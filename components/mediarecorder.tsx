@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Whisper from 'whisper-nodejs';
 
 interface AudioRecorderProps {
   onTranscription: (transcription: any) => void;
@@ -8,69 +7,66 @@ interface AudioRecorderProps {
 function AudioRecorder({ onTranscription }: AudioRecorderProps) {
   const [recorder, setRecorder] = useState<MediaRecorder | null>(null);
   const [audio, setAudio] = useState<Blob | null>(null);
-  const [recording, setRecording] = useState(false);
 
-  // Start recording or stop recording
-  const toggleRecording = async () => {
-    if (!recording) {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const mediaRecorder = new MediaRecorder(stream);
-        let audioChunks: Blob[] = [];
+  // Start recording
+  const startRecording = async () => {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      let audioChunks: Blob[] = [];
 
-        mediaRecorder.ondataavailable = event => {
-          audioChunks.push(event.data);
-        };
+      mediaRecorder.ondataavailable = event => {
+        audioChunks.push(event.data);
+      };
 
-        mediaRecorder.onstop = () => {
-          const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
-          const audioUrl = URL.createObjectURL(audioBlob);
-          setAudio(audioBlob);
-        };
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setAudio(audioBlob);
+      };
 
-        mediaRecorder.start();
-        setRecorder(mediaRecorder);
-        setRecording(true);
-      }
-    } else {
-      recorder?.stop();
-      // Reset recorder state
-      setRecorder(null);
-      setRecording(false);
+      mediaRecorder.start();
+      setRecorder(mediaRecorder);
     }
   };
 
-  // Send audio to API for transcription
+  // Stop recording
+  const stopRecording = () => {
+    recorder?.stop();
+    // Reset recorder state
+    setRecorder(null);
+  };
+
+  // Send audio to API
   const sendAudio = async () => {
     if (audio) {
-      const whisper = new Whisper('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'); // Replace with your OpenAI API key
-      const modelName = 'whisper-large'; // Replace with your desired model
+      const formData = new FormData();
+      formData.append('audio', audio);
+
       try {
-        const text = await whisper.transcribe(audio, modelName);
-        onTranscription(text); // Call the onTranscription function with the transcribed text
+        const response = await fetch('app/api/chat/transcribe.tsx', {
+          method: 'POST',
+          body: formData, // Send the audio blob as form data
+        });
+        const data = await response.json();
+        onTranscription(data); // Call the onTranscription function with the transcribed data
       } catch (error) {
-        console.error('Error transcribing audio:', error);
+        console.error('Error sending audio:', error);
       }
     }
   };
 
   return (
     <div>
-      <button
-        onClick={toggleRecording}
-        style={{ backgroundColor: 'white', color: 'black' }}
-      >
-        {recording ? 'Stop Recording' : 'Start Recording'}
+      <button onClick={startRecording} disabled={recorder !== null}>
+        Start Recording
       </button>
-      {recording && (
-        <button
-          onClick={sendAudio}
-          disabled={!audio}
-          style={{ backgroundColor: 'white', color: 'black' }}
-        >
-          Send Audio
-        </button>
-      )}
+      <button onClick={stopRecording} disabled={recorder === null}>
+        Stop Recording
+      </button>
+      <button onClick={sendAudio} disabled={audio === null}>
+        Send Audio
+      </button>
     </div>
   );
 }
