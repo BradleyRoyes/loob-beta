@@ -7,6 +7,15 @@ import Configure from '../components/Configure';
 import PromptSuggestionRow from '../components/PromptSuggestions/PromptSuggestionsRow';
 import ThemeButton from '../components/ThemeButton';
 import useConfiguration from './hooks/useConfiguration';
+import React, { useState } from 'react';
+import AudioRecorder from '../components/mediarecorder'; // Adjust the path to your AudioRecorder component
+
+const [transcribedText, setTranscribedText] = useState("");
+
+const handleTranscription = (transcription) => {
+  setTranscribedText(transcription);
+  append({ id: crypto.randomUUID(), content: transcription, role: 'user' });
+};
 
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } = useChat();
@@ -91,7 +100,8 @@ export default function Page() {
         similarityMetric={similarityMetric}
         setConfiguration={setConfiguration}
       />
-      {/* <AudioRecorder onTranscription={handleTranscription} /> */}
+      { <AudioRecorder onTranscription={handleTranscription} /> }
+      
     </>
   )
 }
