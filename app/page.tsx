@@ -9,8 +9,6 @@ import ThemeButton from '../components/ThemeButton';
 import useConfiguration from './hooks/useConfiguration';
 import AudioRecorder from '../components/mediarecorder'; // Import the AudioRecorder component
 
-export default function Page() {
-
 const handleTranscription = (transcription) => {
   setTranscribedText(transcription);
   append({ id: crypto.randomUUID(), content: transcription, role: 'user' });
