@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from 'react'; // Keep this line for useState
+import React, { useEffect, useRef, useState } from 'react'; // Import React
 import Bubble from '../components/Bubble';
 import { useChat } from 'ai/react';
 import Footer from '../components/Footer';
@@ -7,8 +7,9 @@ import Configure from '../components/Configure';
 import PromptSuggestionRow from '../components/PromptSuggestions/PromptSuggestionsRow';
 import ThemeButton from '../components/ThemeButton';
 import useConfiguration from './hooks/useConfiguration';
-import React from 'react'; // Remove the redundant import for React
-const [transcribedText, setTranscribedText] = useState("");
+import AudioRecorder from '../components/mediarecorder'; // Import the AudioRecorder component
+
+export default function Page() {
 
 const handleTranscription = (transcription) => {
   setTranscribedText(transcription);
