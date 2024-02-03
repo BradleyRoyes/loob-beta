@@ -15,6 +15,7 @@ export default function Page() {
 
   const messagesEndRef = useRef(null);
   const [configureOpen, setConfigureOpen] = useState(false);
+  const [transcribedText, setTranscribedText] = useState(""); // Placeholder for transcribed text
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -23,6 +24,12 @@ export default function Page() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Handle transcribed text from AudioRecorder
+  const handleTranscription = (transcription) => {
+    setTranscribedText(transcription);
+    // You can append the transcribed text to the chat here if needed.
+  };
 
   const handleSend = (e) => {
     handleSubmit(e, { options: { body: { useRag, llm, similarityMetric } } });
@@ -64,6 +71,14 @@ export default function Page() {
           {!messages || messages.length === 0 && (
             <PromptSuggestionRow onPromptClick={handlePrompt} />
           )}
+
+          {/* Display transcribed text */}
+          {transcribedText && (
+            <div className="transcribed-text">
+              <p>{transcribedText}</p>
+            </div>
+          )}
+
           <form className='flex h-[40px] gap-2' onSubmit={handleSend}>
             <input onChange={handleInputChange} value={input} className='chatbot-input flex-1 text-sm md:text-base outline-none bg-transparent rounded-md p-2' placeholder='Send a message...' />
             <button type="submit" className='chatbot-send-button flex rounded-md items-center justify-center px-2.5 origin:px-3'>
@@ -84,6 +99,7 @@ export default function Page() {
         similarityMetric={similarityMetric}
         setConfiguration={setConfiguration}
       />
+      <AudioRecorder onTranscription={handleTranscription} />
     </>
   )
 }
