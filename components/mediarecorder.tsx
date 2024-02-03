@@ -58,13 +58,13 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
 
   return (
     <div>
-      <button onClick={startRecording} disabled={recorder !== null}>
+      <button onClick={startRecording} disabled={recorder !== null} style={{ backgroundColor: 'white', color: 'black' }}>
         Start Recording
       </button>
-      <button onClick={stopRecording} disabled={recorder === null}>
+      <button onClick={stopRecording} disabled={recorder === null} style={{ backgroundColor: 'white', color: 'black' }}>
         Stop Recording
       </button>
-      <button onClick={sendAudio} disabled={audio === null}>
+      <button onClick={sendAudio} disabled={audio === null} style={{ backgroundColor: 'white', color: 'black' }}>
         Send Audio
       </button>
     </div>
