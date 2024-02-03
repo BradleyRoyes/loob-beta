@@ -1,3 +1,4 @@
+"use client"; // Mark the parent component as a client component
 import React, { useEffect, useRef, useState } from 'react';
 import Bubble from '../components/Bubble';
 import { useChat } from 'ai/react';
@@ -6,8 +7,8 @@ import Configure from '../components/Configure';
 import PromptSuggestionRow from '../components/PromptSuggestions/PromptSuggestionsRow';
 import ThemeButton from '../components/ThemeButton';
 import useConfiguration from './hooks/useConfiguration';
-import AudioRecorder from '../components/mediarecorder'; // Import the AudioRecorder component
-import { randomUUID } from 'crypto'; // Add this import
+import AudioRecorder from '../components/mediarecorder';
+import { randomUUID } from 'crypto'; 
 
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } = useChat();
