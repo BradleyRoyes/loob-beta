@@ -1,8 +1,9 @@
-// Assuming api/chat/transcribe.js is correctly set up as an API endpoint
+// Assuming api/chat/transcribe.ts is correctly set up as an API endpoint
 
+import { NextApiRequest, NextApiResponse } from 'next';
 import Whisper from 'whisper-nodejs';
 
-export default async function handler(req, res) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed, use POST.' });
   }
