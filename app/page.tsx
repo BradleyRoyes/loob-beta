@@ -15,7 +15,8 @@ export default function Page() {
 
   const messagesEndRef = useRef(null);
   const [configureOpen, setConfigureOpen] = useState(false);
-  const [transcribedText, setTranscribedText] = useState(""); // Placeholder for transcribed text
+  const [transcribedText, setTranscribedText] = useState("");
+  const [isRecording, setIsRecording] = useState(false); // Recording state
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -28,17 +29,30 @@ export default function Page() {
   // Handle transcribed text from AudioRecorder
   const handleTranscription = (transcription) => {
     setTranscribedText(transcription);
-    // You can append the transcribed text to the chat here if needed.
+    // Append the transcribed text to the chat
+    append({ id: crypto.randomUUID(), content: transcription, role: 'user' });
+  };
+
+  // Handle voice recording button click
+  const handleVoiceRecord = () => {
+    if (!isRecording) {
+      // Start recording
+      audioRecorder.startRecording(); // Replace 'audioRecorder' with your actual instance
+    } else {
+      // Stop recording
+      audioRecorder.stopRecording(); // Replace 'audioRecorder' with your actual instance
+    }
+    setIsRecording(!isRecording);
   };
 
   const handleSend = (e) => {
     handleSubmit(e, { options: { body: { useRag, llm, similarityMetric } } });
   }
 
-const handlePrompt = (promptText) => {
-  const msg = { id: crypto.randomUUID(), content: promptText, role: 'user' as const };
-  append(msg);
-};
+  const handlePrompt = (promptText) => {
+    const msg = { id: crypto.randomUUID(), content: promptText, role: 'user' as const };
+    append(msg);
+  };
 
   return (
     <>
@@ -78,7 +92,6 @@ const handlePrompt = (promptText) => {
               <p>{transcribedText}</p>
             </div>
           )}
-
           <form className='flex h-[40px] gap-2' onSubmit={handleSend}>
             <input onChange={handleInputChange} value={input} className='chatbot-input flex-1 text-sm md:text-base outline-none bg-transparent rounded-md p-2' placeholder='Send a message...' />
             <button type="submit" className='chatbot-send-button flex rounded-md items-center justify-center px-2.5 origin:px-3'>
@@ -103,3 +116,4 @@ const handlePrompt = (promptText) => {
     </>
   )
 }
+
