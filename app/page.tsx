@@ -86,6 +86,7 @@ export default function Page() {
               </svg>
               <span className='hidden origin:block font-semibold text-sm ml-2'>Send</span>
             </button>
+             { <AudioRecorder onTranscription={handleTranscription} /> }
           </form>
           <Footer />
         </section>
@@ -98,8 +99,7 @@ export default function Page() {
         similarityMetric={similarityMetric}
         setConfiguration={setConfiguration}
       />
-      { <AudioRecorder onTranscription={handleTranscription} /> }
-      
+     
     </>
   )
 }
