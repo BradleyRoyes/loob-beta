@@ -7,7 +7,6 @@ import Configure from '../components/Configure';
 import PromptSuggestionRow from '../components/PromptSuggestions/PromptSuggestionsRow';
 import ThemeButton from '../components/ThemeButton';
 import useConfiguration from './hooks/useConfiguration';
-import AudioRecorder from '../components/mediarecorder'; // Import the AudioRecorder component
 
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } = useChat();
@@ -16,7 +15,6 @@ export default function Page() {
   const messagesEndRef = useRef(null);
   const [configureOpen, setConfigureOpen] = useState(false);
   const [transcribedText, setTranscribedText] = useState("");
-  const [isRecording, setIsRecording] = useState(false); // Recording state
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -25,25 +23,6 @@ export default function Page() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  // Handle transcribed text from AudioRecorder
-  const handleTranscription = (transcription) => {
-    setTranscribedText(transcription);
-    // Append the transcribed text to the chat
-    append({ id: crypto.randomUUID(), content: transcription, role: 'user' });
-  };
-
-  // Handle voice recording button click
-  const handleVoiceRecord = () => {
-    if (!isRecording) {
-      // Start recording
-      AudioRecorder.startRecording(); // Replace 'audioRecorder' with your actual instance
-    } else {
-      // Stop recording
-      AudioRecorder.stopRecording(); // Replace 'audioRecorder' with your actual instance
-    }
-    setIsRecording(!isRecording);
-  };
 
   const handleSend = (e) => {
     handleSubmit(e, { options: { body: { useRag, llm, similarityMetric } } });
@@ -112,8 +91,7 @@ export default function Page() {
         similarityMetric={similarityMetric}
         setConfiguration={setConfiguration}
       />
-      <AudioRecorder onTranscription={handleTranscription} />
+      {/* <AudioRecorder onTranscription={handleTranscription} /> */}
     </>
   )
 }
-
