@@ -1,5 +1,4 @@
-"use client";
-import React, { useEffect, useRef, useState } from 'react'; // Import React
+import React, { useEffect, useRef, useState } from 'react';
 import Bubble from '../components/Bubble';
 import { useChat } from 'ai/react';
 import Footer from '../components/Footer';
@@ -8,11 +7,7 @@ import PromptSuggestionRow from '../components/PromptSuggestions/PromptSuggestio
 import ThemeButton from '../components/ThemeButton';
 import useConfiguration from './hooks/useConfiguration';
 import AudioRecorder from '../components/mediarecorder'; // Import the AudioRecorder component
-
-const handleTranscription = (transcription) => {
-  setTranscribedText(transcription);
-  append({ id: crypto.randomUUID(), content: transcription, role: 'user' });
-};
+import { randomUUID } from 'crypto'; // Add this import
 
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } = useChat();
@@ -20,7 +15,7 @@ export default function Page() {
 
   const messagesEndRef = useRef(null);
   const [configureOpen, setConfigureOpen] = useState(false);
-  const [transcribedText, setTranscribedText] = useState("");
+  const [transcribedText, setTranscribedText] = useState(""); // Define the state
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -30,12 +25,17 @@ export default function Page() {
     scrollToBottom();
   }, [messages]);
 
+  const handleTranscription = (transcription) => {
+    setTranscribedText(transcription); // Use the state setter here
+    append({ id: randomUUID(), content: transcription, role: 'user' });
+  };
+
   const handleSend = (e) => {
     handleSubmit(e, { options: { body: { useRag, llm, similarityMetric } } });
   }
 
   const handlePrompt = (promptText) => {
-    const msg = { id: crypto.randomUUID(), content: promptText, role: 'user' as const };
+    const msg = { id: randomUUID(), content: promptText, role: 'user' as const };
     append(msg);
   };
 
