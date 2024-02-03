@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 
-function AudioRecorder() {
+interface AudioRecorderProps {
+  onTranscription: (transcription: any) => void;
+}
+
+function AudioRecorder({ onTranscription }: AudioRecorderProps) {
   const [recorder, setRecorder] = useState<MediaRecorder | null>(null);
   const [audio, setAudio] = useState<Blob | null>(null);
 
@@ -45,7 +49,7 @@ function AudioRecorder() {
           body: formData, // Send the audio blob as form data
         });
         const data = await response.json();
-        console.log(data);
+        onTranscription(data); // Call the onTranscription function with the transcribed data
       } catch (error) {
         console.error('Error sending audio:', error);
       }
