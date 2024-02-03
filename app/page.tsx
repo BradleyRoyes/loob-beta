@@ -37,10 +37,10 @@ export default function Page() {
   const handleVoiceRecord = () => {
     if (!isRecording) {
       // Start recording
-      audioRecorder.startRecording(); // Replace 'audioRecorder' with your actual instance
+      AudioRecorder.startRecording(); // Replace 'audioRecorder' with your actual instance
     } else {
       // Stop recording
-      audioRecorder.stopRecording(); // Replace 'audioRecorder' with your actual instance
+      AudioRecorder.stopRecording(); // Replace 'audioRecorder' with your actual instance
     }
     setIsRecording(!isRecording);
   };
