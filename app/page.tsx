@@ -35,8 +35,8 @@ export default function Page() {
     handleSubmit(e, { options: { body: { useRag, llm, similarityMetric } } });
   }
 
- const handlePrompt = (promptText) => {
-  const msg = { id: crypto.randomUUID(), content: promptText, role: 'user' };
+const handlePrompt = (promptText) => {
+  const msg = { id: crypto.randomUUID(), content: promptText, role: 'user' as const };
   append(msg);
 };
 
