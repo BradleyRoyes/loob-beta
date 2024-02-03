@@ -39,7 +39,7 @@ function AudioRecorder() {
     formData.append('audio', audio);
 
     try {
-      const response = await fetch('/api/chat/transcribe', {
+      const response = await fetch('app/api/chat/transcribe.js', {
         method: 'POST',
         body: formData, // Send the audio blob as form data
       });
