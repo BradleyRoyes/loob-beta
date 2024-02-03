@@ -23,10 +23,12 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
         const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
         const audioUrl = URL.createObjectURL(audioBlob);
         setAudio(audioBlob);
+        console.log('Audio recording stopped');
       };
 
       mediaRecorder.start();
       setRecorder(mediaRecorder);
+      console.log('Audio recording started');
     }
   };
 
@@ -35,6 +37,7 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
     recorder?.stop();
     // Reset recorder state
     setRecorder(null);
+    console.log('Audio recording stopped');
   };
 
   // Send audio to API
@@ -49,10 +52,13 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
           body: formData, // Send the audio blob as form data
         });
         const data = await response.json();
+        console.log('Received response:', data); // Log the response from the server
         onTranscription(data); // Call the onTranscription function with the transcribed data
       } catch (error) {
         console.error('Error sending audio:', error);
       }
+    } else {
+      console.warn('No audio to send');
     }
   };
 
