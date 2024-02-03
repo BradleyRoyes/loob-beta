@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 
 function AudioRecorder() {
-  const [recorder, setRecorder] = useState(null);
-  const [audio, setAudio] = useState(null);
+  const [recorder, setRecorder] = useState<MediaRecorder | null>(null);
+  const [audio, setAudio] = useState<Blob | null>(null);
 
   // Start recording
   const startRecording = async () => {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
-      let audioChunks = [];
+      let audioChunks: Blob[] = [];
 
       mediaRecorder.ondataavailable = event => {
         audioChunks.push(event.data);
@@ -35,26 +35,34 @@ function AudioRecorder() {
 
   // Send audio to API
   const sendAudio = async () => {
-    const formData = new FormData();
-    formData.append('audio', audio);
+    if (audio) {
+      const formData = new FormData();
+      formData.append('audio', audio);
 
-    try {
-      const response = await fetch('app/api/chat/transcribe.js', {
-        method: 'POST',
-        body: formData, // Send the audio blob as form data
-      });
-      const data = await response.json();
-      console.log(data);
-    } catch (error) {
-      console.error('Error sending audio:', error);
+      try {
+        const response = await fetch('app/api/chat/transcribe.tsx', {
+          method: 'POST',
+          body: formData, // Send the audio blob as form data
+        });
+        const data = await response.json();
+        console.log(data);
+      } catch (error) {
+        console.error('Error sending audio:', error);
+      }
     }
   };
 
   return (
     <div>
-      <button onClick={startRecording} disabled={recorder}>Start Recording</button>
-      <button onClick={stopRecording} disabled={!recorder}>Stop Recording</button>
-      <button onClick={sendAudio} disabled={!audio}>Send Audio</button>
+      <button onClick={startRecording} disabled={recorder !== null}>
+        Start Recording
+      </button>
+      <button onClick={stopRecording} disabled={recorder === null}>
+        Stop Recording
+      </button>
+      <button onClick={sendAudio} disabled={audio === null}>
+        Send Audio
+      </button>
     </div>
   );
 }
