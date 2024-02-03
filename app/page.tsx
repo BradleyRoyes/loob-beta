@@ -35,10 +35,10 @@ export default function Page() {
     handleSubmit(e, { options: { body: { useRag, llm, similarityMetric } } });
   }
 
-  const handlePrompt = (promptText) => {
-    const msg = { id: crypto.randomUUID(), content: promptText, role: 'user' };
-    append(msg, { options: { body: { useRag, llm, similarityMetric } } });
-  };
+ const handlePrompt = (promptText) => {
+  const msg = { id: crypto.randomUUID(), content: promptText, role: 'user' }; // Change 'role' to 'user'
+  append(msg, { options: { body: { useRag, llm, similarityMetric } } });
+};
 
   return (
     <>
