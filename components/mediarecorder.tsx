@@ -7,6 +7,7 @@ interface AudioRecorderProps {
 function AudioRecorder({ onTranscription }: AudioRecorderProps) {
   const [recorder, setRecorder] = useState<MediaRecorder | null>(null);
   const [audio, setAudio] = useState<Blob | null>(null);
+  const [recordingStatus, setRecordingStatus] = useState<string | null>(null);
 
   // Start recording
   const startRecording = async () => {
@@ -23,12 +24,12 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
         const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
         const audioUrl = URL.createObjectURL(audioBlob);
         setAudio(audioBlob);
-        console.log('Audio recording stopped');
+        setRecordingStatus('Recording stopped');
       };
 
       mediaRecorder.start();
       setRecorder(mediaRecorder);
-      console.log('Audio recording started');
+      setRecordingStatus('Recording started');
     }
   };
 
@@ -37,7 +38,7 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
     recorder?.stop();
     // Reset recorder state
     setRecorder(null);
-    console.log('Audio recording stopped');
+    setRecordingStatus('Recording stopped');
   };
 
   // Send audio to API
@@ -52,18 +53,21 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
           body: formData, // Send the audio blob as form data
         });
         const data = await response.json();
-        console.log('Received response:', data); // Log the response from the server
+        setRecordingStatus('Audio sent successfully');
         onTranscription(data); // Call the onTranscription function with the transcribed data
       } catch (error) {
+        setRecordingStatus('Error sending audio');
         console.error('Error sending audio:', error);
       }
     } else {
+      setRecordingStatus('No audio to send');
       console.warn('No audio to send');
     }
   };
 
   return (
     <div>
+      <div>{recordingStatus}</div>
       <button onClick={startRecording} disabled={recorder !== null}>
         Start Recording
       </button>
