@@ -16,7 +16,7 @@
     "geist": "^1.1.0",
     "langchain": "^0.0.179",
     "next": "14.0.1",
-    "openai": "^4.14.2",
+    "openai": "latest",
     "react": "^18",
     "react-dom": "^18",
     "react-markdown": "^9.0.0",
