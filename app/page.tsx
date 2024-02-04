@@ -1,57 +1,85 @@
-import React, { useState, useRef, useEffect } from 'react';
-import Bubble from '../components/Bubble'; // Adjust the import path as needed
-import Footer from '../components/Footer'; // Adjust the import path as needed
-import AudioRecorder from '../components/mediarecorder'; // Adjust the import path as needed
-import { randomUUID } from 'crypto'; 
+import React, { useEffect, useRef, useState } from 'react';
+import Bubble from '../components/Bubble';
+import Footer from '../components/Footer';
+import Configure from '../components/Configure';
+import PromptSuggestionRow from '../components/PromptSuggestions/PromptSuggestionsRow';
+import ThemeButton from '../components/ThemeButton';
+import useConfiguration from './hooks/useConfiguration';
+import AudioRecorder from '../components/mediarecorder';
+import { v4 as uuidv4 } from 'uuid'; // Import the v4 function and rename it to uuidv4 for clarity
 
-const Page = () => {
-  const [messages, setMessages] = useState([]); // Stores all messages
-  const [input, setInput] = useState(''); // Manages the current input field value
-  const messagesEndRef = useRef(null); // For auto-scrolling to the latest message
+export default function Page() {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [configureOpen, setConfigureOpen] = useState(false);
+  const messagesEndRef = useRef(null);
 
-  // Function to handle the transcription received from the AudioRecorder
-  const handleTranscription = (transcription) => {
-    setInput(transcription); // Update the input field with the transcription
-  };
+  // Hooks from your setup (adjust according to your actual implementation)
+  const { useRag, llm, similarityMetric, setConfiguration } = useConfiguration();
 
-  // Function to append a new message and clear the input field
-  const appendMessage = () => {
-    if (!input.trim()) return; // Ignore empty messages
-    const newMessage = { id: randomUUID(), content: input };
-    setMessages([...messages, newMessage]);
-    setInput(''); // Clear the input field after sending
-  };
-
-  // Auto-scroll to the latest message
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const handleTranscription = (transcription) => {
+    setInput(transcription);
+  };
+
+  const appendMessage = () => {
+    if (!input.trim()) return; // Guard clause for empty input
+
+    // Create a new message object with a unique id
+    const newMessage = { id: uuidv4(), content: input, role: 'user' };
+    setMessages(prevMessages => [...prevMessages, newMessage]);
+    setInput(''); // Clear the input field after appending the message
+  };
+
+  const handleSend = (e) => {
+    e.preventDefault();
+    appendMessage();
+  };
+
+  // Example handlePrompt function (adjust as needed)
+  const handlePrompt = (promptText) => {
+    setMessages(prevMessages => [...prevMessages, { id: uuidv4(), content: promptText, role: 'user' }]);
+  };
 
   return (
     <>
       <main className="flex h-screen flex-col items-center justify-center">
-        <section className='flex flex-col w-full h-full rounded-md p-2 md:p-6'>
-          <div className='flex-1 overflow-y-auto my-4 md:my-6'>
+        {/* Page setup (headers, inputs, etc.) remains unchanged */}
+        {/* Insert the rest of your page setup here */}
+        <section className='chatbot-section flex flex-col w-full h-full rounded-md p-2 md:p-6'>
+          <div className='chatbot-header pb-6'>
+            {/* Header content */}
+          </div>
+          <div className='flex-1 relative overflow-y-auto my-4 md:my-6'>
             {messages.map((message, index) => (
               <Bubble key={message.id} content={message.content} />
             ))}
             <div ref={messagesEndRef} />
           </div>
-          <div>
+          {messages.length === 0 && <PromptSuggestionRow onPromptClick={handlePrompt} />}
+          <form className='flex h-[40px] gap-2' onSubmit={handleSend}>
             <input
-              value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message here..."
-              className="w-full p-2"
+              value={input}
+              className='chatbot-input flex-1 text-sm md:text-base outline-none bg-transparent rounded-md p-2'
+              placeholder='Send a message...'
             />
-            <button onClick={appendMessage} className="p-2">Send</button>
-          </div>
-          <AudioRecorder onTranscription={handleTranscription} />
+            <button type="submit" className='chatbot-send-button flex items-center justify-center rounded-md px-2.5'>
+              Send
+            </button>
+            <AudioRecorder onTranscription={handleTranscription} />
+          </form>
           <Footer />
         </section>
+        <Configure
+          isOpen={configureOpen}
+          onClose={() => setConfigureOpen(false)}
+          {...{ useRag, llm, similarityMetric, setConfiguration }}
+        />
       </main>
     </>
   );
-};
-
-export default Page;
+}
