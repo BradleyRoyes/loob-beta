@@ -26,9 +26,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const text = await whisper.transcribe(audioBase64, modelName);
 
     // Respond with the transcribed text in a JSON format
-    res.status(200).json({ success: true, transcription: text });
+    return res.status(200).json({ success: true, transcription: text });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, error: 'Error transcribing audio' });
+    return res.status(500).json({ success: false, error: 'Error transcribing audio' });
   }
 }
