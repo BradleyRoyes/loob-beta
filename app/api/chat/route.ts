@@ -1,42 +1,61 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import Whisper from 'whisper-nodejs'; // Import Whisper without 'require'
+import OpenAI from 'openai';
+import {OpenAIStream, StreamingTextResponse} from 'ai';
+import {AstraDB} from "@datastax/astra-db-ts";
 
-const whisper = new Whisper(process.env.OPENAI_API_KEY);
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed, use POST.' });
-  }
+const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.ASTRA_DB_ENDPOINT, process.env.ASTRA_DB_NAMESPACE);
 
+export async function POST(req: Request) {
   try {
-    // Read the raw audio data from the request body
-    const chunks: Uint8Array[] = [];
+    const {messages, useRag, llm, similarityMetric} = await req.json();
 
-    req.on('data', (chunk: Uint8Array) => {
-      chunks.push(chunk);
-      console.log(`Received chunk of data: ${chunk.length} bytes`);
-    });
+    const latestMessage = messages[messages?.length - 1]?.content;
 
-    req.on('end', async () => {
-      const audioData = Buffer.concat(chunks);
-      console.log(`Received complete audio data: ${audioData.length} bytes`);
+    let docContext = '';
+    if (useRag) {
+      const {data} = await openai.embeddings.create({input: latestMessage, model: 'text-embedding-ada-002'});
 
-      try {
-        // Use the raw audio data to transcribe
-        const transcription = await whisper.transcribe(audioData, 'whisper-1');
-        res.status(200).json({ success: true, transcription });
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, error: 'Error transcribing audio' });
+      const collection = await astraDb.collection(`chat_${similarityMetric}`);
+
+      const cursor= collection.find(null, {
+        sort: {
+          $vector: data[0]?.embedding,
+        },
+        limit: 5,
+      });
+
+      const documents = await cursor.toArray();
+
+      docContext = `
+        START CONTEXT
+        ${documents?.map(doc => doc.content).join("\n")}
+        END CONTEXT
+      `
+    }
+    const ragPrompt = [
+      {
+        role: 'system',
+        content: `You are an AI assistant answering questions about Cassandra and Astra DB. Format responses using markdown where applicable.
+        ${docContext} 
+        If the answer is not provided in the context, the AI assistant will say, "I'm sorry, I don't know the answer".
+      `,
+      },
+    ]
+
+
+    const response = await openai.chat.completions.create(
+      {
+        model: llm ?? 'gpt-3.5-turbo',
+        stream: true,
+        messages: [...ragPrompt, ...messages],
       }
-    });
-
-    req.on('error', (err) => {
-      console.error(err);
-      res.status(500).json({ success: false, error: 'Error receiving audio data' });
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, error: 'Error processing audio data' });
+    );
+    const stream = OpenAIStream(response);
+    return new StreamingTextResponse(stream);
+  } catch (e) {
+    throw e;
   }
 }
