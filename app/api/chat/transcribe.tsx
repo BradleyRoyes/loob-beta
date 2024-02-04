@@ -8,10 +8,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed, use POST.' });
   }
 
-  const whisper = new Whisper('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'); // Replace 'YOUR_API_KEY' with your actual OpenAI API key
-  const { filePath, modelName } = req.body; // Expecting filePath and modelName in the request body
-
   try {
+    const { filePath, modelName } = req.body; // Expecting filePath and modelName in the request body
+    const whisper = new Whisper('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'); // Replace 'YOUR_API_KEY' with your actual OpenAI API key
     const text = await whisper.transcribe(filePath, modelName);
     res.status(200).json({ success: true, text });
   } catch (error) {
