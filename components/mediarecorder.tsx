@@ -79,7 +79,7 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
         method: 'POST',
         body: audio,
         headers: {
-          'Content-Type': 'audio/mpeg', // Use the appropriate content type for the audio format
+          'Content-Type': 'audio', // Use the appropriate content type for the audio format
         },
       });
 
@@ -88,11 +88,11 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
         onTranscription(audio);
         setRecordingStatus('Audio sent successfully');
       } else {
-        setRecordingStatus(`Error sending audio: ${response.status} ${response.statusText}`);
+        setRecordingStatus(`Error sending audio 1: ${response.status} ${response.statusText}`);
         console.error('Error sending audio:', response.status, response.statusText);
       }
     } catch (error) {
-      console.error('Error sending audio:', error);
+      console.error('Error sending audio 2:', error);
       setRecordingStatus(`Error sending audio: ${error.message}`);
     }
   }
