@@ -82,7 +82,7 @@ export default function Page() {
             </button>
             { <AudioRecorder onTranscription={handleTranscription} /> }
           </form>
-          <Footer />
+          <Footer /
         </section>
       </main>
       <Configure
