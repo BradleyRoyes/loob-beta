@@ -1,3 +1,4 @@
+"use client";
 import React, { useEffect, useRef, useState } from 'react';
 import Bubble from '../components/Bubble';
 import NeuronVisual from '../components/NeuronVisual'; // Import the NeuronVisual component
