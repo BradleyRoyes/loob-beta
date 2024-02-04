@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
-import {OpenAIStream, StreamingTextResponse} from 'ai';
-import {AstraDB} from "@datastax/astra-db-ts";
+import { OpenAIStream, StreamingTextResponse } from 'ai';
+import { AstraDB } from "@datastax/astra-db-ts";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -10,17 +10,17 @@ const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.
 
 export async function POST(req: Request) {
   try {
-    const {messages, useRag, llm, similarityMetric} = await req.json();
+    const { messages, useRag, llm, similarityMetric } = await req.json();
 
     const latestMessage = messages[messages?.length - 1]?.content;
 
     let docContext = '';
     if (useRag) {
-      const {data} = await openai.embeddings.create({input: latestMessage, model: 'text-embedding-ada-002'});
+      const { data } = await openai.embeddings.create({ input: latestMessage, model: 'text-embedding-ada-002' });
 
       const collection = await astraDb.collection(`chat_${similarityMetric}`);
 
-      const cursor= collection.find(null, {
+      const cursor = collection.find(null, {
         sort: {
           $vector: data[0]?.embedding,
         },
@@ -45,6 +45,13 @@ export async function POST(req: Request) {
       },
     ]
 
+    // Send all user inputs to the "journey_journals" collection
+    for (const message of messages) {
+      if (message.role === 'user') {
+        const collection = await astraDb.collection("journey_journals");
+        await collection.create(message); // Assuming 'message' is the user input data
+      }
+    }
 
     const response = await openai.chat.completions.create(
       {
