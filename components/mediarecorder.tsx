@@ -75,7 +75,7 @@ const AudioRecorder = ({ onTranscription }: AudioRecorderProps) => {
 
       if (base64Audio) {
         try {
-          const response = await fetch('/api/transcribe', {
+          const response = await fetch('/api/Whisper.xs', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ audio: base64Audio }),
