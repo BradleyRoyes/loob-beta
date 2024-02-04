@@ -39,16 +39,13 @@ export default function Page() {
 
   const handlePrompt = (promptText) => {
     const msg = { id: uuidv4(), content: promptText, role: 'user' };
-    append({ ...msg, role: 'user' }); // Set the role to 'user'
+    append({ ...msg, role: 'user' });
   };
 
   return (
-    <div className="flex h-screen justify-center items-center" style={{ fontFamily: 'Helvetica, Arial, sans-serif' }}>
-      <div className="neuron-visual-container flex-1">
-        <NeuronVisual />
-      </div>
+    <div className="flex h-screen" style={{ fontFamily: 'Helvetica, Arial, sans-serif' }}>
       <main className="flex flex-1 flex-col items-center justify-center bg-white">
-        <section className='chatbot-section flex flex-col w-full max-w-4xl h-full rounded-md shadow-lg p-2 md:p-6'>
+        <section className='chatbot-section flex flex-row-reverse w-full max-w-4xl h-full rounded-md shadow-lg p-2 md:p-6'>
           <div className='chatbot-header pb-6'>
             <div className='flex justify-between items-center'>
               <h1 className='chatbot-text-primary text-5xl md:text-6xl font-bold tracking-wide'>Loob The App</h1>
@@ -94,6 +91,9 @@ export default function Page() {
           <Footer />
         </section>
       </main>
+      <div className="neuron-visual-container">
+        <NeuronVisual />
+      </div>
       <Configure
         isOpen={configureOpen}
         onClose={() => setConfigureOpen(false)}
