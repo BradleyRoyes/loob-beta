@@ -73,7 +73,7 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
     }
 
     try {
-      const response = await fetch('/app/hooks/transcribe', {
+      const response = await fetch('/api/transcribe', {
         method: 'POST',
         body: audio,
         headers: {
