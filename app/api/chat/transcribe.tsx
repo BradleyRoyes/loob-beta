@@ -9,28 +9,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // Read the raw audio data from the request body
-    const chunks: Uint8Array[] = [];
+    const audioBuffer: Buffer = await new Promise((resolve, reject) => {
+      const chunks: Uint8Array[] = [];
 
-    req.on('data', (chunk: Uint8Array) => {
-      chunks.push(chunk);
-      console.log(`Received chunk of data: ${chunk.length} bytes`);
+      req.on('data', (chunk: Uint8Array) => {
+        chunks.push(chunk);
+      });
+
+      req.on('end', () => {
+        const audioData = Buffer.concat(chunks);
+        resolve(audioData);
+      });
+
+      req.on('error', (err) => {
+        reject(err);
+      });
     });
 
-    req.on('end', () => {
-      const audioData = Buffer.concat(chunks);
-      console.log(`Received complete audio data: ${audioData.length} bytes`);
-      
-      // Use the raw audio data to transcribe
-      const transcription = await whisper.transcribe(audioData, 'whisper-1');
-      res.status(200).json({ success: true, transcription });
-    });
+    // Check if audioBuffer is null or empty
+    if (!audioBuffer || audioBuffer.length === 0) {
+      console.log('No audio data received.'); // Add this console log
+      return res.status(400).json({ success: false, error: 'No audio data received.' });
+    }
 
-    req.on('error', (err) => {
-      console.error(err);
-      res.status(500).json({ success: false, error: 'Error receiving audio data' });
-    });
+    // Use the raw audio data to transcribe
+    const transcription = await whisper.transcribe(audioBuffer, 'whisper-1');
+    res.status(200).json({ success: true, transcription });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, error: 'Error transcribing audio' });
   }
 }
+
