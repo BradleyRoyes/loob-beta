@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 
 interface AudioRecorderProps {
-  onTranscription: (transcription: string) => void; // Assuming transcription is a string
+  onTranscription: (audio: Blob) => void; // Updated prop to pass audio Blob
 }
 
 function AudioRecorder({ onTranscription }: AudioRecorderProps) {
@@ -66,6 +66,7 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
   };
 
   // Function to send audio to API
+  // Function to send audio to API
   const sendAudio = async () => {
     if (!audio) {
       setRecordingStatus('No audio to send');
@@ -73,18 +74,19 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
     }
 
     try {
-      const formData = new FormData();
-      formData.append('audio', audio);
-
-      const response = await fetch('/api/chat/transcribe', {
+      // Send the audio Blob directly in the request body
+      const response = await fetch('/api/chat/transcribe.tsx', {
         method: 'POST',
-        body: formData,
+        body: audio,
+        headers: {
+          'Content-Type': 'audio/mpeg', // Use the appropriate content type for the audio format
+        },
       });
 
       if (response.ok) {
-        const { transcription } = await response.json();
+        // Call the callback function to pass the audio Blob
+        onTranscription(audio);
         setRecordingStatus('Audio sent successfully');
-        onTranscription(transcription);
       } else {
         setRecordingStatus(`Error sending audio: ${response.status} ${response.statusText}`);
         console.error('Error sending audio:', response.status, response.statusText);
@@ -93,7 +95,7 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
       console.error('Error sending audio:', error);
       setRecordingStatus(`Error sending audio: ${error.message}`);
     }
-  };
+  }
 
   // Function to play the recorded audio
   const playAudio = () => {
