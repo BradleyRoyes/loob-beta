@@ -49,7 +49,7 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
       setRecordingStatus('Recording started');
     } catch (error) {
       console.error('Error starting recording:', error);
-      setRecordingStatus('Error starting recording');
+      setRecordingStatus(`Error starting recording: ${error.message}`); // Include the error message in the status
     }
   };
 
@@ -67,7 +67,7 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
       }
     } catch (error) {
       console.error('Error stopping recording:', error);
-      setRecordingStatus('Error stopping recording');
+      setRecordingStatus(`Error stopping recording: ${error.message}`); // Include the error message in the status
     }
   };
 
@@ -83,7 +83,7 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
       const formData = new FormData();
       formData.append('audio', audio);
 
-      const response = await fetch('app/api/chat/transcribe.tsx', {
+      const response = await fetch('/api/chat/transcribe.tsx', { // Updated the API endpoint URL
         method: 'POST',
         body: formData, // Send the audio blob as form data
       });
@@ -93,12 +93,12 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
         setRecordingStatus('Audio sent successfully');
         onTranscription(data); // Call the onTranscription function with the transcribed data
       } else {
-        setRecordingStatus('Error sending audio');
-        console.error('Error sending audio:', response.status);
+        setRecordingStatus(`Error sending audio: ${response.status} ${response.statusText}`); // Include status and status text in the error message
+        console.error('Error sending audio:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Error sending audio:', error);
-      setRecordingStatus('Error sending audio');
+      setRecordingStatus(`Error sending audio: ${error.message}`); // Include the error message in the status
     }
   };
 
