@@ -1,4 +1,4 @@
-// "use client"; Mark the parent component as a client component
+"use client";
 import React, { useEffect, useRef, useState } from 'react';
 import Bubble from '../components/Bubble';
 import Footer from '../components/Footer';
