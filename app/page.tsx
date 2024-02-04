@@ -1,14 +1,14 @@
-"use client"; // Mark the parent component as a client component
+// Make sure this is a client component if you're using Next.js 13 or newer with app directory.
+"use client";
 import React, { useEffect, useRef, useState } from 'react';
 import Bubble from '../components/Bubble';
 import { useChat } from 'ai/react';
 import Footer from '../components/Footer';
 import Configure from '../components/Configure';
 import PromptSuggestionRow from '../components/PromptSuggestions/PromptSuggestionsRow';
-import ThemeButton from '../components/ThemeButton';
 import useConfiguration from './hooks/useConfiguration';
-import AudioRecorder from '../components/mediarecorder'; // Ensure this is the correct path to your AudioRecorder component
-import { randomUUID } from 'crypto'; 
+import AudioRecorder from '../components/mediarecorder'; // Correct path assumed as per your setup
+import { randomUUID } from 'crypto';
 
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } = useChat();
@@ -16,80 +16,67 @@ export default function Page() {
 
   const messagesEndRef = useRef(null);
   const [configureOpen, setConfigureOpen] = useState(false);
-  const [transcribedText, setTranscribedText] = useState(""); // Define the state for holding transcribed text
-  const [isRecording, setIsRecording] = useState(false); // State to manage recording UI feedback
+  const [isRecording, setIsRecording] = useState(false); // Adjusted to reflect state management in AudioRecorder
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
+  // Scroll to the bottom of the chat whenever messages update
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Handle audio transcription result
+  // Function to handle the transcription received from the AudioRecorder component
   const handleTranscription = (transcription) => {
-    setTranscribedText(transcription);
     append({ id: randomUUID(), content: transcription, role: 'user' });
-    setIsRecording(false); // Stop recording UI feedback
+    setIsRecording(false); // Adjust recording state based on your logic
   };
 
-  // Handle form submission
+  // Function to handle form submission
   const handleSend = (e) => {
-    e.preventDefault(); // Prevent default form submission behavior
-    if (input.trim()) { // Only submit if input is not empty
+    e.preventDefault();
+    if (input.trim()) {
       handleSubmit(e, { options: { body: { useRag, llm, similarityMetric } } });
     }
-  }
+  };
 
-  // Handle clicks on prompt suggestions
+  // Function to handle prompt selection
   const handlePrompt = (promptText) => {
-    const msg = { id: randomUUID(), content: promptText, role: 'user' };
-    append(msg);
+    append({ id: randomUUID(), content: promptText, role: 'user' });
   };
 
   return (
     <>
       <main className="flex h-screen flex-col items-center justify-center">
-        <section className='chatbot-section flex flex-col origin:w-[800px] w-full origin:h-[735px] h-full rounded-md p-2 md:p-6'>
-          <div className='chatbot-header pb-6'>
-            <div className='flex justify-between'>
-              {/* Your chatbot header here */}
-            </div>
-            {/* Chatbot introductory text or additional UI elements */}
-          </div>
+        <section className='chatbot-section flex flex-col w-full h-full rounded-md p-2 md:p-6'>
+          {/* Chatbot UI components like header, messages display, etc. */}
           <div className='flex-1 relative overflow-y-auto my-4 md:my-6'>
-            <div className='absolute w-full overflow-x-hidden'>
-              {messages.map((message, index) => <Bubble ref={messagesEndRef} key={`message-${index}`} content={message} />)}
-              {/* Ensure Bubble is the correct component for displaying messages */}
-            </div>
+            {messages.map((message, index) => (
+              <Bubble key={`message-${index}`} message={message} />
+            ))}
+            <div ref={messagesEndRef} />
           </div>
-          {!messages || messages.length === 0 && (
-            <PromptSuggestionRow onPromptClick={handlePrompt} />
-          )}
-          {transcribedText && (
-            <div className="transcribed-text">
-              <p>{transcribedText}</p>
-            </div>
-          )}
+          <PromptSuggestionRow onPromptClick={handlePrompt} />
           <form className='flex h-[40px] gap-2' onSubmit={handleSend}>
-            <input onChange={handleInputChange} value={input} className='chatbot-input flex-1 text-sm md:text-base outline-none bg-transparent rounded-md p-2' placeholder='Send a message...' />
+            <input
+              onChange={handleInputChange}
+              value={input}
+              className='chatbot-input flex-1 text-sm md:text-base outline-none bg-transparent rounded-md p-2'
+              placeholder='Send a message...'
+            />
             <button type="submit" className='chatbot-send-button flex rounded-md items-center justify-center px-2.5 origin:px-3'>
-              {/* Send button SVG or text here */}
+              Send
             </button>
             <AudioRecorder onTranscription={handleTranscription} isRecording={isRecording} setIsRecording={setIsRecording} />
           </form>
           <Footer />
         </section>
+        <Configure
+          isOpen={configureOpen}
+          onClose={() => setConfigureOpen(false)}
+          useRag={useRag}
+          llm={llm}
+          similarityMetric={similarityMetric}
+          setConfiguration={setConfiguration}
+        />
       </main>
-      <Configure
-        isOpen={configureOpen}
-        onClose={() => setConfigureOpen(false)}
-        useRag={useRag}
-        llm={llm}
-        similarityMetric={similarityMetric}
-        setConfiguration={setConfiguration}
-      />
     </>
   );
 }
