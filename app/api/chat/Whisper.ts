@@ -1,15 +1,15 @@
-// pages/api/whisper.ts
-import { NextApiRequest, NextApiResponse } from 'next';
-import * as openai from 'openai';
+// pages/api/whisper.js
+const { NextApiRequest, NextApiResponse } = require('next');
+const { OpenAIApi, Configuration } = require('openai');
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
       // Initialize OpenAI API
-      const configuration = new openai.Configuration({
+      const configuration = new Configuration({
         apiKey: process.env.OPENAI_API_KEY,
       });
-      const openaiClient = new openai.OpenAIApi(configuration);
+      const openai = new OpenAIApi(configuration);
 
       // Assuming the audio file is sent as FormData with the key 'audio'
       const { files } = req;
@@ -20,13 +20,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const audioFile = files.audio[0];
 
       // Upload the audio file to OpenAI (adjust as necessary based on actual OpenAI SDK usage)
-      const uploadResponse = await openaiClient.createUpload({
+      const uploadResponse = await openai.createUpload({
         file: audioFile.path,
         purpose: 'transcription',
       });
 
       // Use the upload for transcription
-      const transcriptionResponse = await openaiClient.createTranscription({
+      const transcriptionResponse = await openai.createTranscription({
         model: 'whisper-large',
         upload_id: uploadResponse.data.id,
       });
