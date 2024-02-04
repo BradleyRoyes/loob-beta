@@ -73,12 +73,12 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
     }
 
     try {
-      const response = await fetch('/api/chat/transcribe.tsx', {
+      const formData = new FormData();
+      formData.append('audio', audio);
+
+      const response = await fetch('/api/chat/transcribe', {
         method: 'POST',
-        body: audio,
-        headers: {
-          'Content-Type': 'audio', // Use the appropriate content type for the audio format
-        },
+        body: formData,
       });
 
       if (response.ok) {
@@ -86,12 +86,12 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
         setRecordingStatus('Audio sent successfully');
         onTranscription(transcription);
       } else {
-        setRecordingStatus(`Error sending audio 1: ${response.status} ${response.statusText}`);
-        console.error('Error sending audio: 2', response.status, response.statusText);
+        setRecordingStatus(`Error sending audio: ${response.status} ${response.statusText}`);
+        console.error('Error sending audio:', response.status, response.statusText);
       }
     } catch (error) {
-      console.error('Error sending audio: 3', error);
-      setRecordingStatus(`Error sending audio: 4 ${error.message}`);
+      console.error('Error sending audio:', error);
+      setRecordingStatus(`Error sending audio: ${error.message}`);
     }
   };
 
