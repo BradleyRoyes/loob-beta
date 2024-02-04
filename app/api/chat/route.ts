@@ -10,8 +10,7 @@ const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.
 
 export async function POST(req: Request) {
   try {
-    // Extracting conversationId along with other parameters
-    const { messages, useRag, llm, similarityMetric, conversationId } = await req.json();
+    const { messages, useRag, llm, similarityMetric } = await req.json();
 
     const latestMessage = messages[messages?.length - 1]?.content;
 
@@ -34,7 +33,7 @@ export async function POST(req: Request) {
         START CONTEXT
         ${documents?.map(doc => doc.content).join("\n")}
         END CONTEXT
-      `;
+      `
     }
     const ragPrompt = [
       {
@@ -44,13 +43,13 @@ export async function POST(req: Request) {
         If the answer is not provided in the context, the AI assistant will say, "I'm sorry, I don't know the answer".
       `,
       },
-    ];
+    ]
 
-    // Send all user inputs to the "journey_journals" collection with conversationId
+    // Send all user inputs to the "journey_journals" collection
     for (const message of messages) {
       if (message.role === 'user') {
         const collection = await astraDb.collection("journey_journals");
-        await collection.insertOne({ ...message, conversationId }); // Append conversationId to each message
+        await collection.insertOne(message); // Assuming 'message' is the user input data
       }
     }
 
