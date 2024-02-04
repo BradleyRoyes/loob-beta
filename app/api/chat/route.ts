@@ -49,7 +49,7 @@ export async function POST(req: Request) {
     for (const message of messages) {
       if (message.role === 'user') {
         const collection = await astraDb.collection("journey_journals");
-        await collection.createOne(message); // Assuming 'message' is the user input data
+        await collection.insertOne(message); // Assuming 'message' is the user input data
       }
     }
 
