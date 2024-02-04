@@ -1,21 +1,13 @@
-"use client"; // Mark the parent component as a client component
 import React, { useEffect, useRef, useState } from 'react';
-import Bubble from '../components/Bubble';
-import { useChat } from 'ai/react';
-import Footer from '../components/Footer';
-import Configure from '../components/Configure';
-import PromptSuggestionRow from '../components/PromptSuggestions/PromptSuggestionsRow';
-import useConfiguration from './hooks/useConfiguration';
-import AudioRecorder from '../components/mediarecorder'; // Ensure this is the correct path to your AudioRecorder component
+import Bubble from '../components/Bubble'; // Adjust path as needed
+import Footer from '../components/Footer'; // Adjust path as needed
+import AudioRecorder from '../components/mediarecorder'; // Adjust path as needed
 import { randomUUID } from 'crypto'; 
 
-export default function Page() {
-  const { append, messages, input, handleInputChange, handleSubmit } = useChat();
-  const { useRag, llm, similarityMetric, setConfiguration } = useConfiguration();
-
+const Page = () => {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
   const messagesEndRef = useRef(null);
-  const [configureOpen, setConfigureOpen] = useState(false);
-  const [transcribedText, setTranscribedText] = useState(""); // Define the state for holding transcribed text
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -25,23 +17,17 @@ export default function Page() {
     scrollToBottom();
   }, [messages]);
 
-  // Handle audio transcription result
   const handleTranscription = (transcription) => {
-    setTranscribedText(transcription);
-    append({ id: randomUUID(), content: transcription, role: 'user' });
+    setInput(transcription); // Append transcription to input field
   };
 
-  // Handle form submission
-  const handleSend = (e) => {
-    e.preventDefault(); // Prevent default form submission behavior
-    if (input.trim()) { // Only submit if input is not empty
-      handleSubmit(e, { options: { body: { useRag, llm, similarityMetric } } });
-    }
-  };
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!input.trim()) return;
 
-  // Handle clicks on prompt suggestions
-  const handlePrompt = (promptText) => {
-    append({ id: randomUUID(), content: promptText, role: 'user' });
+    const newMessage = { id: randomUUID(), content: input, role: 'user' };
+    setMessages(prevMessages => [...prevMessages, newMessage]);
+    setInput(''); // Clear input field after sending
   };
 
   return (
@@ -50,13 +36,14 @@ export default function Page() {
         <section className='chatbot-section flex flex-col w-full h-full rounded-md p-2 md:p-6'>
           <div className='flex-1 relative overflow-y-auto my-4 md:my-6'>
             {messages.map((message, index) => (
-              <Bubble key={`message-${index}`} content={message} />
+              <Bubble key={`message-${index}`} content={message.content} />
+              // Adjust Bubble component as needed
             ))}
             <div ref={messagesEndRef} />
           </div>
-          <form className='flex h-[40px] gap-2' onSubmit={handleSend}>
+          <form className='flex h-[40px] gap-2' onSubmit={handleSubmit}>
             <input
-              onChange={handleInputChange}
+              onChange={(e) => setInput(e.target.value)}
               value={input}
               className='flex-1 text-sm md:text-base outline-none bg-transparent rounded-md p-2'
               placeholder='Send a message...'
@@ -64,18 +51,13 @@ export default function Page() {
             <button type="submit" className='flex items-center justify-center rounded-md px-2.5'>
               Send
             </button>
-            <AudioRecorder onTranscription={handleTranscription} />
           </form>
-          <Footer />
+          <AudioRecorder onTranscription={handleTranscription} />
+          <Footer /> {/* Adjust Footer component as needed */}
         </section>
-        <Configure
-          isOpen={configureOpen}
-          onClose={() => setConfigureOpen(false)}
-          useRag={useRag}
-          llm={llm}
-          similarityMetric={similarityMetric}
-          setConfiguration={setConfiguration}
-        />
-      </>
+      </main>
+    </>
   );
-}
+};
+
+export default Page;
