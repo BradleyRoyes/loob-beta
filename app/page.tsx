@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+"use client"; // Mark the parent component as a client component
+import React, { useEffect, useRef, useState } from 'react';
 import Bubble from '../components/Bubble';
 import { useChat } from 'ai/react';
 import Footer from '../components/Footer';
@@ -7,7 +8,7 @@ import PromptSuggestionRow from '../components/PromptSuggestions/PromptSuggestio
 import ThemeButton from '../components/ThemeButton';
 import useConfiguration from './hooks/useConfiguration';
 import AudioRecorder from '../components/mediarecorder';
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'crypto'; 
 
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } = useChat();
@@ -15,8 +16,7 @@ export default function Page() {
 
   const messagesEndRef = useRef(null);
   const [configureOpen, setConfigureOpen] = useState(false);
-  const [transcribedText, setTranscribedText] = useState("");
-  const [conversationUUID, setConversationUUID] = useState(null);
+  const [transcribedText, setTranscribedText] = useState(""); // Define the state
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -27,11 +27,8 @@ export default function Page() {
   }, [messages]);
 
   const handleTranscription = (transcription) => {
-    setTranscribedText(transcription);
-    if (!conversationUUID) {
-      setConversationUUID(randomUUID()); // Generate a new UUID for the conversation
-    }
-    append({ id: conversationUUID, content: transcription, role: 'user' });
+    setTranscribedText(transcription); // Use the state setter here
+    append({ id: randomUUID(), content: transcription, role: 'user' });
   };
 
   const handleSend = (e) => {
@@ -39,7 +36,7 @@ export default function Page() {
   }
 
   const handlePrompt = (promptText) => {
-    const msg = { id: conversationUUID || randomUUID(), content: promptText, role: 'user' };
+    const msg = { id: randomUUID(), content: promptText, role: 'user' as const };
     append(msg);
   };
 
@@ -89,7 +86,7 @@ export default function Page() {
               </svg>
               <span className='hidden origin:block font-semibold text-sm ml-2'>Send</span>
             </button>
-            {<AudioRecorder onTranscription={handleTranscription} />}
+             { <AudioRecorder onTranscription={handleTranscription} /> }
           </form>
           <Footer />
         </section>
@@ -102,6 +99,7 @@ export default function Page() {
         similarityMetric={similarityMetric}
         setConfiguration={setConfiguration}
       />
+     
     </>
-  );
+  )
 }
