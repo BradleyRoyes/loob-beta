@@ -9,7 +9,7 @@ const sendAudio = async () => {
   formData.append("audio", audio, "recording.mp3"); // Append the audio file to FormData
 
   try {
-    const response = await fetch('/api/chat/Whisper.js', { // Update API route path if necessary
+    const response = await fetch('app/api/chat/Whisper.js', { // Update API route path if necessary
       method: 'POST',
       body: formData, // Send FormData
     });
