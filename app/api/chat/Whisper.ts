@@ -1,7 +1,8 @@
-// pages/api/whisper.js
-import { Configuration, OpenAIApi } from "openai";
+// pages/api/whisper.ts
+import { NextApiRequest, NextApiResponse } from 'next';
+import { Configuration, OpenAIApi } from 'openai';
 
-export default async function handler(req, res) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     try {
       // Initialize OpenAI API
@@ -13,7 +14,7 @@ export default async function handler(req, res) {
       // Assuming the audio file is sent as FormData with the key 'audio'
       const { files } = req;
       if (!files || !files.audio) {
-        return res.status(400).send({ error: 'No audio file uploaded.' });
+        return res.status(400).json({ error: 'No audio file uploaded.' });
       }
 
       const audioFile = files.audio[0];
@@ -26,7 +27,7 @@ export default async function handler(req, res) {
 
       // Use the upload for transcription
       const transcriptionResponse = await openai.createTranscription({
-        model: "whisper-large",
+        model: 'whisper-large',
         upload_id: uploadResponse.data.id,
       });
 
