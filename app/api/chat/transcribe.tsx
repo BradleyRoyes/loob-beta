@@ -7,25 +7,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed, use POST.' });
   }
 
-  // Read the raw audio data from the request body
-  const audioBuffer: Buffer = await new Promise((resolve, reject) => {
-    const chunks: Uint8Array[] = [];
-
-    req.on('data', (chunk: Uint8Array) => {
-      chunks.push(chunk);
-    });
-
-    req.on('end', () => {
-      const audioData = Buffer.concat(chunks);
-      resolve(audioData);
-    });
-
-    req.on('error', (err) => {
-      reject(err);
-    });
-  });
-
   try {
+    // Read the raw audio data from the request body
+    const audioBuffer: Buffer = await new Promise((resolve, reject) => {
+      const chunks: Uint8Array[] = [];
+
+      req.on('data', (chunk: Uint8Array) => {
+        chunks.push(chunk);
+      });
+
+      req.on('end', () => {
+        const audioData = Buffer.concat(chunks);
+        resolve(audioData);
+      });
+
+      req.on('error', (err) => {
+        reject(err);
+      });
+    });
+
     // Use the raw audio data to transcribe
     const transcription = await whisper.transcribe(audioBuffer, 'whisper-1');
     res.status(200).json({ success: true, transcription });
