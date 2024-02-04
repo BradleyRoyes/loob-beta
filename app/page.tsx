@@ -37,10 +37,10 @@ export default function Page() {
     handleSubmit(e, { options: { body: { useRag, llm, similarityMetric } } });
   };
 
-  const handlePrompt = (promptText) => {
-    const msg = { id: uuidv4(), content: promptText, role: 'user' };
-    append(msg);
-  };
+const handlePrompt = (promptText) => {
+  const msg = { id: uuidv4(), content: promptText, role: 'user' };
+  append({ ...msg, role: 'user' }); // Set the role to 'user'
+};
 
   return (
     <div className="flex h-screen" style={{ fontFamily: 'Helvetica, Arial, sans-serif' }}>
