@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import axios from 'axios';
 
 interface AudioRecorderProps {
   onTranscription: (transcription: string) => void;
@@ -68,33 +69,31 @@ const AudioRecorder = ({ onTranscription }: AudioRecorderProps) => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.readAsDataURL(audio);
-    reader.onloadend = async () => {
-      const base64Audio = reader.result?.toString().split(',')[1];
+    const formData = new FormData();
+    formData.append('file', audio);
 
-      if (base64Audio) {
-        try {
-          const response = await fetch('/api/whisper', { // Corrected endpoint URL
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ audio: base64Audio }),
-          });
-
-          if (response.ok) {
-            const { transcription } = await response.json();
-            setRecordingStatus('Transcription received successfully');
-            onTranscription(transcription);
-          } else {
-            setRecordingStatus(`Error sending audio: ${response.status} ${response.statusText}`);
-            console.error('Error sending audio:', response.status, response.statusText);
-          }
-        } catch (error) {
-          console.error('Error sending audio:', error);
-          setRecordingStatus(`Error sending audio: ${error.message}`);
-        }
-      }
+    const config = {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      },
     };
+
+    try {
+      const response = await axios.post('/api/whisper', formData, config);
+
+      if (response.status === 200) {
+        const { transcription } = response.data;
+        setRecordingStatus('Transcription received successfully');
+        onTranscription(transcription);
+      } else {
+        setRecordingStatus(`Error sending audio: ${response.status} ${response.statusText}`);
+        console.error('Error sending audio:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('Error sending audio:', error);
+      setRecordingStatus(`Error sending audio: ${error.message}`);
+    }
   };
 
   const playAudio = () => {
@@ -113,6 +112,14 @@ const AudioRecorder = ({ onTranscription }: AudioRecorderProps) => {
       setIsPlaying(false);
     }
   };
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.addEventListener('ended', () => {
+        setIsPlaying(false);
+      });
+    }
+  }, []);
 
   return (
     <div>
