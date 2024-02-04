@@ -4,7 +4,7 @@
   "routes": [
     {
       "src": "/api/transcribe",
-      "dest": "/api/transcribe.ts" // Update with your actual API route file path
+      "dest": "/api/transcribe.ts"
     },
     {
       "src": "/(.*)",
