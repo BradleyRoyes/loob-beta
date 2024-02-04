@@ -1,52 +1,61 @@
 import OpenAI from 'openai';
-import { OpenAIStream, StreamingTextResponse } from 'ai';
-import { AstraDB } from "@datastax/astra-db-ts";
-import { Buffer } from 'buffer';
-import { Readable } from 'stream';
+import {OpenAIStream, StreamingTextResponse} from 'ai';
+import {AstraDB} from "@datastax/astra-db-ts";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-	@@ -12,43 +10,52 @@ const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.
+});
+
+const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.ASTRA_DB_ENDPOINT, process.env.ASTRA_DB_NAMESPACE);
 
 export async function POST(req: Request) {
   try {
-    // Assuming the request's Content-Type is multipart/form-data
-    const formData = await req.formData();
-    const audioFile = formData.get('audio');
-    let latestMessage = '';
+    const {messages, useRag, llm, similarityMetric} = await req.json();
 
-    // Check if there's an audio file and if it is indeed a file
-    if (audioFile instanceof File && audioFile.type.startsWith('audio/')) {
-      // Convert File to ReadableStream for Whisper AI
-      const arrayBuffer = await audioFile.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      const readableStream = new Readable();
-      readableStream.push(buffer);
-      readableStream.push(null); // Indicates end of stream
+    const latestMessage = messages[messages?.length - 1]?.content;
 
-      // Transcribe audio using Whisper AI
-      const transcriptionResponse = await openai.createTranscription(
-        readableStream, 'whisper-1', '', 'text', 0, 'en'
-      );
+    let docContext = '';
+    if (useRag) {
+      const {data} = await openai.embeddings.create({input: latestMessage, model: 'text-embedding-ada-002'});
 
-      if (transcriptionResponse.data) {
-        latestMessage = transcriptionResponse.data.choices[0].text;
+      const collection = await astraDb.collection(`chat_${similarityMetric}`);
 
-        // Here you can insert the latestMessage into your database
-        // For example, let's insert it into a collection called 'transcriptions'
-        const collection = await astraDb.collection('transcriptions');
-        await collection.insertOne({ content: latestMessage });
-      }
-    } else {
-      // Handle cases where 'audio' field is missing or not an audio file
-      return new Response(JSON.stringify({ error: 'Audio file is required and must be of audio type' }), { status: 400 });
+      const cursor= collection.find(null, {
+        sort: {
+          $vector: data[0]?.embedding,
+        },
+        limit: 5,
+      });
+
+      const documents = await cursor.toArray();
+
+      docContext = `
+        START CONTEXT
+        ${documents?.map(doc => doc.content).join("\n")}
+        END CONTEXT
+      `
     }
+    const ragPrompt = [
+      {
+        role: 'system',
+        content: `You are an AI assistant answering questions about Cassandra and Astra DB. Format responses using markdown where applicable.
+        ${docContext} 
+        If the answer is not provided in the context, the AI assistant will say, "I'm sorry, I don't know the answer".
+      `,
+      },
+    ]
 
-    // You can continue to use latestMessage as part of your logic
-    // If you also want to process text messages, you can include that logic here
 
-    return new Response(JSON.stringify({ message: 'Transcription successful', transcription: latestMessage }), { status: 200 });
+    const response = await openai.chat.completions.create(
+      {
+        model: llm ?? 'gpt-3.5-turbo',
+        stream: true,
+        messages: [...ragPrompt, ...messages],
+      }
+    );
+    const stream = OpenAIStream(response);
+    return new StreamingTextResponse(stream);
   } catch (e) {
-    return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    throw e;
   }
 }
