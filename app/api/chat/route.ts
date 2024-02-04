@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
 import { AstraDB } from "@datastax/astra-db-ts";
+import { v4 as uuidv4 } from 'uuid';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -10,7 +11,10 @@ const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.
 
 export async function POST(req: Request) {
   try {
-    const { messages, useRag, llm, similarityMetric } = await req.json();
+    const { messages, useRag, llm, similarityMetric, sessionUUID } = await req.json();
+
+    // Check if there's an existing session UUID, if not, generate a new one.
+    const conversationUUID = sessionUUID || uuidv4();
 
     const latestMessage = messages[messages?.length - 1]?.content;
 
@@ -45,13 +49,13 @@ export async function POST(req: Request) {
       },
     ]
 
-    // Send all user inputs to the "journey_journals" collection
-    for (const message of messages) {
-      if (message.role === 'user') {
-        const collection = await astraDb.collection("journey_journals");
-        await collection.insertOne(message); // Assuming 'message' is the user input data
-      }
-    }
+    // Insert or update the conversation in the "journey_journals" collection with all user inputs
+    const journalCollection = await astraDb.collection("journey_journals");
+    await journalCollection.updateOne(
+      { conversationUUID },
+      { $push: { messages } },
+      { upsert: true }
+    );
 
     const response = await openai.chat.completions.create(
       {
@@ -61,8 +65,9 @@ export async function POST(req: Request) {
       }
     );
     const stream = OpenAIStream(response);
-    return new StreamingTextResponse(stream);
+    return new StreamingTextResponse(stream, { headers: { 'Content-Type': 'application/json', 'Session-UUID': conversationUUID } });
   } catch (e) {
-    throw e;
+    console.error("Error processing request:", e);
+    throw e; // Consider handling errors more gracefully in your real application
   }
 }
