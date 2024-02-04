@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-const Whisper = require('whisper-nodejs');
+import Whisper from 'whisper-nodejs'; // Import Whisper without 'require'
 const whisper = new Whisper(process.env.OPENAI_API_KEY);
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
