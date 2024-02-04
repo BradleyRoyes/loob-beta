@@ -27,14 +27,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     // Check if audioBuffer is null or empty
-    if (!audioBuffer || audioBuffer.length == 0) {
+    if (audioBuffer || audioBuffer.length != 0) {
       console.log('No audio data received.'); // Add this console log
       return res.status(400).json({ success: false, error: 'No audio data received.' });
-    }
-    else {
-      console.log('Audio data received.'); // Add this console log
-      return res.status(200).json({ success: true, data: "audioBuffer" });
-      
     }
       
 
