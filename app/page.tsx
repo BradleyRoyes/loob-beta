@@ -44,6 +44,9 @@ export default function Page() {
 
   return (
     <div className="flex h-screen justify-center items-center" style={{ fontFamily: 'Helvetica, Arial, sans-serif' }}>
+      <div className="neuron-visual-container flex-1">
+        <NeuronVisual />
+      </div>
       <main className="flex flex-1 flex-col items-center justify-center bg-white">
         <section className='chatbot-section flex flex-col w-full max-w-4xl h-full rounded-md shadow-lg p-2 md:p-6'>
           <div className='chatbot-header pb-6'>
@@ -91,9 +94,6 @@ export default function Page() {
           <Footer />
         </section>
       </main>
-      <div className="neuron-visual-container flex-1">
-        <NeuronVisual />
-      </div>
       <Configure
         isOpen={configureOpen}
         onClose={() => setConfigureOpen(false)}
