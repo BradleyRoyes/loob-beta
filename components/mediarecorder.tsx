@@ -32,7 +32,7 @@ const AudioRecorder = ({ onTranscription }: AudioRecorderProps) => {
         audioChunks.push(event.data);
       };
 
-      mediaRecorder.onstop = async () => {
+      mediaRecorder.onstop = () => {
         if (audioChunks.length === 0) {
           setRecordingStatus('No audio data recorded');
           return;
@@ -68,27 +68,33 @@ const AudioRecorder = ({ onTranscription }: AudioRecorderProps) => {
       return;
     }
 
-    const formData = new FormData();
-    formData.append("audio", audio, "recording.mp3");
+    const reader = new FileReader();
+    reader.readAsDataURL(audio);
+    reader.onloadend = async () => {
+      const base64Audio = reader.result?.toString().split(',')[1];
 
-    try {
-      const response = await fetch('/api/Whisper.ts', {
-        method: 'POST',
-        body: formData,
-      });
+      if (base64Audio) {
+        try {
+          const response = await fetch('/api/transcribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ audio: base64Audio }),
+          });
 
-      if (response.ok) {
-        const { transcription } = await response.json();
-        setRecordingStatus('Transcription received successfully');
-        onTranscription(transcription);
-      } else {
-        setRecordingStatus(`Error sending audio: ${response.status} ${response.statusText}`);
-        console.error('Error sending audio:', response.status, response.statusText);
+          if (response.ok) {
+            const { transcription } = await response.json();
+            setRecordingStatus('Transcription received successfully');
+            onTranscription(transcription);
+          } else {
+            setRecordingStatus(`Error sending audio: ${response.status} ${response.statusText}`);
+            console.error('Error sending audio:', response.status, response.statusText);
+          }
+        } catch (error) {
+          console.error('Error sending audio:', error);
+          setRecordingStatus(`Error sending audio: ${error.message}`);
+        }
       }
-    } catch (error) {
-      console.error('Error sending audio:', error);
-      setRecordingStatus(`Error sending audio: ${error.message}`);
-    }
+    };
   };
 
   const playAudio = () => {
@@ -103,7 +109,7 @@ const AudioRecorder = ({ onTranscription }: AudioRecorderProps) => {
   const stopAudio = () => {
     if (audioRef.current) {
       audioRef.current.pause();
-      audioRef.current.currentTime = 0; // Reset playback to start
+      audioRef.current.currentTime = 0;
       setIsPlaying(false);
     }
   };
