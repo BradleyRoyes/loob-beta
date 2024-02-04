@@ -1,19 +1,17 @@
 import React, { useState, useRef } from 'react';
 
 interface AudioRecorderProps {
-  onTranscription: (transcription: string) => void; // Assuming transcription is a string
+  onTranscription: (transcription: string) => void;
 }
 
-function AudioRecorder({ onTranscription }: AudioRecorderProps) {
+const AudioRecorder = ({ onTranscription }: AudioRecorderProps) => {
   const [recorder, setRecorder] = useState<MediaRecorder | null>(null);
   const [audio, setAudio] = useState<Blob | null>(null);
   const [recordingStatus, setRecordingStatus] = useState<string>('');
-  const [isPlaying, setIsPlaying] = useState<boolean>(false); // State for audio playback
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
-  // Audio element reference
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Function to start recording
   const startRecording = async () => {
     if (recorder && recorder.state === 'recording') {
       setRecordingStatus('Recording is already in progress');
@@ -34,15 +32,15 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
         audioChunks.push(event.data);
       };
 
-      mediaRecorder.onstop = () => {
+      mediaRecorder.onstop = async () => {
         if (audioChunks.length === 0) {
           setRecordingStatus('No audio data recorded');
           return;
         }
 
-        const audioBlob = new Blob(audioChunks, { type: 'audio/mpeg' }); // Use 'audio/mpeg' for example; choose the appropriate type
+        const audioBlob = new Blob(audioChunks, { type: 'audio/mpeg' });
         setAudio(audioBlob);
-        setRecordingStatus('Recording stopped');
+        setRecordingStatus('Recording stopped. Ready to send for transcription.');
       };
 
       mediaRecorder.start();
@@ -54,48 +52,45 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
     }
   };
 
-  // Function to stop recording
   const stopRecording = () => {
     if (recorder && recorder.state === 'recording') {
       recorder.stop();
       setRecorder(null);
-      setRecordingStatus('Recording stopped');
+      setRecordingStatus('Recording stopped. Please send the audio for transcription.');
     } else {
       setRecordingStatus('No active recording to stop');
     }
   };
 
-// Updated sendAudio function in AudioRecorder component
-const sendAudio = async () => {
-  if (!audio) {
-    setRecordingStatus('No audio to send');
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append("audio", audio, "recording.mp3"); // Ensure this matches the field expected by formidable
-
-  try {
-    const response = await fetch('/api/transcribe', { // Ensure the path matches your API route
-      method: 'POST',
-      body: formData, // FormData is sent without setting Content-Type in headers
-    });
-
-    if (response.ok) {
-      const { transcription } = await response.json();
-      setRecordingStatus('Audio sent successfully');
-      onTranscription(transcription);
-    } else {
-      setRecordingStatus(`Error sending audio: ${response.status} ${response.statusText}`);
-      console.error('Error sending audio:', response.status, response.statusText);
+  const sendAudio = async () => {
+    if (!audio) {
+      setRecordingStatus('No audio to send');
+      return;
     }
-  } catch (error) {
-    console.error('Error sending audio:', error);
-    setRecordingStatus(`Error sending audio: ${error.message}`);
-  }
-};
 
-  // Function to play the recorded audio
+    const formData = new FormData();
+    formData.append("audio", audio, "recording.mp3");
+
+    try {
+      const response = await fetch('/api/Whisper.ts', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const { transcription } = await response.json();
+        setRecordingStatus('Transcription received successfully');
+        onTranscription(transcription);
+      } else {
+        setRecordingStatus(`Error sending audio: ${response.status} ${response.statusText}`);
+        console.error('Error sending audio:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('Error sending audio:', error);
+      setRecordingStatus(`Error sending audio: ${error.message}`);
+    }
+  };
+
   const playAudio = () => {
     if (audio && audioRef.current) {
       const audioURL = URL.createObjectURL(audio);
@@ -105,17 +100,17 @@ const sendAudio = async () => {
     }
   };
 
-  // Function to stop audio playback
   const stopAudio = () => {
     if (audioRef.current) {
       audioRef.current.pause();
+      audioRef.current.currentTime = 0; // Reset playback to start
       setIsPlaying(false);
     }
   };
 
   return (
     <div>
-      <div>{recordingStatus}</div>
+      <div>Status: {recordingStatus}</div>
       <button onClick={startRecording} disabled={recorder?.state === 'recording'}>
         Start Recording
       </button>
@@ -123,7 +118,7 @@ const sendAudio = async () => {
         Stop Recording
       </button>
       <button onClick={sendAudio} disabled={!audio}>
-        Send Audio
+        Send Audio for Transcription
       </button>
       <button onClick={playAudio} disabled={!audio || isPlaying}>
         Play Audio
@@ -131,9 +126,9 @@ const sendAudio = async () => {
       <button onClick={stopAudio} disabled={!isPlaying}>
         Stop Audio
       </button>
-      <audio ref={audioRef}></audio>
+      <audio ref={audioRef} controls style={{ display: 'none' }}></audio>
     </div>
   );
-}
+};
 
 export default AudioRecorder;
