@@ -19,10 +19,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Decode the Base64 audio string to binary format
     const audioBuffer = Buffer.from(base64Audio, 'base64');
 
-    // TODO: If necessary, convert the audioBuffer to the required format here before sending to Whisper.
-    
-    // Since this example skips audio format conversion, it directly uses the buffer.
-    // Please adjust the approach based on the actual requirements and capabilities of your environment.
-    
     // Sending the audio file to OpenAI's Whisper API for transcription
-    const response
+    const response = await openai.createTranscription({
+      audio: audioBuffer,
+      model: 'whisper-1',
+    });
+
+    // Extract the transcribed text from the API response
+    const transcribedText = response.data.choices[0].text;
+
+    // Respond with the transcribed text
+    res.status(200).json({ text: transcribedText });
+  } catch (error) {
+    console.error('Whisper API error:', error);
+    res.status(500).json({ error: 'Failed to transcribe audio' });
+  }
+}
