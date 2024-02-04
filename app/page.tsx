@@ -1,11 +1,12 @@
+"use client";
 import React, { useEffect, useRef, useState } from 'react';
 import Bubble from '../components/Bubble';
+import { useChat } from 'ai/react';
 import Footer from '../components/Footer';
 import Configure from '../components/Configure';
 import PromptSuggestionRow from '../components/PromptSuggestions/PromptSuggestionsRow';
-import ThemeButton from '../components/ThemeButton';
 import useConfiguration from './hooks/useConfiguration';
-import AudioRecorder from '../components/mediarecorder';
+import AudioRecorder from '../components/mediarecorder'; // Correct path assumed as per your setup
 import { v4 as uuidv4 } from 'uuid'; // Import the v4 function and rename it to uuidv4 for clarity
 
 export default function Page() {
