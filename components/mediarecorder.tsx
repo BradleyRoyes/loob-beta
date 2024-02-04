@@ -30,7 +30,7 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
       const mediaRecorder = new MediaRecorder(stream);
       let audioChunks: Blob[] = [];
 
-      mediaRecorder.ondataavailable = event => {
+      mediaRecorder.ondataavailable = (event) => {
         audioChunks.push(event.data);
       };
 
@@ -40,7 +40,7 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
           return;
         }
 
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' }); // Use webm for broader compatibility
+        const audioBlob = new Blob(audioChunks, { type: 'audio/mpeg' }); // Use 'audio/mpeg' for example; choose the appropriate type
         setAudio(audioBlob);
         setRecordingStatus('Recording stopped');
       };
@@ -72,13 +72,13 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('audio', audio, 'audio.webm'); // Ensure backend accepts 'audio/webm'
-
     try {
-      const response = await fetch('/api/chat/transcribe', { // Make sure the endpoint matches your API route
+      const response = await fetch('/api/chat/transcribe', {
         method: 'POST',
-        body: formData,
+        body: audio,
+        headers: {
+          'Content-Type': 'audio/mpeg', // Use the appropriate content type for the audio format
+        },
       });
 
       if (response.ok) {
