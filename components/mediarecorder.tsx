@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 
 interface AudioRecorderProps {
-  onTranscription: (audio: Blob) => void; // Updated prop to pass audio Blob
+  onTranscription: (audio: Blob, contentType: string) => void; // Pass audio Blob and content type
 }
 
 function AudioRecorder({ onTranscription }: AudioRecorderProps) {
@@ -40,9 +40,12 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
           return;
         }
 
-        const audioBlob = new Blob(audioChunks, { type: 'audio/mpeg' }); // Use 'audio/mpeg' for example; choose the appropriate type
+        const audioBlob = new Blob(audioChunks, { type: 'audio/mpeg' }); // Use the appropriate type
         setAudio(audioBlob);
         setRecordingStatus('Recording stopped');
+
+        // Pass the audio Blob and content type to onTranscription
+        onTranscription(audioBlob, 'audio/mpeg'); // Specify the correct content type
       };
 
       mediaRecorder.start();
@@ -66,7 +69,6 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
   };
 
   // Function to send audio to API
-  // Function to send audio to API
   const sendAudio = async () => {
     if (!audio) {
       setRecordingStatus('No audio to send');
@@ -78,14 +80,9 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
       const response = await fetch('/api/chat/transcribe.tsx', {
         method: 'POST',
         body: audio,
-        headers: {
-          'Content-Type': 'audio', // Use the appropriate content type for the audio format
-        },
       });
 
       if (response.ok) {
-        // Call the callback function to pass the audio Blob
-        onTranscription(audio);
         setRecordingStatus('Audio sent successfully');
       } else {
         setRecordingStatus(`Error sending audio 1: ${response.status} ${response.statusText}`);
