@@ -31,8 +31,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.log('No audio data received.'); // Add this console log
       return res.status(400).json({ success: false, error: 'No audio data received.' });
     }
-    else
+    else {
       console.log('Audio data received.'); // Add this console log
+      return res.status(200).json({ success: true, data: "audioBuffer" });
+      
+    }
+      
 
     // Use the raw audio data to transcribe
     const transcription = await whisper.transcribe(audioBuffer, 'whisper-1');
