@@ -1,13 +1,13 @@
-"use client";
+"use client"; // Mark the parent component as a client component
 import React, { useEffect, useRef, useState } from 'react';
 import Bubble from '../components/Bubble';
-import NeuronVisual from '../components/NeuronVisual'; // Import the NeuronVisual component
+import { useChat } from 'ai/react';
 import Footer from '../components/Footer';
 import Configure from '../components/Configure';
 import PromptSuggestionRow from '../components/PromptSuggestions/PromptSuggestionsRow';
 import useConfiguration from './hooks/useConfiguration';
 import AudioRecorder from '../components/mediarecorder';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid'; // Import the uuidv4 function
 
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } = useChat();
@@ -16,26 +16,18 @@ export default function Page() {
   const messagesEndRef = useRef(null);
   const [configureOpen, setConfigureOpen] = useState(false);
   const [transcribedText, setTranscribedText] = useState("");
-  const [showNeuronVisual, setShowNeuronVisual] = useState(false);
+  const [neuronVisualOpen, setNeuronVisualOpen] = useState(false);
 
-  const openNeuronVisual = () => {
-    setShowNeuronVisual(true);
-  };
-
-  const closeNeuronVisual = () => {
-    setShowNeuronVisual(false);
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
   const handleTranscription = (transcription) => {
-    setTranscribedText(transcription);
+    setTranscribedText(transcription); // Use the state setter here
     append({ id: uuidv4(), content: transcription, role: 'user' });
   };
 
@@ -46,6 +38,14 @@ export default function Page() {
   const handlePrompt = (promptText) => {
     const msg = { id: uuidv4(), content: promptText, role: 'user' as const };
     append(msg);
+  };
+
+  const openNeuronVisual = () => {
+    setNeuronVisualOpen(true);
+  };
+
+  const closeNeuronVisual = () => {
+    setNeuronVisualOpen(false);
   };
 
   return (
@@ -84,12 +84,24 @@ export default function Page() {
           <Footer />
         </section>
       </main>
-      
-      {/* Add a button to open the NeuronVisual */}
-      <button onClick={openNeuronVisual} className="neuron-visual-button">Visualize</button>
+
+      {/* Replace icon buttons with text buttons */}
+      <div className='flex gap-1'>
+        <ThemeButton />
+        <button onClick={openNeuronVisual}>Neuron Visual</button>
+      </div>
+
+      <Configure
+        isOpen={configureOpen}
+        onClose={() => setConfigureOpen(false)}
+        useRag={useRag}
+        llm={llm}
+        similarityMetric={similarityMetric}
+        setConfiguration={setConfiguration}
+      />
 
       {/* Add the NeuronVisual component as an overlay */}
-      {showNeuronVisual && (
+      {neuronVisualOpen && (
         <div className="neuron-visual-overlay">
           <div className="neuron-visual-container">
             <NeuronVisual />
@@ -98,5 +110,6 @@ export default function Page() {
         </div>
       )}
     </>
-  );
+  )
 }
+
