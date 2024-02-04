@@ -1,42 +1,28 @@
-const FormData = require('form-data');
-import { withFileUpload } from 'next-multiparty';
-import { createReadStream } from 'fs';
+// pages/api/whisper.ts
+import { NextApiRequest, NextApiResponse } from 'next';
+import { Configuration, OpenAIApi } from 'openai';
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
-export default withFileUpload(async (req, res) => {
-  const file = req.file;
-  if (!file) {
-    res.status(400).send('No file uploaded');
-    return;
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  // Create form data
-  const formData = new FormData();
-  formData.append('file', createReadStream(file.filepath), 'audio.wav');
-  formData.append('model', 'whisper-1');
-  const response = await fetch(
-    'https://api.openai.com/v1/audio/transcriptions',
-    {
-      method: 'POST',
-      headers: {
-        ...formData.getHeaders(),
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: formData,
-    }
-  );
+  // Initialize OpenAI configuration
+  const configuration = new Configuration({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+  const openai = new OpenAIApi(configuration);
 
-  const { text, error } = await response.json();
-  if (response.ok) {
-    res.status(200).json({ text: text });
-  } else {
-    console.log('OPEN AI ERROR:');
-    console.log(error.message);
-    res.status(400).send(new Error());
-  }
-});
+  try {
+    const { audio: base64Audio } = req.body;
+
+    // Decode the Base64 audio string to binary format
+    const audioBuffer = Buffer.from(base64Audio, 'base64');
+
+    // TODO: If necessary, convert the audioBuffer to the required format here before sending to Whisper.
+    
+    // Since this example skips audio format conversion, it directly uses the buffer.
+    // Please adjust the approach based on the actual requirements and capabilities of your environment.
+    
+    // Sending the audio file to OpenAI's Whisper API for transcription
+    const response
