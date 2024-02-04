@@ -1,45 +1,59 @@
-// pages/api/whisper.js
-const { NextApiRequest, NextApiResponse } = require('next');
-const { OpenAIApi, Configuration } = require('openai');
+// pages/api/transcribe.js
 
-export default async function handler(req, res) {
-  if (req.method === 'POST') {
-    try {
-      // Initialize OpenAI API
-      const configuration = new Configuration({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-      const openai = new OpenAIApi(configuration);
+import { IncomingForm } from 'formidable';
+import fs from 'fs';
+import axios from 'axios';
 
-      // Assuming the audio file is sent as FormData with the key 'audio'
-      const { files } = req;
-      if (!files || !files.audio) {
-        return res.status(400).json({ error: 'No audio file uploaded.' });
-      }
+export const config = {
+    api: {
+        bodyParser: false, // Disable Next.js' default body parser
+    },
+};
 
-      const audioFile = files.audio[0];
-
-      // Upload the audio file to OpenAI (adjust as necessary based on actual OpenAI SDK usage)
-      const uploadResponse = await openai.createUpload({
-        file: audioFile.path,
-        purpose: 'transcription',
-      });
-
-      // Use the upload for transcription
-      const transcriptionResponse = await openai.createTranscription({
-        model: 'whisper-large',
-        upload_id: uploadResponse.data.id,
-      });
-
-      // Send the transcription result back to the client
-      res.status(200).json(transcriptionResponse.data);
-    } catch (error) {
-      console.error('Error transcribing audio:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+const transcribeAudio = async (req, res) => {
+    if (req.method !== 'POST') {
+        return res.status(405).end('Method Not Allowed');
     }
-  } else {
-    // Handle non-POST requests
-    res.setHeader('Allow', ['POST']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+
+    const form = new IncomingForm();
+
+    form.parse(req, async (err, fields, files) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).end('Internal server error');
+        }
+
+        // Ensure there's a file
+        if (!files.audio) {
+            return res.status(400).end('No audio file uploaded');
+        }
+
+        const audioFile = files.audio.filepath;
+        const audioBuffer = fs.readFileSync(audioFile);
+
+        try {
+            const formData = new FormData();
+            formData.append('file', audioBuffer, files.audio.originalFilename);
+            formData.append('model', 'whisper-1');
+
+            const response = await axios({
+                method: 'post',
+                url: 'https://api.openai.com/v1/audio/transcriptions',
+                data: formData,
+                headers: {
+                    ...formData.getHeaders(),
+                    'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+                },
+                maxContentLength: Infinity,
+                maxBodyLength: Infinity,
+            });
+
+            return res.status(200).json(response.data);
+        } catch (error) {
+            console.error('Error calling Whisper API:', error);
+            return res.status(500).json({ message: 'Error processing audio', error: error.message });
+        }
+    });
+};
+
+export default transcribeAudio;
