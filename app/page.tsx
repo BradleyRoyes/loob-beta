@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Bubble from '../components/Bubble'; // Adjust the import path as needed
 import Footer from '../components/Footer'; // Adjust the import path as needed
-import AudioRecorder from '../components/AudioRecorder'; // Adjust the import path as needed
+import AudioRecorder from '../components/mediarecorder'; // Adjust the import path as needed
 import { randomUUID } from 'crypto'; 
 
 const Page = () => {
