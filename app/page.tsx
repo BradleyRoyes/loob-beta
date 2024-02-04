@@ -7,7 +7,7 @@ import Configure from '../components/Configure'; // Ensure this is the correct i
 import PromptSuggestionRow from '../components/PromptSuggestions/PromptSuggestionsRow'; // Adjust as needed
 import ThemeButton from '../components/ThemeButton'; // Ensure this is the correct import path
 import useConfiguration from './hooks/useConfiguration'; // Adjust based on actual import paths
-import AudioRecorder from '../components/AudioRecorder'; // Adjust this path to your actual AudioRecorder component path
+import AudioRecorder from '../components/mediarecorder'; // Adjust this path to your actual AudioRecorder component path
 import { randomUUID } from 'crypto';
 
 export default function Page() {
