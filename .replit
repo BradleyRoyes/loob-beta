@@ -1,6 +1,7 @@
 run = "tsx index.ts"
 entrypoint = "index.ts"
 hidden = [".config", "package-lock.json", "tsconfig.json"]
+modules = ["nodejs-20:v8-20230920-bd784b9"]
 
 [packager]
 language = "nodejs"
