@@ -53,7 +53,7 @@ const AudioRecorder = () => {
     formData.append('file', audioFile);
 
     try {
-      const response = await axios.post('/api/whisper', formData, {
+      const response = await axios.post('/api/chat/Whisper', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
