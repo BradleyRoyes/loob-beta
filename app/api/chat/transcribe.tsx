@@ -1,34 +1,32 @@
-// Import necessary modules and dependencies
-import { NextApiRequest, NextApiResponse } from 'next';
-import Whisper from 'whisper-nodejs';
+// pages/api/chat/transcribe.ts
 
-// Define your Whisper API key (replace with your actual key)
-const WHISPER_API_KEY = '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';
+import type { NextApiRequest, NextApiResponse } from 'next';
+const Whisper = require('whisper-nodejs');
+const whisper = new Whisper(process.env.OPENAI_API_KEY);
 
-// Create an API handler function
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed, use POST.' });
   }
 
+  // Assuming the audio file comes as form data
+  // You might need additional npm packages like 'formidable' to parse 'multipart/form-data' in Next.js
+  const data = await new Promise((resolve, reject) => {
+    const form = new formidable.IncomingForm();
+    form.parse(req, (err, fields, files) => {
+      if (err) reject(err);
+      resolve(files);
+    });
+  });
+
+  const audioFile = data.audio; // Adjust based on the form field for the audio file
+
   try {
-    // Check if the request body contains audio data (assuming the audio is in base64 format)
-    const { audioBase64, modelName } = req.body;
-
-    if (!audioBase64 || !modelName) {
-      return res.status(400).json({ error: 'Missing audio data or modelName in the request body.' });
-    }
-
-    // Initialize Whisper with your API key
-    const whisper = new Whisper(WHISPER_API_KEY);
-
-    // Transcribe the audio using Whisper
-    const text = await whisper.transcribe(audioBase64, modelName);
-
-    // Respond with the transcribed text in a JSON format
-    return res.status(200).json({ success: true, transcription: text });
+    // Use the file path from the uploaded file
+    const transcription = await whisper.transcribe(audioFile.path, 'whisper-1');
+    res.status(200).json({ success: true, transcription });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ success: false, error: 'Error transcribing audio' });
+    res.status(500).json({ success: false, error: 'Error transcribing audio' });
   }
 }
