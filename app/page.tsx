@@ -45,8 +45,8 @@ export default function Page() {
       <main className="flex h-screen flex-col items-center justify-center">
         <section className='chatbot-section flex flex-col origin:w-[800px] w-full origin:h-[735px] h-full rounded-md p-2 md:p-6'>
           <div className='chatbot-header pb-6'>
-            <div className='flex justify-center'> {/* Centered 'Loob Pig' */}
-              <h1 className='chatbot-text-primary text-xl md:text-2xl font-medium'>Loob Pig</h1>
+            <div className='flex justify-center'> {/* Centered 'Loob' */}
+              <h1 className='chatbot-text-primary text-xl md:text-2xl font-medium'>Loob</h1>
             </div>
             <p className="chatbot-text-secondary-inverse text-sm md:text-base mt-2 md:mt-4">Simply type your questions or requests in a clear and concise manner. Responses are sourced from Astra documentation and a link for further reading is provided.</p>
             <div className='flex gap-1 mt-2'> {/* Theme and Settings Buttons */}
