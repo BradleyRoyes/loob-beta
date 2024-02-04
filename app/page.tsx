@@ -1,87 +1,98 @@
-"use client"; // Mark the parent component as a client component
+// Mark the component for client-side execution only
+"use client";
+
+// Import necessary React and other library functionalities
 import React, { useEffect, useRef, useState } from 'react';
-import Bubble from '../components/Bubble';
-import Footer from '../components/Footer';
-import Configure from '../components/Configure';
-import PromptSuggestionRow from '../components/PromptSuggestions/PromptSuggestionsRow';
-import ThemeButton from '../components/ThemeButton';
-import useConfiguration from './hooks/useConfiguration';
-import AudioRecorder from '../components/mediarecorder';
-import { v4 as uuidv4 } from 'uuid'; // Import the uuidv4 function
+import Bubble from '../components/Bubble'; // Import the Bubble component for message display
+import { useChat } from 'ai/react'; // Custom hook for chat functionality
+import Footer from '../components/Footer'; // Import the Footer component for the page footer
+import Configure from '../components/Configure'; // Component for configuration settings
+import PromptSuggestionRow from '../components/PromptSuggestions/PromptSuggestionsRow'; // Component for displaying prompt suggestions
+import ThemeButton from '../components/ThemeButton'; // Button for toggling theme
+import useConfiguration from './hooks/useConfiguration'; // Custom hook for fetching configuration settings
+import AudioRecorder from '../components/mediarecorder'; // Component for audio recording functionality
+import { v4 as uuidv4 } from 'uuid'; // UUID generation function for session identification
 
-// Assuming useChat and useConfiguration are custom hooks you've defined for state management and configuration.
+// Main component definition
 export default function Page() {
-  const [sessionID, setSessionID] = useState(() => uuidv4()); // Generate or retrieve a session UUID.
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
-  const [configureOpen, setConfigureOpen] = useState(false);
-  const [transcribedText, setTranscribedText] = useState("");
-  const messagesEndRef = useRef(null);
+  // Destructure functionalities from the useChat custom hook
+  const { append, messages, input, handleInputChange, handleSubmit } = useChat();
+  // Destructure configuration settings from the useConfiguration custom hook
+  const { useRag, llm, similarityMetric, setConfiguration } = useConfiguration();
 
+  const messagesEndRef = useRef(null); // Ref for auto-scrolling to the latest message
+  const [configureOpen, setConfigureOpen] = useState(false); // State for managing the visibility of the Configure component
+  const [transcribedText, setTranscribedText] = useState(""); // State for storing the text transcribed from audio
+
+  // Generate a unique session ID only once per session
+  const [sessionID] = useState(uuidv4());
+
+  // Effect hook for auto-scrolling to the latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Function to handle the transcription of audio to text
   const handleTranscription = (transcription) => {
-    setTranscribedText(transcription); // Use the state setter here
-    // Append transcription with a new UUID for the message but keep the session ID consistent.
+    setTranscribedText(transcription); // Update the state with the transcribed text
+    // Append the transcribed message to the chat, along with a unique message ID and the session ID
     append({ id: uuidv4(), content: transcription, role: 'user', sessionID });
   };
 
+  // Function to handle the submission of text messages
   const handleSend = (e) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-    // Use the existing session ID for this message.
-    append({ id: uuidv4(), content: input, role: 'user', sessionID });
-    setInput(''); // Clear input after sending.
+    e.preventDefault(); // Prevent the default form submission behavior
+    // Submit the message only if there is input text
+    if (input.trim()) {
+      // Append the input message to the chat, along with a unique message ID and the session ID
+      append({ id: uuidv4(), content: input, role: 'user', sessionID });
+      handleInputChange(''); // Clear the input field after sending the message
+    }
   };
 
-  // Simplified for demonstration; adjust according to your actual implementation.
-  const append = (message) => {
-    setMessages((prevMessages) => [...prevMessages, message]);
+  // Function to handle the selection of suggested prompts
+  const handlePrompt = (promptText) => {
+    // Append the selected prompt to the chat, along with a unique message ID and the session ID
+    const msg = { id: uuidv4(), content: promptText, role: 'user', sessionID };
+    append(msg);
   };
-
-  const handleInputChange = (e) => {
-    setInput(e.target.value);
-  };
-
-  const handlePromptClick = (promptText) => {
-    // Append prompted text with the same session ID.
-    append({ id: uuidv4(), content: promptText, role: 'user', sessionID });
-  };
-
-  return (
-    <>
-      <main className="flex h-screen flex-col items-center justify-center">
-        <section className='chatbot-section flex flex-col w-full h-full rounded-md p-2 md:p-6'>
-          {/* Header and other UI components */}
-          <div className='flex-1 relative overflow-y-auto my-4 md:my-6'>
-            {messages.map((message, index) => (
-              <Bubble key={message.id} content={message.content} />
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-          {messages.length === 0 && <PromptSuggestionRow onPromptClick={handlePromptClick} />}
+          {/* Transcription and message input section */}
           <form className='flex h-[40px] gap-2' onSubmit={handleSend}>
-            <input
-              onChange={handleInputChange}
-              value={input}
-              className='chatbot-input flex-1 text-sm md:text-base outline-none bg-transparent rounded-md p-2'
+            {/* Input field for user message */}
+            <input 
+              onChange={handleInputChange} 
+              value={input} 
+              className='chatbot-input flex-1 text-sm md:text-base outline-none bg-transparent rounded-md p-2' 
               placeholder='Send a message...'
+              aria-label="Message input" // Accessibility improvement
             />
-            <button type="submit" className='chatbot-send-button flex items-center justify-center rounded-md px-2.5'>
-              Send
+            {/* Send button */}
+            <button type="submit" className='chatbot-send-button flex rounded-md items-center justify-center px-2.5 origin:px-3'>
+              <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"> {/* Icon for visual indication */}
+                <path d="M2.925 5.025L9.18333 7.70833L2.91667 6.875L2.925 5.025ZM9.175 12.2917L2.91667 14.975V13.125L9.175 12.2917ZM1.25833 2.5L1.25 8.33333L13.75 10L1.25 11.6667L1.25833 17.5L18.75 10L1.25833 2.5Z" />
+              </svg>
+              <span className='hidden origin:block font-semibold text-sm ml-2'>Send</span> {/* Text hidden on smaller screens */}
             </button>
+            {/* Audio Recorder Component */}
             <AudioRecorder onTranscription={handleTranscription} />
           </form>
+          
+          {/* Footer Component */}
           <Footer />
+
+          {/* Configuration Modal */}
+          {/* This section allows for the configuration of the chat interface, including themes and AI parameters */}
+          <Configure
+            isOpen={configureOpen} // Controls visibility based on state
+            onClose={() => setConfigureOpen(false)} // Handler to close modal
+            useRag={useRag} // Toggle for using Retrieval-Augmented Generation
+            llm={llm} // Selected language model
+            similarityMetric={similarityMetric} // Metric for sorting related conversations
+            setConfiguration={setConfiguration} // Function to update configuration settings
+          />
         </section>
-        <Configure
-          isOpen={configureOpen}
-          onClose={() => setConfigureOpen(false)}
-          // Assuming these are part of your application's configuration; adjust as needed.
-        />
       </main>
     </>
   );
 }
+
