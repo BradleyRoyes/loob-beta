@@ -76,9 +76,9 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
       const response = await fetch('/api/chat/transcribe.tsx', {
         method: 'POST',
         body: audio,
-        // headers: {
-        //   'Content-Type': 'audio/mpeg', // Use the appropriate content type for the audio format
-        // },
+        headers: {
+          'Content-Type': 'audio', // Use the appropriate content type for the audio format
+        },
       });
 
       if (response.ok) {
