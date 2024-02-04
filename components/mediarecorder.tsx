@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 
 interface AudioRecorderProps {
-  onTranscription: (audio: Blob, contentType: string) => void; // Pass audio Blob and content type
+  onTranscription: (transcription: string) => void; // Assuming transcription is a string
 }
 
 function AudioRecorder({ onTranscription }: AudioRecorderProps) {
@@ -40,12 +40,9 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
           return;
         }
 
-        const audioBlob = new Blob(audioChunks, { type: 'audio/mpeg' }); // Use the appropriate type
+        const audioBlob = new Blob(audioChunks, { type: 'audio/mpeg' }); // Use 'audio/mpeg' for example; choose the appropriate type
         setAudio(audioBlob);
         setRecordingStatus('Recording stopped');
-
-        // Pass the audio Blob and content type to onTranscription
-        onTranscription(audioBlob, 'audio/mpeg'); // Specify the correct content type
       };
 
       mediaRecorder.start();
@@ -76,23 +73,27 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
     }
 
     try {
-      // Send the audio Blob directly in the request body
       const response = await fetch('/api/chat/transcribe.tsx', {
         method: 'POST',
         body: audio,
+        headers: {
+          'Content-Type': 'audio/mpeg', // Use the appropriate content type for the audio format
+        },
       });
 
       if (response.ok) {
+        const { transcription } = await response.json();
         setRecordingStatus('Audio sent successfully');
+        onTranscription(transcription);
       } else {
         setRecordingStatus(`Error sending audio 1: ${response.status} ${response.statusText}`);
-        console.error('Error sending audio:', response.status, response.statusText);
+        console.error('Error sending audio: 2', response.status, response.statusText);
       }
     } catch (error) {
-      console.error('Error sending audio 2:', error);
-      setRecordingStatus(`Error sending audio: ${error.message}`);
+      console.error('Error sending audio: 3', error);
+      setRecordingStatus(`Error sending audio: 4 ${error.message}`);
     }
-  }
+  };
 
   // Function to play the recorded audio
   const playAudio = () => {
