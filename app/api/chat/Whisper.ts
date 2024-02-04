@@ -1,4 +1,3 @@
-// pages/api/whisper.ts
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Configuration, OpenAIApi } from 'openai';
 
@@ -28,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Use the upload for transcription
       const transcriptionResponse = await openai.createTranscription({
         model: 'whisper-large',
-        upload_id: uploadResponse.data.id,
+        uploadId: uploadResponse.data.id,
       });
 
       // Send the transcription result back to the client
