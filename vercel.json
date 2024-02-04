@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "builds": [{ "src": "next.config.js", "use": "@now/next" }],
+  "routes": [
+    {
+      "src": "/api/transcribe",
+      "dest": "/api/transcribe.ts" // Update with your actual API route file path
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}
