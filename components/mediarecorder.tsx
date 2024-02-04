@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 
 interface AudioRecorderProps {
   onTranscription: (transcription: string) => void; // Assuming transcription is a string
@@ -8,6 +8,10 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
   const [recorder, setRecorder] = useState<MediaRecorder | null>(null);
   const [audio, setAudio] = useState<Blob | null>(null);
   const [recordingStatus, setRecordingStatus] = useState<string>('');
+  const [isPlaying, setIsPlaying] = useState<boolean>(false); // State for audio playback
+
+  // Audio element reference
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   // Function to start recording
   const startRecording = async () => {
@@ -91,6 +95,24 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
     }
   };
 
+  // Function to play the recorded audio
+  const playAudio = () => {
+    if (audio && audioRef.current) {
+      const audioURL = URL.createObjectURL(audio);
+      audioRef.current.src = audioURL;
+      audioRef.current.play();
+      setIsPlaying(true);
+    }
+  };
+
+  // Function to stop audio playback
+  const stopAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
+
   return (
     <div>
       <div>{recordingStatus}</div>
@@ -103,6 +125,13 @@ function AudioRecorder({ onTranscription }: AudioRecorderProps) {
       <button onClick={sendAudio} disabled={!audio}>
         Send Audio
       </button>
+      <button onClick={playAudio} disabled={!audio || isPlaying}>
+        Play Audio
+      </button>
+      <button onClick={stopAudio} disabled={!isPlaying}>
+        Stop Audio
+      </button>
+      <audio ref={audioRef}></audio>
     </div>
   );
 }
