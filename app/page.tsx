@@ -46,7 +46,7 @@ export default function Page() {
         <section className='chatbot-section flex flex-col origin:w-[800px] w-full origin:h-[735px] h-full rounded-md p-2 md:p-6'>
           <div className='chatbot-header pb-6'>
             <div className='flex justify-between items-center'>
-              <h1 className='chatbot-text-primary text-5xl md:text-6xl font-extrabold tracking-wide'>Loob</h1>
+              <h1 className='chatbot-text-primary text-5xl md:text-6xl font-extrabold tracking-wide'>Loob The App</h1>
               <div className='flex gap-1'>
                 <ThemeButton />
                 <button onClick={() => setConfigureOpen(true)}>
