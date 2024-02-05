@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
-import { AstraDB } from "@datastax/astra-db-ts";
+import { AstraDB, create as createCollection } from "@datastax/astra-db-ts";
 import { v4 as uuidv4 } from 'uuid';
 
 const openai = new OpenAI({
@@ -68,10 +68,13 @@ export async function POST(req: Request) {
       }
     }
 
-    // Insert the data into the "journey_journals" collection
+    // Create the collection if it doesn't exist
     if (dataToInsert.length > 0) {
       const collection = await astraDb.collection("journey_journals");
-      await collection.create(); // Ensure the collection exists (useful for first-time setup)
+      // Check if the collection exists, and create it if it doesn't
+      if (!(await collection.exists())) {
+        await createCollection(collection);
+      }
       await collection.insertMany(dataToInsert);
     }
 
@@ -85,6 +88,7 @@ export async function POST(req: Request) {
     const stream = OpenAIStream(response);
     return new StreamingTextResponse(stream);
   } catch (e) {
+    console.error("Error:", e);
     throw e;
   }
 }
