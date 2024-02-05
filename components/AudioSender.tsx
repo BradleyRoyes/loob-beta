@@ -1,32 +1,51 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import axios from "axios";
 
-export default function AudioSender({ audioBlob, onTranscription }) {
+interface AudioSenderProps {
+  onTranscription: (transcription: string) => void;
+}
+
+const AudioSender: React.FC<AudioSenderProps> = ({ onTranscription }) => {
   const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
 
-  const startRecording = () => {
-    // Implement code to start recording audio (not shown in this example)
-    setIsRecording(true);
-  };
+  const startRecording = useCallback(() => {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then((stream) => {
+        const recorder = new MediaRecorder(stream);
+        recorder.start();
+        setMediaRecorder(recorder);
+        setIsRecording(true);
+      })
+      .catch((err) => console.error("Error accessing media devices:", err));
+  }, []);
 
-  const stopRecordingAndSend = async () => {
-    // Implement code to stop recording audio (not shown in this example)
+  const stopRecordingAndSend = useCallback(async () => {
+    if (!mediaRecorder) return;
 
-    try {
+    mediaRecorder.stop();
+    mediaRecorder.stream.getTracks().forEach(track => track.stop()); // Stop all tracks to release the media stream
+
+    mediaRecorder.addEventListener("dataavailable", async (event) => {
       const formData = new FormData();
-      formData.append("audioBlob", audioBlob);
+      formData.append("audioBlob", event.data);
 
-      // Send the audio data to the server
-      const response = await axios.post("../app/api/chat/transcribe", formData);
+      try {
+        const response = await axios.post("/api/transcribe", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
 
-      // Handle the server's response, e.g., update the UI with the transcribed text
-      onTranscription(response.data.transcribedText);
-    } catch (error) {
-      console.error("Error sending audio to the server:", error);
-    } finally {
-      setIsRecording(false);
-    }
-  };
+        onTranscription(response.data.transcription);
+      } catch (error) {
+        console.error("Error sending audio to the server:", error);
+      } finally {
+        setIsRecording(false);
+      }
+    });
+
+    // Reset MediaRecorder for the next recording
+    setMediaRecorder(null);
+  }, [mediaRecorder, onTranscription]);
 
   return (
     <div>
@@ -35,4 +54,6 @@ export default function AudioSender({ audioBlob, onTranscription }) {
       </button>
     </div>
   );
-}
+};
+
+export default AudioSender;
