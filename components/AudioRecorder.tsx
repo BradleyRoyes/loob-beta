@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { SpeechRecognition as webkitSpeechRecognition } from 'web-speech-api';
 
 // Define props type for the component
 interface AudioRecorderProps {
@@ -9,6 +10,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
   const [recording, setRecording] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const speechRecognition = useRef<SpeechRecognition | null>(null);
+
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
