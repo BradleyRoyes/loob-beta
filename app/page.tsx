@@ -17,7 +17,7 @@ import Configure from "../components/Configure";
 import PromptSuggestionRow from "../components/PromptSuggestions/PromptSuggestionsRow";
 import ThemeButton from "../components/ThemeButton";
 import useConfiguration from "./hooks/useConfiguration";
-import AudioRecorder from "../components/AudioRecorder"; // Ensure this is the updated AudioRecorder
+import AudioRecorder from "../components/AudioRecorder";
 import { v4 as uuidv4 } from "uuid";
 
 export default function Page() {
@@ -39,8 +39,8 @@ export default function Page() {
   }, [messages]);
 
   const handleTranscription = (transcription: string) => {
-    setTranscribedText(transcription);
-    append({ id: uuidv4(), content: transcription, role: "user" });
+    setTranscribedText(transcription); // Displaying the transcribed text is now optional since it's being appended
+    append({ id: uuidv4(), content: transcription, role: "user" as const }); // Correctly type the role here
   };
 
   const handleSend = (e: React.FormEvent<HTMLFormElement>) => {
@@ -49,8 +49,7 @@ export default function Page() {
   };
 
   const handlePrompt = (promptText: string) => {
-    const msg = { id: uuidv4(), content: promptText, role: "user" };
-    append(msg);
+    append({ id: uuidv4(), content: promptText, role: "user" as const }); // Ensure role is typed correctly
   };
 
   return (
@@ -89,9 +88,7 @@ export default function Page() {
             </div>
           </div>
           <PromptSuggestionRow onPromptClick={handlePrompt} />
-
           <AudioRecorder onTranscription={handleTranscription} />
-
           <form className="flex gap-2" onSubmit={handleSend}>
             <input
               onChange={handleInputChange}
