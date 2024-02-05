@@ -72,13 +72,9 @@ export async function POST(req: Request) {
       }
     }
 
-    // Create the collection if it doesn't exist
+    // Send data to the "journey_journals" collection (assuming it already exists)
     if (dataToInsert.length > 0) {
       const collection = await astraDb.collection("journey_journals");
-      // Check if the collection exists, and create it if it doesn't (no change from your original code)
-      if (!(await collection.exists())) {
-        await createCollection(collection);
-      }
       await collection.insertMany(dataToInsert);
     }
 
