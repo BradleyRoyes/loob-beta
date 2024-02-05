@@ -55,10 +55,7 @@ export async function POST(req: Request) {
       `,
     ];
 
-    // Generate a session ID
-    const sessionId = uuidv4();
-
-    // Send all user inputs to the "journey_journals" collection with embeddings and session ID
+    // Send all user inputs to the "journey_journals" collection with embeddings
     for (let i = 0; i < messages.length; i++) {
       if (messages[i].role === 'user') {
         const messageEmbedding = embeddings[i]; // Retrieve the corresponding embedding
@@ -67,7 +64,7 @@ export async function POST(req: Request) {
         await collection.insertOne({
           content: messages[i].content,
           embedding: messageEmbedding, // Store the embedding alongside the text
-          sessionId: sessionId, // Store the session ID
+          sessionId: messages[i].sessionId, // Store the session ID if needed
         });
       }
     }
