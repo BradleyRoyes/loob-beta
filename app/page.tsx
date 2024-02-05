@@ -103,13 +103,13 @@ export default function Page() {
           </div>
           <PromptSuggestionRow onPromptClick={handlePrompt} />
           <AudioRecorder onTranscription={handleTranscription} />
-          <form className='flex h-[40px] gap-2' onSubmit={handleSend}>
-            <input onChange={handleInputChange} value={input || transcribedText} className='chatbot-input flex-1 text-sm md:text-base outline-none bg-transparent rounded-md p-2' placeholder='Send a message...' />
-            <button type="submit" className='chatbot-send-button flex rounded-md items-center justify-center px-2.5 origin:px-3'>
-              <svg width="20" height="20" viewBox="0 0 20 20">
-                <path d="M2.925 5.025L9.18333 7.70833L2.91667 6.875L2.925 5.025ZM9.175 12.2917L2.91667 14.975V13.125L9.175 12.2917ZM1.25833 2.5L1.25 8.33333L13.75 10L1.25 11.6667L1.25833 17.5L18.75 10L1.25833 2.5Z" />
-              </svg>
-            </button>
+          <form className='flex h-[40px] gap-2' onSubmit={handleSend} />
+          <input onChange={handleInputChange} value={input || transcribedText} className='chatbot-input flex-1 text-sm md:text-base outline-none bg-transparent rounded-md p-2' placeholder='Send a message...' />
+          <button type="submit" className='chatbot-send-button flex rounded-md items-center justify-center px-2.5 origin:px-3'>
+            <svg width="20" height="20" viewBox="0 0 20 20">
+              <path d="M2.925 5.025L9.18333 7.70833L2.91667 6.875L2.925 5.025ZM9.175 12.2917L2.91667 14.975V13.125L9.175 12.2917ZM1.25833 2.5L1.25 8.33333L13.75 10L1.25 11.6667L1.25833 17.5L18.75 10L1.25833 2.5Z" />
+            </svg>
+          </button>
           <Footer />
           <Configure isOpen={configureOpen} onClose={() => setConfigureOpen(false)} useRag={useRag} llm={llm} similarityMetric={similarityMetric} setConfiguration={setConfiguration} />
         </section>
