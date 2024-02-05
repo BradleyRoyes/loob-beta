@@ -9,11 +9,6 @@ const openai = new OpenAI({
 
 const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.ASTRA_DB_ENDPOINT, process.env.ASTRA_DB_NAMESPACE);
 
-async function insertDataToJourneyJournal(sessionUUID, text, embeddings) {
-  const collection = await astraDb.collection("journey_journal");
-  await collection.insertOne({ sessionUUID, text, embeddings });
-}
-
 export async function POST(req: Request) {
   try {
     const { messages, useRag, llm, similarityMetric } = await req.json();
@@ -21,6 +16,7 @@ export async function POST(req: Request) {
     const latestMessage = messages[messages?.length - 1]?.content;
 
     let docContext = '';
+    let latestMessageEmbedding = null;
     if (useRag) {
       const { data } = await openai.embeddings.create({ input: latestMessage, model: 'text-embedding-ada-002' });
 
@@ -39,33 +35,41 @@ export async function POST(req: Request) {
         START CONTEXT
         ${documents?.map(doc => doc.content).join("\n")}
         END CONTEXT
-      `
+      `;
+
+      // Store the latest message embedding
+      latestMessageEmbedding = data[0]?.embedding;
     }
+
+    const sessionUUID = uuidv4(); // Generate a session UUID
+
+    // Send all user inputs to the "journey_journals" collection with session ID and embeddings
+    const dataToInsert = [];
+    for (const message of messages) {
+      if (message.role === 'user') {
+        const data = {
+          sessionUUID,
+          text: message.content,
+          embeddings: latestMessageEmbedding,
+        };
+        dataToInsert.push(data);
+      }
+    }
+
+    if (dataToInsert.length > 0) {
+      const collection = await astraDb.collection("journey_journals");
+      await collection.insertMany(dataToInsert);
+    }
+
     const ragPrompt = [
       {
         role: 'system',
-        content: `You are an AI assistant designed to guide people through their transformative psychedelic trip experiences. Be compassionate and curious, engaging users to share more about their experiences.
+        content: `You are an AI assistant answering questions about Cassandra and Astra DB. Format responses using markdown where applicable.
         ${docContext} 
         If the answer is not provided in the context, the AI assistant will say, "I'm sorry, I don't know the answer".
       `,
       },
-    ]
-
-    // Generate a session UUID for this session
-    const sessionUUID = uuidv4();
-
-    // Send all user inputs with session ID to the "journey_journal" collection
-    for (const message of messages) {
-      if (message.role === 'user') {
-        insertDataToJourneyJournal(sessionUUID, message.content, null);
-      }
-    }
-
-    // Send the latest chunk of text to "journey_journal" collection
-    const chunk = messages[messages?.length - 1]?.content;
-    const embedded = await openai.embeddings.create({ input: chunk, model: 'text-embedding-ada-002' });
-    const embeddedText = embedded?.embeddings[0];
-    insertDataToJourneyJournal(sessionUUID, chunk, embeddedText);
+    ];
 
     const response = await openai.chat.completions.create(
       {
