@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-export default function AudioSender({ audioChunks, onTranscriptionReceived }) {
+export default function AudioSender({ audioBlob, onTranscription }) {
   const [isRecording, setIsRecording] = useState(false);
 
   const startRecording = () => {
@@ -14,15 +14,13 @@ export default function AudioSender({ audioChunks, onTranscriptionReceived }) {
 
     try {
       const formData = new FormData();
-      audioChunks.forEach((chunk, index) => {
-        formData.append(`audioChunk${index}`, chunk);
-      });
+      formData.append('audioBlob', audioBlob);
 
       // Send the audio data to the server
       const response = await axios.post('/api/transcribe-audio', formData);
 
       // Handle the server's response, e.g., update the UI with the transcribed text
-      onTranscriptionReceived(response.data.transcribedText);
+      onTranscription(response.data.transcribedText);
     } catch (error) {
       console.error('Error sending audio to the server:', error);
     } finally {
