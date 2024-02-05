@@ -55,10 +55,10 @@ export default function Page() {
   return (
     <>
       <main className="flex h-screen flex-col items-center justify-center">
-        <section className="chatbot-section flex flex-col w-full h-full rounded-md p-2 md:p-6">
+        <section className="chatbot-section flex flex-col origin:w-[800px] w-full origin:h-[735px] h-full rounded-md p-2 md:p-6">
           <div className="chatbot-header pb-6">
             <div className="flex justify-between items-center">
-              <h1 className="text-5xl md:text-6xl font-extrabold">
+              <h1 className="chatbot-text-primary text-5xl md:text-6xl font-extrabold tracking-wide">
                 Loob The App
               </h1>
               <div className="flex gap-1">
@@ -76,15 +76,29 @@ export default function Page() {
                 </button>
               </div>
             </div>
-            <p className="text-lg md:text-xl mt-2 md:mt-4">
-              Welcome to Loob Laboratories...
+            <p className="chatbot-text-secondary-inverse text-lg md:text-xl mt-2 md:mt-4 font-medium">
+              Welcome to Loob Labratories. A Journey Journal like no other. We
+              are glad you are here.
             </p>
           </div>
-          <div className="flex-1 overflow-y-auto my-4 md:my-6">
-            <div className="w-full">
+          <div className="flex-1 relative overflow-y-auto my-4 md:my-6">
+            <div className="absolute w-full overflow-x-hidden">
               {messages.map((message, index) => (
-                <Bubble key={`message-${index}`} content={message} />
+                <Bubble
+                  ref={messagesEndRef}
+                  key={`message-${index}`}
+                  content={message}
+                />
               ))}
+
+              {/* Add a message bubble for transcribed text */}
+              {transcribedText && (
+                <Bubble
+                  ref={messagesEndRef}
+                  key="message-transcribed"
+                  content={{ role: "assistant", content: transcribedText }}
+                />
+              )}
             </div>
           </div>
           <PromptSuggestionRow onPromptClick={handlePrompt} />

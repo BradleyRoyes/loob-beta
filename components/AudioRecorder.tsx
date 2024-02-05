@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
 interface AudioRecorderProps {
   onTranscription: (transcription: string) => void;
@@ -20,10 +20,10 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
       speechRecognitionRef.current.lang = "en-US";
 
       speechRecognitionRef.current.onresult = (event: any) => {
-        let finalTranscript = '';
+        let finalTranscript = "";
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript + ' ';
+            finalTranscript += event.results[i][0].transcript + " ";
           }
         }
         if (finalTranscript.trim()) {
@@ -59,8 +59,9 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
   return (
     <div>
       <button
-        onClick={() => recording ? stopRecording() : startRecording()}
-        style={{ backgroundColor: recording ? "red" : "green", color: "white" }}>
+        onClick={() => (recording ? stopRecording() : startRecording())}
+        style={{ backgroundColor: recording ? "red" : "green", color: "white" }}
+      >
         {recording ? "Stop Recording" : "Start Recording"}
       </button>
       {error && <p style={{ color: "red" }}>Error: {error}</p>}
@@ -69,5 +70,3 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
 };
 
 export default AudioRecorder;
-
-
