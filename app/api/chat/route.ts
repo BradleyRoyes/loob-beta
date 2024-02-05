@@ -9,9 +9,14 @@ const openai = new OpenAI({
 
 const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.ASTRA_DB_ENDPOINT, process.env.ASTRA_DB_NAMESPACE);
 
+// Function to generate a UUID for each chat session
+function generateChatSessionUuid() {
+  return uuidv4();
+}
+
 export async function POST(req: Request) {
   try {
-    const { messages, useRag, llm, similarityMetric, sessionUuid } = await req.json(); // Include sessionUuid in the request
+    const { messages, useRag, llm, similarityMetric } = await req.json();
 
     const latestMessage = messages[messages?.length - 1]?.content;
 
@@ -45,8 +50,8 @@ export async function POST(req: Request) {
       `,
     ]
 
-    // Generate or use the sessionUuid
-    const chatSessionUuid = sessionUuid || uuidv4(); // Generate a new UUID if not provided
+    // Generate a UUID for the chat session
+    const chatSessionUuid = generateChatSessionUuid();
 
     // Send all user inputs to the "journey_journals" collection with the sessionUuid
     for (const message of messages) {
