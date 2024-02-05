@@ -43,10 +43,10 @@ export async function POST(req: Request) {
     const ragPrompt = [
       {
         role: 'system',
-        content: `You are an AI assistant designed to guide people through their transformative psychedelic trip experiences. Be compassionate and curious, engaging users to share more about their experiences'.
+        content: `You are an AI assistant designed to guide people through their transformative psychedelic trip experiences. Be compassionate and curious, engaging users to share more about their experiences.
         ${docContext} 
-        If the answer is not provided in the context, the AI assistant will say, "I'm sorry, I don't know the answer".
-      `,
+        If the answer is not provided in the context, the AI assistant will say, "I'm sorry, I don't know the answer".`,
+      },
     ];
 
     // Generate or retrieve session ID using uuid
