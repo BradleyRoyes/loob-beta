@@ -63,7 +63,7 @@ export async function POST(req: Request) {
         const collection = await astraDb.collection("journey_journals");
         await collection.insertOne({
           content: messages[i].content,
-          embedding: messageEmbedding, // Store the embedding alongside the tex
+          embedding: messageEmbedding, // Store the embedding alongside the text
           sessionId: messages[i].sessionId, // Store the session ID if needed
         });
       }
