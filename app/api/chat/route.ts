@@ -1,18 +1,12 @@
 import OpenAI from 'openai';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
 import { AstraDB } from "@datastax/astra-db-ts";
-import { v4 as uuidv4 } from 'uuid'; // Import the uuidv4 function
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
 const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.ASTRA_DB_ENDPOINT, process.env.ASTRA_DB_NAMESPACE);
-
-// Function to generate a UUID for each chat session
-function generateChatSessionUuid() {
-  return uuidv4();
-}
 
 export async function POST(req: Request) {
   try {
@@ -44,23 +38,18 @@ export async function POST(req: Request) {
     const ragPrompt = [
       {
         role: 'system',
-        content: `You are an AI assistant designed to guide people through their transformative psychedelic trip experiences. Be compassionate and curious, engaging users to share more about their experiences'.
+        content: `You are an AI assistant designed to guide people through their transformative psychedelic trip expereiences. Be compassionate and curious, engaging users to share mroe about their experiences'.
         ${docContext} 
         If the answer is not provided in the context, the AI assistant will say, "I'm sorry, I don't know the answer".
       `,
+      },
     ]
 
-    // Generate a UUID for the chat session
-    const chatSessionUuid = generateChatSessionUuid();
-
-    // Send all user inputs to the "journey_journals" collection with the sessionUuid
+    // Send all user inputs to the "journey_journals" collection
     for (const message of messages) {
       if (message.role === 'user') {
         const collection = await astraDb.collection("journey_journals");
-        await collection.insertOne({
-          ...message,
-          uuid: chatSessionUuid, // Include the chat session UUID
-        });
+        await collection.insertOne(message); // Assuming 'message' is the user input data
       }
     }
 
