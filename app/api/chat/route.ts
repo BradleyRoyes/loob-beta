@@ -15,8 +15,8 @@ const astraDb = new AstraDB(
 // Helper function to ensure the collection exists
 async function ensureCollectionExists() {
   try {
-    const collections = await astraDb.collection();
-    if (!collections.includes("journey_journals")) {
+    const collections = await astraDb.collection("journey_journals");
+    if (!collections) {
       await astraDb.createCollection("journey_journals");
       console.log("journey_journals collection created.");
     }
