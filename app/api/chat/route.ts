@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
 import { AstraDB } from "@datastax/astra-db-ts";
+import { v4 as uuidv4 } from 'uuid'; // Import UUID package
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -10,7 +11,10 @@ const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.
 
 export async function POST(req: Request) {
   try {
-    const { messages, useRag, llm, similarityMetric } = await req.json();
+    const { messages, useRag, llm, similarityMetric, additionalInfo } = await req.json(); // Assuming `additionalInfo` contains substance, mood, location
+
+    // Generate a session UUID
+    const sessionUuid = uuidv4();
 
     const latestMessage = messages[messages?.length - 1]?.content;
 
@@ -38,18 +42,23 @@ export async function POST(req: Request) {
     const ragPrompt = [
       {
         role: 'system',
-        content: `You are an AI assistant designed to guide people through their transformative psychedelic trip expereiences. Be compassionate and curious, engaging users to share mroe about their experiences'.
+        content: `You are an AI assistant designed to guide people through their transformative psychedelic trip experiences. Be compassionate and curious, engaging users to share more about their experiences.
         ${docContext} 
         If the answer is not provided in the context, the AI assistant will say, "I'm sorry, I don't know the answer".
       `,
       },
-    ]
+    ];
 
-    // Send all user inputs to the "journey_journals" collection
+    // Send all user inputs to the "journey_journals" collection along with additionalInfo
     for (const message of messages) {
       if (message.role === 'user') {
         const collection = await astraDb.collection("journey_journals");
-        await collection.insertOne(message); // Assuming 'message' is the user input data
+        await collection.insertOne({
+          sessionUuid,
+          content: message.content,
+          timestamp: new Date(), // Store the timestamp of the interaction
+          ...additionalInfo // Spread additionalInfo if available
+        });
       }
     }
 
