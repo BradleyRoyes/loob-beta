@@ -18,9 +18,17 @@ export default function AudioSender({ audioBlob, onTranscription }) {
       formData.append("audioBlob", audioBlob);
 
       // Save the uploaded audio file temporarily
-      const audioBuffer = audioBlob.buffer;
+      const audioBuffer = new Uint8Array(audioBlob);
       const audioPath = "temp_audio.wav";
-      await fs.writeFile(audioPath, audioBuffer);
+      await new Promise((resolve, reject) => {
+        fs.writeFile(audioPath, audioBuffer, (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(null);
+          }
+        });
+      });
 
       // Send the audio data to the server
       const whisperApiKey = process.env.OPENAI_API_KEY;
