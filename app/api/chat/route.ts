@@ -1,7 +1,6 @@
 import OpenAI from 'openai';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
 import { AstraDB } from "@datastax/astra-db-ts";
-import { v4 as uuidv4 } from 'uuid';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -16,7 +15,6 @@ export async function POST(req: Request) {
     const latestMessage = messages[messages?.length - 1]?.content;
 
     let docContext = '';
-    let latestMessageEmbedding = null;
     if (useRag) {
       const { data } = await openai.embeddings.create({ input: latestMessage, model: 'text-embedding-ada-002' });
 
@@ -35,41 +33,25 @@ export async function POST(req: Request) {
         START CONTEXT
         ${documents?.map(doc => doc.content).join("\n")}
         END CONTEXT
-      `;
-
-      // Store the latest message embedding
-      latestMessageEmbedding = data[0]?.embedding;
+      `
     }
-
-    const sessionUUID = uuidv4(); // Generate a session UUID
-
-    // Send all user inputs to the "journey_journals" collection with session ID and embeddings
-    const dataToInsert = [];
-    for (const message of messages) {
-      if (message.role === 'user') {
-        const data = {
-          sessionUUID,
-          text: message.content,
-          embeddings: latestMessageEmbedding,
-        };
-        dataToInsert.push(data);
-      }
-    }
-
-    if (dataToInsert.length > 0) {
-      const collection = await astraDb.collection("journey_journals");
-      await collection.insertMany(dataToInsert);
-    }
-
     const ragPrompt = [
       {
         role: 'system',
-        content: `You are an AI assistant answering questions about Cassandra and Astra DB. Format responses using markdown where applicable.
+        content: `You are an AI assistant designed to guide people through their transformative psychedelic trip expereiences. Be compassionate and curious, engaging users to share mroe about their experiences'.
         ${docContext} 
         If the answer is not provided in the context, the AI assistant will say, "I'm sorry, I don't know the answer".
       `,
       },
-    ];
+    ]
+
+    // Send all user inputs to the "journey_journals" collection
+    for (const message of messages) {
+      if (message.role === 'user') {
+        const collection = await astraDb.collection("journey_journals");
+        await collection.insertOne(message); // Assuming 'message' is the user input data
+      }
+    }
 
     const response = await openai.chat.completions.create(
       {
