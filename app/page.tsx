@@ -1,18 +1,18 @@
 "use client"; // Mark the parent component as a client component
 import React, { useEffect, useRef, useState } from 'react';
 import Bubble from '../components/Bubble';
-import { useChat } from 'ai/react';
+import { useChat } from 'ai/react'; // Import the useChat hook
 import Footer from '../components/Footer';
 import Configure from '../components/Configure';
 import PromptSuggestionRow from '../components/PromptSuggestions/PromptSuggestionsRow';
 import ThemeButton from '../components/ThemeButton';
-import useConfiguration from './hooks/useConfiguration';
+import useConfiguration, { generateSessionUUID } from './hooks/useConfiguration'; // Import generateSessionUUID
 import AudioRecorder from '../components/mediarecorder';
-import { v4 as uuidv4 } from 'uuid'; // Import the uuidv4 function
 
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } = useChat();
-  const { useRag, llm, similarityMetric, setConfiguration, uuid } = useConfiguration();
+  const { useRag, llm, similarityMetric, setConfiguration } = useConfiguration();
+  const [sessionUUID] = useState(generateSessionUUID()); // Generate a session UUID
 
   const messagesEndRef = useRef(null);
   const [configureOpen, setConfigureOpen] = useState(false);
@@ -27,27 +27,28 @@ export default function Page() {
   }, [messages]);
 
   const handleTranscription = (transcription) => {
-    setTranscribedText(transcription); // Use the state setter here
-    append({ id: uuidv4(), content: transcription, role: 'user' });
+    setTranscribedText(transcription);
+    // Append messages with the sessionUUID included
+    append({ id: sessionUUID, content: transcription, role: 'user' });
   };
 
   const handleSend = (e) => {
     e.preventDefault(); // Prevent default form submission
-    const eventObject = {
-      currentTarget: e.currentTarget,
-      target: e.target,
-      nativeEvent: e.nativeEvent,
-      text: input, // Add the user's input text
-      useRag,
-      llm,
-      similarityMetric,
-      uuid,
-    };
-    handleSubmit(eventObject); // Call handleSubmit with the correct event object
+    handleSubmit(e, {
+      options: {
+        body: {
+          useRag,
+          llm,
+          similarityMetric,
+          uuid: sessionUUID, // Include the session UUID
+        },
+      },
+    });
   }
 
   const handlePrompt = (promptText) => {
-    const msg = { id: uuidv4(), content: promptText, role: 'user' as const };
+    // Append messages with the sessionUUID included
+    const msg = { id: sessionUUID, content: promptText, role: 'user' as const };
     append(msg);
   };
 
