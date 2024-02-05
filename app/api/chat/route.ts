@@ -65,7 +65,8 @@ export async function POST(req: Request) {
     // Send all user inputs to the "journey_journals" collection with additional session UUID, mood, and substance
     for (const message of messages) {
       if (message.role === "user") {
-        await astraDb.collection("journey_journals").insertOne({
+        const tmp = await astraDb.collection("journey_journals");
+        tmp.insertOne({
           ...message,
           sessionUuid,
           mood: "happy", // Random value for testing, replace as needed
