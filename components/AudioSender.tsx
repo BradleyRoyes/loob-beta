@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import fs from "fs";
 
 export default function AudioSender({ audioBlob, onTranscription }) {
   const [isRecording, setIsRecording] = useState(false);
@@ -16,12 +17,26 @@ export default function AudioSender({ audioBlob, onTranscription }) {
       const formData = new FormData();
       formData.append("audioBlob", audioBlob);
 
-      // Send the audio data to the server
-      const response = await axios.post(
-        "https://api.openai.com/v1/audio/transcriptions",
-        formData,
-      );
+      // Save the uploaded audio file temporarily
+      const audioBuffer = audioBlob.buffer;
+      const audioPath = "temp_audio.wav";
+      await fs.writeFile(audioPath, audioBuffer);
 
+      // Send the audio data to the server
+      const whisperApiKey = process.env.OPENAI_API_KEY;
+      const whisperApiEndpoint =
+        "https://api.openai.com/v1/audio/transcriptions";
+      // Send the audio file to the Whisper API for transcription
+      const response = await axios.post(
+        whisperApiEndpoint,
+        fs.createReadStream(audioPath),
+        {
+          headers: {
+            "Content-Type": "audio/wav",
+            Authorization: `Bearer ${whisperApiKey}`,
+          },
+        },
+      );
       // Handle the server's response, e.g., update the UI with the transcribed text
       onTranscription(response.data.transcribedText);
     } catch (error) {
