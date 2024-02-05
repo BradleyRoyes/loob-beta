@@ -12,7 +12,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
 
   useEffect(() => {
     // Dynamically check and use SpeechRecognition without type declaration
-    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
       speechRecognitionRef.current = new SpeechRecognition();
       speechRecognitionRef.current.continuous = true;
