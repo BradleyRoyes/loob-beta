@@ -8,11 +8,10 @@ import PromptSuggestionRow from '../components/PromptSuggestions/PromptSuggestio
 import ThemeButton from '../components/ThemeButton';
 import useConfiguration from './hooks/useConfiguration';
 import AudioRecorder from '../components/mediarecorder';
-import { v4 as uuidv4 } from 'uuid'; // Import the uuidv4 function
 
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } = useChat();
-  const { useRag, llm, similarityMetric, setConfiguration } = useConfiguration();
+  const { useRag, llm, similarityMetric, uuid, setConfiguration } = useConfiguration(); // Include the UUID
 
   const messagesEndRef = useRef(null);
   const [configureOpen, setConfigureOpen] = useState(false);
@@ -27,16 +26,25 @@ export default function Page() {
   }, [messages]);
 
   const handleTranscription = (transcription) => {
-    setTranscribedText(transcription); // Use the state setter here
-    append({ id: uuidv4(), content: transcription, role: 'user' });
+    setTranscribedText(transcription);
+    append({ id: uuid, content: transcription, role: 'user' });
   };
 
   const handleSend = (e) => {
-    handleSubmit(e, { options: { body: { useRag, llm, similarityMetric } } });
+    e.preventDefault();
+    // Include the UUID in the message body
+    const messageBody = {
+      useRag,
+      llm,
+      similarityMetric,
+      uuid, // Include the UUID in the message body
+      text: input, // Add the user's input text
+    };
+    handleSubmit(messageBody);
   }
 
   const handlePrompt = (promptText) => {
-    const msg = { id: uuidv4(), content: promptText, role: 'user' as const };
+    const msg = { id: uuid, content: promptText, role: 'user' as const };
     append(msg);
   };
 
