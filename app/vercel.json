@@ -1,6 +1,6 @@
 {
   "routes": {
-    "/api/transcribe": {
+    "/api/chat/transcribe": {
       "methods": ["POST"]
     }
   }

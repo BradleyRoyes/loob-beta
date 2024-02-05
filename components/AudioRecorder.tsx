@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from "react";
 
 export default function AudioRecorder({ onAudioChunksCaptured }) {
   const [isRecording, setIsRecording] = useState(false);
@@ -16,7 +16,9 @@ export default function AudioRecorder({ onAudioChunksCaptured }) {
           }
         };
         mediaRecorder.current.onstop = () => {
-          const audioBlob = new Blob(audioChunks.current, { type: 'audio/wav' });
+          const audioBlob = new Blob(audioChunks.current, {
+            type: "audio/wav",
+          });
           onAudioChunksCaptured(audioBlob);
           audioChunks.current = [];
         };
@@ -24,12 +26,12 @@ export default function AudioRecorder({ onAudioChunksCaptured }) {
         setIsRecording(true);
       })
       .catch((error) => {
-        console.error('Error accessing microphone:', error);
+        console.error("Error accessing microphone:", error);
       });
   };
 
   const stopRecording = () => {
-    if (mediaRecorder.current && mediaRecorder.current.state === 'recording') {
+    if (mediaRecorder.current && mediaRecorder.current.state === "recording") {
       mediaRecorder.current.stop();
       setIsRecording(false);
     }
@@ -38,7 +40,7 @@ export default function AudioRecorder({ onAudioChunksCaptured }) {
   return (
     <div>
       <button onClick={isRecording ? stopRecording : startRecording}>
-        {isRecording ? 'Stop Recording' : 'Start Recording'}
+        {isRecording ? "Stop Recording" : "Start Recording"}
       </button>
     </div>
   );
