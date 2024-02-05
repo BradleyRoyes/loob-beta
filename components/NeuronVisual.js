@@ -1,56 +1,37 @@
-// app/components/NeuronVisual.js
+import React, { useRef, useState } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { Points, PointMaterial } from '@react-three/drei';
 
-import { useEffect, useRef } from 'react';
-import * as THREE from 'three';
+const FractalPoints = () => {
+  const meshRef = useRef();
+  const [points] = useState(() => {
+    const pts = [];
+    for (let i = 0; i < 10000; i++) {
+      pts.push([Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1]);
+    }
+    return pts;
+  });
+
+  useFrame(() => {
+    meshRef.current.rotation.x += 0.001;
+    meshRef.current.rotation.y += 0.001;
+  });
+
+  return (
+    <Points ref={meshRef} positions={points} frustumCulled={false}>
+      <PointMaterial color="#00ff00" size={0.005} />
+    </Points>
+  );
+};
 
 const NeuronVisual = () => {
-  const mountRef = useRef(null);
-
-  useEffect(() => {
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    mountRef.current.appendChild(renderer.domElement);
-
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0x404040); // soft white light
-    scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    scene.add(directionalLight);
-
-    // Neuron Points
-    const points = [];
-    for (let i = 0; i < 100; i++) {
-      points.push(new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1));
-    }
-
-    const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    const material = new THREE.PointsMaterial({ color: 0x00ff00, size: 0.05 });
-    const neuronPoints = new THREE.Points(geometry, material);
-    scene.add(neuronPoints);
-
-    camera.position.z = 5;
-
-    // Animation Loop
-    const animate = function () {
-      requestAnimationFrame(animate);
-
-      neuronPoints.rotation.x += 0.01;
-      neuronPoints.rotation.y += 0.01;
-
-      renderer.render(scene, camera);
-    };
-
-    animate();
-
-    return () => {
-      mountRef.current.removeChild(renderer.domElement);
-    };
-  }, []);
-
-  return <div ref={mountRef} />;
+  return (
+    <Canvas>
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[0, 0, 5]} intensity={1} />
+      <FractalPoints />
+    </Canvas>
+  );
 };
 
 export default NeuronVisual;
