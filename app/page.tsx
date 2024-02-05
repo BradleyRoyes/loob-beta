@@ -31,9 +31,17 @@ export default function Page() {
     append({ id: uuidv4(), content: transcription, role: 'user' });
   };
 
+  const [sessionId] = useState(() => uuidv4()); // Session ID is generated once per session
+
   const handleSend = (e) => {
-    handleSubmit(e, { options: { body: { useRag, llm, similarityMetric } } });
-  }
+    e.preventDefault(); // Prevent default form submission behavior
+    const messageData = {
+      content: input, // Assuming 'input' is your message text from state
+      sessionId: sessionId, // Include the generated session ID with each message
+    };
+    handleSubmit(e, { options: { body: JSON.stringify(messageData) } }); // Make sure to stringify your message data
+    // Clear the input field here if needed
+  };
 
   const handlePrompt = (promptText) => {
     const msg = { id: uuidv4(), content: promptText, role: 'user' as const };
