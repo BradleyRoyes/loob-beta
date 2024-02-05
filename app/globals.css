@@ -3,42 +3,42 @@
 @tailwind utilities;
 
 :root {
-  --text-primary: #FFFFFF;
-  --text-primary-inverse: #090909;
-  --text-primary-main: #7724AA;
-  --text-secondary: #A6AAAE;
-  --text-secondary-inverse: #494A4D;
-  --background-bubble-primary: #611C9B;
-  --background-bubble-secondary: #F7F7F7;
-  --border-primary: #CED0D2;
-  --background-soft: #F3E5F5;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-  --text-tertiary: #6B6F73;
+  --text-primary: #FFFFFF; /* White */
+  --text-primary-inverse: #090909; /* Black */
+  --text-primary-main: #FF6B6B; /* Coral color */
+  --text-secondary: #A6AAAE; /* Light Gray */
+  --text-secondary-inverse: #494A4D; /* Dark Gray */
+  --background-bubble-primary: #FF6B6B; /* Coral color */
+  --background-bubble-secondary: #F7F7F7; /* Light Gray */
+  --border-primary: #CED0D2; /* Light Gray */
+  --background-soft: #F3E5F5; /* Lavender */
+  --background-start-rgb: 214, 219, 220; /* Light Gray */
+  --background-end-rgb: 255, 255, 255; /* White */
+  --text-tertiary: #6B6F73; /* Medium Gray */
   --shadow-primary: 0px 6px 16px 0px #0A0A0A1F, 0px 4px 14px 0px #0A0A0A14, 0px 8px 10px 0px #0A0A0A14;
   --processing-dot-size: 4px;
+  --font-family: 'Helvetica', sans-serif; /* Helvetica font */
 }
-
 
 .dark {
-  --text-primary: #090909;
-  --text-primary-inverse: #FFFFFF;
-  --text-primary-main: #9946B9;
-  --text-secondary: #494A4D;
-  --text-secondary-inverse: #A6AAAE;
-  --background-bubble-primary: #BA68C8;
-  --background-bubble-secondary: #232324;
-  --background-soft: #200033;
-  --border-primary: #262626;
-  --background-start-rgb: 23, 23, 23;
-  --background-end-rgb: 28, 28, 28;
+  --text-primary: #090909; /* Black */
+  --text-primary-inverse: #FFFFFF; /* White */
+  --text-primary-main: #FF6B6B; /* Coral color */
+  --text-secondary: #494A4D; /* Dark Gray */
+  --text-secondary-inverse: #A6AAAE; /* Light Gray */
+  --background-bubble-primary: #FF6B6B; /* Coral color */
+  --background-bubble-secondary: #232324; /* Dark Gray */
+  --background-soft: #200033; /* Dark Purple */
+  --border-primary: #262626; /* Dark Gray */
+  --background-start-rgb: 23, 23, 23; /* Dark Gray */
+  --background-end-rgb: 28, 28, 28; /* Dark Gray */
 }
-
 
 body {
   background: linear-gradient(to bottom,
       transparent,
       rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
+  font-family: var(--font-family); /* Apply Helvetica font to the entire body */
 }
 
 .chatbot-section {
@@ -115,7 +115,7 @@ body {
   position: relative;
   color: var(--text-secondary-inverse);
   background-color: var(--background-bubble-secondary);
-  border-radius: 10px;
+  border-radius: 0; /* Square boxes */
   border-bottom-left-radius: 0px;
 }
 
@@ -123,7 +123,7 @@ body {
   text-align: right;
   color: var(--text-primary);
   background-color: var(--background-bubble-primary);
-  border-radius: 10px;
+  border-radius: 0; /* Square boxes */
   border-bottom-right-radius: 0px;
 }
 
@@ -145,8 +145,6 @@ body {
 
 .dot-flashing {
   position: relative;
-  /* padding-left: 8px; */
-  /* padding-right: 8px; */
   width: var(--processing-dot-size);
   height: var(--processing-dot-size);
   border-radius: 100%;
