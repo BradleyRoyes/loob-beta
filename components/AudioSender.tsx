@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import fs from "fs";
+import fs from "fs/promises";
 
 export default function AudioSender({ audioBlob, onTranscription }) {
   const [isRecording, setIsRecording] = useState(false);
