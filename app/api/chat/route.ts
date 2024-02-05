@@ -15,7 +15,8 @@ export async function POST(req: Request) {
     const latestMessage = messages[messages?.length - 1]?.content;
 
     let docContext = '';
-    let latestMessageEmbedding = null; // Store the latest message embedding
+    let latestMessageEmbedding = null; // Store the latest message embedding for context retrieval
+    let userMessageEmbeddings = []; // Store user message embeddings for saving to "journey_journals"
 
     if (useRag && latestMessage) {
       // Generate embedding for the latest user message
@@ -53,12 +54,20 @@ export async function POST(req: Request) {
     // Send all user inputs to the "journey_journals" collection
     for (const message of messages) {
       if (message.role === 'user') {
-        const collection = await astraDb.collection("journey_journals");
+        // Generate embeddings for user messages and store them separately
+        const { data } = await openai.embeddings.create({ input: message.content, model: 'text-embedding-ada-002' });
+        const userMessageEmbedding = data[0]?.embedding;
 
-        // Save the message content and its corresponding embedding
+        userMessageEmbeddings.push({
+          content: message.content,
+          embedding: userMessageEmbedding,
+        });
+
+        // Save the message content and its corresponding embedding to "journey_journals"
+        const collection = await astraDb.collection("journey_journals");
         await collection.insertOne({
           content: message.content,
-          embedding: latestMessageEmbedding, // Store the embedding alongside the text
+          embedding: userMessageEmbedding, // Store the embedding alongside the text
         });
       }
     }
