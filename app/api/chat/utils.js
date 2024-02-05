@@ -3,7 +3,7 @@
 
 // Define CORS options
 const corsOptions = {
-  origin: "*", // You can set this to a specific origin or multiple origins
+  origin: "ragbot-loob.vercel.app", // You can set this to a specific origin or multiple origins
   methods: "POST", // Allow only POST requests, you can specify other methods as needed
   optionsSuccessStatus: 204, // No content response for preflight requests
 };
