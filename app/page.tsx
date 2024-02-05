@@ -11,7 +11,8 @@ import Configure from '../components/Configure';
 import PromptSuggestionRow from '../components/PromptSuggestions/PromptSuggestionsRow';
 import ThemeButton from '../components/ThemeButton';
 import useConfiguration from './hooks/useConfiguration';
-import AudioRecorder from '../components/AudioPlayer'; // Import the AudioPlayer component
+import AudioRecorder from '../components/AudioRecorder'; // Import the AudioRecorder component
+import AudioSender from '../components/AudioSender'; // Import the AudioSender component
 import { v4 as uuidv4 } from 'uuid'; // Import the uuidv4 function
 
 export default function Page() {
@@ -21,6 +22,7 @@ export default function Page() {
   const messagesEndRef = useRef(null);
   const [configureOpen, setConfigureOpen] = useState(false);
   const [transcribedText, setTranscribedText] = useState("");
+  const [audioBlob, setAudioBlob] = useState(null); // State to store audio data
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -44,6 +46,11 @@ export default function Page() {
     append(msg);
   };
 
+  // Callback function to receive audio data from AudioRecorder
+  const handleAudioChunksCaptured = (audioBlob) => {
+    setAudioBlob(audioBlob);
+  };
+
   return (
     <>
       <main className="flex h-screen flex-col items-center justify-center">
@@ -65,6 +72,15 @@ export default function Page() {
           <div className='flex-1 relative overflow-y-auto my-4 md:my-6'>
             <div className='absolute w-full overflow-x-hidden'>
               {messages.map((message, index) => <Bubble ref={messagesEndRef} key={`message-${index}`} content={message} />)}
+
+              {/* Add a message bubble for transcribed text */}
+              {transcribedText && (
+                <Bubble
+                  ref={messagesEndRef}
+                  key="message-transcribed"
+                  content={{ role: 'assistant', content: transcribedText }}
+                />
+              )}
             </div>
           </div>
           {!messages || messages.length === 0 && (
@@ -79,7 +95,12 @@ export default function Page() {
           )}
 
           {/* Integrate the AudioRecorder component */}
-          <AudioRecorder />
+          <AudioRecorder onAudioChunksCaptured={handleAudioChunksCaptured} />
+
+          {/* Integrate the AudioSender component with audioBlob as prop */}
+          {audioBlob && (
+            <AudioSender audioBlob={audioBlob} onTranscription={handleTranscription} />
+          )}
 
           <form className='flex h-[40px] gap-2' onSubmit={handleSend}>
             <input onChange={handleInputChange} value={input} className='chatbot-input flex-1 text-sm md:text-base outline-none bg-transparent rounded-md p-2' placeholder='Send a message...' />
