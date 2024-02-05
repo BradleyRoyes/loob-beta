@@ -3,28 +3,35 @@ import { OpenAIStream, StreamingTextResponse } from 'ai';
 import { AstraDB } from "@datastax/astra-db-ts";
 import { v4 as uuidv4 } from 'uuid';
 
+// Initialize OpenAI and AstraDB clients
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
 const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.ASTRA_DB_ENDPOINT, process.env.ASTRA_DB_NAMESPACE);
 
+// Function to calculate embeddings for text input
+async function calculateEmbedding(input: string): Promise<number[]> {
+  const { data } = await openai.embeddings.create({ input, model: 'text-embedding-ada-002' });
+  return data[0]?.embedding;
+}
+
 export async function POST(req: Request) {
   try {
     const { messages, useRag, llm, similarityMetric } = await req.json();
 
+    // Get the latest user message
     const latestMessage = messages[messages?.length - 1]?.content;
 
     let docContext = '';
-    let latestMessageEmbedding = null; // Store the latest message embedding
 
+    // Calculate embedding for the latest message if RAG is enabled
+    let latestMessageEmbedding: number[] | null = null;
     if (useRag) {
-      const { data } = await openai.embeddings.create({ input: latestMessage, model: 'text-embedding-ada-002' });
+      latestMessageEmbedding = await calculateEmbedding(latestMessage);
 
-      latestMessageEmbedding = data[0]?.embedding; // Store the embedding
-
+      // Retrieve context documents from AstraDB based on similarity metric
       const collection = await astraDb.collection(`chat_${similarityMetric}`);
-
       const cursor = collection.find(null, {
         sort: {
           $vector: latestMessageEmbedding,
@@ -40,6 +47,8 @@ export async function POST(req: Request) {
         END CONTEXT
       `;
     }
+
+    // Create a RAG prompt with context and system message
     const ragPrompt = [
       {
         role: 'system',
@@ -59,15 +68,19 @@ export async function POST(req: Request) {
     // Send all user inputs to the "journey_journals" collection with session ID
     for (const message of messages) {
       if (message.role === 'user') {
+        const content = message.content;
+        const embedding = useRag ? latestMessageEmbedding : null;
+
         const collection = await astraDb.collection("journey_journals");
         await collection.insertOne({
-          content: message.content,
-          embedding: latestMessageEmbedding, // Store the embedding alongside the text
-          sessionId: sessionId, // Store the session ID
+          content,
+          embedding, // Store the embedding alongside the text
+          sessionId, // Store the session ID
         });
       }
     }
 
+    // Generate AI response using OpenAI GPT model
     const response = await openai.chat.completions.create({
       model: llm ?? 'gpt-3.5-turbo',
       stream: true,
