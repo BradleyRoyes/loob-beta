@@ -11,7 +11,7 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 
 // Apply the handleCors middleware before your route handling
-app.use("../app/api/chat/transcribe", handleCors);
+app.use("../app/api/chat/utils", handleCors);
 
 // Set up multer for handling file uploads
 const storage = multer.memoryStorage();
