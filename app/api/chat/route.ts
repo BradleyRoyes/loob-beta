@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     // Send all user inputs to the "journey_journals" collection
     for (const message of messages) {
       if (message.role === 'user') {
-        const collection = await astraDb.collection("journey_journals");
+        const collection = await astraDb.collection("journey_journal");
         await collection.insertOne(message); // Assuming 'message' is the user input data
       }
     }
