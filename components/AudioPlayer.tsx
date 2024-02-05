@@ -1,54 +1,45 @@
 import React, { useState, useRef } from 'react';
 
-export default function AudioRecorder() {
+export default function AudioRecorder({ onAudioChunksCaptured }) {
   const [isRecording, setIsRecording] = useState(false);
-  const [audioChunks, setAudioChunks] = useState([]);
-  const audioRef = useRef(null);
+  const mediaRecorder = useRef(null);
+  const audioChunks = useRef([]);
 
-  const handleToggleRecording = () => {
-    if (!isRecording) {
-      startRecording();
-    } else {
-      stopRecording();
-    }
-  };
-
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          setAudioChunks((prevChunks) => [...prevChunks, event.data]);
-        }
-      };
-
-      mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        audioRef.current.src = audioUrl;
-      };
-
-      mediaRecorder.start();
-      setIsRecording(true);
-    } catch (error) {
-      console.error('Error starting recording:', error);
-    }
+  const startRecording = () => {
+    navigator.mediaDevices
+      .getUserMedia({ audio: true })
+      .then((stream) => {
+        mediaRecorder.current = new MediaRecorder(stream);
+        mediaRecorder.current.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunks.current.push(event.data);
+          }
+        };
+        mediaRecorder.current.onstop = () => {
+          const audioBlob = new Blob(audioChunks.current, { type: 'audio/wav' });
+          onAudioChunksCaptured(audioBlob);
+          audioChunks.current = [];
+        };
+        mediaRecorder.current.start();
+        setIsRecording(true);
+      })
+      .catch((error) => {
+        console.error('Error accessing microphone:', error);
+      });
   };
 
   const stopRecording = () => {
-    setIsRecording(false);
-    setAudioChunks([]);
+    if (mediaRecorder.current && mediaRecorder.current.state === 'recording') {
+      mediaRecorder.current.stop();
+      setIsRecording(false);
+    }
   };
 
   return (
     <div>
-      <button onClick={handleToggleRecording}>
+      <button onClick={isRecording ? stopRecording : startRecording}>
         {isRecording ? 'Stop Recording' : 'Start Recording'}
       </button>
-      <audio ref={audioRef} controls />
     </div>
   );
 }
-
