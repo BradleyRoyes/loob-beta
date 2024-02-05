@@ -12,14 +12,14 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 
 // Apply the handleCors middleware before your route handling
-app.use("/api/transcribe", handleCors);
+app.use("/api/chat/transcribe", handleCors);
 
 // Set up multer for handling file uploads
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 // Define an API endpoint for audio file transcription
-app.post("/api/transcribe", upload.single("audio"), async (req, res) => {
+app.post("/api/chat/transcribe", upload.single("audio"), async (req, res) => {
   try {
     // Check if the request contains an audio file
     if (!req.file) {

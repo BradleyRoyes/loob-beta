@@ -18,7 +18,7 @@ export default function AudioSender({ audioBlob, onTranscription }) {
 
       // Send the audio data to the server
       const response = await axios.post(
-        "https://api.openai.com/v1/audio/transcriptions",
+        "././app/api/chat/transcribe",
         formData,
       );
 
