@@ -1,18 +1,13 @@
-const { handleCors } = require("./utils");
-
-const express = require("express");
-const multer = require("multer");
-const axios = require("axios");
-const fs = require("fs");
-const { createReadStream } = require("fs");
+import express from "express";
+import multer from "multer";
+import axios from "axios";
+import fs from "fs";
+import { createReadStream, writeFileSync, unlinkSync } from "fs/promises";
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
-
-// Apply the handleCors middleware before your route handling
-app.use("/api/chat/transcribe", handleCors);
 
 // Set up multer for handling file uploads
 const storage = multer.memoryStorage();
@@ -29,7 +24,7 @@ app.post("/api/chat/transcribe", upload.single("audio"), async (req, res) => {
     // Save the uploaded audio file temporarily
     const audioBuffer = req.file.buffer;
     const audioPath = "temp_audio.wav";
-    fs.writeFileSync(audioPath, audioBuffer);
+    await writeFileSync(audioPath, audioBuffer);
 
     // Initialize Whisper API endpoint and API key
     const whisperApiKey = process.env.OPENAI_API_KEY;
@@ -44,14 +39,14 @@ app.post("/api/chat/transcribe", upload.single("audio"), async (req, res) => {
           "Content-Type": "audio/wav",
           Authorization: `Bearer ${whisperApiKey}`,
         },
-      },
+      }
     );
 
     // Get the transcribed text from the Whisper API response
     const transcribedText = response.data.transcriptions[0].text;
 
     // Delete the temporary audio file
-    fs.unlinkSync(audioPath);
+    await unlinkSync(audioPath);
 
     // Return the transcribed text as a JSON response
     return res.status(200).json({ transcribedText });
