@@ -1,0 +1,7 @@
+{
+  "routes": {
+    "/api/transcribe": {
+      "methods": ["POST"]
+    }
+  }
+}
