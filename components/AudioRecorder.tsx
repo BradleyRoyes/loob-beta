@@ -26,7 +26,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
             finalTranscript += event.results[i][0].transcript + " ";
           }
         }
-        if (finalTranscript.trim()) {
+        if (finalTranscript.length > 0) {
           onTranscription(finalTranscript.trim());
         }
       };
