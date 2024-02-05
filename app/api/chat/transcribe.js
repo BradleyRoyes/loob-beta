@@ -1,8 +1,8 @@
 import express from "express";
 import multer from "multer";
 import axios from "axios";
-import fs from "fs";
-import { createReadStream, writeFileSync, unlinkSync } from "fs/promises";
+import fs from "fs/promises";
+import { createReadStream, unlink } from "fs/promises";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -24,29 +24,32 @@ app.post("/api/chat/transcribe", upload.single("audio"), async (req, res) => {
     // Save the uploaded audio file temporarily
     const audioBuffer = req.file.buffer;
     const audioPath = "temp_audio.wav";
-    await writeFileSync(audioPath, audioBuffer);
+    await fs.writeFile(audioPath, audioBuffer);
 
-    // Initialize Whisper API endpoint and API key
-    const whisperApiKey = process.env.OPENAI_API_KEY;
-    const whisperApiEndpoint = "https://api.openai.com/v1/whisper/recognize";
+    // Initialize the API endpoint and API key
+    const apiKey = process.env.OPENAI_API_KEY;
+    const apiEndpoint = "https://api.openai.com/v1/audio/transcriptions";
 
-    // Send the audio file to the Whisper API for transcription
-    const response = await axios.post(
-      whisperApiEndpoint,
-      createReadStream(audioPath),
-      {
-        headers: {
-          "Content-Type": "audio/wav",
-          Authorization: `Bearer ${whisperApiKey}`,
-        },
-      }
-    );
+    // Define the request payload
+    const requestData = {
+      model: "whisper-1",
+      language: "en",
+      file: createReadStream(audioPath),
+    };
 
-    // Get the transcribed text from the Whisper API response
-    const transcribedText = response.data.transcriptions[0].text;
+    // Send the audio file to the OpenAI API for transcription
+    const response = await axios.post(apiEndpoint, requestData, {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    // Get the transcribed text from the API response
+    const transcribedText = response.data.transcription;
 
     // Delete the temporary audio file
-    await unlinkSync(audioPath);
+    await unlink(audioPath);
 
     // Return the transcribed text as a JSON response
     return res.status(200).json({ transcribedText });
