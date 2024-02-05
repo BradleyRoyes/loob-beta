@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { AstraDB } from "@datastax/astra-db-ts";
 import { v4 as uuidv4 } from "uuid"; // Ensure you have uuid installed (`npm install uuid`)
+import { OpenAIStream, StreamingTextResponse } from "ai";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
