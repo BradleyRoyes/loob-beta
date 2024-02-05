@@ -1,14 +1,17 @@
 import OpenAI from 'openai';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
 import { AstraDB } from "@datastax/astra-db-ts"; // Import AstraDB without 'create'
-import { create as createCollection } from "@datastax/astra-db-ts"; // Import 'create' separately
 import { v4 as uuidv4 } from 'uuid';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.ASTRA_DB_ENDPOINT, process.env.ASTRA_DB_NAMESPACE);
+const astraDb = new AstraDB(
+  process.env.ASTRA_DB_APPLICATION_TOKEN,
+  process.env.ASTRA_DB_ENDPOINT,
+  process.env.ASTRA_DB_NAMESPACE
+);
 
 export async function POST(req: Request) {
   try {
@@ -72,7 +75,7 @@ export async function POST(req: Request) {
     // Create the collection if it doesn't exist
     if (dataToInsert.length > 0) {
       const collection = await astraDb.collection("journey_journals");
-      // Check if the collection exists, and create it if it doesn't
+      // Check if the collection exists, and create it if it doesn't (no change from your original code)
       if (!(await collection.exists())) {
         await createCollection(collection);
       }
