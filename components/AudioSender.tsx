@@ -34,4 +34,5 @@ export default function AudioSender({ audioBlob, onTranscription }) {
         {isRecording ? "Stop Recording and Send" : "Start Recording"}
       </button>
     </div>
-  )
+  );
+}
