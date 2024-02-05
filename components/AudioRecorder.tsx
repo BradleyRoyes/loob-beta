@@ -1,7 +1,19 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { SpeechRecognition, webkitSpeechRecognition } from "web-speech-api";
 
-// Define props type for the component
+// Extend the Window interface for webkit prefixed SpeechRecognition
+declare global {
+  interface Window {
+    SpeechRecognition: typeof SpeechRecognition;
+    webkitSpeechRecognition: typeof SpeechRecognition;
+  }
+
+  // Declare types for SpeechRecognitionEvent if not already available
+  interface SpeechRecognitionEvent extends Event {
+    results: SpeechRecognitionResultList;
+    resultIndex: number;
+  }
+}
+
 interface AudioRecorderProps {
   onTranscription: (transcription: string) => void;
 }
@@ -12,8 +24,9 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
   const speechRecognition = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
+    // Check for browser compatibility and initialize SpeechRecognition
     const SpeechRecognition =
-      window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+      window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       speechRecognition.current = new SpeechRecognition();
       speechRecognition.current.continuous = true;
@@ -27,7 +40,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
             finalTranscript += event.results[i][0].transcript + " ";
           }
         }
-        if (finalTranscript.trim().length > 0) {
+        if (finalTranscript.trim()) {
           onTranscription(finalTranscript.trim());
         }
       };
