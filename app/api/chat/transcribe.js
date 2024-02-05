@@ -1,73 +1,28 @@
-import express from "express";
-import multer from "multer";
-import axios from "axios";
-import fs from "fs/promises";
-import { createReadStream, unlink } from "fs/promises";
+// pages/api/transcribe.js
+import { OpenAI } from "openai";
 
-const app = express();
-const port = process.env.PORT || 3000;
+export default async function handler(req, res) {
+  if (req.method === 'POST') {
+    try {
+      const openai = new OpenAI(process.env.OPENAI_API_KEY);
 
-app.use(express.json());
+      // Assuming you're sending audio data as base64 in the body
+      const { audioBase64 } = req.body;
+      const buffer = Buffer.from(audioBase64, 'base64');
 
-// Set up multer for handling file uploads
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+      const response = await openai.audio.transcriptions.create({
+        model: "whisper-1", // Use the appropriate model version
+        file: buffer,
+      });
 
-// Define an API endpoint for audio file transcription
-app.post("/api/chat/transcribe", upload.single("audio"), async (req, res) => {
-  try {
-    // Check if the request contains an audio file
-    if (!req.file) {
-      console.log("No audio file in the request.");
-      return res.status(400).json({ error: "Audio file is missing" });
+      res.status(200).json({ transcription: response.data.text });
+    } catch (error) {
+      console.error("Transcription error:", error);
+      res.status(500).json({ error: "Failed to transcribe audio." });
     }
-
-    // Save the uploaded audio file temporarily
-    const audioBuffer = req.file.buffer;
-    const audioPath = "temp_audio.wav";
-    await fs.writeFile(audioPath, audioBuffer);
-
-    console.log("Audio file saved:", audioPath);
-
-    // Initialize the API endpoint and API key
-    const apiKey = process.env.OPENAI_API_KEY;
-    const apiEndpoint = "https://api.openai.com/v1/audio/transcriptions";
-
-    // Define the request payload
-    const requestData = {
-      model: "whisper-1",
-      language: "en",
-      file: createReadStream(audioPath),
-    };
-
-    console.log("Sending audio file to OpenAI API...");
-
-    // Send the audio file to the OpenAI API for transcription
-    const response = await axios.post(apiEndpoint, requestData, {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "multipart/form-data",
-      },
-    });
-
-    console.log("Received response from OpenAI API.");
-
-    // Get the transcribed text from the API response
-    const transcribedText = response.data.transcription;
-
-    // Delete the temporary audio file
-    await unlink(audioPath);
-
-    console.log("Temporary audio file deleted.");
-
-    // Return the transcribed text as a JSON response
-    return res.status(200).json({ transcribedText });
-  } catch (error) {
-    console.error("Error:", error.message);
-    return res.status(500).json({ error: "Server error" });
+  } else {
+    // Handle any non-POST requests
+    res.setHeader('Allow', ['POST']);
+    res.status(405).end(`Method ${req.method} Not Allowed`);
   }
-});
-
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+};
