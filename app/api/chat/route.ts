@@ -17,20 +17,20 @@ export async function POST(req: Request) {
     let docContext = '';
     let latestMessageEmbedding = null; // Store the latest message embedding
 
-    if (useRag) {
+    if (useRag && latestMessage) {
+      // Generate embedding for the latest user message
       const { data } = await openai.embeddings.create({ input: latestMessage, model: 'text-embedding-ada-002' });
 
       latestMessageEmbedding = data[0]?.embedding; // Store the embedding
 
+      // Retrieve context documents based on the embedding
       const collection = await astraDb.collection(`chat_${similarityMetric}`);
-
-      const cursor = collection.find(null, {
+      const cursor = collection.find({}, {
         sort: {
           $vector: latestMessageEmbedding,
         },
         limit: 5,
       });
-
       const documents = await cursor.toArray();
 
       docContext = `
@@ -74,6 +74,7 @@ export async function POST(req: Request) {
     const stream = OpenAIStream(response);
     return new StreamingTextResponse(stream);
   } catch (e) {
+    console.error("Error:", e);
     throw e;
   }
 }
