@@ -1,16 +1,9 @@
 import express from "express";
 import multer from "multer";
 import axios from "axios";
-import fs from "fs";
-import { createReadStream, writeFileSync, unlinkSync } from "fs/promises";
+import fs from "fs/promises";
 
 const { handleCors } = require("./utils");
-
-const express = require("express");
-const multer = require("multer");
-const axios = require("axios");
-const fs = require("fs");
-const { createReadStream } = require("fs");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -38,7 +31,7 @@ app.post(
       // Save the uploaded audio file temporarily
       const audioBuffer = req.file.buffer;
       const audioPath = "temp_audio.wav";
-      fs.writeFileSync(audioPath, audioBuffer);
+      await fs.writeFile(audioPath, audioBuffer);
 
       // Initialize Whisper API endpoint and API key
       const whisperApiKey = process.env.OPENAI_API_KEY;
@@ -48,7 +41,7 @@ app.post(
       // Send the audio file to the Whisper API for transcription
       const response = await axios.post(
         whisperApiEndpoint,
-        createReadStream(audioPath),
+        fs.createReadStream(audioPath),
         {
           headers: {
             "Content-Type": "audio/wav",
@@ -61,7 +54,7 @@ app.post(
       const transcribedText = response.data.transcriptions[0].text;
 
       // Delete the temporary audio file
-      fs.unlinkSync(audioPath);
+      await fs.unlink(audioPath);
 
       // Return the transcribed text as a JSON response
       return res.status(200).json({ transcribedText });
