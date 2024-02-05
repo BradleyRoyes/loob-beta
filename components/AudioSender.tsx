@@ -1,59 +1,20 @@
-import React, { useState, useCallback } from "react";
-import axios from "axios";
+// Example function to call the API from the frontend
+async function transcribeAudio(audioBlob) {
+  const reader = new FileReader();
+  reader.readAsDataURL(audioBlob);
+  reader.onloadend = async () => {
+    const base64AudioMessage = reader.result.split(',')[1];
 
-interface AudioSenderProps {
-  onTranscription: (transcription: string) => void;
+    try {
+      const response = await fetch('/api/transcribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ audioBase64: base64AudioMessage }),
+      });
+      const data = await response.json();
+      console.log('Transcription:', data.transcription);
+    } catch (error) {
+      console.error('Error transcribing audio:', error);
+    }
+  };
 }
-
-const AudioSender: React.FC<AudioSenderProps> = ({ onTranscription }) => {
-  const [isRecording, setIsRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
-
-  const startRecording = useCallback(() => {
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then((stream) => {
-        const recorder = new MediaRecorder(stream);
-        recorder.start();
-        setMediaRecorder(recorder);
-        setIsRecording(true);
-      })
-      .catch((err) => console.error("Error accessing media devices:", err));
-  }, []);
-
-  const stopRecordingAndSend = useCallback(async () => {
-    if (!mediaRecorder) return;
-
-    mediaRecorder.stop();
-    mediaRecorder.stream.getTracks().forEach(track => track.stop()); // Stop all tracks to release the media stream
-
-    mediaRecorder.addEventListener("dataavailable", async (event) => {
-      const formData = new FormData();
-      formData.append("audioBlob", event.data);
-
-      try {
-        const response = await axios.post("/api/transcribe", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-
-        onTranscription(response.data.transcription);
-      } catch (error) {
-        console.error("Error sending audio to the server:", error);
-      } finally {
-        setIsRecording(false);
-      }
-    });
-
-    // Reset MediaRecorder for the next recording
-    setMediaRecorder(null);
-  }, [mediaRecorder, onTranscription]);
-
-  return (
-    <div>
-      <button onClick={isRecording ? stopRecordingAndSend : startRecording}>
-        {isRecording ? "Stop Recording and Send" : "Start Recording"}
-      </button>
-    </div>
-  );
-};
-
-export default AudioSender;
