@@ -1,43 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-// Custom type declarations for SpeechRecognition and SpeechRecognitionEvent
-declare global {
-  interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
-  }
-
-  interface SpeechRecognition extends EventTarget {
-    new(): SpeechRecognition;
-    continuous: boolean;
-    interimResults: boolean;
-    lang: string;
-    start: () => void;
-    stop: () => void;
-    onresult: (event: SpeechRecognitionEvent) => void;
-    onerror: (event: SpeechRecognitionErrorEvent) => void;
-  }
-
-  interface SpeechRecognitionResultList {
-    length: number;
-    item(index: number): SpeechRecognitionResult;
-  }
-
-  interface SpeechRecognitionResult {
-    isFinal: boolean;
-    item(index: number): SpeechRecognitionAlternative;
-  }
-
-  interface SpeechRecognitionAlternative {
-    transcript: string;
-  }
-
-  interface SpeechRecognitionEvent extends Event {
-    results: SpeechRecognitionResultList;
-    resultIndex: number;
-  }
-}
-
 interface AudioRecorderProps {
   onTranscription: (transcription: string) => void;
 }
@@ -45,17 +7,17 @@ interface AudioRecorderProps {
 const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
   const [recording, setRecording] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const speechRecognition = useRef<SpeechRecognition | null>(null);
+  const speechRecognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition = (window.SpeechRecognition || window.webkitSpeechRecognition) as any;
     if (SpeechRecognition) {
-      speechRecognition.current = new SpeechRecognition();
-      speechRecognition.current.continuous = true;
-      speechRecognition.current.interimResults = true;
-      speechRecognition.current.lang = "en-US";
+      speechRecognitionRef.current = new SpeechRecognition();
+      speechRecognitionRef.current.continuous = true;
+      speechRecognitionRef.current.interimResults = true;
+      speechRecognitionRef.current.lang = "en-US";
 
-      speechRecognition.current.onresult = (event: SpeechRecognitionEvent) => {
+      speechRecognitionRef.current.onresult = (event: any) => {
         let finalTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           if (event.results[i].isFinal) {
@@ -67,7 +29,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
         }
       };
 
-      speechRecognition.current.onerror = (event: any) => {
+      speechRecognitionRef.current.onerror = (event: any) => {
         console.error("SpeechRecognition error:", event.error);
         setError(`Error occurred in speech recognition: ${event.error}`);
       };
@@ -78,16 +40,16 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
   }, [onTranscription]);
 
   const startRecording = useCallback(() => {
-    if (speechRecognition.current && !recording) {
-      speechRecognition.current.start();
+    if (speechRecognitionRef.current && !recording) {
+      speechRecognitionRef.current.start();
       setRecording(true);
       setError(null);
     }
   }, [recording]);
 
   const stopRecording = useCallback(() => {
-    if (speechRecognition.current && recording) {
-      speechRecognition.current.stop();
+    if (speechRecognitionRef.current && recording) {
+      speechRecognitionRef.current.stop();
       setRecording(false);
     }
   }, [recording]);
@@ -106,3 +68,4 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
 };
 
 export default AudioRecorder;
+
