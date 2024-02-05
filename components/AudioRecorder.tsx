@@ -7,10 +7,12 @@ interface AudioRecorderProps {
 const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
   const [recording, setRecording] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const speechRecognitionRef = useRef<SpeechRecognition | null>(null);
+  // Using `any` to bypass the direct use of SpeechRecognition type
+  const speechRecognitionRef = useRef<any>(null);
 
   useEffect(() => {
-    const SpeechRecognition = (window.SpeechRecognition || window.webkitSpeechRecognition) as any;
+    // Dynamically check and use SpeechRecognition without type declaration
+    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
       speechRecognitionRef.current = new SpeechRecognition();
       speechRecognitionRef.current.continuous = true;
@@ -58,8 +60,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
     <div>
       <button
         onClick={() => recording ? stopRecording() : startRecording()}
-        style={{ backgroundColor: recording ? "red" : "green", color: "white" }}
-      >
+        style={{ backgroundColor: recording ? "red" : "green", color: "white" }}>
         {recording ? "Stop Recording" : "Start Recording"}
       </button>
       {error && <p style={{ color: "red" }}>Error: {error}</p>}
@@ -68,4 +69,5 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
 };
 
 export default AudioRecorder;
+
 
