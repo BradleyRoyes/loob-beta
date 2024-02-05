@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
-import { AstraDB, create as createCollection } from "@datastax/astra-db-ts";
+import { AstraDB } from "@datastax/astra-db-ts"; // Import AstraDB without 'create'
+import { create as createCollection } from "@datastax/astra-db-ts"; // Import 'create' separately
 import { v4 as uuidv4 } from 'uuid';
 
 const openai = new OpenAI({
