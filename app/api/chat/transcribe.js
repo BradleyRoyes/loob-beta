@@ -18,6 +18,7 @@ app.post("/api/chat/transcribe", upload.single("audio"), async (req, res) => {
   try {
     // Check if the request contains an audio file
     if (!req.file) {
+      console.log("No audio file in the request.");
       return res.status(400).json({ error: "Audio file is missing" });
     }
 
@@ -25,6 +26,8 @@ app.post("/api/chat/transcribe", upload.single("audio"), async (req, res) => {
     const audioBuffer = req.file.buffer;
     const audioPath = "temp_audio.wav";
     await fs.writeFile(audioPath, audioBuffer);
+
+    console.log("Audio file saved:", audioPath);
 
     // Initialize the API endpoint and API key
     const apiKey = process.env.OPENAI_API_KEY;
@@ -37,6 +40,8 @@ app.post("/api/chat/transcribe", upload.single("audio"), async (req, res) => {
       file: createReadStream(audioPath),
     };
 
+    console.log("Sending audio file to OpenAI API...");
+
     // Send the audio file to the OpenAI API for transcription
     const response = await axios.post(apiEndpoint, requestData, {
       headers: {
@@ -45,11 +50,15 @@ app.post("/api/chat/transcribe", upload.single("audio"), async (req, res) => {
       },
     });
 
+    console.log("Received response from OpenAI API.");
+
     // Get the transcribed text from the API response
     const transcribedText = response.data.transcription;
 
     // Delete the temporary audio file
     await unlink(audioPath);
+
+    console.log("Temporary audio file deleted.");
 
     // Return the transcribed text as a JSON response
     return res.status(200).json({ transcribedText });
