@@ -43,12 +43,21 @@ const AudioRecorder = ({ onTranscription }) => {
     }
 
     try {
+<<<<<<< HEAD
+      const response = await fetch('/api/chat/transcribe', {
+        method: 'POST',
+        body: audio,
+        headers: {
+          'Content-Type': 'audio/mpeg', // Use the appropriate content type for the audio format
+        },
+=======
       const audioBlob = await fetch(audioBlobUrl).then(r => r.blob());
       const formData = new FormData();
       formData.append('file', audioBlob, 'audio.webm');
 
       const response = await axios.post('/api/chat/whisper', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+>>>>>>> 203a81e1ae1a1db963bd378e1bbce2ab7d45ae45
       });
 
       console.log('Audio sent successfully', response.data);
