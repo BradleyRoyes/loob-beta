@@ -14,14 +14,17 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function analyzeBatch(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).send({ message: 'Only POST requests allowed' });
-  }
-
-  try {
-    // Retrieve all texts from AstraDB collection
-    const texts = await retrieveAllTexts();
+easync function retrieveAllTexts() {
+    try {
+      const texts = await astraDb
+        .namespace(process.env.ASTRA_DB_NAMESPACE)
+        .collection('journey_journal')
+        .find({});
+      return texts;
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      throw error;
+    }
 
     // Concatenate all texts into one large string for analysis
     const concatenatedTexts = texts.map(text => text.content).join(" ");
