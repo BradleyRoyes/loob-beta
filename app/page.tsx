@@ -53,6 +53,10 @@ export default function Page() {
     // Disable voice recording when submit button is pressed
     setAllowVoiceRecording(false);
 
+    setTimeout(() => {
+      setAllowVoiceRecording(true);
+    }, 1000); // 1000 milliseconds (1 second)
+
     handleSubmit(e, { options: { body: { useRag, llm, similarityMetric } } });
     handleInputChange({
       target: { value: "" },
