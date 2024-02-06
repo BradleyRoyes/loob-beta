@@ -59,11 +59,21 @@ export async function POST(req) {
       setCompletion(completionResult);
     };
 
+    const ragPrompt = [
+      {
+        role: 'system',
+        content: `You are an AI assistant designed to guide people through their transformative psychedelic trip experiences. Be compassionate and curious, engaging users to share more about their experiences.
+        ${docContext} 
+        If the answer is not provided in the context, the AI assistant will say, "I'm sorry, I don't know the answer".
+      `,
+      },
+    ];
+
     // Process chat response as before
     const response = await openai.chat.completions.create({
       model: llm ?? 'gpt-3.5-turbo',
       stream: true,
-      messages: messages,
+      messages: [...ragPrompt, ...messages],
     });
 
     // Separate call to ChatGPT for analysis - not returned to the user
