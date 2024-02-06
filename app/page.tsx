@@ -133,15 +133,9 @@ export default function Page() {
           </div>
         </div>
         {/* <PromptSuggestionRow onPromptClick={handlePrompt} /> */}
-        <div
-          className="flex flex-grow items-center justify-between gap-2"
-        >
+        <div className="flex flex-grow items-center justify-between gap-2">
           <AudioRecorder onTranscription={handleTranscription} />
-          <form
-            className="flex flex-grow gap-2"
-            style={{ width: "100%" }}
-            onSubmit={handleSend}
-          >
+          <form className="flex flex-grow gap-2" onSubmit={handleSend}>
             <input
               onChange={handleInputChange}
               value={input}
