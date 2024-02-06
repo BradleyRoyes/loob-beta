@@ -34,15 +34,12 @@ export default function Page() {
   const chatContainerRef = useRef(null);
 
   const scrollToBottom = () => {
-    if (chatContainerRef.current) {
-      const { scrollHeight, clientHeight } = chatContainerRef.current;
-      chatContainerRef.current.scrollTop = scrollHeight - clientHeight;
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     scrollToBottom();
-  }, [messages.length]);
+  }, [messages]);
 
   const handleTranscription = (transcription: string) => {
     handleInputChange({
@@ -126,7 +123,7 @@ export default function Page() {
         <div className="flex-1 relative overflow-y-auto my-4 md:my-6">
           <div className="absolute w-full overflow-x-hidden">
             {messages.map((message, index) => (
-              <Bubble key={`message-${index}`} content={message} />
+              <Bubble ref={messagesEndRef} key={`message-${index}`} content={message} />
             ))}
             <div ref={messagesEndRef} />
           </div>
