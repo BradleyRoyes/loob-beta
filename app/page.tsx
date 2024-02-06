@@ -36,7 +36,7 @@ export default function Page() {
   };
 
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
 
   const handleTranscription = (transcription: string) => {
@@ -152,7 +152,6 @@ export default function Page() {
               Send
             </span>
           </button>
-          <div ref={messagesEndRef} />
         </form>
         <Footer />
       </section>
