@@ -117,8 +117,8 @@ export default function Page() {
         </div>
         <div className="flex-1 relative overflow-y-auto my-4 md:my-6">
           <div className="absolute w-full overflow-x-hidden">
-            {messages.map((message, index) => (
-              <Bubble key={`message-${index}`} content={message} />
+            {messages.map((messages, index) => (
+              <Bubble key={`message-${index}`} content={messages} />
             ))}
             <div ref={messagesEndRef} />
           </div>
