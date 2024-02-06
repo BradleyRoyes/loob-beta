@@ -61,6 +61,17 @@ export async function POST(req) {
       `,
       },
     ]
+
+    const response = await openai.chat.completions.create(
+      {
+        model: llm ?? 'gpt-3.5-turbo',
+        stream: true,
+        messages: [...ragPrompt, ...messages],
+      }
+    );
+    const stream = OpenAIStream(response);
+    return new StreamingTextResponse(stream);
+    
     // Function to extract mood assessment and relevant keywords from a message
     const extractMetricsFromMessage = (message) => {
       const moodMatch = message.content.match(/Mood:\s*\[(.*?)\]/);
@@ -100,12 +111,4 @@ export async function POST(req) {
       }
     }
 
-    const response = await openai.chat.completions.create(
-      {
-        model: llm ?? 'gpt-3.5-turbo',
-        stream: true,
-        messages: [...ragPrompt, ...messages],
-      }
-    );
-    const stream = OpenAIStream(response);
-    return new StreamingTextResponse(stream);
+    
