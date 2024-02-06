@@ -1,54 +1,54 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
-import { v4 as uuidv4 } from 'uuid'; // Import uuid
-import Bubble from "../components/Bubble";
-import { useChat } from "ai/react";
-import Footer from "../components/Footer";
-import Configure from "../components/Configure";
-import PromptSuggestionRow from "../components/PromptSuggestions/PromptSuggestionsRow";
-import ThemeButton from "../components/ThemeButton";
-import useConfiguration from "./hooks/useConfiguration";
-import AudioRecorder from "../components/AudioRecorder";
+  import React, { useEffect, useRef, useState } from "react";
+  import Bubble from "../components/Bubble";
+  import { useChat } from "ai/react";
+  import Footer from "../components/Footer";
+  import Configure from "../components/Configure";
+  import PromptSuggestionRow from "../components/PromptSuggestions/PromptSuggestionsRow";
+  import ThemeButton from "../components/ThemeButton";
+  import useConfiguration from "./hooks/useConfiguration";
+  import AudioRecorder from "../components/AudioRecorder";
+  import { v4 as uuidv4 } from "uuid"; // Ensure you have 'uuid'
 
-export default function Page() {
-  const { append, messages, input, handleInputChange, handleSubmit } = useChat();
-  const { useRag, llm, similarityMetric, setConfiguration } = useConfiguration();
+  export default function Page() {
+    const { append, messages, input, handleInputChange, handleSubmit } = useChat();
+    const { useRag, llm, similarityMetric, setConfiguration } = useConfiguration();
 
-  const messagesEndRef = useRef(null);
-  const [configureOpen, setConfigureOpen] = useState(false);
-  const [transcribedText, setTranscribedText] = useState("");
-  // State for session ID
-  const [sessionID, setSessionID] = useState('');
+    const [sessionUUID, setSessionUUID] = useState(""); // State to store session UUID
+    const messagesEndRef = useRef(null);
+    const [configureOpen, setConfigureOpen] = useState(false);
+    const [transcribedText, setTranscribedText] = useState("");
 
-  // Generate session ID on component mount
-  useEffect(() => {
-    setSessionID(uuidv4());
-  }, []);
+    // Generate a session UUID when the component mounts
+    useEffect(() => {
+      setSessionUUID(uuidv4());
+    }, []);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+    const scrollToBottom = () => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    useEffect(() => {
+      scrollToBottom();
+    }, [messages]);
 
-  const handleTranscription = (transcription) => {
-    setTranscribedText(transcription);
-    append({ content: transcription, role: 'user', sessionID }); // Include sessionID
-  };
+    const handleTranscription = (transcription) => {
+      setTranscribedText(transcription);
+      // Here, you don't need to append the session UUID since it's a transcription
+      append({ content: transcription, role: 'user' });
+    };
 
-  // Update handleSend if possible to include session ID in messages
-  const handleSend = (e) => {
-    e.preventDefault();
-    // Ensure sessionID is included with each message sent
-    handleSubmit(e, { options: { body: { useRag, llm, similarityMetric, sessionID } } });
-  };
+    const handleSend = (e) => {
+      e.preventDefault();
+      // Include the session UUID only for user input messages
+      handleSubmit(e, { options: { body: { useRag, llm, similarityMetric, sessionUUID } } });
+    };
 
-  const handlePrompt = (promptText) => {
-    append({ content: promptText, role: 'user', sessionID }); // Include sessionID
-  };
-
+    const handlePrompt = (promptText) => {
+      append({ content: promptText, role: 'user' });
+      // Prompt messages also don't require the session UUID
+    };
+    
   return (
     <>
       <main className="flex h-screen flex-col items-center justify-center">
