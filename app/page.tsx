@@ -53,7 +53,7 @@ export default function Page() {
     } as React.ChangeEvent<HTMLInputElement>);
 
     // Ensure scrollToBottom is called after state and DOM updates
-    setTimeout(scrollToBottom, 100); // Adjust delay as needed
+    setTimeout(scrollToBottom, 1); // Adjust delay as needed
   };
 
   const handlePrompt = (promptText: string) => {
