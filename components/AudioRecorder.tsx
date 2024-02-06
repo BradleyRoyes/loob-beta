@@ -61,7 +61,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
       <button
         onClick={() => (recording ? stopRecording() : startRecording())}
         className={`p-2 rounded-full ${
-          recording ? "#b36f6a" : "#ffd998"
+          recording ? "#{b36f6a}" : "#{ffd998}"
         } text-white`}
       >
         {/* SVG Microphone Icon */}
