@@ -41,7 +41,7 @@
     const handleSend = (e) => {
       e.preventDefault();
       // Include the session UUID only for user input messages
-      handleSubmit(e, { options: { body: JSON.stringify({ useRag, llm, similarityMetric, sessionUUID, messages }) } });
+      handleSubmit(e, { options: { body: { useRag, llm, similarityMetric, sessionUUID } } });
     };
 
     const handlePrompt = (promptText) => {
