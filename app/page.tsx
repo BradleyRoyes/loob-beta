@@ -144,7 +144,7 @@ export default function Page() {
             />
             <button
               type="submit"
-              className="chatbot-send-button flex rounded-md items-center justify-center px-3"
+              className="chatbot-send-button flex rounded-md items-center justify-center px-2.5"
             >
               <svg
                 width="20"
