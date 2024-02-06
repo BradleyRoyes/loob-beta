@@ -9,12 +9,19 @@ const openai = new OpenAI({
 
 const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.ASTRA_DB_ENDPOINT, process.env.ASTRA_DB_NAMESPACE);
 
-// Function to generate a unique session ID
-function generateSessionId() {
-  return uuidv4();
+// Function to generate a unique session ID if it doesn't exist
+function generateSessionId(req) {
+  const existingSessionId = req.headers.get('x-session-id');
+  if (existingSessionId) {
+    return existingSessionId;
+  } else {
+    const newSessionId = uuidv4();
+    req.headers.set('x-session-id', newSessionId);
+    return newSessionId;
+  }
 }
 
-export async function POST(req: Request) {
+export async function POST(req) {
   try {
     const { messages, useRag, llm, similarityMetric } = await req.json();
 
@@ -52,7 +59,7 @@ export async function POST(req: Request) {
     ]
 
     // Send all user inputs to the "journey_journals" collection with a session ID
-    const sessionId = generateSessionId();
+    const sessionId = generateSessionId(req);
     for (const message of messages) {
       if (message.role === 'user') {
         const collection = await astraDb.collection("journey_journal");
