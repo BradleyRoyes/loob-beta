@@ -48,7 +48,7 @@ export async function POST(req) {
       }
     }
 
-    // Add mood assessment and relevant keywords to the Rag Prompt
+    // Add a request for metrics from ChatGPT in the Rag Prompt
     const ragPrompt = [
       {
         role: 'system',
@@ -56,15 +56,9 @@ export async function POST(req) {
         ${docContext} 
         If the answer is not provided in the context, the AI assistant will say, "I'm sorry, I don't know the answer".
 
-        Mood Assessment:
-        - Positive
-        - Neutral
-        - Negative
-
-        Relevant Keywords:
-        - Keyword 1
-        - Keyword 2
-        - Keyword 3
+        Request Metrics:
+        - Please provide mood assessment (Positive, Neutral, Negative).
+        - Identify and list up to three relevant keywords or themes.
       `,
       },
     ]
@@ -74,16 +68,15 @@ export async function POST(req) {
       if (message.role === 'user') {
         const collection = await astraDb.collection("journey_journal");
 
-        // Include mood assessment and relevant keywords in the message
-        message.mood = extractMetricsFromRagPrompt(ragPrompt[0].content).mood;
-        message.keywords = extractMetricsFromRagPrompt(ragPrompt[0].content).keywords;
+        // Extract metrics from the message
+        const metrics = extractMetricsFromMessage(message);
 
-        // Insert the message into the collection, including session ID, text, mood, and keywords
+        // Insert the message and metrics into the collection
         await collection.insertOne({
           sessionId: sessionId,
           text: message.content,
-          mood: message.mood,
-          keywords: message.keywords,
+          mood: metrics.mood,
+          keywords: metrics.keywords,
         });
       }
     }
@@ -102,10 +95,10 @@ export async function POST(req) {
   }
 }
 
-// Function to extract mood assessment and relevant keywords from Rag Prompt
-const extractMetricsFromRagPrompt = (ragPromptText) => {
-  const moodMatch = ragPromptText.match(/Mood Assessment:\s*-\s*([^]*)/);
-  const keywordsMatch = ragPromptText.match(/Relevant Keywords:\s*-\s*([^]*)/);
+// Function to extract mood assessment and relevant keywords from a message
+const extractMetricsFromMessage = (message) => {
+  const moodMatch = message.content.match(/Mood Assessment:\s*-\s*([^]*)/);
+  const keywordsMatch = message.content.match(/Relevant Keywords:\s*-\s*([^]*)/);
 
   if (moodMatch && keywordsMatch) {
     const mood = moodMatch[1].trim();
@@ -117,5 +110,8 @@ const extractMetricsFromRagPrompt = (ragPromptText) => {
     };
   }
 
-  return null;
+  return {
+    mood: null,
+    keywords: [],
+  };
 };
