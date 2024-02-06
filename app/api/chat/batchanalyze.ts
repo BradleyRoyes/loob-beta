@@ -1,4 +1,4 @@
-// app/chat/api/analyze.ts
+// app/api/chat/batchanalyze.ts
 import { AstraDB } from "@datastax/astra-db-ts";
 import OpenAI from 'openai';
 import { v4 as uuidv4 } from 'uuid';
@@ -20,20 +20,19 @@ export async function analyzeBatch(req, res) {
   }
 
   try {
-    // Extract sessionId from request
     const { sessionId } = req.body;
-
-    // Retrieve session-specific texts from AstraDB
     const texts = await retrieveTextsForSession(sessionId);
-
-    // Concatenate all texts into one large string for analysis
     const concatenatedTexts = texts.map(text => text.content).join(" ");
-
-    // Simple keyword extraction from the concatenated text
     const keywords = extractKeywords(concatenatedTexts);
 
-    // Respond with the keywords for visualization
-    res.status(200).json({ keywords });
+    // Map keywords to desired visualization structure
+    const wordsData = keywords.map(keyword => ({
+      text: keyword,
+      frequency: wordOccurrences[keyword], // Assuming wordOccurrences is globally accessible or returned by extractKeywords
+      sentiment: 'positive', // Placeholder for sentiment analysis
+    }));
+
+    res.status(200).json({ wordsData });
   } catch (error) {
     console.error('Error processing batch analysis:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -41,24 +40,28 @@ export async function analyzeBatch(req, res) {
 }
 
 async function retrieveTextsForSession(sessionId) {
-  // Assuming AstraDB's collection method is similar to MongoDB's for simplicity
-  const texts = await astraDb.collection('journey_journal').find({ sessionId });
+  // Mock function to fetch texts by session ID - replace with actual AstraDB query method
+  // This function simulates fetching documents based on a session ID
+  // Actual implementation will vary based on AstraDB's API
+  const texts = await mockFetchDocumentsBySessionId('journey_journal', sessionId);
   return texts;
 }
 
+// Placeholder for the actual database query function
+// Replace with the method provided by AstraDB to fetch documents by session ID
+async function mockFetchDocumentsBySessionId(collectionName, sessionId) {
+  // Simulate database operation
+  return []; // Return an array of documents
+}
+
+let wordOccurrences = {}; // Define globally if needed across functions
 function extractKeywords(text) {
-  // Simple keyword extraction logic (placeholder for demonstration)
-  // This could be a more sophisticated NLP process depending on your requirements
-  const wordOccurrences = {};
+  wordOccurrences = {}; // Reset for each call
   text.split(/\s+/).forEach(word => {
     word = word.toLowerCase();
     if (!wordOccurrences[word]) wordOccurrences[word] = 0;
     wordOccurrences[word]++;
   });
 
-  // Convert the occurrences object into an array of words sorted by frequency
-  const sortedWords = Object.keys(wordOccurrences).sort((a, b) => wordOccurrences[b] - wordOccurrences[a]);
-
-  // For simplicity, return the top 10 words as keywords
-  return sortedWords.slice(0, 10);
+  return Object.keys(wordOccurrences).sort((a, b) => wordOccurrences[b] - wordOccurrences[a]).slice(0, 10);
 }
