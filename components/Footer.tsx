@@ -5,6 +5,7 @@ const Footer = () => {
         className=" vercel-link flex h-8 w-max flex-none items-center justify-center border rounded-md text-xs"
         aria-label="Create with seks"
         href="https://seks.design"
+        target="_blank"
       >
         <span className="px-3">▲</span>
         <hr className="h-full border-r" />
