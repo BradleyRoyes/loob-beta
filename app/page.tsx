@@ -44,10 +44,15 @@ export default function Page() {
     setTranscribedText(transcription);
     append({ id: uuidv4(), content: transcription, role: "user" as const });
 
-    const handleSend = (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
+    const handleSend = (e) => {
+      e.preventDefault(); // Prevent the default form submit action
       if (transcribedText.trim()) {
-        handleSubmit(e, { input: transcribedText, options: { body: { useRag, llm, similarityMetric } } }); // Use transcribed text as input
+        // Assuming handleInputChange correctly updates the state expected by handleSubmit
+        handleInputChange({ target: { value: transcribedText } }); // Ensure this updates the state as expected
+
+        // Call handleSubmit with only the event, assuming it uses the updated state
+        handleSubmit(e); // Adjusted to match expected usage
+
         setTranscribedText(""); // Reset transcription for the next message
       }
     };
