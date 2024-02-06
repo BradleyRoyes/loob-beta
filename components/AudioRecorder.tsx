@@ -57,14 +57,28 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
   }, [recording]);
 
   return (
-    <div>
+    <div className="flex items-center">
       <button
         onClick={() => (recording ? stopRecording() : startRecording())}
-        style={{ backgroundColor: recording ? "red" : "green", color: "white" }}
+        className={`p-2 rounded-full ${
+          recording ? "bg-red-500" : "bg-green-500"
+        } text-white`}
       >
-        {recording ? "Stop Recording" : "Start Recording"}
+        {/* SVG Microphone Icon */}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          fill="currentColor"
+          viewBox="0 0 16 16"
+          className="bi bi-mic"
+        >
+          <path d="M11 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
+          <path d="M11 7V5a3 3 0 1 0-6 0v2a3 3 0 1 0 6 0z" />
+          <path d="M6.5 10.5a.5.5 0 0 1 .5.5V14h.5a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1h.5v-3a.5.5 0 0 1 .5-.5z" />
+        </svg>
       </button>
-      {error && <p style={{ color: "red" }}>Error: {error}</p>}
+      {error && <p className="text-red-500 text-xs mt-2">Error: {error}</p>}
     </div>
   );
 };
