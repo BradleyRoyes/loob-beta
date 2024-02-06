@@ -1,7 +1,6 @@
 // app/chat/api/analyze.ts
 import { AstraDB } from "@datastax/astra-db-ts";
 import OpenAI from 'openai';
-import { v4 as uuidv4 } from 'uuid';
 
 // Initialize AstraDB and OpenAI clients
 const astraDb = new AstraDB(
@@ -14,17 +13,13 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-easync function retrieveAllTexts() {
-    try {
-      const texts = await astraDb
-        .namespace(process.env.ASTRA_DB_NAMESPACE)
-        .collection('journey_journal')
-        .find({});
-      return texts;
-    } catch (error) {
-      console.error('Error fetching documents:', error);
-      throw error;
-    }
+export async function analyzeBatch(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).send({ message: 'Only POST requests allowed' });
+  }
+
+  try {
+    const texts = await retrieveAllTexts();
 
     // Concatenate all texts into one large string for analysis
     const concatenatedTexts = texts.map(text => text.content).join(" ");
@@ -41,9 +36,16 @@ easync function retrieveAllTexts() {
 }
 
 async function retrieveAllTexts() {
-  // Assuming AstraDB's collection method is similar to MongoDB's for simplicity
-  const texts = await astraDb.collection('journey_journal').find({});
-  return texts;
+  try {
+    const texts = await astraDb
+      .namespace(process.env.ASTRA_DB_NAMESPACE)
+      .collection('journey_journal')
+      .find({});
+    return texts;
+  } catch (error) {
+    console.error('Error fetching documents:', error);
+    throw error;
+  }
 }
 
 function extractKeywords(text) {
