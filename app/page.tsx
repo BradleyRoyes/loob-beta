@@ -133,9 +133,12 @@ export default function Page() {
           </div>
         </div>
         {/* <PromptSuggestionRow onPromptClick={handlePrompt} /> */}
-        <div className="flex items-center justify-center w-full">
+        <div className="flex h-screen flex-col items-center justify-center">
           <AudioRecorder onTranscription={handleTranscription} />
-          <form className="flex items-center gap-2" onSubmit={handleSend}>
+          <form
+            className="flex items-center justify-center w-full"
+            onSubmit={handleSend}
+          >
             <input
               onChange={handleInputChange}
               value={input}
