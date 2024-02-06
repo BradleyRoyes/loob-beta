@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
 import { AstraDB } from "@datastax/astra-db-ts";
 import { v4 as uuidv4 } from 'uuid';
+import { useCompletion } from 'ai/react'; // Import the useCompletion hook
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -37,6 +38,26 @@ export async function POST(req) {
       const documents = await cursor.toArray();
       docContext = documents.map((doc) => doc.content).join("\n");
     }
+
+    // Use the useCompletion hook for text completion
+    const {
+      completion,
+      input,
+      stop,
+      isLoading,
+      handleInputChange,
+      handleSubmit,
+    } = useCompletion({
+      api: '/api/completion',
+      // Add other configuration options as needed
+    });
+
+    // Handle message submission
+    const handleMessageSubmit = async () => {
+      setMessages([...messages, { content: input }]);
+      const completionResult = await handleSubmit();
+      setCompletion(completionResult);
+    };
 
     // Process chat response as before
     const response = await openai.chat.completions.create({
