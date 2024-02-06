@@ -31,16 +31,11 @@ export default function Page() {
   const [configureOpen, setConfigureOpen] = useState(false);
   const [showNeuronVisual, setShowNeuronVisual] = useState(false);
 
-  const chatContainerRef = useRef(null); // Ref for the chat container
-
   const scrollToBottom = () => {
-    if (chatContainerRef.current) {
-      const { scrollHeight, clientHeight } = chatContainerRef.current;
-      chatContainerRef.current.scrollTop = scrollHeight - clientHeight;
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     scrollToBottom();
   }, [messages.length]);
 
@@ -83,10 +78,7 @@ export default function Page() {
 
   return (
     <main className="flex h-screen flex-col items-center justify-center">
-      <section
-        ref={chatContainerRef}
-        className="chatbot-section flex flex-col origin:w-[800px] w-full origin:h-[735px] h-full rounded-md p-2 md:p-6"
-      >
+      <section className="chatbot-section flex flex-col origin:w-[800px] w-full origin:h-[735px] h-full rounded-md p-2 md:p-6">
         <div className="chatbot-header pb-6">
           <div className="flex justify-between items-center">
             <h1 className="chatbot-text-primary text-6xl md:text-7xl font-extrabold tracking-wide">
@@ -160,6 +152,7 @@ export default function Page() {
               Send
             </span>
           </button>
+          <div ref={messagesEndRef} />
         </form>
         <Footer />
       </section>
