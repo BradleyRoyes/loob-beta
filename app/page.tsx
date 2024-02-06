@@ -9,7 +9,7 @@
 // </svg>
 
 "use client"; // Mark the parent component as a client component
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
 import Bubble from "../components/Bubble";
 import { useChat } from "ai/react";
 import Footer from "../components/Footer";
@@ -35,7 +35,7 @@ export default function Page() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     scrollToBottom();
   }, [messages.length]);
 
