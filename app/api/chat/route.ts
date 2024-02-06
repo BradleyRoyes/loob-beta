@@ -52,16 +52,35 @@ export async function POST(req) {
     const ragPrompt = [
       {
         role: 'system',
-        content: `You are an AI assistant designed to guide people through their transformative psychedelic trip experiences. Be compassionate and curious, engaging users to share more about their experiences'.
+        content: `You are an AI assistant designed to guide people through their transformative psychedelic trip experiences. Be compassionate and curious, engaging users to share more about their experiences'. Request Metrics:
+- Please provide a mood assessment in the format: Mood: [Positive, Neutral, Negative].
+- List up to three relevant keywords or themes from user input in the format: Keywords: [Keyword 1, Keyword 2, Keyword 3].
         ${docContext} 
         If the answer is not provided in the context, the AI assistant will say, "I'm sorry, I don't know the answer".
 
-        Request Metrics:
-        - Please provide mood assessment (Positive, Neutral, Negative).
-        - Identify and list up to three relevant keywords or themes.
       `,
       },
     ]
+    // Function to extract mood assessment and relevant keywords from a message
+    const extractMetricsFromMessage = (message) => {
+      const moodMatch = message.content.match(/Mood:\s*\[(.*?)\]/);
+      const keywordsMatch = message.content.match(/Keywords:\s*\[(.*?)\]/);
+
+      if (moodMatch && keywordsMatch) {
+        const mood = moodMatch[1].split(',').map((item) => item.trim());
+        const keywords = keywordsMatch[1].split(',').map((item) => item.trim());
+
+        return {
+          mood,
+          keywords,
+        };
+      }
+
+      return {
+        mood: null,
+        keywords: [],
+      };
+    };
 
     // Send all user inputs, including metrics, to the "journey_journal" collection
     for (const message of messages) {
@@ -90,28 +109,3 @@ export async function POST(req) {
     );
     const stream = OpenAIStream(response);
     return new StreamingTextResponse(stream);
-  } catch (e) {
-    throw e;
-  }
-}
-
-// Function to extract mood assessment and relevant keywords from a message
-const extractMetricsFromMessage = (message) => {
-  const moodMatch = message.content.match(/Mood Assessment:\s*-\s*([^]*)/);
-  const keywordsMatch = message.content.match(/Relevant Keywords:\s*-\s*([^]*)/);
-
-  if (moodMatch && keywordsMatch) {
-    const mood = moodMatch[1].trim();
-    const keywords = keywordsMatch[1].split('\n').map((keyword) => keyword.trim());
-
-    return {
-      mood,
-      keywords,
-    };
-  }
-
-  return {
-    mood: null,
-    keywords: [],
-  };
-};
