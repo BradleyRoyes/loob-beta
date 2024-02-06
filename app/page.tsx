@@ -143,7 +143,10 @@ export default function Page() {
 
         <form className="flex h-[40px] gap-2" onSubmit={handleSend}>
           {allowVoiceRecording && (
-            <AudioRecorder onTranscription={handleTranscription} />
+            <AudioRecorder
+              onTranscription={handleTranscription}
+              shouldActivate={allowVoiceRecording}
+            />
           )}
           <input
             onChange={handleInputChange}
