@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 
 interface AudioRecorderProps {
   onTranscription: (transcription: string) => void;
+  shouldActivate: boolean;
 }
 
-const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
+const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription, shouldActivate, }) => {
   const [recording, setRecording] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   // Using `any` to bypass the direct use of SpeechRecognition type
@@ -42,7 +43,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
   }, [onTranscription]);
 
   const startRecording = useCallback(() => {
-    if (speechRecognitionRef.current && !recording) {
+    if (speechRecognitionRef.current && !recording && shouldActivate) {
       speechRecognitionRef.current.start();
       setRecording(true);
       setError(null);
@@ -54,7 +55,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
       speechRecognitionRef.current.stop();
       setRecording(false);
     }
-  }, [recording]);
+  }, [recording, shouldActivate]);
 
   return (
     <div className="flex items-center">
