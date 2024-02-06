@@ -2,13 +2,9 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 
 interface AudioRecorderProps {
   onTranscription: (transcription: string) => void;
-  currentInputValue: string;
 }
 
-const AudioRecorder: React.FC<AudioRecorderProps> = ({
-  onTranscription,
-  currentInputValue,
-}) => {
+const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
   const [recording, setRecording] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   // Using `any` to bypass the direct use of SpeechRecognition type
@@ -31,8 +27,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
           }
         }
         if (finalTranscript.trim()) {
-          // Append the new transcription to the existing input
-          onTranscription(currentInputValue + finalTranscript.trim());
+          onTranscription(finalTranscript.trim());
         }
       };
 
@@ -44,7 +39,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       console.error("This browser doesn't support SpeechRecognition.");
       setError("This browser doesn't support SpeechRecognition.");
     }
-  }, [onTranscription, currentInputValue]);
+  }, [onTranscription]);
 
   const startRecording = useCallback(() => {
     if (speechRecognitionRef.current && !recording) {
