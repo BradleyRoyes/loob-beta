@@ -1,66 +1,75 @@
-import { OpenAI, Configuration } from 'openai';
+import OpenAI from 'openai';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
 import { AstraDB } from "@datastax/astra-db-ts";
 
-// Initialize the OpenAI client with your API key
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAI(configuration);
 
-const astraDb = new AstraDB(
-  process.env.ASTRA_DB_APPLICATION_TOKEN,
-  process.env.ASTRA_DB_ENDPOINT,
-  process.env.ASTRA_DB_NAMESPACE
-);
+const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.ASTRA_DB_ENDPOINT, process.env.ASTRA_DB_NAMESPACE);
 
-export async function POST(req) {
+export async function POST(req: Request) {
   try {
-    const { messages, useRag, llm = 'text-davinci-003', similarityMetric } = await req.json(); // Defaulting llm to a model if not provided
-    let sessionId = req.headers.get("x-session-id") || "fallback-session-id"; // Fallback session ID
+    const { messages, useRag, llm, similarityMetric } = await req.json();
+
+    const latestMessage = messages[messages?.length - 1]?.content;
 
     let docContext = '';
-    if (useRag && messages.length > 0) {
-      const latestMessage = messages[messages.length - 1]?.content;
-      if (latestMessage) {
-        // This assumes you have logic to deal with embeddings related to your database
-        // Since direct similarity searches might not be straightforward, consider manual or alternative implementations
+    if (useRag) {
+      const { data } = await openai.embeddings.create({ input: latestMessage, model: 'text-embedding-ada-002' });
+
+      const collection = await astraDb.collection(`chat_${similarityMetric}`);
+
+      const cursor = collection.find(null, {
+        sort: {
+          $vector: data[0]?.embedding,
+        },
+        limit: 5,
+      });
+
+      const documents = await cursor.toArray();
+
+      docContext = `
+        START CONTEXT
+        ${documents?.map(doc => doc.content).join("\n")}
+        END CONTEXT
+      `
+    }
+    const ragPrompt = [
+      {
+        role: 'system',
+        content: `You are an AI assistant designed to guide people through their transformative psychedelic trip expereiences. Be compassionate and curious, engaging users to share mroe about their experiences'.
+        ${docContext} 
+        If the answer is not provided in the context, the AI assistant will say, "I'm sorry, I don't know the answer".
+      `,
+      },
+    ]
+
+    // Check if there's an existing session token in the request, otherwise generate a new one
+    const sessionToken = req.headers['session-token'] || uuidv4();
+
+
+    for (const message of messages) {
+      if (message.role === 'user') {
+        const collection = await astraDb.collection("journey_journals");
+        // Include the sessionToken with each message
+        await collection.insertOne({
+          ...message,
+          sessionToken, // Add the sessionToken here
+        });
       }
     }
 
-    // Analyze the conversation and prepare data for storage
-    const analysisPrompt = `Given the conversation: "${messages.map(m => m.content).join("\n")}", provide a mood rating (1-10), an intensity of the altered state of consciousness rating (1-10), and list relevant keywords related to psychedelic trip reports.`;
-    const analysisResponse = await openai.completions.create({
-      model: 'text-davinci-003',
-      prompt: analysisPrompt,
-      max_tokens: 1024,
-    });
-    const analysisText = analysisResponse.data.choices[0].text.trim();
-
-    // Proceed with chat completions as corrected
-    const response = await openai.completions.create({
-      model: llm,
-      prompt: messages.map(m => m.content).join("\n") + "\n" + docContext, // Combine messages and docContext
-      max_tokens: 1024,
-      temperature: 0.7,
-    });
-
-    // Example parsing of analysisText to extract moodRating, intensityRating, keywords
-    // This requires custom logic based on the format of analysisText
-
-    // Store chat messages, analysis results, and session ID in the database
-    await astraDb.collection("journey_journal").insertOne({
-      sessionId,
-      messages,
-      analysisText, // Consider parsing this text to store structured data
-      timestamp: new Date().toISOString(),
-    });
-
+    const response = await openai.chat.completions.create(
+      {
+        model: llm ?? 'gpt-3.5-turbo',
+        stream: true,
+        messages: [...ragPrompt, ...messages],
+      }
+    );
     const stream = OpenAIStream(response);
     return new StreamingTextResponse(stream);
   } catch (e) {
-    console.error(e);
-    // Adjust the error handling as needed
     throw e;
   }
 }
