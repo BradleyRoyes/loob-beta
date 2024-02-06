@@ -132,8 +132,9 @@ export default function Page() {
           </div>
         </div>
         {/* <PromptSuggestionRow onPromptClick={handlePrompt} /> */}
-        <AudioRecorder onTranscription={handleTranscription} />
+
         <form className="flex h-[40px] gap-2" onSubmit={handleSend}>
+          <AudioRecorder onTranscription={handleTranscription} />
           <input
             onChange={handleInputChange}
             value={input}
