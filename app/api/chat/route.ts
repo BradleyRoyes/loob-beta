@@ -48,23 +48,42 @@ export async function POST(req) {
       }
     }
 
+    // Add mood assessment and relevant keywords to the Rag Prompt
     const ragPrompt = [
       {
         role: 'system',
         content: `You are an AI assistant designed to guide people through their transformative psychedelic trip experiences. Be compassionate and curious, engaging users to share more about their experiences'.
         ${docContext} 
         If the answer is not provided in the context, the AI assistant will say, "I'm sorry, I don't know the answer".
+
+        Mood Assessment:
+        - Positive
+        - Neutral
+        - Negative
+
+        Relevant Keywords:
+        - Keyword 1
+        - Keyword 2
+        - Keyword 3
       `,
       },
     ]
 
-    // Send all user inputs to the "journey_journals" collection
+    // Send all user inputs, including metrics, to the "journey_journal" collection
     for (const message of messages) {
       if (message.role === 'user') {
         const collection = await astraDb.collection("journey_journal");
+
+        // Include mood assessment and relevant keywords in the message
+        message.mood = extractMetricsFromRagPrompt(ragPrompt[0].content).mood;
+        message.keywords = extractMetricsFromRagPrompt(ragPrompt[0].content).keywords;
+
+        // Insert the message into the collection, including session ID, text, mood, and keywords
         await collection.insertOne({
-          ...message,
           sessionId: sessionId,
+          text: message.content,
+          mood: message.mood,
+          keywords: message.keywords,
         });
       }
     }
@@ -82,3 +101,21 @@ export async function POST(req) {
     throw e;
   }
 }
+
+// Function to extract mood assessment and relevant keywords from Rag Prompt
+const extractMetricsFromRagPrompt = (ragPromptText) => {
+  const moodMatch = ragPromptText.match(/Mood Assessment:\s*-\s*([^]*)/);
+  const keywordsMatch = ragPromptText.match(/Relevant Keywords:\s*-\s*([^]*)/);
+
+  if (moodMatch && keywordsMatch) {
+    const mood = moodMatch[1].trim();
+    const keywords = keywordsMatch[1].split('\n').map((keyword) => keyword.trim());
+
+    return {
+      mood,
+      keywords,
+    };
+  }
+
+  return null;
+};
