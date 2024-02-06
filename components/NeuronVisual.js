@@ -10,22 +10,20 @@ const NeuronVisual = () => {
     // Define the function to fetch words data from the API
     const fetchWordsData = async () => {
       try {
-        const response = await fetch('/api/chat/batchanalyze', {
+        const response = await fetch('/api/chat/analyzeBatch', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            sessionId: 'your-session-id', // Make sure to replace 'your-session-id' with the actual session ID you want to query
-          }),
+          body: JSON.stringify({}),
         });
 
         if (!response.ok) {
           throw new Error('Network response was not ok');
-        }
+        }    
 
         const data = await response.json();
-        setWordsData(data.wordsData); // Assuming the API returns an object with a 'wordsData' key
+        setWordsData(data.keywords); // Assuming the API returns an object with a 'keywords' key
       } catch (error) {
         console.error('There was a problem with your fetch operation:', error);
       }
