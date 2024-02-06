@@ -17,7 +17,7 @@
   --text-tertiary: #6B6F73; /* Medium Gray */
   --shadow-primary: 0px 6px 16px 0px #0A0A0A1F, 0px 4px 14px 0px #0A0A0A14, 0px 8px 10px 0px #0A0A0A14;
   --processing-dot-size: 4px;
-  --font-family: 'Cousine', sans-serif; /* Helvetica font */
+  --font-family: 'Rebond Grotesque', sans-serif; /* Helvetica font */
 }
 
 .dark {
