@@ -1,10 +1,12 @@
-import OpenAI from 'openai';
+import { OpenAI, Configuration } from 'openai';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
 import { AstraDB } from "@datastax/astra-db-ts";
 
-const openai = new OpenAI({
+// Initialize the OpenAI client with your API key
+const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
+const openai = new OpenAI(configuration);
 
 const astraDb = new AstraDB(
   process.env.ASTRA_DB_APPLICATION_TOKEN,
@@ -14,48 +16,43 @@ const astraDb = new AstraDB(
 
 export async function POST(req) {
   try {
-    const { messages, useRag, llm, similarityMetric } = await req.json();
-    let sessionId = req.headers.get("x-session-id") || "fallback-session-id";
+    const { messages, useRag, llm = 'text-davinci-003', similarityMetric } = await req.json(); // Defaulting llm to a model if not provided
+    let sessionId = req.headers.get("x-session-id") || "fallback-session-id"; // Fallback session ID
 
     let docContext = '';
     if (useRag && messages.length > 0) {
       const latestMessage = messages[messages.length - 1]?.content;
       if (latestMessage) {
-        // Assuming embedding generation and subsequent retrieval of documents based on those embeddings
-        const { data } = await openai.embeddings.create({
-          input: latestMessage,
-          model: 'text-embedding-ada-002',
-        });
-        // You will need to implement logic to find documents based on embeddings here.
-        // This could involve querying your database with criteria relevant to the embeddings.
-        // Since `findSimilar` is not available, you'll likely need a custom implementation.
+        // This assumes you have logic to deal with embeddings related to your database
+        // Since direct similarity searches might not be straightforward, consider manual or alternative implementations
       }
     }
 
-    // Proceed with chat completions as before
-    const response = await openai.Completion.create({
-      model: llm || 'gpt-3.5-turbo',
-      prompt: messages.map(m => m.content).join("\n") + "\n" + docContext, // Combine messages and docContext
-      max_tokens: 1024,
-      n: 1,
-      stop: null,
-      temperature: 0.5,
-    });
-
+    // Analyze the conversation and prepare data for storage
     const analysisPrompt = `Given the conversation: "${messages.map(m => m.content).join("\n")}", provide a mood rating (1-10), an intensity of the altered state of consciousness rating (1-10), and list relevant keywords related to psychedelic trip reports.`;
-    const analysisResponse = await openai.Completion.create({
-      model: 'text-davinci-003', // Adjust model as needed
+    const analysisResponse = await openai.completions.create({
+      model: 'text-davinci-003',
       prompt: analysisPrompt,
       max_tokens: 1024,
     });
-    const analysis = analysisResponse.data.choices[0].text.trim();
-    // Parse the analysis result as needed to extract moodRating, intensityRating, keywords
+    const analysisText = analysisResponse.data.choices[0].text.trim();
 
-    // Store chat messages and analysis results in the database
+    // Proceed with chat completions as corrected
+    const response = await openai.completions.create({
+      model: llm,
+      prompt: messages.map(m => m.content).join("\n") + "\n" + docContext, // Combine messages and docContext
+      max_tokens: 1024,
+      temperature: 0.7,
+    });
+
+    // Example parsing of analysisText to extract moodRating, intensityRating, keywords
+    // This requires custom logic based on the format of analysisText
+
+    // Store chat messages, analysis results, and session ID in the database
     await astraDb.collection("journey_journal").insertOne({
       sessionId,
       messages,
-      analysis, // Include full analysis string or parsed fields
+      analysisText, // Consider parsing this text to store structured data
       timestamp: new Date().toISOString(),
     });
 
@@ -63,6 +60,7 @@ export async function POST(req) {
     return new StreamingTextResponse(stream);
   } catch (e) {
     console.error(e);
+    // Adjust the error handling as needed
     throw e;
   }
 }
