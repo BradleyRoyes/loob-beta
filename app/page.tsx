@@ -30,7 +30,6 @@ export default function Page() {
   const messagesEndRef = useRef(null);
   const [configureOpen, setConfigureOpen] = useState(false);
   const [showNeuronVisual, setShowNeuronVisual] = useState(false);
-  const [allowVoiceRecording, setAllowVoiceRecording] = useState(true);
 
   const chatContainerRef = useRef(null);
 
@@ -50,12 +49,6 @@ export default function Page() {
 
   const handleSend = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Disable voice recording when submit button is pressed
-    setAllowVoiceRecording(false);
-
-    setTimeout(() => {
-      setAllowVoiceRecording(true);
-    }, 1000); // 1000 milliseconds (1 second)
 
     handleSubmit(e, { options: { body: { useRag, llm, similarityMetric } } });
     handleInputChange({
@@ -142,12 +135,7 @@ export default function Page() {
         {/* <PromptSuggestionRow onPromptClick={handlePrompt} /> */}
 
         <form className="flex h-[40px] gap-2" onSubmit={handleSend}>
-          {allowVoiceRecording && (
-            <AudioRecorder
-              onTranscription={handleTranscription}
-              shouldActivate={allowVoiceRecording}
-            />
-          )}
+          <AudioRecorder onTranscription={handleTranscription} />
           <input
             onChange={handleInputChange}
             value={input}
