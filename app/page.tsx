@@ -113,7 +113,7 @@ export default function Page() {
               </button>
               <button
                 onClick={() => setShowNeuronVisual(true)}
-                className="mb-4 p-2 bg-green-500 text-white rounded"
+                className="mb-4 p-2 #{ffe2cc} text-white rounded"
               >
                 Data Analytics Dashboard
               </button>
