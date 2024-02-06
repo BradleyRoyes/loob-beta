@@ -123,9 +123,12 @@ export default function Page() {
         <div className="flex-1 relative overflow-y-auto my-4 md:my-6">
           <div className="absolute w-full overflow-x-hidden">
             {messages.map((message, index) => (
-              <Bubble ref={messagesEndRef} key={`message-${index}`} content={message} />
+              <Bubble
+                ref={messagesEndRef}
+                key={`message-${index}`}
+                content={message}
+              />
             ))}
-            <div ref={messagesEndRef} />
           </div>
         </div>
         {/* <PromptSuggestionRow onPromptClick={handlePrompt} /> */}
