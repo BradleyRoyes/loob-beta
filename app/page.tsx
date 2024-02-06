@@ -1,5 +1,6 @@
-"use client"; // Mark the parent component as a client component
+"use client";
 import React, { useEffect, useRef, useState } from "react";
+import { v4 as uuidv4 } from 'uuid'; // Import uuid
 import Bubble from "../components/Bubble";
 import { useChat } from "ai/react";
 import Footer from "../components/Footer";
@@ -16,6 +17,13 @@ export default function Page() {
   const messagesEndRef = useRef(null);
   const [configureOpen, setConfigureOpen] = useState(false);
   const [transcribedText, setTranscribedText] = useState("");
+  // State for session ID
+  const [sessionID, setSessionID] = useState('');
+
+  // Generate session ID on component mount
+  useEffect(() => {
+    setSessionID(uuidv4());
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -27,16 +35,18 @@ export default function Page() {
 
   const handleTranscription = (transcription) => {
     setTranscribedText(transcription);
-    append({ content: transcription, role: 'user' }); // Removed the id generation
+    append({ content: transcription, role: 'user', sessionID }); // Include sessionID
   };
 
+  // Update handleSend if possible to include session ID in messages
   const handleSend = (e) => {
     e.preventDefault();
-    handleSubmit(e, { options: { body: { useRag, llm, similarityMetric } } });
+    // Ensure sessionID is included with each message sent
+    handleSubmit(e, { options: { body: { useRag, llm, similarityMetric, sessionID } } });
   };
 
   const handlePrompt = (promptText) => {
-    append({ content: promptText, role: 'user' }); // Removed the id generation
+    append({ content: promptText, role: 'user', sessionID }); // Include sessionID
   };
 
   return (
