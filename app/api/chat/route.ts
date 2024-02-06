@@ -1,7 +1,6 @@
 import OpenAI from 'openai';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
 import { AstraDB } from "@datastax/astra-db-ts";
-import { v4 as uuidv4 } from "uuid";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -15,9 +14,7 @@ const astraDb = new AstraDB(
 
 export async function POST(req: Request) {
   try {
-    const { messages, useRag, llm, similarityMetric } = await req.json();
-    // Extract or generate a session token
-    const sessionToken = req.headers.get('session-token') || uuidv4();
+    const { messages, useRag, llm, similarityMetric, sessionUUID } = await req.json(); // Assume sessionUUID is sent from client
 
     let docContext = '';
     if (useRag) {
@@ -34,34 +31,28 @@ export async function POST(req: Request) {
 
       const documents = await cursor.toArray();
 
-      docContext = `
-        START CONTEXT
-        ${documents.map(doc => doc.content).join("\n")}
-        END CONTEXT
-      `;
+      docContext = documents.map(doc => doc.content).join("\n");
     }
 
-    // Create the system prompt as before
     const ragPrompt = [
       {
         role: 'system',
-        content: `You are an AI assistant answering questions about Cassandra and Astra DB. Format responses using markdown where applicable.
+        content: `You are an AI assistant designed to guide people through their transformative psychedelic trip experiences.
         ${docContext}
         If the answer is not provided in the context, the AI assistant will say, "I'm sorry, I don't know the answer".`,
       },
     ];
 
-    // Process each message as before but only attach the session token to entries for the journey_journals collection
+    // Process user messages for journey_journals with session token
     for (const message of messages) {
       if (message.role === 'user') {
         await astraDb.collection("journey_journals").insertOne({
           ...message,
-          sessionToken, // Append sessionToken for each user message
+          sessionUUID, // Attach the sessionUUID only here
         });
       }
     }
 
-    // Generate chat completions as before
     const response = await openai.chat.completions.create({
       model: llm ?? 'gpt-3.5-turbo',
       stream: true,
