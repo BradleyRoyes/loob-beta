@@ -52,9 +52,8 @@ export default function Page() {
         <section className="chatbot-section flex flex-col origin:w-[800px] w-full origin:h-[735px] h-full rounded-md p-2 md:p-6">
           <div className="chatbot-header pb-6">
             <div className="flex justify-between items-center">
-              <h1 className="chatbot-text-primary text-6xl md:text-7xl font-extrabold tracking-wide">
-                <span className="text-7xl md:text-8xl">Loob</span> 
-                <span className="text-2xl md:text-3xl font-normal">The App</span>
+              <h1 className="chatbot-text-primary text-5xl md:text-6xl font-extrabold tracking-wide">
+                Loob The App
               </h1>
               <div className="flex gap-1">
                 <ThemeButton />
@@ -72,8 +71,7 @@ export default function Page() {
               </div>
             </div>
             <p className="chatbot-text-secondary-inverse text-lg md:text-xl mt-2 md:mt-4 font-medium">
-              Welcome to Loob Labratories. A Journey Journal like no other. We
-              are glad you are here.
+              A New Era in Collective Journaling and Community Insight
             </p>
           </div>
           <div className="flex-1 relative overflow-y-auto my-4 md:my-6">
