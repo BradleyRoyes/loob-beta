@@ -31,12 +31,17 @@ export default function Page() {
   const [configureOpen, setConfigureOpen] = useState(false);
   const [showNeuronVisual, setShowNeuronVisual] = useState(false);
 
+  const chatContainerRef = useRef(null);
+
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatContainerRef.current) {
+      const { scrollHeight, clientHeight } = chatContainerRef.current;
+      chatContainerRef.current.scrollTop = scrollHeight - clientHeight;
+    }
   };
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  useLayoutEffect(() => {
+    scrollToBottom();
   }, [messages.length]);
 
   const handleTranscription = (transcription: string) => {
@@ -78,7 +83,10 @@ export default function Page() {
 
   return (
     <main className="flex h-screen flex-col items-center justify-center">
-      <section className="chatbot-section flex flex-col origin:w-[800px] w-full origin:h-[735px] h-full rounded-md p-2 md:p-6">
+      <section
+        ref={chatContainerRef}
+        className="chatbot-section flex flex-col origin:w-[800px] w-full origin:h-[735px] h-full rounded-md p-2 md:p-6"
+      >
         <div className="chatbot-header pb-6">
           <div className="flex justify-between items-center">
             <h1 className="chatbot-text-primary text-6xl md:text-7xl font-extrabold tracking-wide">
@@ -117,8 +125,8 @@ export default function Page() {
         </div>
         <div className="flex-1 relative overflow-y-auto my-4 md:my-6">
           <div className="absolute w-full overflow-x-hidden">
-            {messages.map((messages, index) => (
-              <Bubble key={`message-${index}`} content={messages} />
+            {messages.map((message, index) => (
+              <Bubble key={`message-${index}`} content={message} />
             ))}
             <div ref={messagesEndRef} />
           </div>
