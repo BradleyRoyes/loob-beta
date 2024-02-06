@@ -133,12 +133,9 @@ export default function Page() {
           </div>
         </div>
         {/* <PromptSuggestionRow onPromptClick={handlePrompt} /> */}
-        <div className="flex h-screen flex-col items-center justify-center">
+        <div className="flex items-center gap-2" style={{ width: "100%" }}>
           <AudioRecorder onTranscription={handleTranscription} />
-          <form
-            className="flex items-center justify-center w-full"
-            onSubmit={handleSend}
-          >
+          <form style={{ width: "100%" }} onSubmit={handleSend}>
             <input
               onChange={handleInputChange}
               value={input}
@@ -147,7 +144,7 @@ export default function Page() {
             />
             <button
               type="submit"
-              className="chatbot-send-button flex rounded-md items-center justify-center px-2.5 origin:px-3"
+              className="chatbot-send-button flex rounded-md items-center justify-center px-3"
             >
               <svg
                 width="20"
