@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
 import { AstraDB } from "@datastax/astra-db-ts";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "uuid"; // Ensure UUID is used for session management
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -16,20 +16,32 @@ const astraDb = new AstraDB(
 export async function POST(req: Request) {
   try {
     const { messages, useRag, llm, similarityMetric } = await req.json();
-    const sessionToken = req.headers.get('session-token') || uuidv4(); // Corrected to use get method for headers
+    const sessionToken = req.headers.get('session-token') || uuidv4(); // Handling session management
 
     let docContext = '';
     if (useRag && messages.length > 0) {
       const latestMessage = messages[messages.length - 1]?.content;
       if (latestMessage) {
         const { data } = await openai.embeddings.create({ input: latestMessage, model: 'text-embedding-ada-002' });
-        const collection = await astraDb.collection(`chat_${similarityMetric}`);
-        const documents = await collection.find({
-          '$text': { '$search': latestMessage }
-          // Assuming your collection supports text search; adjust according to your DB capabilities
-        }).limit(5).toArray(); // Simplified for demonstration
 
-        docContext = documents.map(doc => doc.content).join("\n");
+        const collection = await astraDb.collection(`chat_${similarityMetric}`);
+        // Using the embedding data to query the collection, similar to the old setup
+        const cursor = collection.find({
+          // Assuming this is a placeholder for actual query logic
+          // You might need to adjust this to fit the actual capabilities of your database
+          sort: {
+            $vector: data[0]?.embedding,
+          },
+          limit: 5,
+        });
+
+        const documents = await cursor.toArray();
+
+        docContext = `
+          START CONTEXT
+          ${documents?.map(doc => doc.content).join("\n")}
+          END CONTEXT
+        `;
       }
     }
 
@@ -46,7 +58,7 @@ export async function POST(req: Request) {
       if (message.role === 'user') {
         await astraDb.collection("journey_journals").insertOne({
           ...message,
-          sessionToken, // Ensure the sessionToken is included with each message
+          sessionToken, // Append sessionToken for each user message
         });
       }
     }
@@ -60,6 +72,6 @@ export async function POST(req: Request) {
     return new StreamingTextResponse(stream);
   } catch (e) {
     console.error(e); // Ensure proper error logging
-    throw e; // Rethrow the error to handle it according to your application's logic
+    throw e; // Rethrow the error for external handling
   }
 }
