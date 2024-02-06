@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
 import { AstraDB } from "@datastax/astra-db-ts";
-import { v4 as uuidv4 } from "uuid"; // Ensure UUID is used for session management
+import { v4 as uuidv4 } from "uuid";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -16,44 +16,42 @@ const astraDb = new AstraDB(
 export async function POST(req: Request) {
   try {
     const { messages, useRag, llm, similarityMetric } = await req.json();
-    const sessionToken = req.headers.get('session-token') || uuidv4(); // Handling session management
+    // Extract or generate a session token
+    const sessionToken = req.headers.get('session-token') || uuidv4();
 
     let docContext = '';
-    if (useRag && messages.length > 0) {
+    if (useRag) {
       const latestMessage = messages[messages.length - 1]?.content;
-      if (latestMessage) {
-        const { data } = await openai.embeddings.create({ input: latestMessage, model: 'text-embedding-ada-002' });
+      const { data } = await openai.embeddings.create({ input: latestMessage, model: 'text-embedding-ada-002' });
 
-        const collection = await astraDb.collection(`chat_${similarityMetric}`);
-        // Using the embedding data to query the collection, similar to the old setup
-        const cursor = collection.find({
-          // Assuming this is a placeholder for actual query logic
-          // You might need to adjust this to fit the actual capabilities of your database
-          sort: {
-            $vector: data[0]?.embedding,
-          },
-          limit: 5,
-        });
+      const collection = await astraDb.collection(`chat_${similarityMetric}`);
+      const cursor = collection.find(null, {
+        sort: {
+          $vector: data[0]?.embedding,
+        },
+        limit: 5,
+      });
 
-        const documents = await cursor.toArray();
+      const documents = await cursor.toArray();
 
-        docContext = `
-          START CONTEXT
-          ${documents?.map(doc => doc.content).join("\n")}
-          END CONTEXT
-        `;
-      }
+      docContext = `
+        START CONTEXT
+        ${documents.map(doc => doc.content).join("\n")}
+        END CONTEXT
+      `;
     }
 
+    // Create the system prompt as before
     const ragPrompt = [
       {
         role: 'system',
-        content: `You are an AI assistant designed to guide people through their transformative psychedelic trip experiences. Be compassionate and curious, engaging users to share more about their experiences.
+        content: `You are an AI assistant answering questions about Cassandra and Astra DB. Format responses using markdown where applicable.
         ${docContext}
-        If the answer is not provided in the context, the AI assistant will say, "I'm sorry, I don't know the answer."`,
+        If the answer is not provided in the context, the AI assistant will say, "I'm sorry, I don't know the answer".`,
       },
     ];
 
+    // Process each message as before but only attach the session token to entries for the journey_journals collection
     for (const message of messages) {
       if (message.role === 'user') {
         await astraDb.collection("journey_journals").insertOne({
@@ -63,6 +61,7 @@ export async function POST(req: Request) {
       }
     }
 
+    // Generate chat completions as before
     const response = await openai.chat.completions.create({
       model: llm ?? 'gpt-3.5-turbo',
       stream: true,
@@ -71,7 +70,7 @@ export async function POST(req: Request) {
     const stream = OpenAIStream(response);
     return new StreamingTextResponse(stream);
   } catch (e) {
-    console.error(e); // Ensure proper error logging
-    throw e; // Rethrow the error for external handling
+    console.error(e);
+    throw e;
   }
 }
