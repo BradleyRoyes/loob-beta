@@ -135,7 +135,7 @@ export default function Page() {
         {/* <PromptSuggestionRow onPromptClick={handlePrompt} /> */}
         <div className="flex items-center justify-between gap-2">
           <AudioRecorder onTranscription={handleTranscription} />
-          <form className="flex gap-2" onSubmit={handleSend}>
+          <form className="flex flex-1 gap-2" onSubmit={handleSend}>
             <input
               onChange={handleInputChange}
               value={input}
