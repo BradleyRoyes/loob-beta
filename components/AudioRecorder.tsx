@@ -53,7 +53,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
       }
     } else {
       if (speechRecognitionRef.current) {
-        speechRecognitionRef.current.stop();
+        speechRecognitionRef.current.stop(); // Stop the recording
         setRecording(false);
       }
     }
