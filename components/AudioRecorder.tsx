@@ -1,59 +1,23 @@
-import { useState, ChangeEvent, useEffect } from 'react';
-import axios from 'axios';
-import OpenAI from 'openai';
+import { useState, ChangeEvent } from 'react';
 
 const AudioRecorder = () => {
-  const [audioChunks, setAudioChunks] = useState([]);
-  const [audioUrl, setAudioUrl] = useState(null);
-  const [formData, setFormData] = useState<FormData | null>(null);
-  const [convertedText, setConvertedText] = useState<string>('');
-  const [loading, setLoading] = useState(false);
-  const [displayText, setDisplayText] = useState('');
-  const [index, setIndex] = useState(0);
-
-  // Initialize OpenAI with API key
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
-
-  // Handle file upload
-  const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const data = new FormData();
-      data.append('file', file);
-      data.append('model', 'whisper-1');
-      data.append('language', 'en');
-      setFormData(data);
-
-      if (file.size > 25 * 1024 * 1024) {
-        alert('Please upload an audio file less than 25MB');
-        return;
-      }
-    }
-  };
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
 
   // Start recording audio
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-
-      mediaRecorder.addEventListener('dataavailable', (event) => {
-        if (event.data.size > 0) {
-          setAudioChunks((prevChunks) => [...prevChunks, event.data]);
+      const recorder = new MediaRecorder(stream);
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          setAudioChunks((prevChunks) => [...prevChunks, e.data]);
         }
-      });
-
-      mediaRecorder.addEventListener('stop', () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-        const url = URL.createObjectURL(audioBlob);
-        setAudioUrl(url);
-        setFormData(new FormData());
-        setAudioChunks([]);
-      });
-
-      mediaRecorder.start();
+      };
+      setMediaRecorder(recorder);
+      recorder.start();
+      setIsRecording(true);
     } catch (error) {
       console.error('Error accessing microphone:', error);
     }
@@ -61,59 +25,66 @@ const AudioRecorder = () => {
 
   // Stop recording audio
   const stopRecording = () => {
-    mediaRecorder.stop();
-  };
-
-  // Send audio for transcription
-  const sendAudio = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/chat/transcribe', {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await res.json();
-      const text = data.text;
-
-      // Use OpenAI to format and display the transcribed text
-      const formattedText = text.replace(/(\.)(\S)/g, '$1 $2'); // Add space after period if no space exists
-      setConvertedText(formattedText);
-      setDisplayText(formattedText); // Start displaying text letter by letter
-    } catch (error) {
-      console.error('Error transcribing audio:', error);
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+      setIsRecording(false);
     }
-    setLoading(false);
   };
 
-  // Display text letter by letter with a delay
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const currentChar = convertedText.charAt(index);
-      const nextChar = convertedText.charAt(index + 1);
-      setDisplayText((prevDisplayText) => {
-        if (currentChar === '.' && nextChar !== ' ') {
-          return prevDisplayText + currentChar + ' ';
-        }
-        return prevDisplayText + currentChar;
-      });
-      setIndex((prevIndex) => prevIndex + 1);
-    }, 10);
+  // Convert audio chunks to Blob
+  const createAudioBlob = () => {
+    return new Blob(audioChunks, { type: 'audio/wav' });
+  };
 
-    return () => clearInterval(timer);
-  }, [convertedText, index]);
+  // Handle file upload
+  const handleFile = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setAudioChunks([file]);
+    }
+  };
+
+  // Handle form submission
+  const handleSubmit = () => {
+    const audioBlob = createAudioBlob();
+    const formData = new FormData();
+    formData.append('file', audioBlob);
+    formData.append('model', 'whisper-1');
+    formData.append('language', 'en');
+
+    // Send formData to the /api/chat/transcribe endpoint
+    fetch('/api/chat/transcribe', {
+      method: 'POST',
+      body: formData,
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log('Transcribed text:', data.text);
+      })
+      .catch((error) => {
+        console.error('Error transcribing audio:', error);
+      });
+  };
 
   return (
     <div>
       <input type="file" accept="audio/*" onChange={handleFile} />
-      <button onClick={startRecording}>Start Recording</button>
-      <button onClick={stopRecording}>Stop Recording</button>
-      {audioUrl && <audio controls src={audioUrl} />}
-      <button onClick={sendAudio} disabled={!audioUrl}>
-        {loading ? 'Transcribing...' : 'Transcribe Audio'}
+      <button onClick={startRecording} disabled={isRecording}>
+        Start Recording
       </button>
-      {displayText && <div>{displayText}</div>}
+      <button onClick={stopRecording} disabled={!isRecording}>
+        Stop Recording
+      </button>
+      <button onClick={handleSubmit} disabled={audioChunks.length === 0}>
+        Transcribe Audio
+      </button>
     </div>
   );
 };
 
-export default AudioRecorder;
+export default AudioRecorder;e
