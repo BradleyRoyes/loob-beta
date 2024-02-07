@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, ChangeEvent } from 'react';
 
 interface AudioRecorderProps {
   onTranscription: (transcription: string) => void;
@@ -7,9 +7,7 @@ interface AudioRecorderProps {
 const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
   const [recording, setRecording] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [transcriptionBuffer, setTranscriptionBuffer] = useState<string>('');
-
-  const speechRecognitionRef = useRef<SpeechRecognition | null>(null);
+  const speechRecognitionRef = useRef<any>(null); // Use 'any' here
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -19,45 +17,71 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = true;
+    recognition.continuous = true; // Ensure continuous recording
     recognition.interimResults = true;
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const interimTranscript = Array.from(event.results)
-        .map(result => result[0].transcript)
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results)
+        .map((result: any) => result[0].transcript)
         .join('');
-      setTranscriptionBuffer(prevBuffer => prevBuffer + interimTranscript);
+      handleTranscription(transcript);
     };
 
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+    recognition.onerror = (event: any) => {
       setError(`Error occurred in speech recognition: ${event.error}`);
+    };
+
+    recognition.onend = () => {
+      if (recording) {
+        recognition.start(); // Restart recognition if it stops unexpectedly
+      }
     };
 
     speechRecognitionRef.current = recognition;
 
     return () => {
-      if (speechRecognitionRef.current) {
-        speechRecognitionRef.current.stop();
-      }
+      recognition.stop();
     };
-  }, []);
+  }, [onTranscription]);
 
   const toggleRecording = () => {
     if (!speechRecognitionRef.current) return;
 
-    if (!recording) {
-      // Start recording
-      setTranscriptionBuffer('');
-      speechRecognitionRef.current.start();
-      setError(null);
-    } else {
-      // Stop recording and send the complete transcription
-      if (transcriptionBuffer) {
-        onTranscription(transcriptionBuffer);
-      }
+    if (recording) {
       speechRecognitionRef.current.stop();
+      setRecording(false);
+    } else {
+      speechRecognitionRef.current.start();
+      setRecording(true);
+      setError(null); // Reset error state on new recording session
     }
-    setRecording(prevRecording => !prevRecording);
+  };
+
+  const handleTranscription = (transcription: string) => {
+    const event: React.ChangeEvent<HTMLInputElement> = {
+      target: { value: transcription },
+      currentTarget: null,
+      bubbles: false,
+      cancelable: false,
+      defaultPrevented: false,
+      eventPhase: 0,
+      isTrusted: true,
+      nativeEvent: new Event('input'),
+      persist: () => {},
+      preventDefault: () => {},
+      isDefaultPrevented: () => false,
+      stopPropagation: () => {},
+      isPropagationStopped: () => false,
+      timeStamp: Date.now(),
+      type: 'change',
+    };
+
+    handleInputChange(event);
+  };
+
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    // Handle transcription result received in the input field
+    console.log('Transcription:', event.target.value);
   };
 
   return (
