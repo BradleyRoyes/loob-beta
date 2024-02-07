@@ -116,12 +116,12 @@ export default function Page() {
                   color: "white",
                 }}
               >
-                Data Analytics Dashboard
+                Your Data
               </button>
             </div>
           </div>
           <p className="chatbot-text-secondary-inverse text-lg md:text-xl mt-2 md:mt-4 font-medium">
-            Welcome to Loob Labratories. A collective journal like no other.
+            Welcome to Loob Labratories.
           </p>
         </div>
         <div className="flex-1 relative overflow-y-auto my-4 md:my-6">
