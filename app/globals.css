@@ -247,5 +247,5 @@ body {
 
 .dark .button-dash {
   background-color: #ffbe98; /* Dark mode background color */
-  color: var(--text-primary-inverse); /* Dark mode text color */
+  color: var(--text-primary); /* Dark mode text color */
 }
