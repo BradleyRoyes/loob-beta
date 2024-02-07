@@ -107,7 +107,7 @@ export default function Page() {
               <button
                 onClick={() => setShowNeuronVisual(true)}
                 className="button-dash flex rounded-md items-center justify-center px-2.5"
-                style={{ fontWeight: "bold" }}
+                style={{ fontWeight: "600" }}
               >
                 Insights
               </button>
