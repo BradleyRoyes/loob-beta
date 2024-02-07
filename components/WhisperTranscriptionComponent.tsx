@@ -18,7 +18,7 @@ const WhisperTranscriptionComponent = ({ onTranscription }: { onTranscription: (
       data.append("language", "en");
       setFormData(data);
 
-      // check if the size is less than 25MB
+      // Check file size
       if (file.size > 25 * 1024 * 1024) {
         alert("Please upload an audio file less than 25MB");
         return;
@@ -28,21 +28,33 @@ const WhisperTranscriptionComponent = ({ onTranscription }: { onTranscription: (
 
   const sendAudio = async () => {
     setLoading(true);
-    const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
-      headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY ?? ""}`, // Use your environment variable name here
-      },
-      method: "POST",
-      body: formData,
-    });
 
-    const data = await res.json();
-    setLoading(false);
+    if (!formData) {
+      setLoading(false);
+      return;
+    }
 
-    const transcription = data.text;
-    setConvertedText(transcription);
-    onTranscription(transcription); // Call the parent component's onTranscription function with the transcription
+    try {
+      const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+        headers: {
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        },
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      setLoading(false);
+
+      const transcription = data.text;
+      setConvertedText(transcription);
+      onTranscription(transcription);
+    } catch (error) {
+      console.error("Error:", error);
+      setLoading(false);
+    }
   };
+
 
   return (
     <div>
