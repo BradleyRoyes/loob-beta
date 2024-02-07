@@ -109,7 +109,7 @@ export default function Page() {
               </button>
               <button
                 onClick={() => setShowNeuronVisual(true)}
-                className="mb-4 p-2 rounded button-primary"
+                className="mb-4 p-2 rounded button-dash"
               >
                 Your Data
               </button>
