@@ -7,6 +7,8 @@ interface AudioRecorderProps {
 const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
   const [recording, setRecording] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [transcriptionBuffer, setTranscriptionBuffer] = useState<string>('');
+
   const speechRecognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
@@ -21,10 +23,10 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
     recognition.interimResults = true;
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const transcript = Array.from(event.results)
+      const interimTranscript = Array.from(event.results)
         .map(result => result[0].transcript)
         .join('');
-      onTranscription(transcript);
+      setTranscriptionBuffer(prevBuffer => prevBuffer + interimTranscript);
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
@@ -38,16 +40,22 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
         speechRecognitionRef.current.stop();
       }
     };
-  }, [onTranscription]);
+  }, []);
 
   const toggleRecording = () => {
     if (!speechRecognitionRef.current) return;
 
-    if (recording) {
-      speechRecognitionRef.current.stop();
-    } else {
+    if (!recording) {
+      // Start recording
+      setTranscriptionBuffer('');
       speechRecognitionRef.current.start();
       setError(null);
+    } else {
+      // Stop recording and send the complete transcription
+      if (transcriptionBuffer) {
+        onTranscription(transcriptionBuffer);
+      }
+      speechRecognitionRef.current.stop();
     }
     setRecording(prevRecording => !prevRecording);
   };
