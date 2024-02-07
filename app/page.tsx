@@ -20,6 +20,8 @@ import useConfiguration from "./hooks/useConfiguration";
 import AudioRecorder from "../components/AudioRecorder";
 import { v4 as uuidv4 } from "uuid";
 import Dashboard from "../components/dashboard"; // Changed NeuronVisual to Dashboard
+import MessageCollector from '"../components/MessageCollector"; // Adjust the import path as necessary
+
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } =
     useChat();
@@ -35,6 +37,13 @@ export default function Page() {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  const collectAndDisplayMessages = () => {
+    const concatenatedMessages = messages.map((msg) => msg.content).join('\n');
+    setCollectedMessages(concatenatedMessages);
+  };
+  
+  const [collectedMessages, setCollectedMessages] = useState('');
 
   useEffect(() => {
     scrollToBottom();
@@ -79,6 +88,23 @@ export default function Page() {
   }
 
   return (
+
+    <main className="flex h-screen flex-col items-center justify-center">
+    {/* Your existing content... */}
+
+    {/* Button to collect and display messages */}
+    <button onClick={collectAndDisplayMessages} className="mt-4 p-2 bg-blue-500 text-white rounded">
+      Collect Messages
+    </button>
+
+    {/* Display collected messages */}
+    <textarea
+      readOnly
+      value={collectedMessages}
+      className="mt-4 w-full max-w-lg h-64 p-2 text-sm bg-gray-100 border border-gray-200 rounded"
+      placeholder="Collected messages will appear here..."
+    ></textarea>
+    
     <main className="flex h-screen flex-col items-center justify-center">
       <section
         ref={chatContainerRef}
