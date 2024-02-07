@@ -13,7 +13,7 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE,
 );
 
-export async function POST(req) {
+export function runconvo { //export async function POST(req)
   try {
     const { messages, useRag, llm, similarityMetric } = await req.json();
 
@@ -119,6 +119,7 @@ export async function POST(req) {
     throw e;
   }
 }
+runconvo().then(console.log).catch(console.error);
 
 function logResponse(response) {
   // Log the entire response object to the console
