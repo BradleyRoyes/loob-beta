@@ -15,27 +15,27 @@ const astraDb = new AstraDB(
 
 export async function POST(req) {
   try {
-  //export async function POST(req)
+    //export async function POST(req)
     const { messages, useRag, llm, similarityMetric } = await req.json();
-  
+
     // Check if a session ID is provided in the request headers, or generate a new one
     let sessionId = req.headers.get("x-session-id");
     if (!sessionId) {
       sessionId = uuidv4();
       req.headers.set("x-session-id", sessionId);
     }
-  
+
     let docContext = "";
     if (useRag) {
       const latestMessage = messages[messages.length - 1]?.content;
-  
+
       if (latestMessage) {
         // Generate embeddings for the latest message
         const { data } = await openai.embeddings.create({
           input: latestMessage,
           model: "text-embedding-ada-002",
         });
-  
+
         // Retrieve similar documents from AstraDB based on embeddings
         const collection = await astraDb.collection(`chat_${similarityMetric}`);
         const cursor = collection.find(null, {
@@ -48,7 +48,7 @@ export async function POST(req) {
         docContext = documents.map((doc) => doc.content).join("\n");
       }
     }
-  
+
     // Incorporate ragPrompt with docContext into the messages sent to OpenAI
     const initialMessage = {
       role: "system",
@@ -61,10 +61,10 @@ export async function POST(req) {
   
       If the answer is not provided in the context, the AI assistant will say, "I'm sorry, I don't know the answer".`,
     };
-  
+
     // Add the initialMessage to the start of the messages array
     messages.unshift(initialMessage);
-  
+
     const tools = [
       {
         type: "function",
@@ -85,7 +85,7 @@ export async function POST(req) {
         },
       },
     ];
-  
+
     // Send all user inputs to the "journey_journals" collection
     for (const message of messages) {
       if (message.role === "user") {
@@ -96,28 +96,28 @@ export async function POST(req) {
         });
       }
     }
-  
+
     const response = await openai.chat.completions.create({
       model: llm ?? "gpt-3.5-turbo",
       stream: true,
       messages: messages,
       tools: tools,
     });
-  
+
     console.log("response: ", response);
     logResponse(response);
-  
+
     // // Extract analysis results and chat response
     // const { analysisResults, clientResponse } = parseResponse(response);
-  
+
     // // Store the analysis results (if any) in the database
     // if (analysisResults) {
     //   await storeAnalysisData(sessionId, analysisResults);
     // }
-  
+
     const stream = OpenAIStream(response);
-    return new stream;
-    } catch (e) {
+    return new StreamingTextResponse(stream);
+  } catch (e) {
     throw e;
   }
 }
