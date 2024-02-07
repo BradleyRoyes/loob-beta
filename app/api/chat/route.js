@@ -15,111 +15,108 @@ const astraDb = new AstraDB(
 
 async function runconvo() {
   //export async function POST(req)
-  try {
-    const { messages, useRag, llm, similarityMetric } = await req.json();
+  const { messages, useRag, llm, similarityMetric } = await req.json();
 
-    // Check if a session ID is provided in the request headers, or generate a new one
-    let sessionId = req.headers.get("x-session-id");
-    if (!sessionId) {
-      sessionId = uuidv4();
-      req.headers.set("x-session-id", sessionId);
+  // Check if a session ID is provided in the request headers, or generate a new one
+  let sessionId = req.headers.get("x-session-id");
+  if (!sessionId) {
+    sessionId = uuidv4();
+    req.headers.set("x-session-id", sessionId);
+  }
+
+  let docContext = "";
+  if (useRag) {
+    const latestMessage = messages[messages.length - 1]?.content;
+
+    if (latestMessage) {
+      // Generate embeddings for the latest message
+      const { data } = await openai.embeddings.create({
+        input: latestMessage,
+        model: "text-embedding-ada-002",
+      });
+
+      // Retrieve similar documents from AstraDB based on embeddings
+      const collection = await astraDb.collection(`chat_${similarityMetric}`);
+      const cursor = collection.find(null, {
+        sort: {
+          $vector: data[0]?.embedding,
+        },
+        limit: 5,
+      });
+      const documents = await cursor.toArray();
+      docContext = documents.map((doc) => doc.content).join("\n");
     }
+  }
 
-    let docContext = "";
-    if (useRag) {
-      const latestMessage = messages[messages.length - 1]?.content;
+  // Incorporate ragPrompt with docContext into the messages sent to OpenAI
+  const initialMessage = {
+    role: "system",
+    content: `You are an AI assistant designed to guide people through their transformative psychedelic trip experiences using compassionate inquiry, a framework developed by Gabor Maté. Engage users by encouraging them to share more about their experiences. Remember, remind the user when necessary that you are just a robot here to help them share and reflect on their experiences.
 
-      if (latestMessage) {
-        // Generate embeddings for the latest message
-        const { data } = await openai.embeddings.create({
-          input: latestMessage,
-          model: "text-embedding-ada-002",
-        });
+    Structure your response as follows (without quotes):
+    "[Your response here]"
 
-        // Retrieve similar documents from AstraDB based on embeddings
-        const collection = await astraDb.collection(`chat_${similarityMetric}`);
-        const cursor = collection.find(null, {
-          sort: {
-            $vector: data[0]?.embedding,
-          },
-          limit: 5,
-        });
-        const documents = await cursor.toArray();
-        docContext = documents.map((doc) => doc.content).join("\n");
-      }
-    }
+    ${docContext}
 
-    // Incorporate ragPrompt with docContext into the messages sent to OpenAI
-    const initialMessage = {
-      role: "system",
-      content: `You are an AI assistant designed to guide people through their transformative psychedelic trip experiences using compassionate inquiry, a framework developed by Gabor Maté. Engage users by encouraging them to share more about their experiences. Remember, remind the user when necessary that you are just a robot here to help them share and reflect on their experiences.
+    If the answer is not provided in the context, the AI assistant will say, "I'm sorry, I don't know the answer".`,
+  };
 
-      Structure your response as follows (without quotes):
-      "[Your response here]"
+  // Add the initialMessage to the start of the messages array
+  messages.unshift(initialMessage);
 
-      ${docContext}
-
-      If the answer is not provided in the context, the AI assistant will say, "I'm sorry, I don't know the answer".`,
-    };
-
-    // Add the initialMessage to the start of the messages array
-    messages.unshift(initialMessage);
-
-    const tools = [
-      {
-        type: "function",
-        function: {
-          name: "analyze_message",
-          description:
-            "Analyzes the mood, keywords, and intensity of the message",
-          parameters: {
-            type: "object",
-            properties: {
-              message: {
-                type: "string",
-                description: "The user message to analyze",
-              },
+  const tools = [
+    {
+      type: "function",
+      function: {
+        name: "analyze_message",
+        description:
+          "Analyzes the mood, keywords, and intensity of the message",
+        parameters: {
+          type: "object",
+          properties: {
+            message: {
+              type: "string",
+              description: "The user message to analyze",
             },
-            required: ["message"],
           },
+          required: ["message"],
         },
       },
-    ];
+    },
+  ];
 
-    // Send all user inputs to the "journey_journals" collection
-    for (const message of messages) {
-      if (message.role === "user") {
-        const collection = await astraDb.collection("journey_journal");
-        await collection.insertOne({
-          ...message,
-          sessionId: sessionId,
-        });
-      }
+  // Send all user inputs to the "journey_journals" collection
+  for (const message of messages) {
+    if (message.role === "user") {
+      const collection = await astraDb.collection("journey_journal");
+      await collection.insertOne({
+        ...message,
+        sessionId: sessionId,
+      });
     }
-
-    const response = await openai.chat.completions.create({
-      model: llm ?? "gpt-3.5-turbo",
-      messages: messages,
-      tools: tools,
-    });
-
-    console.log("response: ", response);
-    logResponse(response);
-
-    // // Extract analysis results and chat response
-    // const { analysisResults, clientResponse } = parseResponse(response);
-
-    // // Store the analysis results (if any) in the database
-    // if (analysisResults) {
-    //   await storeAnalysisData(sessionId, analysisResults);
-    // }
-
-    //const stream = OpenAIStream(response);
-    return response; //new stream;
-  } catch (e) {
-    throw e;
   }
+
+  const response = await openai.chat.completions.create({
+    model: llm ?? "gpt-3.5-turbo",
+    messages: messages,
+    tools: tools,
+  });
+
+  console.log("response: ", response);
+  logResponse(response);
+
+  // // Extract analysis results and chat response
+  // const { analysisResults, clientResponse } = parseResponse(response);
+
+  // // Store the analysis results (if any) in the database
+  // if (analysisResults) {
+  //   await storeAnalysisData(sessionId, analysisResults);
+  // }
+
+  //const stream = OpenAIStream(response);
+  return response; //new stream;
 }
+
 runconvo().then(console.log).catch(console.error);
 
 function logResponse(response) {
