@@ -1,70 +1,32 @@
-import express from "express";
-import multer from "multer";
-import axios from "axios";
-import fs from "fs/promises";
+// pages/api/transcribe.ts
 
-const { handleCors } = require("./utils");
+import { NextApiRequest, NextApiResponse } from 'next';
+import openai from 'openai'; // Assuming you've configured this with your API key
 
-const app = express();
-const port = process.env.PORT || 3000;
+const openaiApiKey = process.env.OPENAI_API_KEY;
 
-app.use(express.json());
+if (!openaiApiKey) {
+  throw new Error('OPENAI_API_KEY is not defined in environment variables');
+}
 
-// Apply the handleCors middleware before your route handling
-app.use("../app/api/chat/utils", handleCors);
+const openaiClient = new openai.OpenAI(openaiApiKey);
 
-// Set up multer for handling file uploads
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method === 'POST') {
+    // Extract audio data from request body
+    const { audioData } = req.body;
 
-// Define an API endpoint for audio file transcription
-app.post(
-  "../app/api/chat/transcribe",
-  upload.single("audio"),
-  async (req, res) => {
     try {
-      // Check if the request contains an audio file
-      if (!req.file) {
-        return res.status(400).json({ error: "Audio file is missing" });
-      }
+      // Make a call to the Whisper API to transcribe the audio
+      const transcription = await openaiClient.whisper.transcribe(audioData);
 
-      // Save the uploaded audio file temporarily
-      const audioBuffer = req.file.buffer;
-      const audioPath = "temp_audio.wav";
-      await fs.writeFile(audioPath, audioBuffer);
-
-      // Initialize Whisper API endpoint and API key
-      const whisperApiKey = process.env.OPENAI_API_KEY;
-      const whisperApiEndpoint =
-        "https://api.openai.com/v1/audio/transcriptions";
-
-      // Send the audio file to the Whisper API for transcription
-      const response = await axios.post(
-        whisperApiEndpoint,
-        fs.createReadStream(audioPath),
-        {
-          headers: {
-            "Content-Type": "audio/wav",
-            Authorization: `Bearer ${whisperApiKey}`,
-          },
-        },
-      );
-
-      // Get the transcribed text from the Whisper API response
-      const transcribedText = response.data.transcriptions[0].text;
-
-      // Delete the temporary audio file
-      await fs.unlink(audioPath);
-
-      // Return the transcribed text as a JSON response
-      return res.status(200).json({ transcribedText });
+      // Return the transcription
+      res.status(200).json({ transcription });
     } catch (error) {
-      console.error("Error:", error.message);
-      return res.status(500).json({ error: "Server error" });
+      console.error('Error transcribing audio:', error);
+      res.status(500).json({ error: 'Error transcribing audio' });
     }
-  },
-);
-
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+  } else {
+    res.status(405).json({ error: 'Method Not Allowed' });
+  }
+}
