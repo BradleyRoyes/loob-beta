@@ -71,7 +71,7 @@ export async function POST(req) {
         function: {
           name: "analyze_message",
           description:
-            "Analyzes the mood, keywords, and intensity of the message",
+            "Analyze the mood, keywords, and intensity of the message. After each user input, always provide an analysis of the users message including:1. Mood: positive, negative, or neutral. 2. A list of 3 relevant or notable keywords from the user input. 3. An intensity of experience rating from 1 to 10.",
           parameters: {
             type: "object",
             properties: {
@@ -102,7 +102,38 @@ export async function POST(req) {
       stream: true,
       messages: messages,
       tools: tools,
+      tool_choice: "auto",
     });
+
+    const responseMessage = response.choices[0].message;
+
+    const toolCalls = responseMessage.tool_calls;
+    if (responseMessage.tool_calls) {
+      const availableFunctions = {
+        analyze_message: analyzeMessage,
+      };
+      messages.push(responseMessage);
+      for (const toolCall of toolCalls) {
+      const functionName = toolCall.function.name;
+      const functionToCall = availableFunctions[functionName];
+      const functionArgs = JSON.parse(toolCall.function.arguments);
+      const functionResponse = functionToCall(
+        functionArgs.message
+      );
+        messages.push({
+          tool_call_id: toolCall.id,
+          role: "tool",
+          name: functionName,
+          content: functionResponse,
+        });
+      }
+      const secondResponse = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo-0125",
+        messages: messages,
+      }); // get a new response from the model where it can see the function response
+      return secondResponse.choices;
+      
+    }
 
     console.log("response: ", response);
     logResponse(response);
@@ -121,7 +152,6 @@ export async function POST(req) {
     throw e;
   }
 }
-
 
 function logResponse(response) {
   // Log the entire response object to the console
