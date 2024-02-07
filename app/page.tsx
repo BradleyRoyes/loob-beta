@@ -9,7 +9,7 @@ import ThemeButton from "../components/ThemeButton";
 import useConfiguration from "./hooks/useConfiguration";
 import { v4 as uuidv4 } from "uuid";
 import Dashboard from "../components/dashboard"; // Changed NeuronVisual to Dashboard
-import WhisperTranscriptionComponent from './WhisperTranscriptionComponent'; // Import WhisperTranscriptionComponent
+import WhisperTranscriptionComponent from '..components/WhisperTranscriptionComponent'; // Import WhisperTranscriptionComponent
 
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } =
