@@ -15,11 +15,12 @@ const astraDb = new AstraDB(
 
 export async function POST(req, res) {
   console.log("Received request:", req.body);
-  res.status(200).json({ message: "Function executed successfully." });
+  // res.status(200).json({ message: "Function executed successfully." });
 
   try {
     //export async function POST(req)
     const { messages, useRag, llm, similarityMetric } = await req.json();
+    console.log("Received request 2:", req.body);
 
     // Check if a session ID is provided in the request headers, or generate a new one
     let sessionId = req.headers.get("x-session-id");
@@ -115,6 +116,7 @@ export async function POST(req, res) {
       response.choices.length > 0 &&
       response.choices[0].tool_calls
     ) {
+      console.log("Received request 3:", req.body);
       const responseMessage = response.choices[0].message;
 
       const availableFunctions = {
@@ -138,17 +140,18 @@ export async function POST(req, res) {
         model: "gpt-3.5-turbo-0125",
         messages: messages,
       }); // get a new response from the model where it can see the function response
-      return res.status(200).json(secondResponse.choices);
+      res.status(200).json(secondResponse.choices);
+      return;
     } else {
       // Handle case where no choices are returned or the tool function result is not as expected
       console.error("Unexpected response format:", initialResponse);
-      res
-        .status(500)
-        .json({ error: "Received unexpected response format from OpenAI." });
-      return;
-      res.status(200).json({
-        error: "No response or expected tool function result from OpenAI.",
-      });
+      // res
+      //   .status(500)
+      //   .json({ error: "Received unexpected response format from OpenAI." });
+      // return;
+      // res.status(200).json({
+      //   error: "No response or expected tool function result from OpenAI.",
+      // });
     }
 
     console.log("response: ", response);
@@ -165,14 +168,14 @@ export async function POST(req, res) {
     const stream = OpenAIStream(response);
     return new StreamingTextResponse(stream);
   } catch (e) {
-    console.error(
+    console.log(
       "OpenAI API error:",
       error.response ? error.response.data : error.message,
     );
-    res
-      .status(500)
-      .json({ error: "Error calling OpenAI API", details: error.message });
-    return;
+    // res
+    //   .status(500)
+    //   .json({ error: "Error calling OpenAI API", details: error.message });
+    // return;
   }
 }
 
