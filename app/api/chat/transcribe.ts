@@ -13,13 +13,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       formData.append('file', file);
       formData.append('model', 'whisper-1');
       formData.append('language', 'en');
-
       const openaiApiKey = process.env.OPENAI_API_KEY; // Get OpenAI API key
       if (!openaiApiKey) {
         throw new Error('OpenAI API key is missing.');
       }
 
-      const response = await axios.post('https://api.openai.com/v1/audio/transcriptions', formData, {
+      const response= await axios.post('https://api.openai.com/v1/audio/transcriptions', formData, {
         headers: {
           'Authorization': `Bearer ${openaiApiKey}`, // Include OpenAI API key in headers
           'Content-Type': 'multipart/form-data', // Specify content type
