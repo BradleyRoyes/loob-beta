@@ -13,7 +13,7 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE,
 );
 
-export async function POST(req) {
+export async function POST(req, res) {
   console.log("Received request:", req.body);
   res.status(200).json({ message: "Function executed successfully." });
 
