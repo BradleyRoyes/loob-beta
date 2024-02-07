@@ -1,88 +1,58 @@
-import { useState, ChangeEvent } from 'react';
+import React, { useState, useEffect, ChangeEvent } from 'react';
 
-interface AudioRecorderProps {
-  onTranscription: (transcription: string) => void;
-}
+const WhisperTranscriptionComponent = () => {
+  const [formData, setFormData] = useState<FormData | null>(null);
+  const [convertedText, setConvertedText] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
-const AudioRecorder = ({ onTranscription }: AudioRecorderProps) => {
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
-  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
-  const [isRecording, setIsRecording] = useState(false);
-
-  // Start recording audio
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          setAudioChunks((prevChunks) => [...prevChunks, e.data]);
-        }
-      };
-      setMediaRecorder(recorder);
-      recorder.start();
-      setIsRecording(true);
-    } catch (error) {
-      console.error('Error accessing microphone:', error);
-    }
-  };
-
-  // Stop recording audio
-  const stopRecording = () => {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-      mediaRecorder.stop();
-      setIsRecording(false);
-    }
-  };
-
-  // Convert audio chunks to Blob
-  const createAudioBlob = () => {
-    return new Blob(audioChunks, { type: 'audio/wav' });
-  };
-
-  // Handle file upload
-  const handleFile = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setAudioChunks([file]);
+      const data = new FormData();
+      data.append("file", file);
+      data.append("model", "whisper-1");
+      data.append("language", "en");
+      setFormData(data);
+
+      // check if the size is less than 25MB
+      if (file.size > 25 * 1024 * 1024) {
+        alert("Please upload an audio file less than 25MB");
+        return;
+      }
     }
   };
 
-  // Updated handleSubmit function
-  const handleSubmit = () => {
-    const audioBlob = createAudioBlob();
-    const formData = new FormData();
-    formData.append('file', audioBlob);
-    formData.append('model', 'whisper-1');
-    formData.append('language', 'en');
+  const sendAudio = async () => {
+  setLoading(true);
+  const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+    headers: {
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY ?? ""}`, // Use your environment variable name here
+    },
+    method: "POST",
+    body: formData,
+  });
 
-    fetch('/api/chat/transcribe', {
-      method: 'POST',
-      body: formData,
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        onTranscription(data.text); // Use the prop callback
-      })
-      .catch((error) => {
-        console.error('Error transcribing audio:', error);
-      });
+    const data = await res.json();
+    setLoading(false);
+
+    setConvertedText(data.text);
   };
 
   return (
     <div>
-      <input type="file" accept="audio/*" onChange={handleFile} />
-      <button onClick={startRecording} disabled={isRecording}>
-        Start Recording
+      <input
+        type="file"
+        accept="audio/*"
+        onChange={handleFile}
+      />
+      <button onClick={sendAudio} disabled={!formData || loading}>
+        {loading ? 'Processing...' : 'Send Audio'}
       </button>
-      <button onClick={stopRecording} disabled={!isRecording}>
-        Stop Recording
-      </button>
-      <button onClick={handleSubmit} disabled={audioChunks.length === 0}>
-        Transcribe Audio
-      </button>
+      {convertedText && (
+        <div>{convertedText}</div>
+      )}
     </div>
   );
 };
 
-export default AudioRecorder;
+export default WhisperTranscriptionComponent;
