@@ -220,3 +220,19 @@ body {
 .vercel-link hr {
   border-color: var(--border-primary);
 }
+
+.word-cloud-container {
+  max-width: 100%;
+  height: auto;
+  overflow: hidden;
+  text-align: center; /* Centers the word cloud SVG */
+}
+
+@media (max-width: 768px) {
+  .chatbot-section {
+    padding: 2rem 1rem; /* Adjusts padding for smaller screens */
+  }
+  .grid {
+    grid-template-columns: 1fr; /* Stacks charts vertically on smaller screens */
+  }
+}
