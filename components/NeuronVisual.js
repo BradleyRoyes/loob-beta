@@ -62,7 +62,7 @@ const NeuronVisual = ({ wordsData }) => {
     }
   };
 
-  return <div ref={ref}></div>;
+  return <div ref={ref} style={{ maxWidth: '100%', overflowX: 'auto' }}></div>;
 };
 
 const Dashboard = () => {
@@ -70,16 +70,16 @@ const Dashboard = () => {
   const [moodData, setMoodData] = useState(sampleMoodData);
 
   return (
-    <div>
-      <h1>Journaling Dashboard</h1>
-      <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
-        <div>
-          <h2>Word Cloud</h2>
+    <div style={{ padding: '0 10px' }}>
+      <h1 style={{ textAlign: 'center' }}>Journaling Dashboard</h1>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ marginBottom: '20px', width: '100%' }}>
+          <h2 style={{ textAlign: 'center' }}>Word Cloud</h2>
           <NeuronVisual wordsData={wordsData} />
         </div>
-        <div>
-          <h2>Mood Distribution</h2>
-          <PieChart width={400} height={300}>
+        <div style={{ width: '100%' }}>
+          <h2 style={{ textAlign: 'center' }}>Mood Distribution</h2>
+          <PieChart width={400} height={300} style={{ margin: '0 auto' }}>
             <Pie
               data={moodData}
               cx={200}

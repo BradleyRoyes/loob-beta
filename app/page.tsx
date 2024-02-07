@@ -33,9 +33,9 @@ export default function Page() {
   const handleTranscription = (transcription) => {
     handleInputChange({
       target: { value: transcription },
-    });
+    } as React.ChangeEvent<HTMLInputElement>);
   };
-
+  
   const handleSend = (e) => {
     e.preventDefault();
 
