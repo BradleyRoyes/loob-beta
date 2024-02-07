@@ -1,37 +1,70 @@
-// pages/api/chat/transcribe.ts
+import express from "express";
+import multer from "multer";
+import axios from "axios";
+import fs from "fs/promises";
 
-import { NextApiRequest, NextApiResponse } from 'next';
-import axios from 'axios';
+const { handleCors } = require("./utils");
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'POST') {
-    const { file } = req.body;
+const app = express();
+const port = process.env.PORT || 3000;
 
+app.use(express.json());
+
+// Apply the handleCors middleware before your route handling
+app.use("../app/api/chat/transcribe", handleCors);
+
+// Set up multer for handling file uploads
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
+// Define an API endpoint for audio file transcription
+app.post(
+  "../app/api/chat/transcribe",
+  upload.single("audio"),
+  async (req, res) => {
     try {
-      // Send the audio file to the Whisper API for transcription
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('model', 'whisper-1');
-      formData.append('language', 'en');
-      const openaiApiKey = process.env.OPENAI_API_KEY; // Get OpenAI API key
-      if (!openaiApiKey) {
-        throw new Error('OpenAI API key is missing.');
+      // Check if the request contains an audio file
+      if (!req.file) {
+        return res.status(400).json({ error: "Audio file is missing" });
       }
 
-      const response= await axios.post('https://api.openai.com/v1/audio/transcriptions', formData, {
-        headers: {
-          'Authorization': `Bearer ${openaiApiKey}`, // Include OpenAI API key in headers
-          'Content-Type': 'multipart/form-data', // Specify content type
-        },
-      });
+      // Save the uploaded audio file temporarily
+      const audioBuffer = req.file.buffer;
+      const audioPath = "temp_audio.wav";
+      await fs.writeFile(audioPath, audioBuffer);
 
-      // Return the transcribed text to the client
-      res.status(200).json({ text: response.data.text });
+      // Initialize Whisper API endpoint and API key
+      const whisperApiKey = process.env.OPENAI_API_KEY;
+      const whisperApiEndpoint =
+        "https://api.openai.com/v1/audio/transcriptions";
+
+      // Send the audio file to the Whisper API for transcription
+      const response = await axios.post(
+        whisperApiEndpoint,
+        fs.createReadStream(audioPath),
+        {
+          headers: {
+            "Content-Type": "audio/wav",
+            Authorization: `Bearer ${whisperApiKey}`,
+          },
+        },
+      );
+
+      // Get the transcribed text from the Whisper API response
+      const transcribedText = response.data.transcriptions[0].text;
+
+      // Delete the temporary audio file
+      await fs.unlink(audioPath);
+
+      // Return the transcribed text as a JSON response
+      return res.status(200).json({ transcribedText });
     } catch (error) {
-      console.error('Error transcribing audio:', error);
-      res.status(500).json({ error: 'Error transcribing audio' });
+      console.error("Error:", error.message);
+      return res.status(500).json({ error: "Server error" });
     }
-  } else {
-    res.status(405).json({ error: 'Method Not Allowed' });
-  }
-}
+  },
+);
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
