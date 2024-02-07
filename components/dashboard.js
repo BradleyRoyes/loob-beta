@@ -19,7 +19,9 @@ const sampleMoodData = [
   { name: 'Neutral', value: 20 },
 ];
 
-const NeuronVisual = ({ wordsData }) => {
+const Dashboard = () => {
+  const [wordsData, setWordsData] = useState(sampleWordsData);
+  const [moodData, setMoodData] = useState(sampleMoodData);
   const ref = useRef();
 
   useEffect(() => {
@@ -62,13 +64,6 @@ const NeuronVisual = ({ wordsData }) => {
     }
   };
 
-  return <div ref={ref} style={{ maxWidth: '100%', overflowX: 'auto' }}></div>;
-};
-
-const Dashboard = () => {
-  const [wordsData, setWordsData] = useState(sampleWordsData);
-  const [moodData, setMoodData] = useState(sampleMoodData);
-
   return (
     <main className="flex flex-col items-center justify-center h-screen">
       <section className="chatbot-section w-full md:origin-w-[800px] md:w-full md:h-full rounded-md p-2 md:p-6">
@@ -78,7 +73,7 @@ const Dashboard = () => {
         <div className="flex flex-col items-center">
           <div className="mb-6 w-full">
             <h2 className="chatbot-text-primary text-3xl mb-2">Word Cloud</h2>
-            <NeuronVisual wordsData={wordsData} />
+            <div ref={ref} style={{ maxWidth: '100%', overflowX: 'auto' }}></div>
           </div>
           <div className="w-full">
             <h2 className="chatbot-text-primary text-3xl mb-2">Mood Distribution</h2>
