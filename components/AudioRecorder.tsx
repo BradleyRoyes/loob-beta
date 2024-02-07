@@ -1,11 +1,12 @@
-import React, { useState, useEffect, ChangeEvent } from 'react';
+// WhisperTranscriptionComponent.tsx
+import React, { useState } from 'react';
 
 const WhisperTranscriptionComponent = () => {
   const [formData, setFormData] = useState<FormData | null>(null);
   const [convertedText, setConvertedText] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
-  const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       const data = new FormData();
@@ -23,19 +24,19 @@ const WhisperTranscriptionComponent = () => {
   };
 
   const sendAudio = async () => {
-  setLoading(true);
-  const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
-    headers: {
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY ?? ""}`, // Use your environment variable name here
-    },
-    method: "POST",
-    body: formData,
-  });
+    setLoading(true);
+    const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+      headers: {
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY ?? ""}`, // Use your environment variable name here
+      },
+      method: "POST",
+      body: formData,
+    });
 
     const data = await res.json();
     setLoading(false);
 
-    setConvertedText(data.text);
+    setConvertedText(data.text); // Update the converted text state with transcribed text
   };
 
   return (
