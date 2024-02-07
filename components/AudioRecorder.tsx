@@ -10,7 +10,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
   const speechRecognitionRef = useRef<any>(null); // Use 'any' here
 
   useEffect(() => {
-    // Check for browser compatibility and initialize SpeechRecognition
     const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       setError("This browser doesn't support SpeechRecognition.");
@@ -18,23 +17,30 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = true; // Keep recording until manually stopped
-    recognition.interimResults = true; // Useful for real-time feedback, can be set to false if not needed
+    recognition.continuous = true; // Ensure continuous recording
+    recognition.interimResults = true;
 
     recognition.onresult = (event: any) => { // Use 'any' here
       const transcript = Array.from(event.results)
         .map((result: any) => result[0].transcript) // Use 'any' here
         .join('');
-      onTranscription(transcript); // Callback with the transcription
+      onTranscription(transcript);
     };
 
     recognition.onerror = (event: any) => { // Use 'any' here
       setError(`Error occurred in speech recognition: ${event.error}`);
     };
 
+    recognition.onend = () => {
+      if (recording) {
+        recognition.start(); // Restart recognition if it stops unexpectedly
+      }
+    };
+
     speechRecognitionRef.current = recognition;
+
     return () => {
-      recognition.stop(); // Ensure to stop recognition when component unmounts
+      recognition.stop();
     };
   }, [onTranscription]);
 
@@ -47,7 +53,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
     } else {
       speechRecognitionRef.current.start();
       setRecording(true);
-      setError(null); // Reset error state on new recording session
+      setError(null);
     }
   };
 
