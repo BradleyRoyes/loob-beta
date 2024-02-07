@@ -85,4 +85,4 @@ const AudioRecorder = ({ onTranscription }: AudioRecorderProps) => {
   );
 };
 
-export default AudioRecorder;e
+export default AudioRecorder;
