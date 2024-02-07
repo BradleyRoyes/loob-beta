@@ -1,67 +1,80 @@
-import { useState } from 'react';
-import axios from 'axios'; // Assuming you have axios installed
+// components/AudioRecorder.tsx
+
+import { useState, ChangeEvent } from 'react';
+import axios from 'axios';
 
 const AudioRecorder = () => {
   const [audioChunks, setAudioChunks] = useState([]);
-  const [recording, setRecording] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
+  const [formData, setFormData] = useState<FormData | null>(null);
+  const [convertedText, setConvertedText] = useState<string>('');
+  const [loading, setLoading] = useState(false);
 
-  const handleStartRecording = () => {
-    setRecording(true);
-    setAudioChunks([]);
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(stream => {
-        const mediaRecorder = new MediaRecorder(stream);
-        mediaRecorder.ondataavailable = event => {
-          setAudioChunks(prevChunks => [...prevChunks, event.data]);
-        };
-        mediaRecorder.onstop = () => {
-          const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-          const audioUrl = URL.createObjectURL(audioBlob);
-          setAudioUrl(audioUrl);
-        };
-        mediaRecorder.start();
-      })
-      .catch(error => console.error('Error accessing microphone:', error));
+  const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const data = new FormData();
+      data.append('file', file);
+      setFormData(data);
+
+      if (file.size > 25 * 1024 * 1024) {
+        alert('Please upload an audio file less than 25MB');
+        return;
+      }
+    }
   };
 
-  const handleStopRecording = () => {
-    setRecording(false);
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+
+      mediaRecorder.addEventListener('dataavailable', (event) => {
+        if (event.data.size > 0) {
+          setAudioChunks((prevChunks) => [...prevChunks, event.data]);
+        }
+      });
+
+      mediaRecorder.addEventListener('stop', () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const url = URL.createObjectURL(audioBlob);
+        setAudioUrl(url);
+        setFormData(new FormData());
+        setAudioChunks([]);
+      });
+
+      mediaRecorder.start();
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+    }
+  };
+
+  const stopRecording = () => {
     mediaRecorder.stop();
   };
 
-  const handleSaveRecording = async () => {
-    try {
-      const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-      const formData = new FormData();
-      formData.append('audioData', audioBlob);
+  const sendAudio = async () => {
+    setLoading(true);
+    const res = await fetch('/api/chat/transcribe', {
+      method: 'POST',
+      body: formData,
+    });
 
-      // Make a POST request to your API route to transcribe the audio
-      const response = await axios.post('/api/transcribe', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      console.log('Transcription:', response.data.transcription);
-    } catch (error) {
-      console.error('Error transcribing audio:', error);
-    }
+    const data = await res.json();
+    setLoading(false);
+    setConvertedText(data.text);
   };
 
   return (
     <div>
-      {recording ? (
-        <button onClick={handleStopRecording}>Stop Recording</button>
-      ) : (
-        <button onClick={handleStartRecording}>Start Recording</button>
-      )}
-      {audioUrl && (
-        <div>
-          <audio controls src={audioUrl} />
-          <button onClick={handleSaveRecording}>Save Recording</button>
-        </div>
-      )}
+      <input type="file" accept="audio/*" onChange={handleFile} />
+      <button onClick={startRecording}>Start Recording</button>
+      <button onClick={stopRecording}>Stop Recording</button>
+      {audioUrl && <audio controls src={audioUrl} />}
+      <button onClick={sendAudio} disabled={!audioUrl}>
+        {loading ? 'Transcribing...' : 'Transcribe Audio'}
+      </button>
+      {convertedText && <div>{convertedText}</div>}
     </div>
   );
 };
