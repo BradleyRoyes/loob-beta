@@ -7,6 +7,7 @@ interface AudioRecorderProps {
 const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
   const [recording, setRecording] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [transcriptionText, setTranscriptionText] = useState<string>(""); // State to store the complete transcription text
   // Using `any` to bypass the direct use of SpeechRecognition type
   const speechRecognitionRef = useRef<any>(null);
 
@@ -27,7 +28,9 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
           }
         }
         if (finalTranscript.trim()) {
-          onTranscription(finalTranscript.trim());
+          const newTranscription = finalTranscript.trim();
+          setTranscriptionText(prevText => prevText + " " + newTranscription); // Append new transcription to the existing text
+          onTranscription(newTranscription);
         }
       };
 
@@ -78,6 +81,14 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
         </svg>
       </button>
       {error && <p className="text-red-500 text-xs mt-2">Error: {error}</p>}
+      <textarea
+        value={transcriptionText}
+        onChange={() => {}} // Disable typing in the textarea
+        className="ml-4 p-2 border border-gray-300 rounded"
+        placeholder="Transcription..."
+        rows={4}
+        cols={50}
+      />
     </div>
   );
 };
