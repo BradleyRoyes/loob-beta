@@ -8,7 +8,7 @@ import ThemeButton from "../components/ThemeButton";
 import useConfiguration from "./hooks/useConfiguration";
 import AudioRecorder from "../components/AudioRecorder";
 import { v4 as uuidv4 } from "uuid";
-import NeuronVisual from "../components/Dashboard"; // Ensure this path matches your component's location
+import Dashboard from "../components/Dashboard"; // Ensure this path matches your component's location
 
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } =
@@ -18,7 +18,7 @@ export default function Page() {
   const [sessionId] = useState(uuidv4());
   const messagesEndRef = useRef(null);
   const [configureOpen, setConfigureOpen] = useState(false);
-  const [showNeuronVisual, setShowNeuronVisual] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
 
   const chatContainerRef = useRef(null);
 
@@ -30,7 +30,7 @@ export default function Page() {
     scrollToBottom();
   }, [messages]);
 
-  const handleTranscription = (transcription: string) => {
+  const handleTranscription = (transcription) => {
     handleInputChange({
       target: { value: transcription },
     });
@@ -54,12 +54,12 @@ export default function Page() {
     });
   };
 
-  if (showNeuronVisual) {
+  if (showDashboard) {
     return (
       <>
-        <NeuronVisual />
+        <Dashboard />
         <button
-          onClick={() => setShowNeuronVisual(false)}
+          onClick={() => setShowDashboard(false)}
           className="fixed top-4 right-4 p-2 bg-blue-500 text-white rounded"
         >
           Back to Chat
@@ -98,7 +98,7 @@ export default function Page() {
                 </svg>
               </button>
               <button
-                onClick={() => setShowNeuronVisual(true)}
+                onClick={() => setShowDashboard(true)}
                 className="mb-4 p-2 rounded"
                 style={{
                   backgroundColor: "#ffe2cc",
