@@ -122,7 +122,6 @@ export async function POST(req) {
   }
 }
 
-runconvo().then(console.log).catch(console.error);
 
 function logResponse(response) {
   // Log the entire response object to the console
