@@ -1,6 +1,10 @@
 import { useState, ChangeEvent } from 'react';
 
-const AudioRecorder = () => {
+interface AudioRecorderProps {
+  onTranscription: (transcription: string) => void;
+}
+
+const AudioRecorder = ({ onTranscription }: AudioRecorderProps) => {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [isRecording, setIsRecording] = useState(false);
@@ -44,7 +48,7 @@ const AudioRecorder = () => {
     }
   };
 
-  // Handle form submission
+  // Updated handleSubmit function
   const handleSubmit = () => {
     const audioBlob = createAudioBlob();
     const formData = new FormData();
@@ -52,19 +56,13 @@ const AudioRecorder = () => {
     formData.append('model', 'whisper-1');
     formData.append('language', 'en');
 
-    // Send formData to the /api/chat/transcribe endpoint
     fetch('/api/chat/transcribe', {
       method: 'POST',
       body: formData,
     })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
+      .then((response) => response.json())
       .then((data) => {
-        console.log('Transcribed text:', data.text);
+        onTranscription(data.text); // Use the prop callback
       })
       .catch((error) => {
         console.error('Error transcribing audio:', error);
