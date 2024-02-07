@@ -72,7 +72,7 @@ export default function Page() {
     <main className="flex h-screen flex-col items-center justify-center">
       <section
         ref={chatContainerRef}
-        className="chatbot-section flex flex-col w-full h-full rounded-md p-2 md:p-6"
+        className="chatbot-section flex flex-col w-screen h-screen md:origin-w-[800px] md:origin-h-[735px] md:w-full md:h-full rounded-md p-2 md:p-6"
       >
         <div className="chatbot-header pb-6">
           <div className="flex justify-between items-center">
