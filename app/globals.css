@@ -237,6 +237,28 @@ body {
   }
 }
 
+.visualization-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.word-cloud-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  overflow: auto;
+}
+
+@media (max-width: 640px) {
+  .chatbot-section {
+    margin: 0 10px;
+  }
+}
+
+
 .button-dash {
   padding: 4px 12px; /* Adjust as needed */
   border-radius: 2px; /* Adjust as needed */
