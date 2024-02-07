@@ -260,7 +260,7 @@ body {
 
 
 .button-dash {
-  padding: 4px 12px; /* Adjust as needed */
+  padding: 4px 11px; /* Adjust as needed */
   border-radius: 2px; /* Adjust as needed */
   color: var(--text-primary); /* White text */
   background-color: #000000; /* Primary background color */
