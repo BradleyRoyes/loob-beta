@@ -70,33 +70,37 @@ const Dashboard = () => {
   const [moodData, setMoodData] = useState(sampleMoodData);
 
   return (
-    <div style={{ padding: '0 10px' }}>
-      <h1 style={{ textAlign: 'center' }}>Journaling Dashboard</h1>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <div style={{ marginBottom: '20px', width: '100%' }}>
-          <h2 style={{ textAlign: 'center' }}>Word Cloud</h2>
-          <NeuronVisual wordsData={wordsData} />
+    <main className="flex flex-col items-center justify-center h-screen">
+      <section className="chatbot-section w-full md:origin-w-[800px] md:w-full md:h-full rounded-md p-2 md:p-6">
+        <h1 className="chatbot-text-primary text-6xl md:text-7xl font-extrabold tracking-wide mb-6">
+          Journaling Dashboard
+        </h1>
+        <div className="flex flex-col items-center">
+          <div className="mb-6 w-full">
+            <h2 className="chatbot-text-primary text-3xl mb-2">Word Cloud</h2>
+            <NeuronVisual wordsData={wordsData} />
+          </div>
+          <div className="w-full">
+            <h2 className="chatbot-text-primary text-3xl mb-2">Mood Distribution</h2>
+            <PieChart width={400} height={300} style={{ margin: '0 auto' }}>
+              <Pie
+                data={moodData}
+                cx={200}
+                cy={150}
+                outerRadius={100}
+                fill="#8884d8"
+                dataKey="value"
+                label
+              >
+                {moodData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={['green', 'red', 'blue'][index]} />
+                ))}
+              </Pie>
+            </PieChart>
+          </div>
         </div>
-        <div style={{ width: '100%' }}>
-          <h2 style={{ textAlign: 'center' }}>Mood Distribution</h2>
-          <PieChart width={400} height={300} style={{ margin: '0 auto' }}>
-            <Pie
-              data={moodData}
-              cx={200}
-              cy={150}
-              outerRadius={100}
-              fill="#8884d8"
-              dataKey="value"
-              label
-            >
-              {moodData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={['green', 'red', 'blue'][index]} />
-              ))}
-            </Pie>
-          </PieChart>
-        </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 };
 
