@@ -241,11 +241,11 @@ body {
   padding: 8px 16px; /* Adjust as needed */
   border-radius: 4px; /* Adjust as needed */
   color: var(--text-primary-inverse); /* White text */
-  background-color: var(--background-bubble-primary); /* Primary background color */
+  background-color: #6aa7b3; /* Primary background color */
   transition: background-color 0.3s, color 0.3s; /* Smooth transition for color changes */
 }
 
 .dark .button-dash {
-  background-color: var(--background-bubble-primary); /* Dark mode background color */
+  background-color: #ffbe98; /* Dark mode background color */
   color: var(--text-primary-inverse); /* Dark mode text color */
 }
