@@ -13,7 +13,7 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE,
 );
 
-export async function POST(req) {
+async function POST(req) {
   try {
     //export async function POST(req)
     const { messages, useRag, llm, similarityMetric } = await req.json();
@@ -114,12 +114,10 @@ export async function POST(req) {
       };
       messages.push(responseMessage);
       for (const toolCall of toolCalls) {
-      const functionName = toolCall.function.name;
-      const functionToCall = availableFunctions[functionName];
-      const functionArgs = JSON.parse(toolCall.function.arguments);
-      const functionResponse = functionToCall(
-        functionArgs.message
-      );
+        const functionName = toolCall.function.name;
+        const functionToCall = availableFunctions[functionName];
+        const functionArgs = JSON.parse(toolCall.function.arguments);
+        const functionResponse = functionToCall(functionArgs.message);
         messages.push({
           tool_call_id: toolCall.id,
           role: "tool",
@@ -132,7 +130,6 @@ export async function POST(req) {
         messages: messages,
       }); // get a new response from the model where it can see the function response
       return secondResponse.choices;
-      
     }
 
     console.log("response: ", response);
