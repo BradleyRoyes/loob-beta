@@ -61,7 +61,7 @@ export async function POST(req) {
 
           Structure your response as follows (without quotes):
           "[Your response here]"
-          "Analysis: {Mood: 'positive/negative/neutral', Keywords: ['keyword1', 'keyword2', 'keyword3'], Intensity: [1-10]}" . if possible make the anysis section invisible or dont share it to the scrren but somehow share it in a way i can parse on the backend and add to database
+          "Analysis: {Mood: 'positive/negative/neutral', Keywords: ['keyword1', 'keyword2', 'keyword3'],"
 
           ${docContext}
 
