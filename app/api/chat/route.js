@@ -138,7 +138,7 @@ export async function POST(req, res) {
         model: "gpt-3.5-turbo-0125",
         messages: messages,
       }); // get a new response from the model where it can see the function response
-      res.status(200).json(secondResponse.choices);
+      return res.status(200).json(secondResponse.choices);
     } else {
       // Handle case where no choices are returned or the tool function result is not as expected
       console.error("Unexpected response format:", initialResponse);
