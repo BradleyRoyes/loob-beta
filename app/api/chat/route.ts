@@ -48,13 +48,6 @@ export async function POST(req) {
       ];
     }
 
-
-      // Your existing logic for handling useRag...
-    }
-
-    // Assuming this prepares the prompt for ChatGPT including contextual documents
-    const ragPrompt = [...]; // Your existing RAG prompt setup
-
     for (const message of messages) {
       // Adjusted logic to handle different types of messages
       if (message.type === 'analysis') {
