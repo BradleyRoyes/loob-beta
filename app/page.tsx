@@ -39,11 +39,11 @@ export default function Page() {
   };
 
   const collectAndDisplayMessages = () => {
-    const concatenatedMessages = messages.map((msg) => msg.content).join('\n');
+    const concatenatedMessages = messages.map((msg) => msg.content).join("\n");
     setCollectedMessages(concatenatedMessages);
   };
-  
-  const [collectedMessages, setCollectedMessages] = useState('');
+
+  const [collectedMessages, setCollectedMessages] = useState("");
 
   useEffect(() => {
     scrollToBottom();
@@ -88,24 +88,22 @@ export default function Page() {
   }
 
   return (
-
     <main className="flex h-screen flex-col items-center justify-center">
-    {/* Your existing content... */}
+      {/* Button to collect and display messages */}
+      <button
+        onClick={collectAndDisplayMessages}
+        className="mt-4 p-2 bg-blue-500 text-white rounded"
+      >
+        Collect Messages
+      </button>
 
-    {/* Button to collect and display messages */}
-    <button onClick={collectAndDisplayMessages} className="mt-4 p-2 bg-blue-500 text-white rounded">
-      Collect Messages
-    </button>
-
-    {/* Display collected messages */}
-    <textarea
-      readOnly
-      value={collectedMessages}
-      className="mt-4 w-full max-w-lg h-64 p-2 text-sm bg-gray-100 border border-gray-200 rounded"
-      placeholder="Collected messages will appear here..."
-    ></textarea>
-    
-    <main className="flex h-screen flex-col items-center justify-center">
+      {/* Display collected messages */}
+      <textarea
+        readOnly
+        value={collectedMessages}
+        className="mt-4 w-full max-w-lg h-64 p-2 text-sm bg-gray-100 border border-gray-200 rounded"
+        placeholder="Collected messages will appear here..."
+      ></textarea>
       <section
         ref={chatContainerRef}
         className="chatbot-section flex flex-col origin:w-[800px] w-full origin:h-[735px] h-full rounded-md p-2 md:p-6"
