@@ -20,7 +20,7 @@ import useConfiguration from "./hooks/useConfiguration";
 import AudioRecorder from "../components/AudioRecorder";
 import { v4 as uuidv4 } from "uuid";
 import Dashboard from "../components/dashboard"; // Changed NeuronVisual to Dashboard
-import MessageCollector from '"../components/MessageCollector"; // Adjust the import path as necessary
+import MessageCollector from "../components/MessageCollector"; // Adjust the import path as necessary
 
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } =
@@ -114,7 +114,7 @@ export default function Page() {
           <div className="flex justify-between items-center">
             <h1 className="chatbot-text-primary text-6xl md:text-7xl font-extrabold tracking-wide">
               <span className="text-5xl md:text-7xl">loob</span>
-              <span className="text-lg md:text-xl font-normal">the app</span>
+              <span className="text-lg md:text-xl font-normal"> the app</span>
             </h1>
             <div className="flex gap-1">
               <ThemeButton />
