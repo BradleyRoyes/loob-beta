@@ -98,7 +98,7 @@ async function runconvo() {
 
   const response = await openai.chat.completions.create({
     model: llm ?? "gpt-3.5-turbo",
-    messages: messages,
+    messages: [...ragPrompt, ...messages],
     tools: tools,
   });
 
