@@ -14,6 +14,9 @@ const astraDb = new AstraDB(
 );
 
 export async function POST(req) {
+  console.log("Received request:", req.body);
+  res.status(200).json({ message: "Function executed successfully." });
+
   try {
     //export async function POST(req)
     const { messages, useRag, llm, similarityMetric } = await req.json();
@@ -162,12 +165,14 @@ export async function POST(req) {
     const stream = OpenAIStream(response);
     return new StreamingTextResponse(stream);
   } catch (e) {
-    console.error("Error details:", e.message);
-    console.error("Stack trace:", e.stack);
+    console.error(
+      "OpenAI API error:",
+      error.response ? error.response.data : error.message,
+    );
     res
       .status(500)
-      .json({ error: "Internal Server Error", details: e.message });
-    throw e;
+      .json({ error: "Error calling OpenAI API", details: error.message });
+    return;
   }
 }
 
