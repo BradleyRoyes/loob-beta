@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const formData = new FormData();
       formData.append('audioData', audioData);
 
-      const response = await axios.post('/api/transcribe', formData, {
+      const response = await axios.post('/api/chat/transcribe', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
