@@ -2,8 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import cloud from 'd3-cloud';
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import ThemeButton from './ThemeButton';
 
-// Sample data for word cloud
 const sampleWordsData = [
   { text: 'happy', frequency: 20, sentiment: 'positive' },
   { text: 'sad', frequency: 15, sentiment: 'negative' },
@@ -12,21 +12,18 @@ const sampleWordsData = [
   { text: 'excited', frequency: 25, sentiment: 'positive' },
 ];
 
-// Sample data for pie chart
 const sampleMoodData = [
   { name: 'Positive', value: 40 },
   { name: 'Negative', value: 30 },
   { name: 'Neutral', value: 20 },
 ];
 
-// Sample data for bar chart
 const sampleSentimentData = [
   { name: 'Positive', value: 25 },
   { name: 'Negative', value: 15 },
   { name: 'Neutral', value: 10 },
 ];
 
-// Sample data for line chart
 const sampleConversationLengthData = [
   { name: 'Session 1', length: 10 },
   { name: 'Session 2', length: 15 },
@@ -36,6 +33,7 @@ const sampleConversationLengthData = [
 ];
 
 const Dashboard = () => {
+  const [theme, setTheme] = useState('dark');
   const [wordsData, setWordsData] = useState(sampleWordsData);
   const [moodData, setMoodData] = useState(sampleMoodData);
   const [sentimentData, setSentimentData] = useState(sampleSentimentData);
@@ -85,12 +83,15 @@ const Dashboard = () => {
   };
 
   return (
-    <main className="flex flex-col items-center justify-center h-screen">
-      <section className="chatbot-section w-full md:origin-w-[800px] md:w-full md:h-full rounded-md p-2 md:p-6">
-        <h1 className="chatbot-text-primary text-6xl md:text-7xl font-extrabold tracking-wide mb-6">
-          Journaling Dashboard
-        </h1>
-        <div className="flex flex-col items-center">
+    <main className={`flex flex-col items-center justify-center h-screen ${theme === 'dark' ? 'dark' : 'light'}`}>
+      <section className="chatbot-section w-full md:w-[800px] md:h-[735px] rounded-md p-2 md:p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="chatbot-text-primary text-6xl md:text-7xl font-extrabold tracking-wide">
+            Journaling Dashboard
+          </h1>
+          <ThemeButton theme={theme} setTheme={setTheme} />
+        </div>
+        <div className="flex flex-col items-center w-full overflow-x-auto">
           <div className="mb-6 w-full">
             <h2 className="chatbot-text-primary text-3xl mb-2">Word Cloud</h2>
             <div ref={wordCloudRef} style={{ maxWidth: '100%', overflowX: 'auto' }}></div>

@@ -1,7 +1,10 @@
-// WhisperTranscriptionComponent.tsx
 import React, { useState } from 'react';
 
-const WhisperTranscriptionComponent = () => {
+interface FormData {
+  append(name: string, value: any): void;
+}
+
+const WhisperTranscriptionComponent = ({ onTranscription }: { onTranscription: (transcription: string) => void }) => {
   const [formData, setFormData] = useState<FormData | null>(null);
   const [convertedText, setConvertedText] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -36,7 +39,9 @@ const WhisperTranscriptionComponent = () => {
     const data = await res.json();
     setLoading(false);
 
-    setConvertedText(data.text); // Update the converted text state with transcribed text
+    const transcription = data.text;
+    setConvertedText(transcription);
+    onTranscription(transcription); // Call the parent component's onTranscription function with the transcription
   };
 
   return (
