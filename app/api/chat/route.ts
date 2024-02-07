@@ -70,9 +70,18 @@ export async function POST(req) {
       },
     ];
 
-    // Send all user inputs to the "journey_journals" collection
     for (const message of messages) {
-      if (message.role === 'user') {
+      if (message.type === 'analysis') {
+      // Assuming you have a separate collection or a structure within the 'journey_journal' collection to store analysis data
+      const analysisCollection = await astraDb.collection("journey_journal");
+      await analysisCollection.insertOne({
+        sessionId: sessionId,
+        mood: message.analysis.mood,
+        keywords: message.analysis.keywords,
+        intensity: message.analysis.intensity,
+        timestamp: new Date(), // Optionally store the timestamp
+      });
+       else if (message.role === 'user') {
         const collection = await astraDb.collection("journey_journal");
         await collection.insertOne({
           ...message,
@@ -80,7 +89,8 @@ export async function POST(req) {
         });
       }
     }
-
+    
+      
     const response = await openai.chat.completions.create(
       {
         model: llm ?? 'gpt-3.5-turbo',
