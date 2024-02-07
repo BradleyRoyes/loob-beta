@@ -7,7 +7,7 @@ interface AudioRecorderProps {
 const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
   const [recording, setRecording] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const speechRecognitionRef = useRef<SpeechRecognition | null>(null);
+  const speechRecognitionRef = useRef<any>(null); // Use 'any' here
 
   useEffect(() => {
     // Check for browser compatibility and initialize SpeechRecognition
@@ -21,14 +21,14 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
     recognition.continuous = true; // Keep recording until manually stopped
     recognition.interimResults = true; // Useful for real-time feedback, can be set to false if not needed
 
-    recognition.onresult = (event) => {
+    recognition.onresult = (event: any) => { // Use 'any' here
       const transcript = Array.from(event.results)
-        .map((result) => result[0].transcript)
+        .map((result: any) => result[0].transcript) // Use 'any' here
         .join('');
       onTranscription(transcript); // Callback with the transcription
     };
 
-    recognition.onerror = (event) => {
+    recognition.onerror = (event: any) => { // Use 'any' here
       setError(`Error occurred in speech recognition: ${event.error}`);
     };
 
