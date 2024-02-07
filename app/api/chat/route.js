@@ -13,7 +13,7 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE,
 );
 
-async function POST(req) {
+export async function POST(req) {
   try {
     //export async function POST(req)
     const { messages, useRag, llm, similarityMetric } = await req.json();
@@ -129,7 +129,7 @@ async function POST(req) {
         model: "gpt-3.5-turbo-0125",
         messages: messages,
       }); // get a new response from the model where it can see the function response
-      return secondResponse.choices;
+      return res.status(200).json(secondResponse.choices);
     }
 
     console.log("response: ", response);
