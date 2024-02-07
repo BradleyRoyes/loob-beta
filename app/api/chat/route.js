@@ -13,7 +13,8 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE,
 );
 
-export function runconvo { //export async function POST(req)
+async function runconvo() {
+  //export async function POST(req)
   try {
     const { messages, useRag, llm, similarityMetric } = await req.json();
 
