@@ -30,12 +30,12 @@ export default function Page() {
     scrollToBottom();
   }, [messages]);
 
-  const handleTranscription = (transcription) => {
+  const handleTranscription = (transcription: string) => {
     handleInputChange({
       target: { value: transcription },
-    } as React.ChangeEvent<HTMLInputElement>);
+    });
   };
-  
+
   const handleSend = (e) => {
     e.preventDefault();
 
