@@ -21,7 +21,6 @@ import AudioRecorder from "../components/AudioRecorder";
 import { v4 as uuidv4 } from "uuid";
 import Dashboard from "../components/dashboard"; // Changed NeuronVisual to Dashboard
 export default function Page() {
-  
   const { append, messages, input, handleInputChange, handleSubmit } =
     useChat();
   const { useRag, llm, similarityMetric, setConfiguration } =
@@ -110,11 +109,7 @@ export default function Page() {
               </button>
               <button
                 onClick={() => setShowNeuronVisual(true)}
-                className="mb-4 p-2 rounded"
-                style={{
-                  backgroundColor: "#ffe2cc",
-                  color: "white",
-                }}
+                className="mb-4 p-2 rounded button-primary"
               >
                 Your Data
               </button>
