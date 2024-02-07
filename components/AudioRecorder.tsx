@@ -12,7 +12,8 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
   useEffect(() => {
     // Check for browser compatibility and initialize SpeechRecognition
     const SpeechRecognition =
-      window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       setError("This browser doesn't support SpeechRecognition.");
       return;
