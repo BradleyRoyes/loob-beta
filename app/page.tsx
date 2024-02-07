@@ -8,7 +8,7 @@ import ThemeButton from "../components/ThemeButton";
 import useConfiguration from "./hooks/useConfiguration";
 import AudioRecorder from "../components/AudioRecorder";
 import { v4 as uuidv4 } from "uuid";
-import NeuronVisual from "../components/NeuronVisual"; // Ensure this path matches your component's location
+import NeuronVisual from "../components/Dashboard"; // Ensure this path matches your component's location
 
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } =
