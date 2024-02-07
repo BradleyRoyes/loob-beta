@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import cloud from 'd3-cloud';
-import { PieChart, Pie, Cell } from 'recharts';
+import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 // Sample data for word cloud
 const sampleWordsData = [
@@ -19,10 +19,30 @@ const sampleMoodData = [
   { name: 'Neutral', value: 20 },
 ];
 
+// Sample data for bar chart
+const sampleSentimentData = [
+  { name: 'Positive', value: 25 },
+  { name: 'Negative', value: 15 },
+  { name: 'Neutral', value: 10 },
+];
+
+// Sample data for line chart
+const sampleConversationLengthData = [
+  { name: 'Session 1', length: 10 },
+  { name: 'Session 2', length: 15 },
+  { name: 'Session 3', length: 8 },
+  { name: 'Session 4', length: 12 },
+  { name: 'Session 5', length: 20 },
+];
+
 const Dashboard = () => {
   const [wordsData, setWordsData] = useState(sampleWordsData);
   const [moodData, setMoodData] = useState(sampleMoodData);
-  const ref = useRef();
+  const [sentimentData, setSentimentData] = useState(sampleSentimentData);
+  const [conversationLengthData, setConversationLengthData] = useState(sampleConversationLengthData);
+  const wordCloudRef = useRef();
+  const barChartRef = useRef();
+  const lineChartRef = useRef();
 
   useEffect(() => {
     if (wordsData.length > 0) {
@@ -31,7 +51,7 @@ const Dashboard = () => {
   }, [wordsData]);
 
   const drawWordCloud = (words) => {
-    d3.select(ref.current).selectAll('*').remove();
+    d3.select(wordCloudRef.current).selectAll('*').remove();
 
     const layout = cloud()
       .size([800, 600])
@@ -45,7 +65,7 @@ const Dashboard = () => {
     layout.start();
 
     function draw(words) {
-      const svg = d3.select(ref.current)
+      const svg = d3.select(wordCloudRef.current)
         .append('svg')
         .attr('width', layout.size()[0])
         .attr('height', layout.size()[1])
@@ -73,7 +93,7 @@ const Dashboard = () => {
         <div className="flex flex-col items-center">
           <div className="mb-6 w-full">
             <h2 className="chatbot-text-primary text-3xl mb-2">Word Cloud</h2>
-            <div ref={ref} style={{ maxWidth: '100%', overflowX: 'auto' }}></div>
+            <div ref={wordCloudRef} style={{ maxWidth: '100%', overflowX: 'auto' }}></div>
           </div>
           <div className="w-full">
             <h2 className="chatbot-text-primary text-3xl mb-2">Mood Distribution</h2>
@@ -92,6 +112,28 @@ const Dashboard = () => {
                 ))}
               </Pie>
             </PieChart>
+          </div>
+          <div className="w-full">
+            <h2 className="chatbot-text-primary text-3xl mb-2">Sentiment Analysis</h2>
+            <BarChart width={400} height={300} data={sentimentData} ref={barChartRef}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="value" fill="#8884d8" />
+            </BarChart>
+          </div>
+          <div className="w-full">
+            <h2 className="chatbot-text-primary text-3xl mb-2">Conversation Length Analysis</h2>
+            <LineChart width={400} height={300} data={conversationLengthData} ref={lineChartRef}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="length" stroke="#8884d8" />
+            </LineChart>
           </div>
         </div>
       </section>
