@@ -24,7 +24,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
       const transcript = Array.from(event.results)
         .map((result: any) => result[0].transcript) // Use 'any' here
         .join('');
-      onTranscription(transcript);
+      handleTranscription(transcript); // Call handleTranscription with the transcript
     };
 
     recognition.onerror = (event: any) => { // Use 'any' here
@@ -55,6 +55,11 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
       setRecording(true);
       setError(null);
     }
+  };
+
+  // Define handleTranscription function within AudioRecorder component
+  const handleTranscription = (transcription: string) => {
+    onTranscription(transcription); // Pass transcription to the parent component
   };
 
   return (
