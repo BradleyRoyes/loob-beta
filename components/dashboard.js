@@ -85,33 +85,47 @@ const Dashboard = () => {
 return (
   <main className={`flex flex-col items-center justify-center h-screen ${theme === 'dark' ? 'dark' : 'light'} p-4`}>
     <section className="chatbot-section w-full max-w-4xl rounded-md overflow-hidden shadow-lg">
-      <div className="flex justify-between items-center mb-6 p-4">
-        <h1 className="chatbot-text-primary text-3xl md:text-4xl font-bold tracking-wide">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="chatbot-text-primary text-4xl md:text-5xl font-bold tracking-wide">
           Journaling Dashboard
         </h1>
         <ThemeButton theme={theme} setTheme={setTheme} />
       </div>
       <div className="grid md:grid-cols-2 gap-4 p-4">
-        <div className="bg-white rounded-md shadow-md p-4">
+        <div>
           <h2 className="chatbot-text-primary text-xl mb-2">Word Cloud</h2>
           <div ref={wordCloudRef} className="word-cloud-container"></div>
         </div>
-        <div className="bg-white rounded-md shadow-md p-4">
+        <div>
           <h2 className="chatbot-text-primary text-xl mb-2">Mood Distribution</h2>
           <PieChart width={300} height={300}>
-            {/* PieChart content */}
+            <Pie data={moodData} cx="50%" cy="50%" outerRadius={100} fill="#8884d8" dataKey="value" label>
+              {moodData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={['#82ca9d', '#8884d8', '#ffc658'][index % 3]} />
+              ))}
+            </Pie>
           </PieChart>
         </div>
-        <div className="bg-white rounded-md shadow-md p-4">
+        <div>
           <h2 className="chatbot-text-primary text-xl mb-2">Sentiment Analysis</h2>
           <BarChart width={300} height={300} data={sentimentData}>
-            {/* BarChart content */}
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="value" fill="#82ca9d" />
           </BarChart>
         </div>
-        <div className="bg-white rounded-md shadow-md p-4">
+        <div>
           <h2 className="chatbot-text-primary text-xl mb-2">Conversation Length Analysis</h2>
           <LineChart width={300} height={300} data={conversationLengthData}>
-            {/* LineChart content */}
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Line type="monotone" dataKey="length" stroke="#8884d8" />
           </LineChart>
         </div>
       </div>
