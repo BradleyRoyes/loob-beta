@@ -1,7 +1,7 @@
-import OpenAI from 'openai';
-import { OpenAIStream, StreamingTextResponse } from 'ai';
+import OpenAI from "openai";
+import { OpenAIStream, StreamingTextResponse } from "ai";
 import { AstraDB } from "@datastax/astra-db-ts";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -10,7 +10,7 @@ const openai = new OpenAI({
 const astraDb = new AstraDB(
   process.env.ASTRA_DB_APPLICATION_TOKEN,
   process.env.ASTRA_DB_ENDPOINT,
-  process.env.ASTRA_DB_NAMESPACE
+  process.env.ASTRA_DB_NAMESPACE,
 );
 
 export async function POST(req) {
@@ -24,7 +24,7 @@ export async function POST(req) {
       req.headers.set("x-session-id", sessionId);
     }
 
-    let docContext = '';
+    let docContext = "";
     if (useRag) {
       const latestMessage = messages[messages.length - 1]?.content;
 
@@ -32,7 +32,7 @@ export async function POST(req) {
         // Generate embeddings for the latest message
         const { data } = await openai.embeddings.create({
           input: latestMessage,
-          model: 'text-embedding-ada-002',
+          model: "text-embedding-ada-002",
         });
 
         // Retrieve similar documents from AstraDB based on embeddings
@@ -48,31 +48,46 @@ export async function POST(req) {
       }
     }
 
-    const ragPrompt = [
+    // Incorporate ragPrompt with docContext into the messages sent to OpenAI
+    const initialMessage = {
+      role: "system",
+      content: `You are an AI assistant designed to guide people through their transformative psychedelic trip experiences using compassionate inquiry, a framework developed by Gabor Maté. Engage users by encouraging them to share more about their experiences. Remember, remind the user when necessary that you are just a robot here to help them share and reflect on their experiences.
+
+      Structure your response as follows (without quotes):
+      "[Your response here]"
+
+      ${docContext}
+
+      If the answer is not provided in the context, the AI assistant will say, "I'm sorry, I don't know the answer".`,
+    };
+
+    // Add the initialMessage to the start of the messages array
+    messages.unshift(initialMessage);
+
+    const tools = [
       {
-        role: 'system',
-        content: `
-          You are an AI assistant designed to guide people through their transformative psychedelic trip experiences using compassionate inquiry, a framework developed by Gabor Maté. Engage users by encouraging them to share more about their experiences. Remember, remind the user when necessary that yu are just a robot here to help them share and reflect on their experiences.
-
-          After each user input, always provide an analysis of the users message including:
-          1. Mood: positive, negative, or neutral.
-          2. A list of 3 relevant or notable keywords from the user input.
-          3. An intensity of experience rating from 1 to 10.
-
-          Structure your response as follows (without quotes):
-          "[Your response here]"
-          "Analysis: {Mood: 'positive/negative/neutral', Keywords: ['keyword1', 'keyword2', 'keyword3'], Intensity: [1-10]}" . if possible make the anysis section invisible or dont share it to the scrren but somehow share it in a way i can parse on the backend and add to database
-
-          ${docContext}
-
-          If the answer is not provided in the context, the AI assistant will say, "I'm sorry, I don't know the answer".
-        `,
+        type: "function",
+        function: {
+          name: "analyze_message",
+          description:
+            "Analyzes the mood, keywords, and intensity of the message",
+          parameters: {
+            type: "object",
+            properties: {
+              message: {
+                type: "string",
+                description: "The user message to analyze",
+              },
+            },
+            required: ["message"],
+          },
+        },
       },
     ];
 
     // Send all user inputs to the "journey_journals" collection
     for (const message of messages) {
-      if (message.role === 'user') {
+      if (message.role === "user") {
         const collection = await astraDb.collection("journey_journal");
         await collection.insertOne({
           ...message,
@@ -81,16 +96,31 @@ export async function POST(req) {
       }
     }
 
-    const response = await openai.chat.completions.create(
-      {
-        model: llm ?? 'gpt-3.5-turbo',
-        stream: true,
-        messages: [...ragPrompt, ...messages],
-      }
-    );
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: messages,
+      tools: tools,
+    });
+
+    console.log("response: ", response);
+    logResponse(response);
+
+    // // Extract analysis results and chat response
+    // const { analysisResults, clientResponse } = parseResponse(response);
+
+    // // Store the analysis results (if any) in the database
+    // if (analysisResults) {
+    //   await storeAnalysisData(sessionId, analysisResults);
+    // }
+
     const stream = OpenAIStream(response);
     return new StreamingTextResponse(stream);
   } catch (e) {
     throw e;
   }
+}
+
+function logResponse(response) {
+  // Log the entire response object to the console
+  console.log("OpenAI API Response:", JSON.stringify(response, null, 2));
 }
