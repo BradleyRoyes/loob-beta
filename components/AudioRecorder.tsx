@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, ChangeEvent } from 'react';
 
 interface AudioRecorderProps {
   onTranscription: (transcription: string) => void;
@@ -59,6 +59,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
 
   // Define handleTranscription function within AudioRecorder component
   const handleTranscription = (transcription: string) => {
+    const event: ChangeEvent<HTMLInputElement> = { target: { value: transcription } };
     onTranscription(transcription); // Pass transcription to the parent component
   };
 
