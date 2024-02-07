@@ -138,6 +138,11 @@ export async function POST(req) {
       res.status(200).json(secondResponse.choices);
     } else {
       // Handle case where no choices are returned or the tool function result is not as expected
+      console.error("Unexpected response format:", initialResponse);
+      res
+        .status(500)
+        .json({ error: "Received unexpected response format from OpenAI." });
+      return;
       res.status(200).json({
         error: "No response or expected tool function result from OpenAI.",
       });
@@ -157,6 +162,11 @@ export async function POST(req) {
     const stream = OpenAIStream(response);
     return new StreamingTextResponse(stream);
   } catch (e) {
+    console.error("Error details:", e.message);
+    console.error("Stack trace:", e.stack);
+    res
+      .status(500)
+      .json({ error: "Internal Server Error", details: e.message });
     throw e;
   }
 }
