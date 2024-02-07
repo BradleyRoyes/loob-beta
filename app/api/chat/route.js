@@ -113,8 +113,8 @@ export async function POST(req) {
     //   await storeAnalysisData(sessionId, analysisResults);
     // }
 
-    const stream = OpenAIStream(response);
-    return new StreamingTextResponse(stream);
+    //const stream = OpenAIStream(response);
+    return response; //new stream;
   } catch (e) {
     throw e;
   }
