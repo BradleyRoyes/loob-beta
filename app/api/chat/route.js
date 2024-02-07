@@ -119,7 +119,6 @@ export async function POST(req) {
     return new stream;
     } catch (e) {
     throw e;
-    }
   }
 }
 
