@@ -109,7 +109,7 @@ export default function Page() {
                 className="button-dash flex rounded-md items-center justify-center px-2.5"
                 style={{ fontWeight: "bold" }}
               >
-                Your Data
+                Insights
               </button>
             </div>
           </div>
