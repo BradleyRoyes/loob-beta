@@ -24,7 +24,7 @@
     "geist": "^1.1.0",
     "langchain": "^0.0.179",
     "multer": "^1.4.5-lts.1",
-    "next": "^14.0.1",
+    "next": "^14.1.0",
     "openai": "^4.26.1",
     "react": "^18",
     "react-dom": "^18",
