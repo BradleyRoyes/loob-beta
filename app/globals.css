@@ -1,6 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import url('https://fonts.googleapis.com/css?family=Varela+Round');
 
 :root {
   --text-primary: #FFFFFF;
@@ -39,6 +40,7 @@ body {
   background: linear-gradient(to bottom,
       transparent,
       rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
+  font-family: 'Varela Round', sans-serif;
 }
 
 .chatbot-section {
