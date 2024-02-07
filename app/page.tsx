@@ -19,8 +19,7 @@ import ThemeButton from "../components/ThemeButton";
 import useConfiguration from "./hooks/useConfiguration";
 import AudioRecorder from "../components/AudioRecorder";
 import { v4 as uuidv4 } from "uuid";
-import NeuronVisual from "../components/NeuronVisual"; // Ensure this path matches your component's location
-
+import Dashboard from "../components/Dashboard"; // Changed NeuronVisual to Dashboard
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } =
     useChat();
@@ -68,7 +67,7 @@ export default function Page() {
   if (showNeuronVisual) {
     return (
       <>
-        <NeuronVisual />
+        <Dashboard /> {/* Changed NeuronVisual to Dashboard */}
         <button
           onClick={() => setShowNeuronVisual(false)}
           className="fixed top-4 right-4 p-2 bg-blue-500 text-white rounded"
