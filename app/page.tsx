@@ -7,7 +7,6 @@ import Configure from "../components/Configure";
 import PromptSuggestionRow from "../components/PromptSuggestions/PromptSuggestionsRow";
 import ThemeButton from "../components/ThemeButton";
 import useConfiguration from "./hooks/useConfiguration";
-import AudioRecorder from "../components/AudioRecorder";
 import { v4 as uuidv4 } from "uuid";
 import Dashboard from "../components/dashboard"; // Changed NeuronVisual to Dashboard
 import WhisperTranscriptionComponent from './WhisperTranscriptionComponent'; // Import WhisperTranscriptionComponent
