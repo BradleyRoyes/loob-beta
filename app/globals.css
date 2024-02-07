@@ -261,7 +261,7 @@ body {
 
 .button-dash {
   padding: 4px 11px; /* Adjust as needed */
-  border-radius: 2px; /* Adjust as needed */
+  /* border-radius: 2px; /* Adjust as needed */ */
   color: var(--text-primary); /* White text */
   background-color: #000000; /* Primary background color */
   transition: background-color 0.3s, color 0.3s; /* Smooth transition for color changes */
