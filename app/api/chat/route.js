@@ -105,15 +105,21 @@ export async function POST(req) {
       tool_choice: "auto",
     });
 
-    const responseMessage = response.choices[0].message;
+    console.log("Initial OpenAI API Response:", response);
 
-    const toolCalls = responseMessage.tool_calls;
-    if (responseMessage.tool_calls) {
+    if (
+      response.choices &&
+      response.choices.length > 0 &&
+      response.choices[0].tool_calls
+    ) {
+      const responseMessage = response.choices[0].message;
+
       const availableFunctions = {
         analyze_message: analyzeMessage,
       };
+
       messages.push(responseMessage);
-      for (const toolCall of toolCalls) {
+      for (const toolCall of responseMessage.tool_calls) {
         const functionName = toolCall.function.name;
         const functionToCall = availableFunctions[functionName];
         const functionArgs = JSON.parse(toolCall.function.arguments);
@@ -129,7 +135,12 @@ export async function POST(req) {
         model: "gpt-3.5-turbo-0125",
         messages: messages,
       }); // get a new response from the model where it can see the function response
-      return res.status(200).json(secondResponse.choices);
+      res.status(200).json(secondResponse.choices);
+    } else {
+      // Handle case where no choices are returned or the tool function result is not as expected
+      res.status(200).json({
+        error: "No response or expected tool function result from OpenAI.",
+      });
     }
 
     console.log("response: ", response);
