@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useUsername } from '../contexts/UsernameContext'; // Adjust the path as necessary
+import { useUsername } from './contexts/UsernameContext'; // Adjust the path as necessary
 
 const UsernameModal: React.FC = () => {
   const { saveUsername } = useUsername();
