@@ -13,43 +13,53 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE,
 );
 
-interface PromptCompletionData {
-  prompt: { content: string, timestamp: Date };
-  completion: { content: string, timestamp: Date };
-}
-
-async function savePromptAndCompletionToDatabase(data: PromptCompletionData, sessionId: string) {
+async function savePromptToDatabase(prompt, sessionId) {
   const collection = await astraDb.collection("journey_journal");
   const existingEntry = await collection.findOne({ sessionId: sessionId });
-
-  const { prompt, completion } = data;
-
-  const newData = {
-    sessionId: sessionId,
-    timestamp: new Date(),
-    data: [
-      { type: "prompt", content: prompt.content, timestamp: new Date() },
-      { type: "completion", content: completion.content, timestamp: new Date() }
-    ]
-  };
 
   if (existingEntry) {
     await collection.updateOne(
       { sessionId: sessionId },
-      { $push: { data: { $each: newData.data } } }
+      { $push: { prompts: prompt } } // Use the $push operator to append to the array
     );
   } else {
-    await collection.insertOne(newData);
+    await collection.insertOne({
+      sessionId: sessionId,
+      prompts: [prompt],
+      completions: [],
+      timestamp: new Date(),
+    });
   }
 }
 
-export async function POST(req: any) {
+async function saveCompletionToDatabase(completion, sessionId) {
+  const collection = await astraDb.collection("journey_journal");
+  const existingEntry = await collection.findOne({ sessionId: sessionId });
+
+  if (existingEntry) {
+    await collection.updateOne(
+      { sessionId: sessionId },
+      { $push: { completions: completion } } // Use the $push operator to append to the array
+    );
+  } else {
+    await collection.insertOne({
+      sessionId: sessionId,
+      prompts: [],
+      completions: [completion],
+      timestamp: new Date(),
+    });
+  }
+}
+
+export async function POST(req) {
   try {
     const { messages, useRag, llm, similarityMetric } = await req.json();
 
+    // Check if a session ID is provided in the request headers, or generate a new one
     let sessionId = req.headers.get("x-session-id");
     if (!sessionId) {
       sessionId = uuidv4();
+      // Note: Depending on your server setup, you might need to adjust how you're setting headers for the response
     }
 
     let docContext = "";
@@ -57,11 +67,13 @@ export async function POST(req: any) {
       const latestMessage = messages[messages.length - 1]?.content;
 
       if (latestMessage) {
+        // Generate embeddings for the latest message
         const { data } = await openai.embeddings.create({
           input: latestMessage,
           model: "text-embedding-ada-002",
         });
 
+        // Retrieve similar documents from AstraDB based on embeddings
         const collection = await astraDb.collection(`chat_${similarityMetric}`);
         const cursor = collection.find(null, {
           sort: {
@@ -102,15 +114,19 @@ export async function POST(req: any) {
       messages: [...ragPrompt, ...messages],
     });
 
+    // Convert the response into a friendly text-stream
     const stream = OpenAIStream(response, {
       onStart: async () => {
-        await savePromptAndCompletionToDatabase({ prompt: ragPrompt[0], completion: { content: "", timestamp: new Date() } }, sessionId);
+        // Save the initial prompt to your database
+        await savePromptToDatabase(messages.map(m => m.content).join("\n"), sessionId);
       },
       onToken: async (token: string) => {
         console.log(token);
+        // Optionally, implement logic to save individual tokens if needed
       },
       onCompletion: async (completion: string) => {
-        await savePromptAndCompletionToDatabase({ prompt: { content: "", timestamp: new Date() }, completion: { content: completion, timestamp: new Date() } }, sessionId);
+        // Save the final completion to your database
+        await saveCompletionToDatabase(completion, sessionId);
       },
     });
 
