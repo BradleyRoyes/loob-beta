@@ -13,63 +13,30 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE,
 );
 
-async function savePromptToDatabase(prompt, sessionId) {
-  const collection = await astraDb.collection("journey_journal");
-  const existingEntry = await collection.findOne({ sessionId: sessionId });
+// Generate a session ID when the application is first loaded
+const sessionId = uuidv4();
 
-  if (existingEntry) {
-    await collection.updateOne(
-      { sessionId: sessionId },
-      { $push: { prompts: prompt } }
-    );
-  } else {
-    await collection.insertOne({
-      sessionId: sessionId,
-      prompts: [prompt],
-      completions: [],
-      timestamp: new Date(),
-    });
-  }
+async function savePromptToDatabase(prompt) {
+  const collection = await astraDb.collection("journey_journal");
+  await collection.insertOne({
+    sessionId: sessionId,
+    prompt: prompt,
+    completion: null,
+    timestamp: new Date(),
+  });
 }
 
-async function saveCompletionToDatabase(completion, sessionId) {
+async function saveCompletionToDatabase(completion) {
   const collection = await astraDb.collection("journey_journal");
-  const existingEntry = await collection.findOne({ sessionId: sessionId });
-
-  if (existingEntry) {
-    await collection.updateOne(
-      { sessionId: sessionId },
-      { $push: { completions: completion } }
-    );
-  } else {
-    await collection.insertOne({
-      sessionId: sessionId,
-      prompts: [],
-      completions: [completion],
-      timestamp: new Date(),
-    });
-  }
+  await collection.updateOne(
+    { sessionId: sessionId },
+    { $set: { completion: completion } }
+  );
 }
 
 export async function POST(req) {
   try {
     const { messages, useRag, llm, similarityMetric } = await req.json();
-
-    let sessionId = req.headers.get("x-session-id");
-
-    // Check if session ID is stored in the client's browser storage
-    if (!sessionId && typeof window !== 'undefined') {
-      sessionId = localStorage.getItem("session_id");
-    }
-
-    // Generate new session ID if it doesn't exist
-    if (!sessionId) {
-      sessionId = uuidv4();
-      // Store session ID in browser storage
-      if (typeof window !== 'undefined') {
-        localStorage.setItem("session_id", sessionId);
-      }
-    }
 
     let docContext = "";
     if (useRag) {
@@ -121,26 +88,14 @@ export async function POST(req) {
       messages: [...ragPrompt, ...messages],
     });
 
-    // Define a variable to track whether completion has been saved
-    let completionSaved = false;
-
     const stream = OpenAIStream(response, {
       onStart: async () => {
         // Save the initial prompt to your database
-        await savePromptToDatabase(messages.map(m => m.content).join("\n"), sessionId);
-      },
-      onToken: async (token) => {
-        console.log(token);
-        // Optionally, implement logic to save individual tokens if needed
+        await savePromptToDatabase(messages.map(m => m.content).join("\n"));
       },
       onCompletion: async (completion) => {
-        // Check if completion has already been saved
-        if (!completionSaved) {
-          // Save the final completion to your database
-          await saveCompletionToDatabase(completion, sessionId);
-          // Set completionSaved to true to prevent duplicate saves
-          completionSaved = true;
-        }
+        // Save the final completion to your database
+        await saveCompletionToDatabase(completion);
       },
     });
 
