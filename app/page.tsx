@@ -22,7 +22,7 @@ import { v4 as uuidv4 } from "uuid";
 import Dashboard from "../components/dashboard"; // Changed NeuronVisual to Dashboard
 import MessageCollector from "../components/MessageCollector"; // Adjust the import path as necessary
 import TranscriptionComponent from "../components/TranscriptionComponent";
-import { UsernameProvider, useUsername } from "./contexts/UsernameContext"; // Ensure this path is correct
+import { useUsername } from "./contexts/UsernameContext"; // Ensure this path is correct
 import UsernameModal from "../components/UsernameModal"; 
 
 export default function Page() {
@@ -98,8 +98,8 @@ const saveUsername = (newUsername: string) => {
   }
 
   return (
-     <UsernameProvider> {/* This should ideally be in a higher-level component like App.tsx */}
-      {!username && <UsernameModal onSaveUsername={saveUsername} />}
+   <>
+      {!username && <UsernameModal />} {/* UsernameModal is shown if username is not set */}
     <main className="flex h-screen flex-col items-center justify-center">
       {/* Button to collect and display messages */}
       <button
@@ -215,6 +215,5 @@ const saveUsername = (newUsername: string) => {
         />
       )}
     </main>
-    </UsernameProvider>
   );
 }
