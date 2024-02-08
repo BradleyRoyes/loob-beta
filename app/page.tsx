@@ -95,11 +95,12 @@ const saveUsername = (newUsername: string) => {
         </button>
       </>
     );
-  }
+  };
 
   return (
    <>
-      {!username && <UsernameModal />} {/* UsernameModal is shown if username is not set */}
+      {!username && <UsernameModal />}
+     
     <main className="flex h-screen flex-col items-center justify-center">
       {/* Button to collect and display messages */}
       <button
