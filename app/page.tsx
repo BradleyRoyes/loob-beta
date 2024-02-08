@@ -39,11 +39,6 @@ export default function Page() {
 
   const { username, saveUsername } = useUsername(); // Use the username context
 
-const saveUsername = (newUsername: string) => {
-  localStorage.setItem('username', newUsername);
-  setUsername(newUsername);
-};
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -95,7 +90,7 @@ const saveUsername = (newUsername: string) => {
         </button>
       </>
     );
-  };
+  }
 
   return (
    <>
