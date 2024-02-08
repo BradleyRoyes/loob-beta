@@ -13,6 +13,26 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE,
 );
 
+async function savePromptToDatabase(prompt, sessionId) {
+  const collection = await astraDb.collection("journey_journal");
+  await collection.insertOne({
+    type: 'prompt',
+    content: prompt,
+    sessionId: sessionId,
+    timestamp: new Date(),
+  });
+}
+
+async function saveCompletionToDatabase(completion, sessionId) {
+  const collection = await astraDb.collection("journey_journal");
+  await collection.insertOne({
+    type: 'completion',
+    content: completion,
+    sessionId: sessionId,
+    timestamp: new Date(),
+  });
+}
+
 export async function POST(req) {
   try {
     const { messages, useRag, llm, similarityMetric } = await req.json();
@@ -21,7 +41,7 @@ export async function POST(req) {
     let sessionId = req.headers.get("x-session-id");
     if (!sessionId) {
       sessionId = uuidv4();
-      req.headers.set("x-session-id", sessionId);
+      // Note: Depending on your server setup, you might need to adjust how you're setting headers for the response
     }
 
     let docContext = "";
@@ -52,16 +72,16 @@ export async function POST(req) {
       {
         role: "system",
         content: `
-          You are an AI assistant designed to guide people through their transformative psychedelic trip experiences using compassionate inquiry, a framework developed by Gabor Maté. Engage users by encouraging them to share more about their experiences. Remember, remind the user when necessary that yu are just a robot here to help them share and reflect on their experiences.
+          You are an AI assistant designed to guide people through their transformative psychedelic trip experiences using compassionate inquiry, a framework developed by Gabor Maté. Engage users by encouraging them to share more about their experiences. Remember, remind the user when necessary that you are just a robot here to help them share and reflect on their experiences.
 
-          After each user input, always provide an analysis of the users message including:
+          After each user input, always provide an analysis of the user's message including:
           1. Mood: positive, negative, or neutral.
           2. A list of 3 relevant or notable keywords from the user input.
           3. An intensity of experience rating from 1 to 10.
 
           Structure your response as follows (without quotes):
           "[Your response here]"
-          "Analysis: {Mood: 'positive/negative/neutral', Keywords: ['keyword1', 'keyword2', 'keyword3'], Intensity: [1-10]}" . if possible make the anysis section invisible or dont share it to the scrren but somehow share it in a way i can parse on the backend and add to database
+          "Analysis: {Mood: 'positive/negative/neutral', Keywords: ['keyword1', 'keyword2', 'keyword3'], Intensity: [1-10]}". If possible, make the analysis section invisible or don't share it to the screen but somehow share it in a way I can parse on the backend and add to the database.
 
           ${docContext}
 
@@ -69,9 +89,6 @@ export async function POST(req) {
         `,
       },
     ];
-    
-// Initialize the collection for saving completions
-    const collection = await astraDb.collection("journey_journal");
 
     const response = await openai.chat.completions.create({
       model: llm ?? "gpt-3.5-turbo",
@@ -79,16 +96,19 @@ export async function POST(req) {
       messages: [...ragPrompt, ...messages],
     });
 
-    // Updated streaming logic to handle completions
+    // Convert the response into a friendly text-stream
     const stream = OpenAIStream(response, {
+      onStart: async () => {
+        // Save the initial prompt to your database
+        await savePromptToDatabase(messages.map(m => m.content).join("\n"), sessionId);
+      },
+      onToken: async (token: string) => {
+        console.log(token);
+        // Optionally, implement logic to save individual tokens if needed
+      },
       onCompletion: async (completion: string) => {
-        // Save the completion along with the session ID and other relevant data
-        await collection.insertOne({
-          content: completion,
-          sessionId: sessionId,
-          role: 'ai', // This identifies the message as coming from the AI
-          timestamp: new Date(), // Optionally add a timestamp
-        });
+        // Save the final completion to your database
+        await saveCompletionToDatabase(completion, sessionId);
       },
     });
 
