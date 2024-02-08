@@ -116,9 +116,6 @@ const saveUsername = (newUsername: string) => {
         className="mt-4 w-full max-w-lg h-64 p-2 text-sm bg-gray-100 border border-gray-200 rounded"
         placeholder="Collected messages will appear here..."
       ></textarea>
-
-      <>
-    {!username && <UsernameModal onSaveUsername={saveUsername} />}
   </>
  <TranscriptionComponent />
 
