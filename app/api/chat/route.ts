@@ -20,7 +20,7 @@ async function savePromptToDatabase(prompt, sessionId) {
   if (existingEntry) {
     await collection.updateOne(
       { sessionId: sessionId },
-      { $push: { prompts: prompt } } // Use the $push operator to append to the array
+      { $push: { prompts: prompt } }
     );
   } else {
     await collection.insertOne({
@@ -39,7 +39,7 @@ async function saveCompletionToDatabase(completion, sessionId) {
   if (existingEntry) {
     await collection.updateOne(
       { sessionId: sessionId },
-      { $push: { completions: completion } } // Use the $push operator to append to the array
+      { $push: { completions: completion } }
     );
   } else {
     await collection.insertOne({
@@ -55,11 +55,20 @@ export async function POST(req) {
   try {
     const { messages, useRag, llm, similarityMetric } = await req.json();
 
-    // Check if a session ID is provided in the request headers, or generate a new one
     let sessionId = req.headers.get("x-session-id");
+
+    // Check if session ID is stored in the client's browser storage
+    if (!sessionId && typeof window !== 'undefined') {
+      sessionId = localStorage.getItem("session_id");
+    }
+
+    // Generate new session ID if it doesn't exist
     if (!sessionId) {
       sessionId = uuidv4();
-      // Note: Depending on your server setup, you might need to adjust how you're setting headers for the response
+      // Store session ID in browser storage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem("session_id", sessionId);
+      }
     }
 
     let docContext = "";
@@ -67,13 +76,11 @@ export async function POST(req) {
       const latestMessage = messages[messages.length - 1]?.content;
 
       if (latestMessage) {
-        // Generate embeddings for the latest message
         const { data } = await openai.embeddings.create({
           input: latestMessage,
           model: "text-embedding-ada-002",
         });
 
-        // Retrieve similar documents from AstraDB based on embeddings
         const collection = await astraDb.collection(`chat_${similarityMetric}`);
         const cursor = collection.find(null, {
           sort: {
@@ -115,27 +122,27 @@ export async function POST(req) {
     });
 
     // Define a variable to track whether completion has been saved
-let completionSaved = false;
+    let completionSaved = false;
 
-const stream = OpenAIStream(response, {
-  onStart: async () => {
-    // Save the initial prompt to your database
-    await savePromptToDatabase(messages.map(m => m.content).join("\n"), sessionId);
-  },
-  onToken: async (token: string) => {
-    console.log(token);
-    // Optionally, implement logic to save individual tokens if needed
-  },
-  onCompletion: async (completion: string) => {
-    // Check if completion has already been saved
-    if (!completionSaved) {
-      // Save the final completion to your database
-      await saveCompletionToDatabase(completion, sessionId);
-      // Set completionSaved to true to prevent duplicate saves
-      completionSaved = true;
-    }
-  },
-});
+    const stream = OpenAIStream(response, {
+      onStart: async () => {
+        // Save the initial prompt to your database
+        await savePromptToDatabase(messages.map(m => m.content).join("\n"), sessionId);
+      },
+      onToken: async (token) => {
+        console.log(token);
+        // Optionally, implement logic to save individual tokens if needed
+      },
+      onCompletion: async (completion) => {
+        // Check if completion has already been saved
+        if (!completionSaved) {
+          // Save the final completion to your database
+          await saveCompletionToDatabase(completion, sessionId);
+          // Set completionSaved to true to prevent duplicate saves
+          completionSaved = true;
+        }
+      },
+    });
 
     return new StreamingTextResponse(stream);
   } catch (e) {
