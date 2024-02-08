@@ -205,7 +205,7 @@ export default function Page() {
           setConfiguration={setConfiguration}
         />
       )}
-    </main>
-    </React.Fragment>
+      </main>
+    </>
   );
 }
