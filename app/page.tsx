@@ -22,6 +22,7 @@ import { v4 as uuidv4 } from "uuid";
 import Dashboard from "../components/dashboard"; // Changed NeuronVisual to Dashboard
 import MessageCollector from "../components/MessageCollector"; // Adjust the import path as necessary
 import TranscriptionComponent from "../components/TranscriptionComponent";
+import UsernameModal from '../components/UsernameModal';
 
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } =
@@ -34,6 +35,13 @@ export default function Page() {
   const [showNeuronVisual, setShowNeuronVisual] = useState(false);
 
   const chatContainerRef = useRef(null);
+
+  const [username, setUsername] = useState(() => localStorage.getItem('username') || '');
+
+const saveUsername = (newUsername: string) => {
+  localStorage.setItem('username', newUsername);
+  setUsername(newUsername);
+};
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -106,6 +114,9 @@ export default function Page() {
         placeholder="Collected messages will appear here..."
       ></textarea>
 
+      <>
+    {!username && <UsernameModal onSaveUsername={saveUsername} />}
+  </>
  <TranscriptionComponent />
 
       <section
