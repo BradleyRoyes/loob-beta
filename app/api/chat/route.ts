@@ -15,22 +15,40 @@ const astraDb = new AstraDB(
 
 async function savePromptToDatabase(prompt, sessionId) {
   const collection = await astraDb.collection("journey_journal");
-  await collection.insertOne({
-    type: 'prompt',
-    content: prompt,
-    sessionId: sessionId,
-    timestamp: new Date(),
-  });
+  const existingEntry = await collection.findOne({ sessionId: sessionId });
+
+  if (existingEntry) {
+    await collection.updateOne(
+      { sessionId: sessionId },
+      { $push: { prompts: prompt } } // Use the $push operator to append to the array
+    );
+  } else {
+    await collection.insertOne({
+      sessionId: sessionId,
+      prompts: [prompt],
+      completions: [],
+      timestamp: new Date(),
+    });
+  }
 }
 
 async function saveCompletionToDatabase(completion, sessionId) {
   const collection = await astraDb.collection("journey_journal");
-  await collection.insertOne({
-    type: 'completion',
-    content: completion,
-    sessionId: sessionId,
-    timestamp: new Date(),
-  });
+  const existingEntry = await collection.findOne({ sessionId: sessionId });
+
+  if (existingEntry) {
+    await collection.updateOne(
+      { sessionId: sessionId },
+      { $push: { completions: completion } } // Use the $push operator to append to the array
+    );
+  } else {
+    await collection.insertOne({
+      sessionId: sessionId,
+      prompts: [],
+      completions: [completion],
+      timestamp: new Date(),
+    });
+  }
 }
 
 export async function POST(req) {
