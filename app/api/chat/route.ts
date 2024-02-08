@@ -13,41 +13,28 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE,
 );
 
-async function savePromptToDatabase(prompt, sessionId) {
+async function savePromptAndCompletionToDatabase(data, sessionId) {
   const collection = await astraDb.collection("journey_journal");
   const existingEntry = await collection.findOne({ sessionId: sessionId });
+
+  const { prompt, completion } = data;
+
+  const newData = {
+    sessionId: sessionId,
+    timestamp: new Date(),
+    data: [
+      { type: "prompt", content: prompt.content, timestamp: new Date() },
+      { type: "completion", content: completion, timestamp: new Date() }
+    ]
+  };
 
   if (existingEntry) {
     await collection.updateOne(
       { sessionId: sessionId },
-      { $push: { prompts: prompt } } // Use the $push operator to append to the array
+      { $push: { data: { $each: newData.data } } }
     );
   } else {
-    await collection.insertOne({
-      sessionId: sessionId,
-      prompts: [prompt],
-      completions: [],
-      timestamp: new Date(),
-    });
-  }
-}
-
-async function saveCompletionToDatabase(completion, sessionId) {
-  const collection = await astraDb.collection("journey_journal");
-  const existingEntry = await collection.findOne({ sessionId: sessionId });
-
-  if (existingEntry) {
-    await collection.updateOne(
-      { sessionId: sessionId },
-      { $push: { completions: completion } } // Use the $push operator to append to the array
-    );
-  } else {
-    await collection.insertOne({
-      sessionId: sessionId,
-      prompts: [],
-      completions: [completion],
-      timestamp: new Date(),
-    });
+    await collection.insertOne(newData);
   }
 }
 
