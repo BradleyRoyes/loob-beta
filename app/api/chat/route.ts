@@ -47,11 +47,9 @@ export async function POST(req: any) {
   try {
     const { messages, useRag, llm, similarityMetric } = await req.json();
 
-    // Check if a session ID is provided in the request headers, or generate a new one
     let sessionId = req.headers.get("x-session-id");
     if (!sessionId) {
       sessionId = uuidv4();
-      // Note: Depending on your server setup, you might need to adjust how you're setting headers for the response
     }
 
     let docContext = "";
@@ -59,13 +57,11 @@ export async function POST(req: any) {
       const latestMessage = messages[messages.length - 1]?.content;
 
       if (latestMessage) {
-        // Generate embeddings for the latest message
         const { data } = await openai.embeddings.create({
           input: latestMessage,
           model: "text-embedding-ada-002",
         });
 
-        // Retrieve similar documents from AstraDB based on embeddings
         const collection = await astraDb.collection(`chat_${similarityMetric}`);
         const cursor = collection.find(null, {
           sort: {
@@ -106,18 +102,14 @@ export async function POST(req: any) {
       messages: [...ragPrompt, ...messages],
     });
 
-    // Convert the response into a friendly text-stream
     const stream = OpenAIStream(response, {
       onStart: async () => {
-        // Save the initial prompt and completion to your database
         await savePromptAndCompletionToDatabase({ prompt: ragPrompt[0], completion: { content: "", timestamp: new Date() } }, sessionId);
       },
       onToken: async (token: string) => {
         console.log(token);
-        // Optionally, implement logic to save individual tokens if needed
       },
       onCompletion: async (completion: string) => {
-        // Save the final completion to your database
         await savePromptAndCompletionToDatabase({ prompt: { content: "", timestamp: new Date() }, completion: { content: completion, timestamp: new Date() } }, sessionId);
       },
     });
