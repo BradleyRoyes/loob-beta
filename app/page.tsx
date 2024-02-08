@@ -76,24 +76,26 @@ export default function Page() {
     } as React.ChangeEvent<HTMLInputElement>);
   };
 
-  if (showNeuronVisual) {
-    return (
-      <React.Fragment>
-        <Dashboard /> {/* Changed NeuronVisual to Dashboard */}
-        <button
-          onClick={() => setShowNeuronVisual(false)}
-          className="fixed top-4 right-4 p-2 bg-blue-500 text-white rounded"
-        >
-          Back to Chat
-        </button>
-      </React.Fragment>
-    );
-  }
 
   // Main return statement for the Page component
   return (
-   <React.Fragment>
+   // Ensure modals overlay the main page content correctly
+  return (
+    <>
+      {/* UsernameModal is conditionally rendered based on the absence of username */}
       {!username && <UsernameModal />}
+      {/* NeuronVisual/Dashboard is optionally shown based on state */}
+      {showNeuronVisual && (
+        <>
+          <Dashboard />
+          <button onClick={() => setShowNeuronVisual(false)} className="fixed top-4 right-4 p-2 bg-blue-500 text-white rounded">
+            Back to Chat
+          </button>
+        </>
+      )}
+
+      {/* Main content of the page */}
+      {!showNeuronVisual && ( // Ensure the main content is not displayed when showing NeuronVisual/Dashboard
      
     <main className="flex h-screen flex-col items-center justify-center">
       {/* Button to collect and display messages */}
