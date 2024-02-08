@@ -69,26 +69,32 @@ export async function POST(req) {
         `,
       },
     ];
-
-    // Send all user inputs to the "journey_journals" collection
-    for (const message of messages) {
-      if (message.role === "user") {
-        const collection = await astraDb.collection("journey_journal");
-        await collection.insertOne({
-          ...message,
-          sessionId: sessionId,
-        });
-      }
-    }
+    
+// Initialize the collection for saving completions
+    const collection = await astraDb.collection("journey_journal");
 
     const response = await openai.chat.completions.create({
       model: llm ?? "gpt-3.5-turbo",
       stream: true,
       messages: [...ragPrompt, ...messages],
     });
-    const stream = OpenAIStream(response);
+
+    // Updated streaming logic to handle completions
+    const stream = OpenAIStream(response, {
+      onCompletion: async (completion: string) => {
+        // Save the completion along with the session ID and other relevant data
+        await collection.insertOne({
+          content: completion,
+          sessionId: sessionId,
+          role: 'ai', // This identifies the message as coming from the AI
+          timestamp: new Date(), // Optionally add a timestamp
+        });
+      },
+    });
+
     return new StreamingTextResponse(stream);
   } catch (e) {
+    console.error(e);
     throw e;
   }
 }
