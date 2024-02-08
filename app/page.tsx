@@ -22,7 +22,8 @@ import { v4 as uuidv4 } from "uuid";
 import Dashboard from "../components/dashboard"; // Changed NeuronVisual to Dashboard
 import MessageCollector from "../components/MessageCollector"; // Adjust the import path as necessary
 import TranscriptionComponent from "../components/TranscriptionComponent";
-import UsernameModal from '../components/UsernameModal';
+import { UsernameProvider } from './contexts/UsernameContext'; 
+import UsernameModal from '../components/UsernameModal'; 
 
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } =
@@ -96,7 +97,10 @@ const saveUsername = (newUsername: string) => {
     );
   }
 
+ const Page: React.FC = () => {
   return (
+    <UsernameProvider>
+      <UsernameModal />
     <main className="flex h-screen flex-col items-center justify-center">
       {/* Button to collect and display messages */}
       <button
@@ -212,5 +216,6 @@ const saveUsername = (newUsername: string) => {
         />
       )}
     </main>
+       </UsernameProvider>
   );
 }
