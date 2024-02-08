@@ -76,10 +76,7 @@ export default function Page() {
     } as React.ChangeEvent<HTMLInputElement>);
   };
 
-
-  // Main return statement for the Page component
-  return (
-   // Ensure modals overlay the main page content correctly
+  // Main return statement
   return (
     <>
       {/* UsernameModal is conditionally rendered based on the absence of username */}
