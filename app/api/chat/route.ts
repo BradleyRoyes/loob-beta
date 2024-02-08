@@ -114,21 +114,28 @@ export async function POST(req) {
       messages: [...ragPrompt, ...messages],
     });
 
-    // Convert the response into a friendly text-stream
-    const stream = OpenAIStream(response, {
-      onStart: async () => {
-        // Save the initial prompt to your database
-        await savePromptToDatabase(messages.map(m => m.content).join("\n"), sessionId);
-      },
-      onToken: async (token: string) => {
-        console.log(token);
-        // Optionally, implement logic to save individual tokens if needed
-      },
-      onCompletion: async (completion: string) => {
-        // Save the final completion to your database
-        await saveCompletionToDatabase(completion, sessionId);
-      },
-    });
+    // Define a variable to track whether completion has been saved
+let completionSaved = false;
+
+const stream = OpenAIStream(response, {
+  onStart: async () => {
+    // Save the initial prompt to your database
+    await savePromptToDatabase(messages.map(m => m.content).join("\n"), sessionId);
+  },
+  onToken: async (token: string) => {
+    console.log(token);
+    // Optionally, implement logic to save individual tokens if needed
+  },
+  onCompletion: async (completion: string) => {
+    // Check if completion has already been saved
+    if (!completionSaved) {
+      // Save the final completion to your database
+      await saveCompletionToDatabase(completion, sessionId);
+      // Set completionSaved to true to prevent duplicate saves
+      completionSaved = true;
+    }
+  },
+});
 
     return new StreamingTextResponse(stream);
   } catch (e) {
