@@ -3,6 +3,7 @@ import { OpenAIStream, StreamingTextResponse } from "ai";
 import { AstraDB } from "@datastax/astra-db-ts";
 import { v4 as uuidv4 } from "uuid";
 
+// Initialize OpenAI and AstraDB with your configuration
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -13,9 +14,7 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE,
 );
 
-// Generate a session ID when the application is first loaded
-const sessionId = uuidv4();
-
+// Function to save message to the database
 async function saveMessageToDatabase(sessionId, content, role, analysis = null) {
   const messagesCollection = await astraDb.collection("messages");
   await messagesCollection.insertOne({
@@ -30,7 +29,8 @@ async function saveMessageToDatabase(sessionId, content, role, analysis = null) 
 
 export async function POST(req) {
   try {
-    const { messages, useRag, llm, similarityMetric } = await req.json();
+    // Extracting the sessionId from the request, ensuring it's used throughout the conversation
+    const { messages, useRag, llm, similarityMetric, sessionId } = await req.json(); // Added sessionId in the destructuring
 
     let docContext = "";
     if (useRag) {
@@ -54,7 +54,7 @@ export async function POST(req) {
       }
     }
 
-   const ragPrompt = [
+       const ragPrompt = [
   {
     role: "system",
     content: `
@@ -83,17 +83,22 @@ export async function POST(req) {
   },
 ];
 
+    // Generate the response from OpenAI
     const response = await openai.chat.completions.create({
       model: llm ?? "gpt-3.5-turbo",
       stream: true,
       messages: [...ragPrompt, ...messages],
     });
 
+    // Stream the response
     const stream = OpenAIStream(response, {
       onStart: async () => {
-        // Save the initial prompt to your database
-        await savePromptToDatabase(messages.map(m => m.content).join("\n"));
+        // Save each message to your database with the correct sessionId
+        for (const message of messages) {
+          await saveMessageToDatabase(sessionId, message.content, message.role);
+        }
       },
+    });
 
     return new StreamingTextResponse(stream);
   } catch (e) {
