@@ -79,9 +79,7 @@ export default function Page() {
   // Main return statement
   return (
     <>
-      {/* UsernameModal is conditionally rendered based on the absence of username */}
       {!username && <UsernameModal />}
-      {/* NeuronVisual/Dashboard is optionally shown based on state */}
       {showNeuronVisual && (
         <>
           <Dashboard />
@@ -91,27 +89,16 @@ export default function Page() {
         </>
       )}
 
-      {/* Main content of the page */}
-      {!showNeuronVisual && ( // Ensure the main content is not displayed when showing NeuronVisual/Dashboard
-     
-    <main className="flex h-screen flex-col items-center justify-center">
-      {/* Button to collect and display messages */}
-      <button
-        onClick={collectAndDisplayMessages}
-        className="mt-4 p-2 bg-blue-500 text-white rounded"
-      >
-        Collect Messages
-      </button>
+      {/* Main content should be wrapped in a single fragment if showNeuronVisual is false */}
+      {!showNeuronVisual && (
+        <main className="flex h-screen flex-col items-center justify-center">
+          <button onClick={collectAndDisplayMessages} className="mt-4 p-2 bg-blue-500 text-white rounded">
+            Collect Messages
+          </button>
 
-      {/* Display collected messages */}
-      <textarea
-        readOnly
-        value={collectedMessages}
-        className="mt-4 w-full max-w-lg h-64 p-2 text-sm bg-gray-100 border border-gray-200 rounded"
-        placeholder="Collected messages will appear here..."
-      ></textarea>
-  </>
- <TranscriptionComponent />
+          <textarea readOnly value={collectedMessages} className="mt-4 w-full max-w-lg h-64 p-2 text-sm bg-gray-100 border border-gray-200 rounded" placeholder="Collected messages will appear here..."></textarea>
+          
+          <TranscriptionComponent />
 
       <section
         ref={chatContainerRef}
