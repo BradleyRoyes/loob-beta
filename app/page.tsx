@@ -27,12 +27,26 @@ export default function Page() {
     useChat();
   const { useRag, llm, similarityMetric, setConfiguration } =
     useConfiguration();
-  const [sessionId] = useState(uuidv4());
   const messagesEndRef = useRef(null);
   const [configureOpen, setConfigureOpen] = useState(false);
   const [showNeuronVisual, setShowNeuronVisual] = useState(false);
+  const [sessionId, setSessionId] = useState("");
 
   const chatContainerRef = useRef(null);
+  
+  useEffect(() => {
+    // Attempt to retrieve an existing session ID from localStorage
+    let storedSessionId = localStorage.getItem("sessionId");
+    
+    // If it doesn't exist, generate a new one and store it
+    if (!storedSessionId) {
+      storedSessionId = uuidv4();
+      localStorage.setItem("sessionId", storedSessionId);
+    }
+    
+    // Set the retrieved or newly generated session ID in state
+    setSessionId(storedSessionId);
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
