@@ -16,22 +16,16 @@ const astraDb = new AstraDB(
 // Generate a session ID when the application is first loaded
 const sessionId = uuidv4();
 
-async function savePromptToDatabase(prompt) {
-  const collection = await astraDb.collection("journey_journal");
-  await collection.insertOne({
+async function saveMessageToDatabase(sessionId, content, role, analysis = null) {
+  const messagesCollection = await astraDb.collection("messages");
+  await messagesCollection.insertOne({
     sessionId: sessionId,
-    prompt: prompt,
-    completion: null,
-    timestamp: new Date(),
+    messageId: uuidv4(),
+    role: role,
+    content: content,
+    analysis: analysis,
+    createdAt: new Date(),
   });
-}
-
-async function saveCompletionToDatabase(completion) {
-  const collection = await astraDb.collection("completions");
-  await collection.updateOne(
-    { sessionId: sessionId },
-    { $set: { completion: completion } }
-  );
 }
 
 export async function POST(req) {
@@ -100,11 +94,6 @@ export async function POST(req) {
         // Save the initial prompt to your database
         await savePromptToDatabase(messages.map(m => m.content).join("\n"));
       },
-      onCompletion: async (completion) => {
-        // Save the final completion to your database
-        await saveCompletionToDatabase(completion);
-      },
-    });
 
     return new StreamingTextResponse(stream);
   } catch (e) {
