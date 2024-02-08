@@ -27,7 +27,7 @@ async function savePromptToDatabase(prompt) {
 }
 
 async function saveCompletionToDatabase(completion) {
-  const collection = await astraDb.collection("journey_journal");
+  const collection = await astraDb.collection("completions");
   await collection.updateOne(
     { sessionId: sessionId },
     { $set: { completion: completion } }
