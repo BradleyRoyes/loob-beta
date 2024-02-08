@@ -21,6 +21,7 @@ import AudioRecorder from "../components/AudioRecorder";
 import { v4 as uuidv4 } from "uuid";
 import Dashboard from "../components/dashboard"; // Changed NeuronVisual to Dashboard
 import MessageCollector from "../components/MessageCollector"; // Adjust the import path as necessary
+import TranscriptionComponent from "../components/TranscriptionComponent";
 
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } =
@@ -104,6 +105,9 @@ export default function Page() {
         className="mt-4 w-full max-w-lg h-64 p-2 text-sm bg-gray-100 border border-gray-200 rounded"
         placeholder="Collected messages will appear here..."
       ></textarea>
+
+ <TranscriptionComponent />
+
       <section
         ref={chatContainerRef}
         className="chatbot-section flex flex-col origin:w-[800px] w-full origin:h-[735px] h-full rounded-md p-2 md:p-6"
