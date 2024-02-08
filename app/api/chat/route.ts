@@ -13,7 +13,12 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE,
 );
 
-async function savePromptAndCompletionToDatabase(data, sessionId) {
+interface PromptCompletionData {
+  prompt: { content: string, timestamp: Date };
+  completion: { content: string, timestamp: Date };
+}
+
+async function savePromptAndCompletionToDatabase(data: PromptCompletionData, sessionId: string) {
   const collection = await astraDb.collection("journey_journal");
   const existingEntry = await collection.findOne({ sessionId: sessionId });
 
@@ -24,7 +29,7 @@ async function savePromptAndCompletionToDatabase(data, sessionId) {
     timestamp: new Date(),
     data: [
       { type: "prompt", content: prompt.content, timestamp: new Date() },
-      { type: "completion", content: completion, timestamp: new Date() }
+      { type: "completion", content: completion.content, timestamp: new Date() }
     ]
   };
 
@@ -38,7 +43,7 @@ async function savePromptAndCompletionToDatabase(data, sessionId) {
   }
 }
 
-export async function POST(req) {
+export async function POST(req: any) {
   try {
     const { messages, useRag, llm, similarityMetric } = await req.json();
 
@@ -104,8 +109,8 @@ export async function POST(req) {
     // Convert the response into a friendly text-stream
     const stream = OpenAIStream(response, {
       onStart: async () => {
-        // Save the initial prompt to your database
-        await savePromptToDatabase(messages.map(m => m.content).join("\n"), sessionId);
+        // Save the initial prompt and completion to your database
+        await savePromptAndCompletionToDatabase({ prompt: ragPrompt[0], completion: { content: "", timestamp: new Date() } }, sessionId);
       },
       onToken: async (token: string) => {
         console.log(token);
@@ -113,7 +118,7 @@ export async function POST(req) {
       },
       onCompletion: async (completion: string) => {
         // Save the final completion to your database
-        await saveCompletionToDatabase(completion, sessionId);
+        await savePromptAndCompletionToDatabase({ prompt: { content: "", timestamp: new Date() }, completion: { content: completion, timestamp: new Date() } }, sessionId);
       },
     });
 
