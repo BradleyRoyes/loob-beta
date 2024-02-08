@@ -34,10 +34,8 @@ export default function Page() {
   const messagesEndRef = useRef(null);
   const [configureOpen, setConfigureOpen] = useState(false);
   const [showNeuronVisual, setShowNeuronVisual] = useState(false);
-
+  const { username } = useUsername(); // Use the username context
   const chatContainerRef = useRef(null);
-
-  const { username, saveUsername } = useUsername(); // Use the username context
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -92,8 +90,9 @@ export default function Page() {
     );
   }
 
+  // Main return statement for the Page component
   return (
-   <>
+     <>
       {!username && <UsernameModal />}
      
     <main className="flex h-screen flex-col items-center justify-center">
