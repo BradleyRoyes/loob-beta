@@ -1,4 +1,5 @@
-# RAGBot Starter
+# R
+LOOB README
 
 This project is a starter for creating a chatbot using Astra DB and OpenAI. It's designed to be easy to deploy and use, with a focus on performance and usability.
 
