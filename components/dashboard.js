@@ -97,7 +97,7 @@ const Dashboard = () => {
         .style("font-size", (d) => d.size + "px")
         .style("font-family", "Nunito")
         .style("fill", (d) =>
-          d.sentiment === "positive" ? "#9fe2bf" : "#faa0a0",
+          d.sentiment === "negative" ? "#9fe2bf" : "#faa0a0",
         )
         .attr("text-anchor", "middle")
         .attr("transform", (d) => `translate(${[d.x, d.y]})rotate(${d.rotate})`)
