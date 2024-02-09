@@ -1,31 +1,35 @@
-import React from 'react';
+// MessageCollector.js
+import React, { useEffect, useState } from 'react';
 
-const MessageCollector = ({ messages, onCollect }) => {
-  const handleCollectMessages = () => {
-    // Filter messages to only include those in JSON format
-    const jsonMessages = messages.filter(msg => {
-      if (typeof msg.content === 'string') {
+const MessageCollector = ({ messages, showDashboard }) => {
+  const [jsonMessages, setJsonMessages] = useState([]);
+
+  useEffect(() => {
+    if (showDashboard) {
+      // Filter messages to only include those in JSON format
+      const filteredJsonMessages = messages.filter(msg => {
         try {
           JSON.parse(msg.content);
           return true;
         } catch (error) {
           return false;
         }
-      }
-      return false;
-    });
+      });
+  
+      // Set the JSON messages to state
+      setJsonMessages(filteredJsonMessages);
+    }
+  }, [messages, showDashboard]);
 
-    // Convert JSON messages to a JSON string
-    const jsonMessagesString = jsonMessages.map(msg => msg.content).join('\n');
-
-    // Call the callback function to send JSON messages to the dashboard
-    onCollect(jsonMessagesString);
-  };
+  // Return null if not showing dashboard
+  if (!showDashboard) {
+    return null;
+  }
 
   return (
-    <button onClick={handleCollectMessages} className="p-2 bg-blue-500 text-white rounded">
-      Collect JSON Messages
-    </button>
+    <div>
+      {/* Optionally render the JSON messages */}
+    </div>
   );
 };
 
