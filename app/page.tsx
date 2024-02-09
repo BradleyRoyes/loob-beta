@@ -44,10 +44,10 @@ export default function Page() {
     } as React.ChangeEvent<HTMLInputElement>);
   };
 
-  const handleAnalyseButtonClick = () => {
-    const analyseMessage = "Analyse our conversation so far";
-    append({ id: randomUUID(), content: analyseMessage, role: 'user' });
-  };
+const handleAnalyseButtonClick = () => {
+  const analyseMessage = "Analyse our conversation so far";
+  append({ content: analyseMessage, role: 'user' });
+};
 
   if (showNeuronVisual) {
     return (
