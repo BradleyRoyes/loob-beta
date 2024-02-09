@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 @import url('https://fonts.googleapis.com/css?family=Varela+Round');
+@import url('https://fonts.googleapis.com/css?family=Nunito');
 
 
 :root {
@@ -19,7 +20,7 @@
   --text-tertiary: #6B6F73;
   --shadow-primary: 0px 6px 16px 0px #0A0A0A1F, 0px 4px 14px 0px #0A0A0A14, 0px 8px 10px 0px #0A0A0A14;
   --processing-dot-size: 4px;
-  --font-family-primary: 'Varela Round';
+  --font-family-primary: 'Ninuto';
 }
 
 
@@ -35,7 +36,7 @@
   --border-primary: #262626;
   --background-start-rgb: 23, 23, 23;
   --background-end-rgb: 28, 28, 28;
-  --font-family-primary: 'Varela Round';
+  --font-family-primary: 'Nunito';
 }
 
 /* latin-ext */
