@@ -16,17 +16,23 @@ const astraDb = new AstraDB(
 
 // Function to parse the analysis object and extract Mood and Keywords
 function parseAnalysis(content: string) {
-  const regex = /"analysis"\s*:\s*{\s*"Mood"\s*:\s*"([^"]+)",\s*"Keywords"\s*:\s*\[([^\]]+)\]/;
+  // Regex to find the JSON part within curly braces, accounting for nested structures
+  const regex = /{[\s\S]*?mood[\s\S]*?:[\s\S]*?".*?"[\s\S]*?,[\s\S]*?keywords[\s\S]*?:[\s\S]*?\[[\s\S]*?\][\s\S]*?}/;
   const match = content.match(regex);
 
   if (match) {
-    const mood = match[1];
-    const keywords = match[2].split(',').map(keyword => keyword.trim());
-    return { Mood: mood, Keywords: keywords };
-  } else {
-    return null;
+    try {
+      const analysis = JSON.parse(match[0]);
+      if (analysis.mood && Array.isArray(analysis.keywords)) {
+        return { Mood: analysis.mood, Keywords: analysis.keywords };
+      }
+    } catch (error) {
+      console.error("Failed to parse JSON from content", error);
+    }
   }
+  return null;
 }
+
 
 async function saveMessageToDatabase(sessionId: string, content: string, role: string) {
   const messagesCollection = await astraDb.collection("messages");
@@ -88,7 +94,7 @@ export async function POST(req: any) {
 
 important!!! when you recieve the message "*** Analyse our conversation so far ***" you will respond only with an analysis in json format containing mood and a list of thematically relavant keywords. like this:
 
- ***Magic Analysis: Following this line, provide a structured analysis in JSON format of the conversation's mood and keywords.
+ ***Loob Magic Analysis: Following this line, provide a structured analysis in JSON format of the conversation's mood and keywords.
 
         
           apart from json analysis, In your interactions:
