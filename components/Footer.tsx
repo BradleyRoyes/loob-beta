@@ -24,7 +24,7 @@ const Footer = () => {
           style={
             {
               enableBackground: "new 0 0 513 713",
-              width: "50px", // Adjust as needed
+              width: "auto", // Adjust as needed
               height: "auto", // Adjust as needed
               marginLeft: "4px", // Ensures spacing between text and SVG
               marginTop: "1px",
@@ -100,8 +100,8 @@ const Footer = () => {
             fill="#6B6F73"
           />
           <circle
-            cx="296.5"
-            cy="356.5"
+            cx="256.5"
+            cy="336.5"
             r="250"
             style={{
               fill: "none",
