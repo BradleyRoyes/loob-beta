@@ -1,7 +1,6 @@
 // SplashScreen.tsx
 import React, { useState } from 'react';
-import './SplashScreen.module.css'; // Adjust the path based on your project structure
-
+import './SplashScreen.module.css'; // Ensure this path matches where you've placed the CSS file
 
 interface SplashScreenProps {
   onEnter: (sessionId: string) => void; // Updated to accept a session ID string
@@ -11,15 +10,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onEnter }) => {
   const [name, setName] = useState('');
 
   return (
-<div className="fixed top-0 left-0 right-0 bottom-0 flex items-center justify-center bg-black z-50 transition-opacity duration-700 ease-in-out fade-in">
-      .fade-in {
-  animation: fadeIn 1s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+    <div className="fixed top-0 left-0 right-0 bottom-0 flex items-center justify-center bg-black z-50 fade-in">
       <div className="text-center">
         <h1 className="mb-4 text-4xl font-bold text-white">Welcome to Loob Laboratories</h1>
         <div className="mb-4">
