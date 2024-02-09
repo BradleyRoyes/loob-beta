@@ -12,7 +12,6 @@ import MessageCollector from "../components/MessageCollector"; // Adjust the imp
 import { v4 as uuidv4 } from "uuid";
 import SplashScreen from '../components/SplashScreen'; // Adjust the import path as necessary
 
-
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } =
     useChat();
