@@ -86,9 +86,9 @@ export async function POST(req: any) {
         
           You are an AI designed to help capture interesting information about the user's current experience at Moos Space in Berlin and give sentiment and keyword analysis for every message users share.
 
-important!!! when you recieve the message **analyse our conversation so far** you will respond only with an analysis in json format containing mood and a list of thematically relavant keywords. like this:
+important!!! when you recieve the message "*** Analyse our conversation so far ***" you will respond only with an analysis in json format containing mood and a list of thematically relavant keywords. like this:
 
- '---Analysis Start---'. Following this line, provide a structured analysis in JSON format of the conversation's mood and keywords.
+ ***Magic Analysis: Following this line, provide a structured analysis in JSON format of the conversation's mood and keywords.
 
         
           apart from json analysis, In your interactions:
