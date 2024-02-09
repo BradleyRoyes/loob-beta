@@ -98,6 +98,16 @@ const Footer = () => {
                     c69.8,2.9,61.3,73.1,0.9,73.1c-54.5,0-60.3-28.1-60.3-28.1"
             fill="#6B6F73"
           />
+          <circle
+            cx="256.5"
+            cy="356.5"
+            r="250"
+            style={{
+              fill: "none",
+              stroke: "#6B6F73", // Change the stroke color as needed
+              strokeWidth: "16", // Adjust the stroke width as needed
+            }}
+          />
         </svg>
       </div>
     </footer>
