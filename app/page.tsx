@@ -11,7 +11,7 @@ import Dashboard from "../components/dashboard"; // Changed NeuronVisual to Dash
 import MessageCollector from "../components/MessageCollector"; // Adjust the import path as necessary
 import { v4 as uuidv4 } from "uuid";
 import SplashScreen from "../components/SplashScreen"; // Adjust the import path as necessary
-import AnalyseButton from "..components/AnalyseButton";
+import AnalyseButton from "../components/AnalyseButton";
 
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } =
