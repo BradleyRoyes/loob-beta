@@ -14,11 +14,9 @@ const Footer = () => {
       <div className="ml-auto flex flex-row items-center">
         <span className="mr-1">Powered by</span>
         <svg
-          version="1.1"
-          id="Layer_1"
           xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 513 513"
-          style={{ enableBackground: "new 0 0 513 513" } as any}
+          viewBox="0 0 513 713"
+          style={{ enableBackground: "new 0 0 513 713" } as any}
         >
           <path
             className="st0"
