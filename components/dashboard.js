@@ -67,7 +67,7 @@ const Dashboard = () => {
     d3.select(wordCloudRef.current).selectAll("*").remove();
 
     const layout = cloud()
-      .size([800, 600])
+      .size([800, 400])
       .words(
         words.map((d) => ({
           text: d.text,
@@ -109,7 +109,7 @@ const Dashboard = () => {
           } else if (d.sentiment === "negative") {
             return "#faa0a0"; // Reddish color for negative
           } else {
-            return "red"; // Fallback color (e.g., for neutral or undefined sentiment)
+            return "#6B6F73"; // Fallback color (e.g., for neutral or undefined sentiment)
           }
         })
         .attr("text-anchor", "middle")
