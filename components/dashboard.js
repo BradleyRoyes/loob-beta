@@ -96,9 +96,13 @@ const Dashboard = () => {
         .append("text")
         .style("font-size", (d) => d.size + "px")
         .style("font-family", "Nunito")
-        .style("fill", (d) =>
-          d.sentiment === "negative" ? "#9fe2bf" : "#faa0a0",
-        )
+        .style("fill", (d) => {
+          if (d.sentiment === "positive") {
+            return "#9fe2bf"; // Greenish color for positive
+          } else if (d.sentiment === "negative") {
+            return "#faa0a0"; // Reddish color for negative
+          }
+        })
         .attr("text-anchor", "middle")
         .attr("transform", (d) => `translate(${[d.x, d.y]})rotate(${d.rotate})`)
         .text((d) => d.text);
