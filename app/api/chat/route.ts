@@ -21,7 +21,7 @@ function parseAnalysis(analysis) {
 }
 
 // Update the saveMessageToDatabase function to include analysis parsing for messages from the assistant role
-async function saveMessageToDatabase(sessionId, message, role) {
+async function saveMessageToDatabase(sessionId, content, role) {
   const messagesCollection = await astraDb.collection("messages");
   let analysis = null;
   if (role === "assistant") {
@@ -95,7 +95,7 @@ export async function POST(req) {
           If a direct answer isn't available, guide the conversation by asking another question to help the user delve deeper into their thoughts or suggest reflecting on a related aspect of their experience.
 
           Remember to clarify you're an AI, especially if discussions go beyond your capacity to understand or support, emphasizing the importance of professional help for personal issues.
-
+          ${docContext}
           Use the insights from retrieved documents to inform your approach, tailoring questions and reflections to the user's shared experiences. This includes adapting to the user's mood and the themes of their input to enhance the supportive and therapeutic interaction.
         `,
       },
@@ -113,7 +113,7 @@ export async function POST(req) {
       onStart: async () => {
         // Save each message to your database with the correct sessionId
         for (const message of messages) {
-          await saveMessageToDatabase(sessionId, message, message.role);
+          await saveMessageToDatabase(sessionId, message.content, message.role);
         }
       },
     });
