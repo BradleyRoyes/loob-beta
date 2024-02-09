@@ -31,7 +31,7 @@ async function saveMessageToDatabase(sessionId, content, role) {
     sessionId: sessionId,
     messageId: uuidv4(),
     role: role,
-    content: message.content,
+    content: content,
     ...analysis, // Spread the parsed analysis object if available
     createdAt: new Date(),
   });
