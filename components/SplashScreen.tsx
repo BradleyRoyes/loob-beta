@@ -11,7 +11,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onEnter }) => {
   const [name, setName] = useState('');
 
   return (
-    <div className="fixed top-0 left-0 right-0 bottom-0 flex items-center justify-center bg-black z-50 transition-opacity duration-700 ease-in-out">
+<div className="fixed top-0 left-0 right-0 bottom-0 flex items-center justify-center bg-black z-50 transition-opacity duration-700 ease-in-out fade-in">
       .fade-in {
   animation: fadeIn 1s ease-in-out;
 }
