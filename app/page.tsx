@@ -136,9 +136,8 @@ export default function Page() {
       
       {/* Footer Component */}
       <Footer />
-    </main>
     
-    {/* Configuration Modal */}
+    
     {configureOpen && (
       <Configure
         isOpen={configureOpen}
@@ -149,5 +148,5 @@ export default function Page() {
         setConfiguration={setConfiguration}
       />
     )}
+      </main>
   );
-}
