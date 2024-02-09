@@ -14,15 +14,25 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE,
 );
 
-// Function to save message to the database
+// Function to parse the analysis object and extract Mood, Keywords, and Takeaway
+function parseAnalysis(analysis) {
+  const { Mood, Keywords, Takeaway } = analysis;
+  return { Mood, Keywords, Takeaway };
+}
+
+// Update the saveMessageToDatabase function to include analysis parsing for messages from the assistant role
 async function saveMessageToDatabase(sessionId, message, role) {
   const messagesCollection = await astraDb.collection("messages");
+  let analysis = null;
+  if (role === "assistant") {
+    analysis = parseAnalysis(message.analysis);
+  }
   await messagesCollection.insertOne({
     sessionId: sessionId,
     messageId: uuidv4(),
     role: role,
     content: message.content,
-    analysis: message.analysis || null,
+    ...analysis, // Spread the parsed analysis object if available
     createdAt: new Date(),
   });
 }
