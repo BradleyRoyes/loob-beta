@@ -21,11 +21,11 @@ const Footer = () => {
         <a href="https://seks.design" target="_blank" rel="noopener noreferrer">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 513 713"
+            viewBox="0 0 600 713"
             style={
               {
-                enableBackground: "new 0 0 513 713",
-                width: "55px", // Adjust as needed
+                enableBackground: "new 0 0 600 713",
+                width: "30px", // Adjust as needed
                 height: "auto", // Adjust as needed
                 marginLeft: "4px", // Ensures spacing between text and SVG
               } as any
