@@ -94,7 +94,7 @@ return (
         </div>
         <div className="flex flex-wrap justify-around">
           <div className="visualization-container mb-4">
-            <h2 className="chatbot-text-primary text-xl mb-2">Word Cloud</h2>
+            <h2 className="chatbot-text-primary text-xl mb-2">Common words</h2>
             <div ref={wordCloudRef} className="word-cloud-container" />
           </div>
           <div className="visualization-container mb-4">
