@@ -17,16 +17,14 @@ const Footer = () => {
           version="1.1"
           id="Layer_1"
           xmlns="http://www.w3.org/2000/svg"
-          x="0px"
-          y="0px"
-          viewBox="0 0 595.3 841.9"
-          style={{ enableBackground: "new 0 0 595.3 841.9" } as any}
+          viewBox="0 0 13 13"
+          style={{ enableBackground: "new 0 0 13 13" } as any}
         >
           <path
             className="st0"
             style={{
               fill: "none",
-              stroke: "#000000",
+              stroke: "#6B6F73",
               strokeWidth: 9,
               strokeMiterlimit: 10,
             }}
@@ -38,7 +36,7 @@ const Footer = () => {
             className="st0"
             style={{
               fill: "none",
-              stroke: "#000000",
+              stroke: "#6B6F73",
               strokeWidth: 9,
               strokeMiterlimit: 10,
             }}
@@ -49,7 +47,7 @@ const Footer = () => {
             className="st0"
             style={{
               fill: "none",
-              stroke: "#000000",
+              stroke: "#6B6F73",
               strokeWidth: 9,
               strokeMiterlimit: 10,
             }}
@@ -60,7 +58,7 @@ const Footer = () => {
             className="st1"
             style={{
               fill: "none",
-              stroke: "#000000",
+              stroke: "#6B6F73",
               strokeWidth: 16,
               strokeMiterlimit: 10,
             }}
@@ -71,7 +69,7 @@ const Footer = () => {
             className="st1"
             style={{
               fill: "none",
-              stroke: "#000000",
+              stroke: "#6B6F73",
               strokeWidth: 16,
               strokeMiterlimit: 10,
             }}
@@ -82,7 +80,7 @@ const Footer = () => {
             className="st0"
             style={{
               fill: "none",
-              stroke: "#000000",
+              stroke: "#6B6F73",
               strokeWidth: 9,
               strokeMiterlimit: 10,
             }}
