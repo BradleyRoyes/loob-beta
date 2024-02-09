@@ -66,8 +66,10 @@ const Dashboard = () => {
   const drawWordCloud = (words) => {
     d3.select(wordCloudRef.current).selectAll("*").remove();
 
+    const [width, height] = [800, 600]; // SVG dimensions
+
     const layout = cloud()
-      .size([800, 600])
+      .size([width, height])
       .words(words.map((d) => ({ text: d.text, size: d.frequency * 10 + 10 })))
       .padding(5)
       .rotate(() => (~~(Math.random() * 6) - 3) * 30)
@@ -81,20 +83,28 @@ const Dashboard = () => {
       const svg = d3
         .select(wordCloudRef.current)
         .append("svg")
-        .attr("width", layout.size()[0])
-        .attr("height", layout.size()[1])
-        .append("g")
-        .attr(
-          "transform",
-          `translate(${layout.size()[0] / 2},${layout.size()[1] / 2})`,
-        );
+        .attr("width", width)
+        .attr("height", height);
 
+      // Define a clipping path that matches the SVG dimensions
       svg
+        .append("clipPath")
+        .attr("id", "clip")
+        .append("rect")
+        .attr("width", width)
+        .attr("height", height);
+
+      const group = svg
+        .append("g")
+        .attr("transform", `translate(${width / 2},${height / 2})`)
+        .attr("clip-path", "url(#clip)"); // Apply clipping path to the group
+
+      group
         .selectAll("text")
         .data(words)
         .enter()
         .append("text")
-        .style("font-size", (d) => d.size + "px")
+        .style("font-size", (d) => `${d.size}px`)
         .style("font-family", "Impact")
         .style("fill", (d) => (d.sentiment === "positive" ? "green" : "red"))
         .attr("text-anchor", "middle")
@@ -112,7 +122,7 @@ const Dashboard = () => {
       <section className="chatbot-section max-w-4xl w-full overflow-hidden rounded-md shadow-lg">
         <div className="p-4">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="chatbot-text-primary text-3xl font-bold justify-center">
+            <h1 className="chatbot-text-primary text-3xl font-bold">
               Dashboard
             </h1>
             <ThemeButton theme={theme} setTheme={setTheme} />
