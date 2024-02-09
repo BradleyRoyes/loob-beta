@@ -14,7 +14,6 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE,
 );
 
-// Function to parse the analysis object and extract Mood and Keywords
 function parseAnalysis(content: string) {
   // Regex to find the JSON part within curly braces, accounting for nested structures
   const regex = /{[\s\S]*?mood[\s\S]*?:[\s\S]*?".*?"[\s\S]*?,[\s\S]*?keywords[\s\S]*?:[\s\S]*?\[[\s\S]*?\][\s\S]*?}/;
@@ -32,7 +31,6 @@ function parseAnalysis(content: string) {
   }
   return null;
 }
-
 
 async function saveMessageToDatabase(sessionId: string, content: string, role: string) {
   const messagesCollection = await astraDb.collection("messages");
