@@ -44,9 +44,10 @@ export default function Page() {
     } as React.ChangeEvent<HTMLInputElement>);
   };
 
-   const handleAnalyseButtonClick = () => {
-    const analyseMessage = "analyse our conversation until now";
-    append({ author: "user", content: analyseMessage }); // Append the message to the chat
+  const handleAnalyseButtonClick = () => {
+    // Define the behavior for the AnalyseButton click here
+    // For example:
+    append({ author: "user", content: "Analyse our conversation until now" });
   };
 
   if (showNeuronVisual) {
