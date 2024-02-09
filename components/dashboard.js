@@ -5,13 +5,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
   Tooltip,
   Legend,
 } from "recharts";
@@ -20,25 +13,46 @@ import ThemeButton from "./ThemeButton";
 const Dashboard = ({ jsonMessages }) => {
   const [theme, setTheme] = useState("dark");
   const wordCloudRef = useRef();
+  const [keywordsData, setKeywordsData] = useState([]);
+  const [moodData, setMoodData] = useState([]);
 
-  // Simplified example to visualize JSON messages
   useEffect(() => {
-    if (jsonMessages && jsonMessages.length > 0) {
-      drawWordCloud(jsonMessages);
-    }
+    // Process jsonMessages to extract and aggregate keywords and moods
+    const keywordsFrequency = {};
+    const moodCount = { Positive: 0, Negative: 0, Neutral: 0 };
+
+    jsonMessages.forEach((message) => {
+      message.keywords.forEach((keyword) => {
+        keywordsFrequency[keyword] = (keywordsFrequency[keyword] || 0) + 1;
+      });
+
+      moodCount[message.mood] = (moodCount[message.mood] || 0) + 1;
+    });
+
+    // Convert aggregated data into arrays for visualization
+    const keywordsArray = Object.keys(keywordsFrequency).map((key) => ({
+      text: key,
+      value: keywordsFrequency[key],
+    }));
+
+    const moodArray = Object.keys(moodCount).map((key) => ({
+      name: key,
+      value: moodCount[key],
+    }));
+
+    setKeywordsData(keywordsArray);
+    setMoodData(moodArray);
+
+    // Draw word cloud
+    drawWordCloud(keywordsArray);
   }, [jsonMessages]);
 
-  const drawWordCloud = (messages) => {
+  const drawWordCloud = (keywords) => {
     const layout = cloud()
       .size([800, 400])
-      .words(
-        messages.map((d) => ({
-          text: d.keywords.join(" "), // Assuming 'keywords' field exists and is an array
-          size: 10 + Math.random() * 90, // Random size for demonstration
-        }))
-      )
+      .words(keywords.map((d) => ({ text: d.text, size: d.value * 10 }))) // Adjust size multiplier as needed
       .padding(5)
-      .rotate(() => ~~(Math.random() * 2) * 90)
+      .rotate(0)
       .font("Impact")
       .fontSize((d) => d.size)
       .on("end", (words) => {
@@ -62,7 +76,7 @@ const Dashboard = ({ jsonMessages }) => {
         .style("font-size", (d) => `${d.size}px`)
         .style("font-family", "Impact")
         .attr("text-anchor", "middle")
-        .attr("transform", (d) => `translate(${[d.x, d.y]})rotate(${d.rotate})`)
+        .attr("transform", (d) => `translate(${[d.x, d.y]})`)
         .text((d) => d.text);
     }
   };
@@ -72,12 +86,17 @@ const Dashboard = ({ jsonMessages }) => {
       <ThemeButton theme={theme} setTheme={setTheme} />
       <section className="max-w-4xl w-full overflow-hidden rounded-md shadow-lg p-4">
         <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-        <div ref={wordCloudRef} className="word-cloud-container" />
-        {/* Additional visualization components can go here */}
-        {/* Simple JSON display for debug */}
-        <div className="json-messages-display mt-4">
-          <h2>Raw JSON Messages</h2>
-          <pre>{JSON.stringify(jsonMessages, null, 2)}</pre>
+        <div ref={wordCloudRef} className="word-cloud-container mb-4" />
+        <div className="pie-chart-container">
+          <PieChart width={400} height={400}>
+            <Pie data={moodData} cx={200} cy={200} outerRadius={100} fill="#8884d8" dataKey="value" label>
+              {moodData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={["#0088FE", "#00C49F", "#FFBB28"][index % 3]} />
+              ))}
+            </Pie>
+            <Tooltip />
+            <Legend />
+          </PieChart>
         </div>
       </section>
     </main>
