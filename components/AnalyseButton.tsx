@@ -5,12 +5,13 @@ interface AnalyseButtonProps {
 }
 
 const AnalyseButton: React.FC<AnalyseButtonProps> = ({ onClick }) => {
-  const handleAnalyseButtonClick = () => {
-    // Define the behavior for the button click here
-    // For example:
-    console.log("Analyse button clicked");
-    onClick(); // Call the provided onClick function
-  };
+ const handleAnalyseButtonClick = () => {
+  const analyseMessage = "analyse our conversation until now";
+  append({ author: "user", content: analyseMessage }); // Send the message to the chat
+  // Optionally, you can also clear the input field after sending the message
+  handleInputChange({ target: { value: "" } } as React.ChangeEvent<HTMLInputElement>);
+};
+
 
   return (
     <button
