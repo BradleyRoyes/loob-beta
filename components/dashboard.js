@@ -122,9 +122,11 @@ const Dashboard = () => {
       <section className="chatbot-section max-w-4xl w-full overflow-hidden rounded-md shadow-lg">
         <div className="p-4">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="chatbot-text-primary text-3xl font-bold">
-              Dashboard
-            </h1>
+            <div class="flex justify-center items-center h-screen">
+              <h1 className="chatbot-text-primary text-3xl font-bold">
+                Dashboard
+              </h1>
+            </div>
             <ThemeButton theme={theme} setTheme={setTheme} />
           </div>
           <div className="flex flex-wrap justify-around">
