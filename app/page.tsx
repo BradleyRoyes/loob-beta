@@ -112,15 +112,15 @@ export default function Page() {
                 >
                   Insights
                 </button>
+                <div className="relative">
+                  <AnalyseButton onClick={handleAnalyseButtonClick} />
+                </div>
               </div>
             </div>
           </div>
-          <div className="flex justify-between items-center w-full mt-4">
-            <AnalyseButton onClick={handleAnalyseButtonClick} />
-            <p className="chatbot-text-secondary-inverse text-lg md:text-xl font-medium">
-              recreating recreation
-            </p>
-          </div>
+          <p className="chatbot-text-secondary-inverse text-lg md:text-xl mt-1 md:mt-2 font-medium">
+            recreating recreation
+          </p>
         </div>
         <div className="flex-1 relative overflow-y-auto my-4 md:my-6">
           <div className="absolute w-full overflow-x-hidden">
