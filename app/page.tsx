@@ -44,6 +44,11 @@ export default function Page() {
     } as React.ChangeEvent<HTMLInputElement>);
   };
 
+  const handleAnalyseButtonClick = () => {
+    const analyseMessage = "Analyse our conversation so far";
+    append({ id: randomUUID(), content: analyseMessage, role: 'user' });
+  };
+
   if (showNeuronVisual) {
     return (
       <>
@@ -94,7 +99,7 @@ export default function Page() {
               >
                 Insights
               </button>
-               <AnalyseButton />
+               <AnalyseButton onClick={handleAnalyseButtonClick} />
             </div>
           </div>
           <p className="chatbot-text-secondary-inverse text-lg md:text-xl mt-2 md:mt-4 font-medium">
