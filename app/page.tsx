@@ -61,11 +61,6 @@ export default function Page() {
     append({ content: analyseMessage, role: 'user' });
   };
 
-const handleAnalyseButtonClick = () => {
-  const analyseMessage = "Analyse our conversation so far";
-  append({ content: analyseMessage, role: 'user' });
-};
-
   if (showNeuronVisual) {
     return (
       <>
