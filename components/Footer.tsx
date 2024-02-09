@@ -15,8 +15,8 @@ const Footer = () => {
         <span className="mr-1">Powered by</span>
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 513 713"
-          style={{ enableBackground: "new 0 0 513 713" } as any}
+          viewBox="0 0 1013 1713"
+          style={{ enableBackground: "new 0 0 1013 1713" } as any}
         >
           <path
             className="st0"
