@@ -3,6 +3,7 @@
 @tailwind utilities;
 @import url('https://fonts.googleapis.com/css?family=Varela+Round');
 
+
 :root {
   --text-primary: #FFFFFF;
   --text-primary-inverse: #090909;
@@ -46,7 +47,7 @@
 
 @layer base {
   html {
-    font-family: 'Vrela Round';
+    font-family: varela, normal;
   }
 }
 
@@ -54,7 +55,7 @@ body {
   background: linear-gradient(to bottom,
       transparent,
       rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
-  font-family: 'Varela Round';
+  font-family: varela;
 }
 
 .chatbot-section {
