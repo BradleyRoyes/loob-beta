@@ -15,32 +15,40 @@ const astraDb = new AstraDB(
 );
 
 // Function to parse the analysis object and extract Mood, Keywords, and Takeaway
-function parseAnalysis(analysis) {
-  const { Mood, Keywords, Takeaway } = analysis;
-  return { Mood, Keywords, Takeaway };
+function parseAnalysis(content: string) {
+  const regex = /"analysis"\s*:\s*{\s*"Mood"\s*:\s*"([^"]+)",\s*"Keywords"\s*:\s*\[([^\]]+)\],\s*"Takeaway"\s*:\s*"([^"]+)"\s*}/;
+  const match = content.match(regex);
+
+  if (match) {
+    const mood = match[1];
+    const keywords = match[2].split(',').map(keyword => keyword.trim());
+    const takeaway = match[3];
+    return { Mood: mood, Keywords: keywords, Takeaway: takeaway };
+  } else {
+    return null;
+  }
 }
 
-// Update the saveMessageToDatabase function to include analysis parsing for messages from the assistant role
-async function saveMessageToDatabase(sessionId, content, role) {
+// Function to save message to the database
+async function saveMessageToDatabase(sessionId: string, content: string, role: string) {
   const messagesCollection = await astraDb.collection("messages");
   let analysis = null;
   if (role === "assistant") {
-    analysis = parseAnalysis(message.analysis);
+    analysis = parseAnalysis(content);
   }
   await messagesCollection.insertOne({
     sessionId: sessionId,
     messageId: uuidv4(),
     role: role,
     content: content,
-    ...analysis, // Spread the parsed analysis object if available
+    ...analysis,
     createdAt: new Date(),
   });
 }
 
-export async function POST(req) {
+export async function POST(req: any) {
   try {
-    // Extracting the sessionId from the request, ensuring it's used throughout the conversation
-    const { messages, useRag, llm, similarityMetric, sessionId } = await req.json(); // Added sessionId in the destructuring
+    const { messages, useRag, llm, similarityMetric, sessionId } = await req.json();
 
     let docContext = "";
     if (useRag) {
@@ -79,12 +87,10 @@ export async function POST(req) {
           2. Keywords: 3 relevant terms from the user input.
           3. Takeaway: Please provide a one-sentence integration takeaway message for the user—a recommended action item or suggestion for the user to work on, think about, or reflect on going forward.
 
-
           Structure your response as a JSON-like object with two main parts: 'response' and 'analysis'. The 'analysis' part should include 'Mood', 'Keywords', and 'Takeaway' as fields. This structure makes the analysis easily parseable for backend processing. For example:
-
-          {
-          "Loob": "Your conversational response here...",
           
+          {
+            "Loob": "Your conversational response here...",
             "analysis": {
               "Mood": "positive",
               "Keywords": ["keyword1", "keyword2", "keyword3"],
@@ -101,17 +107,14 @@ export async function POST(req) {
       },
     ];
 
-    // Generate the response from OpenAI
     const response = await openai.chat.completions.create({
       model: llm ?? "gpt-3.5-turbo",
       stream: true,
       messages: [...ragPrompt, ...messages],
     });
 
-    // Stream the response
     const stream = OpenAIStream(response, {
       onStart: async () => {
-        // Save each message to your database with the correct sessionId
         for (const message of messages) {
           await saveMessageToDatabase(sessionId, message.content, message.role);
         }
