@@ -15,9 +15,9 @@ const Footer = () => {
         <span className="mr-1">Powered by</span>
         <svg
           aria-label="Vercel logotype"
-          width="53"
+          width="13"
           height="13"
-          viewBox="0 0 53 13"
+          viewBox="0 0 13 13"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
@@ -25,7 +25,7 @@ const Footer = () => {
             <path
               className="st0"
               style={{
-                fill: "6B6F73",
+                fill: "#6B6F73",
                 stroke: "#000000",
                 strokeWidth: 9,
                 strokeMiterlimit: 10,
@@ -36,7 +36,7 @@ const Footer = () => {
             <path
               className="st0"
               style={{
-                fill: "6B6F73",
+                fill: "#6B6F73",
                 stroke: "#000000",
                 strokeWidth: 9,
                 strokeMiterlimit: 10,
@@ -46,7 +46,7 @@ const Footer = () => {
             <path
               className="st0"
               style={{
-                fill: "6B6F73",
+                fill: "#6B6F73",
                 stroke: "#000000",
                 strokeWidth: 9,
                 strokeMiterlimit: 10,
@@ -56,7 +56,7 @@ const Footer = () => {
             <polyline
               className="st1"
               style={{
-                fill: "6B6F73",
+                fill: "#6B6F73",
                 stroke: "#000000",
                 strokeWidth: 16,
                 strokeMiterlimit: 10,
@@ -66,7 +66,7 @@ const Footer = () => {
             <path
               className="st1"
               style={{
-                fill: "6B6F73",
+                fill: "#6B6F73",
                 stroke: "#000000",
                 strokeWidth: 16,
                 strokeMiterlimit: 10,
@@ -76,7 +76,7 @@ const Footer = () => {
             <path
               className="st0"
               style={{
-                fill: "6B6F73",
+                fill: "#6B6F73",
                 stroke: "#000000",
                 strokeWidth: 9,
                 strokeMiterlimit: 10,
