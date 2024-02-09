@@ -14,24 +14,15 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE,
 );
 
+// Function to parse the analysis object and extract Mood and Keywords
 function parseAnalysis(content: string) {
-  // Look for the delimiters and extract the JSON string between them
-  const analysisStartMarker = '---Analysis Start---';
-  const analysisEndMarker = '---Analysis End---';
-  const start = content.indexOf(analysisStartMarker);
-  const end = content.indexOf(analysisEndMarker);
+  const regex = /"analysis"\s*:\s*{\s*"Mood"\s*:\s*"([^"]+)",\s*"Keywords"\s*:\s*\[([^\]]+)\]/;
+  const match = content.match(regex);
 
-  if (start !== -1 && end !== -1) {
-    const jsonAnalysis = content.substring(start + analysisStartMarker.length, end).trim();
-    try {
-      const analysis = JSON.parse(jsonAnalysis);
-      const mood = analysis.Mood;
-      const keywords = analysis.Keywords;
-      return { Mood: mood, Keywords: keywords };
-    } catch (error) {
-      console.error('Failed to parse JSON analysis', error);
-      return null;
-    }
+  if (match) {
+    const mood = match[1];
+    const keywords = match[2].split(',').map(keyword => keyword.trim());
+    return { Mood: mood, Keywords: keywords };
   } else {
     return null;
   }
@@ -51,17 +42,16 @@ async function saveMessageToDatabase(sessionId: string, content: string, role: s
   if (role === "assistant") {
     analysis = parseAnalysis(content);
   }
-  
-await messagesCollection.insertOne({
-  sessionId: sessionId,
-  messageId: uuidv4(),
-  role: role,
-  content: content,
-  Mood: analysis ? analysis.Mood : null,
-  Keywords: analysis ? analysis.Keywords : [],
-  createdAt: new Date(),
-});
 
+  await messagesCollection.insertOne({
+    sessionId: sessionId,
+    messageId: uuidv4(),
+    role: role,
+    content: content,
+    ...analysis,
+    createdAt: new Date(),
+  });
+}
 
 export async function POST(req: any) {
   try {
@@ -95,14 +85,13 @@ export async function POST(req: any) {
         content: `
         
           You are an AI designed to help capture interesting information about the user's current experience at Moos Space in Berlin, utilizing techniques of compassionate inquiry, CBT, and psychedelic integration.
-        First, provide a conversational response to the user's query. After your conversational response, include a line that says '---Analysis Start---'. Following this line, provide a structured analysis in JSON format of the conversation's sentiment and keywords. Use '---Analysis End---' to signify the end of the JSON analysis."
+        First, provide a conversational response to the user's query. After your conversational response, include a line that says '---Analysis Start---'. Following this line, provide a structured analysis in JSON format of the conversation's mood and keywords. Use '---Analysis End---' to signify the end of the JSON analysis."
 
-Example Response from you:
-
-"Your response here..."
+Example Response from ChatGPT:
+"Thank you for sharing your experience. It sounds like you had a challenging day, but it's great to hear you're looking for ways to understand it better.
 ---Analysis Start---
 {
-  "Mood": "positive",
+  "Mood": "Reflective",
   "Keywords": ["challenging day", "understand", "better"]
 }
 ---Analysis End---"
