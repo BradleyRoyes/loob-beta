@@ -14,23 +14,23 @@ const Footer = () => {
       <div className="ml-auto flex flex-row items-center">
         <span className="mr-1">Powered by</span>
         <svg
-          aria-label="Vercel logotype"
-          width="53"
-          height="13"
-          viewBox="0 0 53 13"
-          fill="#6B6F73"
-          xmlns="http://www.w3.org/2000/svg"
+          version="1.1"
+          id="Layer_1"
+          x="0px"
+          y="0px"
+          viewBox="0 0 595.3 841.9"
+          style={{ enableBackground: "new 0 0 595.3 841.9" } as any}
         >
           <path
             className="st0"
             style={{
-              fill: "#6B6F73",
+              fill: "none",
               stroke: "#000000",
               strokeWidth: 9,
               strokeMiterlimit: 10,
             }}
             d="M286.6,280.3l-3.7-72.2c0,0-61.2,20.3-74,32.2c-20.2,18.9-12.3,43.8-9.6,63.6c2.7,19.8,21.8,79.6-33.9,79.5
-                c-57.6-0.1-53.4-70.2-53.4-70.2"
+                    c-57.6-0.1-53.4-70.2-53.4-70.2"
             fill="#6B6F73"
           />
           <path
@@ -86,7 +86,7 @@ const Footer = () => {
               strokeMiterlimit: 10,
             }}
             d="M478.1,384.5c0,0-9.6-23.3-49-23.3c-39,0-54.2,18.4-54.2,35.9c0,17.5,15.6,30.1,53.5,31.7
-                c69.8,2.9,61.3,73.1,0.9,73.1c-54.5,0-60.3-28.1-60.3-28.1"
+                    c69.8,2.9,61.3,73.1,0.9,73.1c-54.5,0-60.3-28.1-60.3-28.1"
             fill="#6B6F73"
           />
         </svg>
