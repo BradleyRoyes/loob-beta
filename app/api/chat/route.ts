@@ -28,24 +28,6 @@ function parseAnalysis(content: string) {
   }
 }
 
-const processedMessages = new Set();
-
-const stream = OpenAIStream(response, {
-  onStart: async () => {
-    // Example: Reset or ensure the set is empty at the start of a new stream session
-    processedMessages.clear();
-  },
-  onData: async (message) => {
-    const messageHash = `${message.sessionId}-${message.content}-${message.role}`;
-    if (!processedMessages.has(messageHash)) {
-      await saveMessageToDatabase(message.sessionId, message.content, message.role);
-      processedMessages.add(messageHash);
-    }
-  },
-  // Ensure other necessary logic is correctly implemented
-});
-
-
 // Function to save message to the database
 async function saveMessageToDatabase(sessionId: string, content: string, role: string) {
   const messagesCollection = await astraDb.collection("messages");
@@ -127,14 +109,22 @@ export async function POST(req: any) {
       stream: true,
       messages: [...ragPrompt, ...messages],
     });
+const processedMessages = new Set();
 
-    const stream = OpenAIStream(response, {
-      onStart: async () => {
-        for (const message of messages) {
-          await saveMessageToDatabase(sessionId, message.content, message.role);
-        }
-      },
-    });
+const stream = OpenAIStream(response, {
+  onStart: async () => {
+    // Example: Reset or ensure the set is empty at the start of a new stream session
+    processedMessages.clear();
+  },
+  onData: async (message) => {
+    const messageHash = `${message.sessionId}-${message.content}-${message.role}`;
+    if (!processedMessages.has(messageHash)) {
+      await saveMessageToDatabase(message.sessionId, message.content, message.role);
+      processedMessages.add(messageHash);
+    }
+  },
+  // Ensure other necessary logic is correctly implemented
+});
 
     return new StreamingTextResponse(stream);
   } catch (e) {
