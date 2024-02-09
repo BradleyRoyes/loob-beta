@@ -32,7 +32,7 @@ async function saveMessageToDatabase(sessionId: string, content: string, role: s
   const messagesCollection = await astraDb.collection("messages");
   
   // Check for an existing message with the same content, role, and sessionId
-  const exists = await messagesCollection.findOne({ content, role });
+  const exists = await messagesCollection.findOne({ sessionId, content, role });
   if (exists) {
     console.log("Message already saved to the database.");
     return; // Skip saving as this message is already saved
