@@ -1,6 +1,6 @@
 // AnalyseButton.tsx
 import React from "react";
-import { useChat } from "ai/react";
+import { useChat, CreateMessage } from "ai/react"; // Import CreateMessage type from your chat library
 
 const defaultAnalyseMessage = "Analyse our conversation until now"; // Define the default message here
 
@@ -8,7 +8,10 @@ const AnalyseButton: React.FC = () => {
   const { append } = useChat();
 
   const handleButtonClick = () => {
-    append({ author: "user", content: defaultAnalyseMessage }); // Append the default message to the chat
+    const message: CreateMessage = {
+      content: defaultAnalyseMessage,
+    };
+    append(message); // Append the default message to the chat
   };
 
   return (
