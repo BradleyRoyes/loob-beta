@@ -72,7 +72,7 @@ export default function Page() {
   const handleSend = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    handleSubmit(e, { options: { body: { useRag, llm, similarityMetric, sessionID } } });
+    handleSubmit(e, { options: { body: { useRag, llm, similarityMetric, sessionId } } });
     handleInputChange({
       target: { value: "" },
     } as React.ChangeEvent<HTMLInputElement>);
