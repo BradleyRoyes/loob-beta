@@ -14,16 +14,15 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE,
 );
 
-// Function to parse the analysis object and extract Mood, Keywords, and Takeaway
+// Function to parse the analysis object and extract Mood and Keywords
 function parseAnalysis(content: string) {
-  const regex = /"analysis"\s*:\s*{\s*"Mood"\s*:\s*"([^"]+)",\s*"Keywords"\s*:\s*\[([^\]]+)\],\s*"Takeaway"\s*:\s*"([^"]+)"\s*}/;
+  const regex = /"analysis"\s*:\s*{\s*"Mood"\s*:\s*"([^"]+)",\s*"Keywords"\s*:\s*\[([^\]]+)\]/;
   const match = content.match(regex);
 
   if (match) {
     const mood = match[1];
     const keywords = match[2].split(',').map(keyword => keyword.trim());
-    const takeaway = match[3];
-    return { Mood: mood, Keywords: keywords, Takeaway: takeaway };
+    return { Mood: mood, Keywords: keywords };
   } else {
     return null;
   }
@@ -85,16 +84,14 @@ export async function POST(req: any) {
           After each input, provide a structured analysis including:
           1. Mood: Positive, negative, or neutral.
           2. Keywords: 3 relevant terms from the user input.
-          3. Takeaway: Please provide a one-sentence integration takeaway message for the user—a recommended action item or suggestion for the user to work on, think about, or reflect on going forward.
 
-          Structure your response as a JSON-like object with two main parts: 'response' and 'analysis'. The 'analysis' part should include 'Mood', 'Keywords', and 'Takeaway' as fields. This structure makes the analysis easily parseable for backend processing. For example:
+          Structure your response as a JSON-like object with two main parts: 'response' and 'analysis'. The 'analysis' part should include 'Mood' and 'Keywords' fields. This structure makes the analysis easily parseable for backend processing. For example:
           
           {
             "Loob": "Your conversational response here...",
             "analysis": {
               "Mood": "positive",
-              "Keywords": ["keyword1", "keyword2", "keyword3"],
-              "Takeaway": "Integration takeaway message here."
+              "Keywords": ["keyword1", "keyword2", "keyword3"]
             }
           }
 
