@@ -1,9 +1,14 @@
-// AnalyseButton.js
+// AnalyseButton.tsx
 import React from "react";
+import { useChat } from "ai/react";
 
-const AnalyseButton = ({ onClick }) => {
+const defaultAnalyseMessage = "Analyse our conversation until now"; // Define the default message here
+
+const AnalyseButton: React.FC = () => {
+  const { append } = useChat();
+
   const handleButtonClick = () => {
-    onClick("Analyse our conversation until now"); // Pass the predefined message to the onClick handler
+    append({ author: "user", content: defaultAnalyseMessage }); // Append the default message to the chat
   };
 
   return (
@@ -12,7 +17,7 @@ const AnalyseButton = ({ onClick }) => {
       className="button-dash flex rounded-md items-center justify-center px-2.5"
       style={{ fontWeight: "500" }}
     >
-      Analyse
+      {defaultAnalyseMessage} {/* Display the default message */}
     </button>
   );
 };
