@@ -44,10 +44,6 @@ export default function Page() {
     } as React.ChangeEvent<HTMLInputElement>);
   };
 
-  const handleJsonMessages = (jsonMessages) => {
-  // Set state or pass these messages to Dashboard as needed
-};
-  
   const [showAnalyseButton, setShowAnalyseButton] = useState(false);
 
   useEffect(() => {
@@ -65,21 +61,20 @@ export default function Page() {
     append({ content: analyseMessage, role: "user" });
   };
 
-if (showNeuronVisual) {
-  return (
-    <>
-      <MessageCollector messages={messages} showDashboard={showNeuronVisual} />
-      <Dashboard jsonMessages={jsonMessages} /> {/* Ensure Dashboard can accept and use jsonMessages */}
-      <button
-        onClick={() => setShowNeuronVisual(false)}
-        className="button-dash flex rounded-md fixed top-4 right-4 items-center justify-center px-2.5"
-        style={{ fontWeight: "500" }}
-      >
-        Back to Chat
-      </button>
-    </>
-  );
-}
+  if (showNeuronVisual) {
+    return (
+      <>
+        <Dashboard /> {/* Changed NeuronVisual to Dashboard */}
+        <button
+          onClick={() => setShowNeuronVisual(false)}
+          className="button-dash flex rounded-md fixed top-4 right-4 items-center justify-center px-2.5"
+          style={{ fontWeight: "500" }}
+        >
+          Back to Chat
+        </button>
+      </>
+    );
+  }
 
   return showSplash ? (
     <SplashScreen onEnter={() => setShowSplash(false)} />
@@ -117,15 +112,15 @@ if (showNeuronVisual) {
                 >
                   Insights
                 </button>
+                <div className="relative">
+                  <AnalyseButton onClick={handleAnalyseButtonClick} />
+                </div>
               </div>
             </div>
           </div>
-          <div className="flex justify-between items-center w-full mt-4">
-            <AnalyseButton onClick={handleAnalyseButtonClick} />
-            <p className="chatbot-text-secondary-inverse text-lg md:text-xl font-medium">
-              recreating recreation
-            </p>
-          </div>
+          <p className="chatbot-text-secondary-inverse text-lg md:text-xl mt-1 md:mt-2 font-medium">
+            recreating recreation
+          </p>
         </div>
         <div className="flex-1 relative overflow-y-auto my-4 md:my-6">
           <div className="absolute w-full overflow-x-hidden">
