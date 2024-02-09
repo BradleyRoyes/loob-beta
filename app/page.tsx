@@ -44,6 +44,11 @@ export default function Page() {
     } as React.ChangeEvent<HTMLInputElement>);
   };
 
+   const handleAnalyseButtonClick = () => {
+    const analyseMessage = "analyse our conversation until now";
+    append({ author: "user", content: analyseMessage }); // Append the message to the chat
+  };
+
   if (showNeuronVisual) {
     return (
       <>
