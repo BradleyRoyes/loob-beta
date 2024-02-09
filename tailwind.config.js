@@ -10,6 +10,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
+        vareal: ["Varela Round", "normal"],
         sans: ["var(--font-geist-sans)"],
       },
       screens: {
