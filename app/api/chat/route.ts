@@ -15,8 +15,8 @@ const astraDb = new AstraDB(
 );
 
 function parseAnalysis(content: string) {
-  // Regex to find the JSON part within curly braces, accounting for nested structures
-  const regex = /{[\s\S]*?mood[\s\S]*?:[\s\S]*?".*?"[\s\S]*?,[\s\S]*?keywords[\s\S]*?:[\s\S]*?\[[\s\S]*?\][\s\S]*?}/;
+  // Look for a JSON structure within the content
+  const regex = /{[^{}]*"mood"[^{}]*:[^{}]*"[^"]*"[^{}]*,[^{}]*"keywords"[^{}]*:\[[^\]]*\][^{}]*}/;
   const match = content.match(regex);
 
   if (match) {
@@ -114,15 +114,12 @@ important!!! when you recieve the message "*** Analyse our conversation so far *
       messages: [...ragPrompt, ...messages],
     });
 
-    const stream = OpenAIStream(response, {
-      onStart: async () => {
-        for (const message of messages) {
-          await saveMessageToDatabase(sessionId, message.content, message.role);
-        }
-      },
-    });
+    for await (const message of response) {
+      if (message.role === "system") continue; // Skip system messages
+      await saveMessageToDatabase(sessionId, message.content, message.role);
+    }
 
-    return new StreamingTextResponse(stream);
+    return new StreamingTextResponse(response);
   } catch (e) {
     console.error(e);
     throw e;
