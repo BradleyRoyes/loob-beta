@@ -35,7 +35,7 @@ const Footer = () => {
             target="_blank"
             rel="noopener noreferrer"
           >
-            <g transform="translate(256.5, 336.5)">
+            <g transform="translate(10, 10)">
               <path
                 className="st0"
                 style={{
