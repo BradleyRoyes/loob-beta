@@ -35,7 +35,7 @@ const Footer = () => {
             style={{
               fill: "none",
               stroke: "#6B6F73",
-              strokeWidth: 16,
+              strokeWidth: 13,
               strokeMiterlimit: 10,
             }}
             d="M286.6,280.3l-3.7-72.2c0,0-61.2,20.3-74,32.2c-20.2,18.9-12.3,43.8-9.6,63.6c2.7,19.8,21.8,79.6-33.9,79.5
@@ -47,7 +47,7 @@ const Footer = () => {
             style={{
               fill: "none",
               stroke: "#6B6F73",
-              strokeWidth: 16,
+              strokeWidth: 13,
               strokeMiterlimit: 10,
             }}
             d="M69.8,485.8h135.6c0,0-3.6-72.6-70.2-72.6C69.8,413.2,69.8,485.8,69.8,485.8z"
@@ -58,7 +58,7 @@ const Footer = () => {
             style={{
               fill: "none",
               stroke: "#6B6F73",
-              strokeWidth: 16,
+              strokeWidth: 13,
               strokeMiterlimit: 10,
             }}
             d="M69.8,488.9c0,0,0,43.9,32,67.7c50.4,37.4,102.6-15.5,102.6-15.5v28.7"
@@ -91,7 +91,7 @@ const Footer = () => {
             style={{
               fill: "none",
               stroke: "#6B6F73",
-              strokeWidth: 16,
+              strokeWidth: 13,
               strokeMiterlimit: 10,
             }}
             d="M478.1,384.5c0,0-9.6-23.3-49-23.3c-39,0-54.2,18.4-54.2,35.9c0,17.5,15.6,30.1,53.5,31.7
@@ -99,13 +99,13 @@ const Footer = () => {
             fill="#6B6F73"
           />
           <circle
-            cx="256.5"
-            cy="356.5"
+            cx="226.5"
+            cy="376.5"
             r="250"
             style={{
               fill: "none",
               stroke: "#6B6F73", // Change the stroke color as needed
-              strokeWidth: "16", // Adjust the stroke width as needed
+              strokeWidth: "13", // Adjust the stroke width as needed
             }}
           />
         </svg>
