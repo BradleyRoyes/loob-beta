@@ -95,8 +95,10 @@ const Dashboard = () => {
         .enter()
         .append("text")
         .style("font-size", (d) => d.size + "px")
-        .style("font-family", "Impact")
-        .style("fill", (d) => (d.sentiment === "positive" ? "green" : "red"))
+        .style("font-family", "Nunito")
+        .style("fill", (d) =>
+          d.sentiment === "positive" ? "#9fe2bf" : "#faa0a0",
+        )
         .attr("text-anchor", "middle")
         .attr("transform", (d) => `translate(${[d.x, d.y]})rotate(${d.rotate})`)
         .text((d) => d.text);
