@@ -24,8 +24,8 @@ const Footer = () => {
           style={
             {
               enableBackground: "new 0 0 513 713",
-              width: "100px", // Adjust as needed
-              height: "150px", // Adjust as needed
+              width: "20px", // Adjust as needed
+              height: "50px", // Adjust as needed
               marginLeft: "4px", // Ensures spacing between text and SVG
             } as any
           }
