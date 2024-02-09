@@ -101,7 +101,7 @@ const Footer = () => {
           />
           <circle
             cx="296.5"
-            cy="386.5"
+            cy="356.5"
             r="250"
             style={{
               fill: "none",
