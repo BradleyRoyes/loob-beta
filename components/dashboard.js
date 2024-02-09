@@ -71,7 +71,7 @@ const Dashboard = () => {
       .words(
         words.map((d) => ({
           text: d.text,
-          size: d.frequency * 10 + 10,
+          size: d.frequency * 3 + 3,
           sentiment: d.sentiment,
         })),
       )
