@@ -101,6 +101,8 @@ const Dashboard = () => {
             return "#9fe2bf"; // Greenish color for positive
           } else if (d.sentiment === "negative") {
             return "#faa0a0"; // Reddish color for negative
+          } else {
+            return "red"; // Fallback color (e.g., for neutral or undefined sentiment)
           }
         })
         .attr("text-anchor", "middle")
