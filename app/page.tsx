@@ -10,6 +10,8 @@ import AudioRecorder from "../components/AudioRecorder";
 import Dashboard from "../components/dashboard"; // Changed NeuronVisual to Dashboard
 import MessageCollector from "../components/MessageCollector"; // Adjust the import path as necessary
 import { v4 as uuidv4 } from "uuid";
+import SplashScreen from '../components/SplashScreen'; // Adjust the import path as necessary
+
 
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } =
@@ -20,6 +22,8 @@ export default function Page() {
   const messagesEndRef = useRef(null);
   const [configureOpen, setConfigureOpen] = useState(false);
   const [showNeuronVisual, setShowNeuronVisual] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
+
 
   const chatContainerRef = useRef(null);
 
@@ -55,8 +59,10 @@ export default function Page() {
     );
   }
 
-  return (
-    <main className="flex h-screen flex-col items-center justify-center">
+  return showSplash ? (
+  <SplashScreen onEnter={() => setShowSplash(false)} />
+) : (
+  <main className="flex h-screen flex-col items-center justify-center">
       <section
         ref={chatContainerRef}
         className="chatbot-section flex flex-col origin:w-[800px] w-full origin:h-[735px] h-full rounded-md p-2 md:p-6"
