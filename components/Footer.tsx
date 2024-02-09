@@ -11,12 +11,24 @@ const Footer = () => {
         <hr className="h-full border-r" />
         <span className="px-3">loob.labs</span>
       </a>
-      <div className="ml-auto flex flex-row items-center">
-        <span className="mr-1">Powered by</span>
+      <div
+        className="ml-auto flex flex-row items-center"
+        style={{ whiteSpace: "nowrap" }}
+      >
+        <span className="mr-1" style={{ whiteSpace: "nowrap" }}>
+          Powered by
+        </span>
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 1013 1713"
-          style={{ enableBackground: "new 0 0 1013 1713" } as any}
+          viewBox="0 0 513 713"
+          style={
+            {
+              enableBackground: "new 0 0 513 713",
+              width: "100px", // Adjust as needed
+              height: "150px", // Adjust as needed
+              marginLeft: "4px", // Ensures spacing between text and SVG
+            } as any
+          }
         >
           <path
             className="st0"
