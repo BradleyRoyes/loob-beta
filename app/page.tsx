@@ -44,6 +44,23 @@ export default function Page() {
     } as React.ChangeEvent<HTMLInputElement>);
   };
 
+   const [showAnalyseButton, setShowAnalyseButton] = useState(false);
+
+  useEffect(() => {
+    // After 45 seconds, set showAnalyseButton to true
+    const timer = setTimeout(() => {
+      setShowAnalyseButton(true);
+    }, 45000);
+
+    // Clean up the timer
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleAnalyseButtonClick = () => {
+    const analyseMessage = "Analyse our conversation so far";
+    append({ content: analyseMessage, role: 'user' });
+  };
+
 const handleAnalyseButtonClick = () => {
   const analyseMessage = "Analyse our conversation so far";
   append({ content: analyseMessage, role: 'user' });
