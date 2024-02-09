@@ -18,24 +18,20 @@ const Footer = () => {
         <span className="mr-1" style={{ whiteSpace: "nowrap" }}>
           Powered by
         </span>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 513 713"
-          style={
-            {
-              enableBackground: "new 0 0 513 713",
-              width: "30px", // Adjust as needed
-              height: "auto", // Adjust as needed
-              marginLeft: "4px", // Ensures spacing between text and SVG
-            } as any
-          }
-        >
-          <a
-            href="https://seks.design"
-            target="_blank"
-            rel="noopener noreferrer"
+        <a href="https://seks.design" target="_blank" rel="noopener noreferrer">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 513 713"
+            style={
+              {
+                enableBackground: "new 0 0 513 713",
+                width: "30px", // Adjust as needed
+                height: "auto", // Adjust as needed
+                marginLeft: "4px", // Ensures spacing between text and SVG
+              } as any
+            }
           >
-            <g transform="translate(10, 10)">
+            <g transform="translate(-10, -10)">
               <path
                 className="st0"
                 style={{
@@ -115,8 +111,8 @@ const Footer = () => {
                 strokeWidth: "13", // Adjust the stroke width as needed
               }}
             />
-          </a>
-        </svg>
+          </svg>
+        </a>
       </div>
     </footer>
   );
