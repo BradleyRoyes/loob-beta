@@ -26,6 +26,8 @@ export default function Page() {
 
   const chatContainerRef = useRef(null);
 
+  const [collectedJsonMessages, setCollectedJsonMessages] = useState([]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -61,20 +63,17 @@ export default function Page() {
     append({ content: analyseMessage, role: "user" });
   };
 
-  if (showNeuronVisual) {
-    return (
-      <>
-        <Dashboard /> {/* Changed NeuronVisual to Dashboard */}
-        <button
-          onClick={() => setShowNeuronVisual(false)}
-          className="button-dash flex rounded-md fixed top-4 right-4 items-center justify-center px-2.5"
-          style={{ fontWeight: "500" }}
-        >
-          Back to Chat
-        </button>
-      </>
-    );
-  }
+if (showNeuronVisual) {
+  return (
+    <>
+      <MessageCollector messages={messages} showDashboard={showNeuronVisual} setCollectedJsonMessages={setCollectedJsonMessages} />
+      <Dashboard jsonMessages={collectedJsonMessages} />
+      <button onClick={() => setShowNeuronVisual(false)} className="button-dash">
+        Back to Chat
+      </button>
+    </>
+  );
+}
 
   return showSplash ? (
     <SplashScreen onEnter={() => setShowSplash(false)} />
