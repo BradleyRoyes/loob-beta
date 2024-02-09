@@ -67,7 +67,7 @@ const Dashboard = () => {
     d3.select(wordCloudRef.current).selectAll("*").remove();
 
     const layout = cloud()
-      .size([400, 200])
+      .size([800, 600])
       .words(words.map((d) => ({ text: d.text, size: d.frequency * 10 + 10 })))
       .padding(5)
       .rotate(() => (~~(Math.random() * 6) - 3) * 30)
