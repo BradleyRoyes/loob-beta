@@ -1,5 +1,7 @@
 // SplashScreen.tsx
 import React, { useState } from 'react';
+import './SplashScreen.module.css'; // Adjust the path based on your project structure
+
 
 interface SplashScreenProps {
   onEnter: (sessionId: string) => void; // Updated to accept a session ID string
