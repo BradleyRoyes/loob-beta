@@ -24,7 +24,7 @@ async function saveMessageToDatabase(sessionId, content, role) {
     sessionId: sessionId,
     messageId: uuidv4(),
     role: role,
-    content: Loob,
+    content: response,
     analysis: analysis,
     createdAt: new Date(),
   });
@@ -32,12 +32,12 @@ async function saveMessageToDatabase(sessionId, content, role) {
 
 function parseContent(content) {
   // Parse content to separate response and analysis
-  const { Loob, analysis } = JSON.parse(content);
+  const { response, analysis } = JSON.parse(content);
 
   // Further parse analysis into mood, keywords, and takeaway
   const { Mood, Keywords, Takeaway } = analysis;
 
-  return { Loob, analysis: { Mood, Keywords, Takeaway } };
+  return { response, analysis: { Mood, Keywords, Takeaway } };
 }
 
 
