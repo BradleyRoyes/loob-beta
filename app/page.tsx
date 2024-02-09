@@ -34,19 +34,20 @@ export default function Page() {
 
   const chatContainerRef = useRef(null);
   
-  useEffect(() => {
-    // Attempt to retrieve an existing session ID from localStorage
-    let storedSessionId = localStorage.getItem("sessionId");
-    
-    // If it doesn't exist, generate a new one and store it
-    if (!storedSessionId) {
-      storedSessionId = uuidv4();
-      localStorage.setItem("sessionId", storedSessionId);
-    }
-    
-    // Set the retrieved or newly generated session ID in state
-    setSessionId(storedSessionId);
-  }, []);
+ useEffect(() => {
+  let sessionData = JSON.parse(localStorage.getItem("sessionData"));
+  const currentTime = new Date().getTime();
+
+  if (!sessionData || currentTime > sessionData.expiry) {
+    sessionData = {
+      sessionId: uuidv4(),
+      expiry: new Date().getTime() + (24 * 60 * 60 * 1000), // 24 hours from now
+    };
+    localStorage.setItem("sessionData", JSON.stringify(sessionData));
+  }
+
+  setSessionId(sessionData.sessionId);
+}, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -152,7 +153,7 @@ export default function Page() {
             </div>
           </div>
           <p className="chatbot-text-secondary-inverse text-lg md:text-xl mt-2 md:mt-4 font-medium">
-            Journaling done differently
+            collective journaling done differently
           </p>
         </div>
         <div className="flex-1 relative overflow-y-auto my-4 md:my-6">
