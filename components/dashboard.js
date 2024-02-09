@@ -67,7 +67,7 @@ const Dashboard = () => {
     d3.select(wordCloudRef.current).selectAll("*").remove();
 
     const layout = cloud()
-      .size([800, 600])
+      .size([400, 200])
       .words(words.map((d) => ({ text: d.text, size: d.frequency * 10 + 10 })))
       .padding(5)
       .rotate(() => (~~(Math.random() * 6) - 3) * 30)
@@ -97,6 +97,7 @@ const Dashboard = () => {
         .style("font-size", (d) => d.size + "px")
         .style("font-family", "Nunito")
         .style("fill", (d) => {
+          console.log(`Word: ${d.text}, Sentiment: ${d.sentiment}`);
           if (d.sentiment === "positive") {
             return "#9fe2bf"; // Greenish color for positive
           } else if (d.sentiment === "negative") {
