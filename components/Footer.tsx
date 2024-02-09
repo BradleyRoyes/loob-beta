@@ -31,7 +31,7 @@ const Footer = () => {
               } as any
             }
           >
-            <g transform="translate(-15, -73)">
+            <g transform="translate(0, -73)">
               <path
                 className="st0"
                 style={{
@@ -102,7 +102,7 @@ const Footer = () => {
               />
             </g>
             <circle
-              cx="256.5"
+              cx="241.5"
               cy="336.5"
               r="300"
               style={{
