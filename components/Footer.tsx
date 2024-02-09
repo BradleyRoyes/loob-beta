@@ -104,7 +104,7 @@ const Footer = () => {
             <circle
               cx="256.5"
               cy="336.5"
-              r="250"
+              r="300"
               style={{
                 fill: "none",
                 stroke: "#6B6F73", // Change the stroke color as needed
