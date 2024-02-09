@@ -99,8 +99,8 @@ const Footer = () => {
             fill="#6B6F73"
           />
           <circle
-            cx="206.5"
-            cy="346.5"
+            cx="306.5"
+            cy="446.5"
             r="250"
             style={{
               fill: "none",
