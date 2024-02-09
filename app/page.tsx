@@ -49,8 +49,8 @@ export default function Page() {
         <Dashboard /> {/* Changed NeuronVisual to Dashboard */}
         <button
           onClick={() => setShowNeuronVisual(false)}
-          className="button-dash flex rounded-md items-center justify-center px-2.5"
-          style={{ fontWeight: "600" }}
+          className="button-dash flex rounded-md fixed top-4 right-4 p-2 items-center justify-center px-2.5"
+          style={{ fontWeight: "500" }}
         >
           Back to Chat
         </button>
