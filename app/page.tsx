@@ -11,6 +11,7 @@ import Dashboard from "../components/dashboard"; // Changed NeuronVisual to Dash
 import MessageCollector from "../components/MessageCollector"; // Adjust the import path as necessary
 import { v4 as uuidv4 } from "uuid";
 import SplashScreen from "../components/SplashScreen"; // Adjust the import path as necessary
+import AnalyseButton from "..components/AnalyseButton";
 
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } =
@@ -93,10 +94,11 @@ export default function Page() {
               >
                 Insights
               </button>
+               <AnalyseButton onClick={handleAnalyseButtonClick} />
             </div>
           </div>
           <p className="chatbot-text-secondary-inverse text-lg md:text-xl mt-2 md:mt-4 font-medium">
-            collective journaling done differently
+            recreating recreation
           </p>
         </div>
         <div className="flex-1 relative overflow-y-auto my-4 md:my-6">
