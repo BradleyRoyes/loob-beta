@@ -15,17 +15,31 @@ const astraDb = new AstraDB(
 );
 
 // Function to save message to the database
-async function saveMessageToDatabase(sessionId, content, role, analysis = null) {
+async function saveMessageToDatabase(sessionId, content, role) {
+  // Parse the content to separate response and analysis
+  const { response, analysis } = parseContent(content);
+
   const messagesCollection = await astraDb.collection("messages");
   await messagesCollection.insertOne({
     sessionId: sessionId,
     messageId: uuidv4(),
     role: role,
-    content: content,
+    content: Loob,
     analysis: analysis,
     createdAt: new Date(),
   });
 }
+
+function parseContent(content) {
+  // Parse content to separate response and analysis
+  const { Loob, analysis } = JSON.parse(content);
+
+  // Further parse analysis into mood, keywords, and takeaway
+  const { Mood, Keywords, Takeaway } = analysis;
+
+  return { Loob, analysis: { Mood, Keywords, Takeaway } };
+}
+
 
 export async function POST(req) {
   try {
