@@ -31,7 +31,7 @@ const Footer = () => {
               } as any
             }
           >
-            <g transform="translate(-15, -67)">
+            <g transform="translate(-15, -73)">
               <path
                 className="st0"
                 style={{
