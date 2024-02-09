@@ -28,13 +28,21 @@ function parseAnalysis(content: string) {
   }
 }
 
-// Function to save message to the database
 async function saveMessageToDatabase(sessionId: string, content: string, role: string) {
   const messagesCollection = await astraDb.collection("messages");
+  
+  // Check for an existing message with the same content, role, and sessionId
+  const exists = await messagesCollection.findOne({ content, role });
+  if (exists) {
+    console.log("Message already saved to the database.");
+    return; // Skip saving as this message is already saved
+  }
+
   let analysis = null;
   if (role === "assistant") {
     analysis = parseAnalysis(content);
   }
+
   await messagesCollection.insertOne({
     sessionId: sessionId,
     messageId: uuidv4(),
@@ -109,22 +117,14 @@ export async function POST(req: any) {
       stream: true,
       messages: [...ragPrompt, ...messages],
     });
-const processedMessages = new Set();
 
-const stream = OpenAIStream(response, {
-  onStart: async () => {
-    // Example: Reset or ensure the set is empty at the start of a new stream session
-    processedMessages.clear();
-  },
-  onData: async (message) => {
-    const messageHash = `${message.sessionId}-${message.content}-${message.role}`;
-    if (!processedMessages.has(messageHash)) {
-      await saveMessageToDatabase(message.sessionId, message.content, message.role);
-      processedMessages.add(messageHash);
-    }
-  },
-  // Ensure other necessary logic is correctly implemented
-});
+    const stream = OpenAIStream(response, {
+      onStart: async () => {
+        for (const message of messages) {
+          await saveMessageToDatabase(sessionId, message.content, message.role);
+        }
+      },
+    });
 
     return new StreamingTextResponse(stream);
   } catch (e) {
