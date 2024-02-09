@@ -27,6 +27,7 @@ const Footer = () => {
               width: "50px", // Adjust as needed
               height: "auto", // Adjust as needed
               marginLeft: "4px", // Ensures spacing between text and SVG
+              marginTop: "1px",
             } as any
           }
         >
