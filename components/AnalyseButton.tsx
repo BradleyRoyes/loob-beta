@@ -1,23 +1,23 @@
 // AnalyseButton.tsx
 import React from "react";
-import { useChat } from "ai/react";
 
-const defaultAnalyseMessage = "Analyse our conversation until now";
+interface AnalyseButtonProps {
+  onClick: (message: string) => void; // Define onClick prop to pass message to parent
+}
 
-const AnalyseButton: React.FC = () => {
-  const { append } = useChat();
-
+const AnalyseButton: React.FC<AnalyseButtonProps> = ({ onClick }) => {
   const handleButtonClick = () => {
-    append({ author: "user", content: defaultAnalyseMessage }); // Append the default message to the chat
+    // Define the message to be sent when the button is clicked
+    const analyseMessage = "Analyse our conversation so far";
+    onClick(analyseMessage); // Pass the message to the parent component
   };
 
   return (
     <button
       onClick={handleButtonClick}
-      className="button-dash flex rounded-md items-center justify-center px-2.5"
-      style={{ fontWeight: "500" }}
+      className="prompt-button text-sm py-2 px-4 rounded-lg overflow-hidden whitespace-nowrap focus:outline-none focus:shadow-outline"
     >
-      {defaultAnalyseMessage} {/* Display the default message */}
+      Analyse {/* Display the button text */}
     </button>
   );
 };
