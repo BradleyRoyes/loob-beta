@@ -66,10 +66,8 @@ const Dashboard = () => {
   const drawWordCloud = (words) => {
     d3.select(wordCloudRef.current).selectAll("*").remove();
 
-    const [width, height] = [800, 600]; // SVG dimensions
-
     const layout = cloud()
-      .size([width, height])
+      .size([800, 600])
       .words(words.map((d) => ({ text: d.text, size: d.frequency * 10 + 10 })))
       .padding(5)
       .rotate(() => (~~(Math.random() * 6) - 3) * 30)
@@ -83,28 +81,20 @@ const Dashboard = () => {
       const svg = d3
         .select(wordCloudRef.current)
         .append("svg")
-        .attr("width", width)
-        .attr("height", height);
-
-      // Define a clipping path that matches the SVG dimensions
-      svg
-        .append("clipPath")
-        .attr("id", "clip")
-        .append("rect")
-        .attr("width", width)
-        .attr("height", height);
-
-      const group = svg
+        .attr("width", layout.size()[0])
+        .attr("height", layout.size()[1])
         .append("g")
-        .attr("transform", `translate(${width / 2},${height / 2})`)
-        .attr("clip-path", "url(#clip)"); // Apply clipping path to the group
+        .attr(
+          "transform",
+          `translate(${layout.size()[0] / 2},${layout.size()[1] / 2})`,
+        );
 
-      group
+      svg
         .selectAll("text")
         .data(words)
         .enter()
         .append("text")
-        .style("font-size", (d) => `${d.size}px`)
+        .style("font-size", (d) => d.size + "px")
         .style("font-family", "Impact")
         .style("fill", (d) => (d.sentiment === "positive" ? "green" : "red"))
         .attr("text-anchor", "middle")
