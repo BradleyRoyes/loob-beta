@@ -163,7 +163,7 @@ const Dashboard = () => {
               </BarChart>
             </div>
             <div className="visualization-container mb-4">
-              <h2 className="chatbot-text-primary text-xl mb-2">
+              <h2 className="chatbot-text-primary items-center justify-center text-xl mb-2">
                 Conversation Length Analysis
               </h2>
               <LineChart width={300} height={300} data={conversationLengthData}>
