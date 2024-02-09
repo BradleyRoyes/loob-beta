@@ -36,8 +36,9 @@ export default function Page() {
     handleSubmit(e, {
       options: { body: { useRag, llm, similarityMetric, sessionId } },
     });
-    handleInputChange({ target: { value: "" } });
-    setTimeout(scrollToBottom, 1);
+    handleInputChange({
+  target: { value: "" }
+} as React.ChangeEvent<HTMLInputElement>);
   };
 
   if (showNeuronVisual) {
