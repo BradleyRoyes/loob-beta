@@ -38,7 +38,7 @@
 
 @layer base {
   html {
-    font-family: ui-sans-serif, sans-serif;
+    font-family: "Varela Round", sans-serif;
   }
 }
 
@@ -46,7 +46,7 @@ body {
   background: linear-gradient(to bottom,
       transparent,
       rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
-  font-family: ui-sans-serif, sans-serif;
+  font-family: "Varela Round", sans-serif;
 }
 
 .chatbot-section {
