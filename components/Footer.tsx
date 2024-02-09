@@ -18,13 +18,13 @@ const Footer = () => {
           width="53"
           height="13"
           viewBox="0 0 53 13"
-          fill="none"
+          fill="#6B6F73"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
             className="st0"
             style={{
-              fill: "none",
+              fill: "#6B6F73",
               stroke: "#000000",
               strokeWidth: 9,
               strokeMiterlimit: 10,
