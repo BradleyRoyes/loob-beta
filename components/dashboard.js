@@ -68,7 +68,13 @@ const Dashboard = () => {
 
     const layout = cloud()
       .size([800, 600])
-      .words(words.map((d) => ({ text: d.text, size: d.frequency * 10 + 10 })))
+      .words(
+        words.map((d) => ({
+          text: d.text,
+          size: d.frequency * 10 + 10,
+          sentiment: d.sentiment,
+        })),
+      )
       .padding(5)
       .rotate(() => (~~(Math.random() * 6) - 3) * 30)
       .font("Impact")
