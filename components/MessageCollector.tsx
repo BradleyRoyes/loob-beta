@@ -1,17 +1,30 @@
-// MessageCollector.js
 import React from 'react';
 
 const MessageCollector = ({ messages, onCollect }) => {
   const handleCollectMessages = () => {
-    // Concatenate all messages into a single string or prepare them as needed
-    const concatenatedMessages = messages.map(msg => msg.content).join('\n');
-    // Call an optional callback function to use the concatenated messages outside this component
-    onCollect(concatenatedMessages);
+    // Filter messages to only include those in JSON format
+    const jsonMessages = messages.filter(msg => {
+      if (typeof msg.content === 'string') {
+        try {
+          JSON.parse(msg.content);
+          return true;
+        } catch (error) {
+          return false;
+        }
+      }
+      return false;
+    });
+
+    // Convert JSON messages to a JSON string
+    const jsonMessagesString = jsonMessages.map(msg => msg.content).join('\n');
+
+    // Call the callback function to send JSON messages to the dashboard
+    onCollect(jsonMessagesString);
   };
 
   return (
     <button onClick={handleCollectMessages} className="p-2 bg-blue-500 text-white rounded">
-      Collect Messages
+      Collect JSON Messages
     </button>
   );
 };
