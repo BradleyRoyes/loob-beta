@@ -29,27 +29,14 @@ function parseAnalysis(content: string) {
 async function saveMessageToDatabase(sessionId: string, content: string, role: string, analysis: any = null) {
   const messagesCollection = await astraDb.collection("messages");
   
-  // Define saveData with an index signature to allow any additional properties
-  let saveData: {
-    sessionId: string,
-    role: string,
-    content: string,
-    length: number,
-    createdAt: Date,
-    [key: string]: any // Allows for mood and keywords or any other property
-  } = {
+  let saveData = {
     sessionId: sessionId,
     role: role,
     content: content,
     length: content.length,
     createdAt: new Date(),
+    ...(analysis ? { mood: analysis.mood, keywords: analysis.keywords } : {})
   };
-
-  if (role === "assistant" && analysis) {
-    // Now you can safely add mood and keywords without TypeScript errors
-    saveData.mood = analysis.mood;
-    saveData.keywords = analysis.keywords;
-  }
 
   await messagesCollection.insertOne(saveData);
 }
@@ -79,61 +66,30 @@ export async function POST(req: any) {
       }
     }
 
-    // Process and save messages before streaming logic
-    for (const message of messages) {
-      const analysis = message.role === "assistant" ? parseAnalysis(message.content) : null;
-      await saveMessageToDatabase(sessionId, message.content, message.role, analysis);
-    }
+    const ragPrompt = {
+      role: "system",
+      content: `
+        You are an AI designed to engage in meaningful conversations about the user's experiences. Incorporate the document context (docContext) to provide insightful responses. When receiving "*** Analyse our conversation so far ***", respond with a JSON-formatted analysis of the conversation, including mood and keywords.
+        
+        ${docContext}
+        
+        Note: Your responses should maintain a professional and empathetic tone throughout the conversation.
+      `
+    };
 
-       // Insert your ragPrompt content here
-   const ragPrompt = [
-     {
-  role: "system",
-  content: `
-    You are an AI designed with a specific purpose: to engage users in meaningful conversations about their current or recent experiences. Your goal is to collect feedback and insights to better understand user sentiment. You have access to a wealth of documents (referred to as docContext below) that should be used to inform your responses, ensuring they are relevant and insightful.
-
-    There are three main tasks you need to perform:
-    1. Use the provided document context (docContext) to tailor your conversation. This means you should incorporate information or themes from these documents into your responses wherever relevant.
-    2. Engage users in a conversation about their experiences. You should act as a conversational agent designed to discuss their recent activities or feelings, helping them reflect and provide feedback.
-    3. Upon receiving the message "*** Analyse our conversation so far ***", you must switch to an analytical mode. In this mode, you will not continue the conversation but instead provide an analysis of the conversation up to that point. The analysis should be in JSON format, detailing the user's mood and identifying keywords that have emerged in the conversation. The format should look like this:
-
-        {
-          "mood": "positive", "nuetral", or "negative", // based on the sentiment of the conversation
-          "keywords": ["keyword1", "keyword2", "keyword3"] // the most relevant keywords or themes from the conversation
-        }
-
-    ${docContext} // This is where the document context will be dynamically inserted.
-
-    Note: Maintain a professional and empathetic tone throughout the conversation, ensuring users feel heard and understood. Your responses should always remind users that you are an AI, especially if the conversation reaches a point that would be better handled by a human professional.
-  `,
-}
-,
-    ];
- 
+    // Proceed with creating the chat completion request, including the ragPrompt
     const response = await openai.chat.completions.create({
       model: llm ?? "gpt-3.5-turbo",
       stream: true,
-      messages: [
-        {
-          role: "system",
-          content: docContext,
-        },
-        ...messages,
-      ],
+      messages: [ragPrompt, ...messages],
     });
 
-    const stream = OpenAIStream(response, {
-      onStart: async () => {
-        // Logic to execute when the stream starts
-      },
-      onCompletion: async (completion: string) => {
-        const analysis = parseAnalysis(completion);
-        if (analysis) {
-          await saveMessageToDatabase(sessionId, completion, 'assistant', analysis);
-        } else {
-          await saveMessageToDatabase(sessionId, completion, 'assistant');
-        }
-      },
+    const stream = new OpenAIStream(response);
+
+    // Process and save messages asynchronously without affecting the streaming to the user
+    messages.forEach(async (message) => {
+      const analysis = message.role === "assistant" ? parseAnalysis(message.content) : null;
+      await saveMessageToDatabase(sessionId, message.content, message.role, analysis);
     });
 
     return new StreamingTextResponse(stream);
