@@ -105,7 +105,7 @@ body {
 .chatbot-input {
   color: var(--text-primary-inverse);
   border: 1px solid var(--border-primary);
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .chatbot-input::placeholder {
