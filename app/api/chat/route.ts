@@ -26,10 +26,18 @@ function parseAnalysis(content: string) {
   return null;
 }
 
-async function saveMessageToDatabase(sessionId: string, content: string, role: string, parsedAnalysis: any = null) {
+async function saveMessageToDatabase(sessionId: string, content: string, role: string, analysis: any = null) {
   const messagesCollection = await astraDb.collection("messages");
   
-  let saveData = {
+  // Define saveData with an index signature to allow any additional properties
+  let saveData: {
+    sessionId: string,
+    role: string,
+    content: string,
+    length: number,
+    createdAt: Date,
+    [key: string]: any // Allows for mood and keywords or any other property
+  } = {
     sessionId: sessionId,
     role: role,
     content: content,
@@ -37,9 +45,10 @@ async function saveMessageToDatabase(sessionId: string, content: string, role: s
     createdAt: new Date(),
   };
 
-  if (role === "assistant" && parsedAnalysis) {
-    saveData.mood = parsedAnalysis.mood;
-    saveData.keywords = parsedAnalysis.keywords;
+  if (role === "assistant" && analysis) {
+    // Now you can safely add mood and keywords without TypeScript errors
+    saveData.mood = analysis.mood;
+    saveData.keywords = analysis.keywords;
   }
 
   await messagesCollection.insertOne(saveData);
