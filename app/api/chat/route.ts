@@ -32,7 +32,7 @@ function parseAnalysis(content: string) {
   return null;
 }
 
-async function saveMessageToDatabase(sessionId: string, content: string, role: string) {
+async function saveMessageToDatabase(sessionId: string, content: string, role: string, analysis: any = null) {
   const messagesCollection = await astraDb.collection("messages");
   
   // Check for an existing message with the same content, role, and sessionId
@@ -42,17 +42,12 @@ async function saveMessageToDatabase(sessionId: string, content: string, role: s
     return; // Skip saving as this message is already saved
   }
 
-  let analysis = null;
-  if (role === "assistant") {
-    analysis = parseAnalysis(content);
-  }
-
   await messagesCollection.insertOne({
     sessionId: sessionId,
     messageId: uuidv4(),
     role: role,
     content: content,
-    ...analysis,
+    ...analysis, // Spread the analysis directly if it exists
     createdAt: new Date(),
   });
 }
@@ -83,7 +78,8 @@ export async function POST(req: any) {
       }
     }
 
-    const ragPrompt = [
+    // Insert your ragPrompt content here
+   const ragPrompt = [
       {
         role: "system",
         content: `
@@ -116,8 +112,15 @@ important!!! when you recieve the message "*** Analyse our conversation so far *
 
     const stream = OpenAIStream(response, {
       onStart: async () => {
-        for (const message of messages) {
-          await saveMessageToDatabase(sessionId, message.content, message.role);
+        // Your existing logic, if any, for when the stream starts
+      },
+      onCompletion: async (completion: string) => {
+        const analysis = parseAnalysis(completion);
+        if (analysis) {
+          await saveMessageToDatabase(sessionId, completion, 'assistant', analysis);
+        } else {
+          // Assuming you still want to save other completions without analysis
+          await saveMessageToDatabase(sessionId, completion, 'assistant');
         }
       },
     });
