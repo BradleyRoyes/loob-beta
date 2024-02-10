@@ -312,4 +312,5 @@ body {
   max-width: 800px; /* Adjust based on your design */
   margin: 0 auto; /* Center the container */
   overflow: hidden; /* Hide overflow */
+  background-color: #f0f0f0;
 }
