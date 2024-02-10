@@ -72,6 +72,9 @@ body {
   background-color: var(--text-primary);
   box-shadow: var(--shadow-primary);
   border: 1px solid var(--border-primary);
+  flex: 1; /* This will make it fill the available space */
+  overflow: hidden; /* Prevents it from stretching beyond the viewport */
+
 }
 
 .chatbot-header {
