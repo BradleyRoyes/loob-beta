@@ -142,6 +142,7 @@ const Dashboard = () => {
                 Common words
               </h2>
               <div ref={wordCloudRef} className="word-cloud-container" />
+              console.log(wordsData);
             </div>
             <div className="visualization-container mb-4">
               <h2 className="chatbot-text-primary text-xl mb-2">
