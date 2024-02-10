@@ -88,7 +88,7 @@ export async function POST(req: any) {
 
 important!!! when you recieve the message "*** Analyse our conversation so far ***" you will respond only with an analysis( of the users messsages only) in json format containing mood and a list of thematically relavant keywords. like this:
 
- ***Loob Magic Analysis: Following this line, provide a structured analysis in JSON format of the users mood and keywords from the complete conversation.
+ ***Loob Magic Analysis: Following this line, provide a structured analysis in JSON format of the users mood( positive, negative, or neutral) and keywords (from the users half of the conversation).
 
         
           apart from json analysis, In your interactions:
