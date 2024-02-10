@@ -308,7 +308,7 @@ body {
 
 .word-cloud-container {
   width: 100%; /* Ensure it takes the full width of its parent */
-  height: auto; /* Height can be auto or set to a specific ratio of the width */
+  height: 600px; /* Height can be auto or set to a specific ratio of the width */
   max-width: 800px; /* Adjust based on your design */
   margin: 0 auto; /* Center the container */
   overflow: hidden; /* Hide overflow */
