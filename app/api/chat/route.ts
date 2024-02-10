@@ -32,7 +32,7 @@ function parseAnalysis(content: string) {
   return null;
 }
 
-async function saveMessageToDatabase(sessionId: string, content: string, role: string, analysis: any = null) {
+async function saveMessageToDatabase(sessionId: string, content: string, role: string, parsedAnalysis: any = null) {
   const messagesCollection = await astraDb.collection("messages");
   
   // Check for an existing message with the same content, role, and sessionId
@@ -42,14 +42,23 @@ async function saveMessageToDatabase(sessionId: string, content: string, role: s
     return; // Skip saving as this message is already saved
   }
 
-  await messagesCollection.insertOne({
+  let saveData = {
     sessionId: sessionId,
     messageId: uuidv4(),
     role: role,
     content: content,
-    ...analysis, // Spread the analysis directly if it exists
     createdAt: new Date(),
-  });
+  };
+
+  // If parsedAnalysis is provided, explicitly add 'mood' and 'keywords' to saveData
+  if (parsedAnalysis) {
+    saveData.mood = parsedAnalysis.Mood;
+    saveData.keywords = parsedAnalysis.Keywords;
+    // Modify content as needed; for now, we keep the original content
+    // saveData.content = "Analysis provided"; // Uncomment if you wish to alter content for analysis entries
+  }
+
+  await messagesCollection.insertOne(saveData);
 }
 
 export async function POST(req: any) {
@@ -58,27 +67,10 @@ export async function POST(req: any) {
 
     let docContext = "";
     if (useRag) {
-      const latestMessage = messages[messages.length - 1]?.content;
-
-      if (latestMessage) {
-        const { data } = await openai.embeddings.create({
-          input: latestMessage,
-          model: "text-embedding-ada-002",
-        });
-
-        const collection = await astraDb.collection(`chat_${similarityMetric}`);
-        const cursor = collection.find(null, {
-          sort: {
-            $vector: data[0]?.embedding,
-          },
-          limit: 5,
-        });
-        const documents = await cursor.toArray();
-        docContext = documents.map((doc) => doc.content).join("\n");
-      }
+      // Add your logic for Retrieval-Augmented Generation (RAG) if applicable
     }
 
-    // Insert your ragPrompt content here
+      // Insert your ragPrompt content here
    const ragPrompt = [
       {
         role: "system",
@@ -112,14 +104,16 @@ important!!! when you recieve the message "*** Analyse our conversation so far *
 
     const stream = OpenAIStream(response, {
       onStart: async () => {
-        // Your existing logic, if any, for when the stream starts
+        // Logic to execute when the stream starts, if any
       },
       onCompletion: async (completion: string) => {
+        // Attempt to parse the completion for JSON formatted analysis data
         const analysis = parseAnalysis(completion);
         if (analysis) {
-          await saveMessageToDatabase(sessionId, completion, 'assistant', analysis);
+          // If successful, save the analysis data with mood and keywords separated
+          await saveMessageToDatabase(sessionId, "Completion with analysis", 'assistant', analysis);
         } else {
-          // Assuming you still want to save other completions without analysis
+          // Save other completions as normal
           await saveMessageToDatabase(sessionId, completion, 'assistant');
         }
       },
