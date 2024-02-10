@@ -84,7 +84,7 @@ export async function POST(req: any) {
       messages: [ragPrompt, ...messages],
     });
 
-    const stream = new OpenAIStream(response);
+    const stream = openai.OpenAIStream(response);
 
     // Process and save messages asynchronously without affecting the streaming to the user
     messages.forEach(async (message) => {
