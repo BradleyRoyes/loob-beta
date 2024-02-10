@@ -34,23 +34,22 @@ function parseAnalysis(content: string) {
 
 async function saveMessageToDatabase(sessionId: string, content: string, role: string, analysis: any = null) {
   const messagesCollection = await astraDb.collection("messages");
-  
-  // Check for an existing message with the same content, role, and sessionId
-  const exists = await messagesCollection.findOne({ sessionId, content, role });
-  if (exists) {
-    console.log("Message already saved to the database.");
-    return; // Skip saving as this message is already saved
-  }
 
-  await messagesCollection.insertOne({
+  // Structure for saving message data, including analysis if present
+  let messageData = {
     sessionId: sessionId,
-    messageId: uuidv4(),
     role: role,
     content: content,
-    ...analysis, // Spread the analysis directly if it exists
-    createdAt: new Date(),
-  });
+    length: content.length, // Message length
+    createdAt: new Date(), // Timestamp
+    // Include analysis data if it exists, otherwise set to undefined
+    mood: analysis?.Mood,
+    keywords: analysis?.Keywords,
+  };
+
+  await messagesCollection.insertOne(messageData);
 }
+
 
 export async function POST(req: any) {
   try {
