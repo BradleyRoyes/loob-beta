@@ -17,7 +17,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onEnter }) => {
     <div className="fixed top-0 left-0 right-0 bottom-0 flex items-center justify-center bg-black z-50 fade-in">
       <div className="text-center">
         <h1 className="mb-4 text-4xl font-bold text-white">
-          Welcome to Loob Labs
+          Welcome to Loob
         </h1>
         <div className="mb-4">
           <input
@@ -27,7 +27,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onEnter }) => {
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
-          <p className="text-white text-sm">What can we call you? (optional)</p>
+          <p className="text-white text-sm"> Do you have a name? (optional)</p>
         </div>
         <button
           onClick={enterApp} // Trigger the fade-out animation and enter the app
