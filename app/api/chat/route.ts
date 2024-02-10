@@ -30,25 +30,21 @@ function parseAnalysis(content: string) {
 async function saveMessageToDatabase(sessionId: string, content: string, role: string, parsedAnalysis: any = null) {
   const messagesCollection = await astraDb.collection("messages");
   
-  // Skipping the check for existing message for brevity
-
-  // Base saveData object
+  // Base saveData object with 'length' field added to capture message length
   let saveData = {
     sessionId: sessionId,
-    messageId: uuidv4(),
+    // Removed messageId as per your request
     role: role,
     content: content,
+    length: content.length, // Capture the length of the message
     createdAt: new Date(),
-    // Initialize mood and keywords so they are always present, default to null or appropriate defaults
-    mood: null,
-    keywords: [],
   };
 
-  // If parsedAnalysis is provided, update 'mood' and 'keywords'
-  if (parsedAnalysis) {
-    saveData.mood = parsedAnalysis.Mood;
-    saveData.keywords = parsedAnalysis.Keywords;
-    // Optionally clear 'content' or set to a placeholder if you don't want the original JSON string
+  // Conditionally add 'mood' and 'keywords' for assistant messages if analysis is provided
+  if (role === "assistant" && parsedAnalysis) {
+    saveData['mood'] = parsedAnalysis.Mood;
+    saveData['keywords'] = parsedAnalysis.Keywords;
+    // Optionally adjust content if you want to remove or alter it for assistant messages with analysis
     // saveData.content = "Analysis provided"; // Adjust according to your needs
   }
 
@@ -56,8 +52,29 @@ async function saveMessageToDatabase(sessionId: string, content: string, role: s
 }
 
 export async function POST(req: any) {
-  try {
-    const { messages, useRag, llm, similarityMetric, sessionId } = await req.json();
+  // Assume extraction of messages and other necessary data from req.json()
+
+  // Process each message individually
+  messages.forEach(message => {
+    if (message.role === "user") {
+      // Directly save user messages without analysis
+      saveMessageToDatabase(sessionId, message.content, message.role);
+    } else if (message.role === "assistant") {
+      // For assistant messages, attempt to parse for analysis
+      const analysis = parseAnalysis(message.content);
+      if (analysis) {
+        // If analysis is successful, pass it along with the message to be saved
+        saveMessageToDatabase(sessionId, message.content, message.role, analysis);
+      } else {
+        // If no analysis is found, save the assistant message normally
+        saveMessageToDatabase(sessionId, message.content, message.role);
+      }
+    }
+  });
+
+  // Continue with your streaming logic for real-time responses if applicable
+}
+
 
     let docContext = "";
     if (useRag) {
