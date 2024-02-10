@@ -35,13 +35,15 @@ function parseAnalysis(content: string) {
 async function saveMessageToDatabase(sessionId: string, content: string, role: string, parsedAnalysis: any = null) {
   const messagesCollection = await astraDb.collection("messages");
   
+  // Check for an existing message with the same content, role, and sessionId
   const exists = await messagesCollection.findOne({ sessionId, content, role });
   if (exists) {
     console.log("Message already saved to the database.");
-    return;
+    return; // Skip saving as this message is already saved
   }
 
-  let saveData: MessageData = {
+  // Base saveData object
+  let saveData = {
     sessionId: sessionId,
     messageId: uuidv4(),
     role: role,
@@ -49,14 +51,14 @@ async function saveMessageToDatabase(sessionId: string, content: string, role: s
     createdAt: new Date(),
   };
 
+  // If parsedAnalysis is provided, directly add 'mood' and 'keywords' to saveData
   if (parsedAnalysis) {
-    saveData.mood = parsedAnalysis.Mood;
-    saveData.keywords = parsedAnalysis.Keywords;
+    saveData['mood'] = parsedAnalysis.Mood;
+    saveData['keywords'] = parsedAnalysis.Keywords;
   }
 
   await messagesCollection.insertOne(saveData);
 }
-
 
 export async function POST(req: any) {
   try {
