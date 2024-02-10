@@ -307,10 +307,10 @@ body {
 }
 
 .word-cloud-container {
-  width: 100%; /* Ensure it takes the full width of its parent */
-  height: 600px; /* Height can be auto or set to a specific ratio of the width */
-  max-width: 800px; /* Adjust based on your design */
-  margin: 0 auto; /* Center the container */
-  overflow: hidden; /* Hide overflow */
-  background-color: #f0f0f0;
+  width: 100%; /* Full width of its parent to use available space */
+  height: 400px; /* Set a fixed height or maintain aspect ratio */
+  display: flex; /* Use flex to center the SVG if needed */
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  margin: 0 auto; /* Ensure it's centered horizontally if within a wider section */
 }
