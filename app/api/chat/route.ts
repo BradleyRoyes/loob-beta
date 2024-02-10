@@ -1,7 +1,7 @@
+import { v4 as uuidv4 } from "uuid";
 import OpenAI from "openai";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 import { AstraDB } from "@datastax/astra-db-ts";
-import { v4 as uuidv4 } from "uuid";
 
 // Initialize OpenAI and AstraDB with your configuration
 const openai = new OpenAI({
@@ -17,14 +17,13 @@ const astraDb = new AstraDB(
 function parseAnalysis(content: string) {
   try {
     const analysis = JSON.parse(content);
-    // Check if both mood and keywords exist and are in the expected format
     if (analysis.mood && Array.isArray(analysis.keywords)) {
-      return { Mood: analysis.mood, Keywords: analysis.keywords };
+      return { mood: analysis.mood, keywords: analysis.keywords };
     }
   } catch (error) {
     console.error("Failed to parse JSON from content", error);
   }
-  return null; // Return null if parsing fails or the expected data isn't found
+  return null;
 }
 
 async function saveMessageToDatabase(sessionId: string, content: string, role: string, parsedAnalysis: any = null) {
@@ -39,30 +38,45 @@ async function saveMessageToDatabase(sessionId: string, content: string, role: s
   };
 
   if (role === "assistant" && parsedAnalysis) {
-    saveData = { ...saveData, ...parsedAnalysis };
+    saveData.mood = parsedAnalysis.mood;
+    saveData.keywords = parsedAnalysis.keywords;
   }
 
   await messagesCollection.insertOne(saveData);
 }
 
 export async function POST(req: any) {
-  const { messages, sessionId } = await req.json(); // Assuming sessionId and messages are part of the request
-
-  // Handle saving messages before initiating streaming logic
-  for (const message of messages) {
-    const analysis = message.role === "assistant" ? parseAnalysis(message.content) : null;
-    await saveMessageToDatabase(sessionId, message.content, message.role, analysis);
-  }
-
-  // Continue with your streaming logic for real-time responses if applicable
-}
+  try {
+    const { messages, useRag, llm, similarityMetric, sessionId } = await req.json();
 
     let docContext = "";
     if (useRag) {
-      // Add your logic for Retrieval-Augmented Generation (RAG) if applicable
+      const latestMessage = messages[messages.length - 1]?.content;
+      if (latestMessage) {
+        const { data } = await openai.embeddings.create({
+          input: latestMessage,
+          model: "text-embedding-ada-002",
+        });
+
+        const collection = await astraDb.collection(`chat_${similarityMetric}`);
+        const cursor = collection.find({}, {
+          sort: {
+            $vector: data[0]?.embedding,
+          },
+          limit: 5,
+        });
+        const documents = await cursor.toArray();
+        docContext = documents.map((doc) => doc.content).join("\n");
+      }
     }
 
-      // Insert your ragPrompt content here
+    // Process and save messages before streaming logic
+    for (const message of messages) {
+      const analysis = message.role === "assistant" ? parseAnalysis(message.content) : null;
+      await saveMessageToDatabase(sessionId, message.content, message.role, analysis);
+    }
+
+       // Insert your ragPrompt content here
    const ragPrompt = [
       {
         role: "system",
@@ -91,21 +105,24 @@ important!!! when you recieve the message "*** Analyse our conversation so far *
     const response = await openai.chat.completions.create({
       model: llm ?? "gpt-3.5-turbo",
       stream: true,
-      messages: [...ragPrompt, ...messages],
+      messages: [
+        {
+          role: "system",
+          content: docContext,
+        },
+        ...messages,
+      ],
     });
 
     const stream = OpenAIStream(response, {
       onStart: async () => {
-        // Logic to execute when the stream starts, if any
+        // Logic to execute when the stream starts
       },
       onCompletion: async (completion: string) => {
-        // Attempt to parse the completion for JSON formatted analysis data
         const analysis = parseAnalysis(completion);
         if (analysis) {
-          // If successful, save the analysis data with mood and keywords separated
-          await saveMessageToDatabase(sessionId, "Completion with analysis", 'assistant', analysis);
+          await saveMessageToDatabase(sessionId, completion, 'assistant', analysis);
         } else {
-          // Save other completions as normal
           await saveMessageToDatabase(sessionId, completion, 'assistant');
         }
       },
