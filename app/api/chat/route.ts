@@ -15,32 +15,22 @@ const astraDb = new AstraDB(
 );
 
 function parseAnalysis(content: string) {
-  // Regex to find the JSON part within curly braces, accounting for nested structures
-  const regex = /{[\s\S]*?mood[\s\S]*?:[\s\S]*?".*?"[\s\S]*?,[\s\S]*?keywords[\s\S]*?:[\s\S]*?\[[\s\S]*?\][\s\S]*?}/;
-  const match = content.match(regex);
-
-  if (match) {
-    try {
-      const analysis = JSON.parse(match[0]);
-      if (analysis.mood && Array.isArray(analysis.keywords)) {
-        return { Mood: analysis.mood, Keywords: analysis.keywords };
-      }
-    } catch (error) {
-      console.error("Failed to parse JSON from content", error);
+  try {
+    const analysis = JSON.parse(content);
+    // Check if both mood and keywords exist and are in the expected format
+    if (analysis.mood && Array.isArray(analysis.keywords)) {
+      return { Mood: analysis.mood, Keywords: analysis.keywords };
     }
+  } catch (error) {
+    console.error("Failed to parse JSON from content", error);
   }
-  return null;
+  return null; // Return null if parsing fails or the expected data isn't found
 }
 
 async function saveMessageToDatabase(sessionId: string, content: string, role: string, parsedAnalysis: any = null) {
   const messagesCollection = await astraDb.collection("messages");
   
-  // Check for an existing message with the same content, role, and sessionId
-  const exists = await messagesCollection.findOne({ sessionId, content, role });
-  if (exists) {
-    console.log("Message already saved to the database.");
-    return; // Skip saving as this message is already saved
-  }
+  // Skipping the check for existing message for brevity
 
   // Base saveData object
   let saveData = {
@@ -49,12 +39,17 @@ async function saveMessageToDatabase(sessionId: string, content: string, role: s
     role: role,
     content: content,
     createdAt: new Date(),
+    // Initialize mood and keywords so they are always present, default to null or appropriate defaults
+    mood: null,
+    keywords: [],
   };
 
-  // If parsedAnalysis is provided, directly add 'mood' and 'keywords' to saveData
+  // If parsedAnalysis is provided, update 'mood' and 'keywords'
   if (parsedAnalysis) {
-    saveData['mood'] = parsedAnalysis.Mood;
-    saveData['keywords'] = parsedAnalysis.Keywords;
+    saveData.mood = parsedAnalysis.Mood;
+    saveData.keywords = parsedAnalysis.Keywords;
+    // Optionally clear 'content' or set to a placeholder if you don't want the original JSON string
+    // saveData.content = "Analysis provided"; // Adjust according to your needs
   }
 
   await messagesCollection.insertOne(saveData);
