@@ -111,9 +111,9 @@ export default function Page() {
           className="chatbot-section flex flex-col origin:w-[800px] w-full origin:h-[735px] h-full rounded-md p-2 md:p-6"
         >
           <div className="chatbot-header pt-0 pb-6">
-            <div className="flex justify-between items-center">
-              <h1 className="chatbot-text-primary text-6xl md:text-7xl font-extrabold tracking-wide">
-                <span className="text-5xl md:text-7xl">loob</span>
+            <div className="flex justify-between items-center pt-0">
+              <h1 className="chatbot-text-primary text-6xl md:text-7xl font-extrabold tracking-wide pt-0">
+                <span className="text-5xl md:text-7xl pt-0">loob</span>
                 <span className="text-lg md:text-xl font-normal"> the app</span>
               </h1>
               <div className="flex gap-1">
