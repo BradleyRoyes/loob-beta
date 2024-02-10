@@ -68,9 +68,9 @@ const Dashboard = () => {
   const drawWordCloud = (words) => {
     d3.select(wordCloudRef.current).selectAll("*").remove();
 
-    // Use the container's width or fall back to a default value
-    const containerWidth = wordCloudRef.current.offsetWidth || 800;
-    const containerHeight = containerWidth / 2; // Or any other ratio you prefer
+    const container = wordCloudRef.current;
+    const containerWidth = container.offsetWidth; // Full width of the container
+    const containerHeight = container.offsetHeight; // Height of the container
 
     const layout = cloud()
       .size([containerWidth, containerHeight]) // Use dynamic size
