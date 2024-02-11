@@ -49,19 +49,15 @@ async function saveMessageToDatabase(sessionId: string, content: string, role: s
     content: content,
     length: content.length, // Capture the length of the message
     createdAt: new Date(), // Timestamp
+    // Include analysis data if it exists, otherwise set to undefined
+    mood: analysis?.Mood,
+    keywords: analysis?.Keywords,
   };
-
-  // If the message is from an assistant and analysis data is provided, include it
-  if (role === "assistant" && analysis) {
-    messageData.mood = analysis.Mood;
-    messageData.keywords = analysis.Keywords;
-  }
 
   await messagesCollection.insertOne(messageData);
 }
 
-
-export async function POST(req: any) {
+   export async function POST(req: any) {
   try {
     const { messages, useRag, llm, similarityMetric, sessionId } = await req.json();
 
@@ -76,7 +72,7 @@ export async function POST(req: any) {
         });
 
         const collection = await astraDb.collection(`chat_${similarityMetric}`);
-        const cursor = collection.find(null, {
+        const cursor = collection.find({}, {
           sort: {
             $vector: data[0]?.embedding,
           },
@@ -85,6 +81,12 @@ export async function POST(req: any) {
         const documents = await cursor.toArray();
         docContext = documents.map((doc) => doc.content).join("\n");
       }
+    }
+
+    // Process and save each message before streaming logic
+    for (const message of messages) {
+      const analysis = message.role === 'assistant' ? parseAnalysis(message.content) : null;
+      await saveMessageToDatabase(sessionId, message.content, message.role, analysis);
     }
 
     // Insert your ragPrompt content here
@@ -121,16 +123,13 @@ important!!! when you recieve the message "*** Analyse our conversation so far *
 
     const stream = OpenAIStream(response, {
       onStart: async () => {
-        // Your existing logic, if any, for when the stream starts
+        // Logic to execute when the stream starts, if needed
       },
       onCompletion: async (completion: string) => {
+        // Perform analysis on completion content
         const analysis = parseAnalysis(completion);
-        if (analysis) {
-          await saveMessageToDatabase(sessionId, completion, 'assistant', analysis);
-        } else {
-          // Assuming you still want to save other completions without analysis
-          await saveMessageToDatabase(sessionId, completion, 'assistant');
-        }
+        // Save the completion along with any analysis
+        await saveMessageToDatabase(sessionId, completion, 'assistant', analysis);
       },
     });
 
