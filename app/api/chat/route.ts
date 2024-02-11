@@ -35,17 +35,27 @@ function parseAnalysis(content: string) {
 async function saveMessageToDatabase(sessionId: string, content: string, role: string, analysis: any = null) {
   const messagesCollection = await astraDb.collection("messages");
 
-  // Structure for saving message data, including analysis if present
+  // Check for an existing message with the same sessionId and content
+  const existingMessage = await messagesCollection.findOne({ sessionId, content });
+  
+  if (existingMessage) {
+    console.log("Duplicate message detected. Skipping save to prevent duplicates.");
+    return; // Exit the function to prevent saving the duplicate message
+  }
+
   let messageData = {
     sessionId: sessionId,
     role: role,
     content: content,
-    length: content.length, // Message length
+    length: content.length, // Capture the length of the message
     createdAt: new Date(), // Timestamp
-    // Include analysis data if it exists, otherwise set to undefined
-    mood: analysis?.Mood,
-    keywords: analysis?.Keywords,
   };
+
+  // If the message is from an assistant and analysis data is provided, include it
+  if (role === "assistant" && analysis) {
+    messageData.mood = analysis.Mood;
+    messageData.keywords = analysis.Keywords;
+  }
 
   await messagesCollection.insertOne(messageData);
 }
