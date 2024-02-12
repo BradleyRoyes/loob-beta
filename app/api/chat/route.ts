@@ -16,7 +16,8 @@ const astraDb = new AstraDB(
 
 function parseAnalysis(content: string) {
   // Regex to find the JSON part within curly braces, accounting for nested structures
-  const regex = /{[\s\S]*?mood[\s\S]*?:[\s\S]*?".*?"[\s\S]*?,[\s\S]*?keywords[\s\S]*?:[\s\S]*?\[[\s\S]*?\][\s\S]*?}/;
+  const regex =
+    /{[\s\S]*?mood[\s\S]*?:[\s\S]*?".*?"[\s\S]*?,[\s\S]*?keywords[\s\S]*?:[\s\S]*?\[[\s\S]*?\][\s\S]*?}/;
   const match = content.match(regex);
 
   if (match) {
@@ -32,14 +33,24 @@ function parseAnalysis(content: string) {
   return null;
 }
 
-async function saveMessageToDatabase(sessionId: string, content: string, role: string, analysis: any = null) {
+async function saveMessageToDatabase(
+  sessionId: string,
+  content: string,
+  role: string,
+  analysis: any = null,
+) {
   const messagesCollection = await astraDb.collection("messages");
 
   // Check for an existing message with the same sessionId and content
-  const existingMessage = await messagesCollection.findOne({ sessionId, content });
-  
+  const existingMessage = await messagesCollection.findOne({
+    sessionId,
+    content,
+  });
+
   if (existingMessage) {
-    console.log("Duplicate message detected. Skipping save to prevent duplicates.");
+    console.log(
+      "Duplicate message detected. Skipping save to prevent duplicates.",
+    );
     return; // Exit the function to prevent saving the duplicate message
   }
 
@@ -57,9 +68,10 @@ async function saveMessageToDatabase(sessionId: string, content: string, role: s
   await messagesCollection.insertOne(messageData);
 }
 
-   export async function POST(req: any) {
+export async function POST(req: any) {
   try {
-    const { messages, useRag, llm, similarityMetric, sessionId } = await req.json();
+    const { messages, useRag, llm, similarityMetric, sessionId } =
+      await req.json();
 
     let docContext = "";
     if (useRag) {
@@ -72,12 +84,15 @@ async function saveMessageToDatabase(sessionId: string, content: string, role: s
         });
 
         const collection = await astraDb.collection(`chat_${similarityMetric}`);
-        const cursor = collection.find({}, {
-          sort: {
-            $vector: data[0]?.embedding,
+        const cursor = collection.find(
+          {},
+          {
+            sort: {
+              $vector: data[0]?.embedding,
+            },
+            limit: 5,
           },
-          limit: 5,
-        });
+        );
         const documents = await cursor.toArray();
         docContext = documents.map((doc) => doc.content).join("\n");
       }
@@ -85,12 +100,18 @@ async function saveMessageToDatabase(sessionId: string, content: string, role: s
 
     // Process and save each message before streaming logic
     for (const message of messages) {
-      const analysis = message.role === 'assistant' ? parseAnalysis(message.content) : null;
-      await saveMessageToDatabase(sessionId, message.content, message.role, analysis);
+      const analysis =
+        message.role === "assistant" ? parseAnalysis(message.content) : null;
+      await saveMessageToDatabase(
+        sessionId,
+        message.content,
+        message.role,
+        analysis,
+      );
     }
 
     // Insert your ragPrompt content here
-   const ragPrompt = [
+    const ragPrompt = [
       {
         role: "system",
         content: `
@@ -107,7 +128,7 @@ important!!! when you recieve the message "*** Analyse our conversation so far *
           - Never ask the user how you can help or assist them, instead ask them to tell you more about their day or recent experience (at Moos ideally)
           - Reflect back on their emotions and words to validate their experience.
           - Guide conversations by asking questions to help the user delve deeper into their thoughts or suggest reflecting on a related aspect of their experience.
-          - Provide a list of relevant events at MOOS, their dates, and any aditional information, including time if available, price and description. The relevance of their events should be based on their requirenmnets, and possibly current mood and keywords.
+          - Provide a list of relevant events at MOOS, their dates, and any aditional information, including time if available, how to register if available, price and description. The relevance of their events should be based on their requirenmnets, and possibly current mood and keywords. Provide events in situations where they ask for them, but also when it is implied in the conversation.
 
           Remember to clarify you're an AI, especially if discussions go beyond your capacity to understand or support, emphasizing the importance of professional help for personal issues.
           ${docContext}
@@ -130,7 +151,12 @@ important!!! when you recieve the message "*** Analyse our conversation so far *
         // Perform analysis on completion content
         const analysis = parseAnalysis(completion);
         // Save the completion along with any analysis
-        await saveMessageToDatabase(sessionId, completion, 'assistant', analysis);
+        await saveMessageToDatabase(
+          sessionId,
+          completion,
+          "assistant",
+          analysis,
+        );
       },
     });
 
