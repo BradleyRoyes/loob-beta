@@ -10,37 +10,37 @@
   height: 100%;
   background-color: black;
   color: white;
-  z-index: 1000; /* Ensure it's above other content */
+  flex-direction: column;
+  z-index: 1000; /* High z-index to overlay content */
 }
 
 .content {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 20px; /* Space between elements */
+}
+
+.gradientText {
+  background: linear-gradient(45deg, pink, orange);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 2rem; /* Adjusted for prominence without being too large */
   text-align: center;
+  margin: 0;
 }
 
-h1 {
-  font-size: 2.5rem; /* Adjust size as needed */
-  margin-bottom: 1rem;
-}
-
-h2 {
-  font-size: 2rem; /* Adjust size as needed */
-  margin: 1rem 0;
-}
-
-button {
-  background: transparent;
+.splashScreen button {
+  padding: 10px 20px;
+  margin-top: 20px;
   border: 2px solid white;
+  background: transparent;
   color: white;
-  padding: 0.5rem 1rem;
-  margin: 0.5rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: color 0.3s ease, background-color 0.3s ease;
 }
 
-button:hover {
+.splashScreen button:hover {
   background-color: white;
   color: black;
 }
