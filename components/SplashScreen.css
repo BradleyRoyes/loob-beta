@@ -11,18 +11,20 @@
 }
 
 .options {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
 }
 
 button {
-  display: block;
-  margin: 20px auto; /* Increase space between buttons */
+  margin: 20px 0; /* Increased spacing */
   padding: 10px 20px;
   border: 2px solid white;
-  background-color: transparent;
+  background: none;
   color: white;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 button:hover {
@@ -31,5 +33,5 @@ button:hover {
 }
 
 h1, p {
-  margin-bottom: 20px; /* Adjust as needed for spacing */
+  margin: 0 0 20px;
 }
