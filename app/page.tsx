@@ -56,6 +56,14 @@ export default function Page() {
     append(msg, { options: { body: { useRag, llm, similarityMetric } } });
   };
 
+  // Update the setShowSplash function to also handle prompts
+  const handleEnter = (promptText?: string) => {
+    setShowSplash(false); // Hide splash screen
+    if (promptText) {
+      handlePrompt(promptText); // Handle the prompt if provided
+    }
+  };
+
   const [showAnalyseButton, setShowAnalyseButton] = useState(false);
 
   useEffect(() => {
@@ -98,26 +106,10 @@ export default function Page() {
         </button>
       </>
     );
-    // return (
-    //   <>
-    //     <MessageCollector
-    //       messages={messages}
-    //       showDashboard={showNeuronVisual}
-    //       setCollectedJsonMessages={setCollectedJsonMessages}
-    //     />
-    //     <Dashboard jsonMessages={collectedJsonMessages} />
-    //     <button
-    //       onClick={() => setShowNeuronVisual(false)}
-    //       className="button-dash"
-    //     >
-    //       Back to Chat
-    //     </button>
-    //   </>
-    // );
   }
 
   return showSplash ? (
-    <SplashScreen onEnter={() => setShowSplash(false)} />
+    <SplashScreen onEnter={handleEnter} />
   ) : (
     <>
       <style>
