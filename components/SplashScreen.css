@@ -43,5 +43,5 @@
 
 .splashScreen button:hover {
   background-color: black; /* Light background on hover for contrast */
-  color: white; /* This won't have effect due to gradient text but left for consistency */
+  color: #6B6F73; /* This won't have effect due to gradient text but left for consistency */
 }
