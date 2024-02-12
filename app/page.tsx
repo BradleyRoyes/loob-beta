@@ -1,7 +1,7 @@
 "use client"; // Mark the parent component as a client component
 import React, { useEffect, useRef, useState } from "react";
 import Bubble from "../components/Bubble";
-import { useChat } from "ai/react";
+import { useChat, Message } from "ai/react";
 import Footer from "../components/Footer";
 import Configure from "../components/Configure";
 import ThemeButton from "../components/ThemeButton";
@@ -46,6 +46,15 @@ export default function Page() {
     handleInputChange({
       target: { value: "" },
     } as React.ChangeEvent<HTMLInputElement>);
+  };
+
+  const handlePrompt = (promptText) => {
+    const msg: Message = {
+      id: crypto.randomUUID(),
+      content: promptText,
+      role: "user",
+    };
+    append(msg, { options: { body: { useRag, llm, similarityMetric } } });
   };
 
   const [showAnalyseButton, setShowAnalyseButton] = useState(false);
