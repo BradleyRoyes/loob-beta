@@ -20,6 +20,7 @@
     "d3-cloud": "^1.2.7",
     "express": "^4.18.2",
     "formidable": "^3.5.1",
+    "framer-motion": "^11.0.3",
     "fs.promises": "^0.1.2",
     "geist": "^1.1.0",
     "langchain": "^0.0.179",
