@@ -34,7 +34,7 @@
   padding: 10px 20px;
   margin-top: 20px;
   color: black;
-  border: 2px solid white; /* Make border transparent to focus on gradient text */
+  border: 2px solid transparent; /* Make border transparent to focus on gradient text */
   background: linear-gradient(45deg, pink, orange);
   cursor: pointer;
   transition: color 0.3s ease, background-color 0.3s ease;/* Ensure the background extends to the padding area */
