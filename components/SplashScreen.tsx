@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import './SplashScreen.css'; // Ensure this contains the updated styles as provided below
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import "./SplashScreen.css"; // Ensure this contains the updated styles as provided below
 
-const SplashScreen: React.FC<{ onEnter: () => void }> = ({ onEnter }) => {
-  const [phase, setPhase] = useState('welcome');
+const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
+  onEnter,
+}) => {
+  const [phase, setPhase] = useState("welcome");
 
   const proceed = (nextPhase: string) => {
     setPhase(nextPhase);
@@ -11,8 +13,8 @@ const SplashScreen: React.FC<{ onEnter: () => void }> = ({ onEnter }) => {
 
   const variants = {
     initial: { opacity: 0 },
-    animate: { opacity: 1, transition: { duration: 1.5, ease: 'easeInOut' } },
-    exit: { opacity: 0, transition: { duration: 1.5, ease: 'easeInOut' } },
+    animate: { opacity: 1, transition: { duration: 1.5, ease: "easeInOut" } },
+    exit: { opacity: 0, transition: { duration: 1.5, ease: "easeInOut" } },
   };
 
   return (
@@ -23,28 +25,34 @@ const SplashScreen: React.FC<{ onEnter: () => void }> = ({ onEnter }) => {
       exit="exit"
       variants={variants}
     >
-      {phase === 'welcome' && (
+      {phase === "welcome" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText">Welcome to Loob</h1>
-          <button onClick={() => proceed('location')}>Continue</button>
+          <button onClick={() => proceed("location")}>Continue</button>
         </motion.div>
       )}
 
-      {phase === 'location' && (
+      {phase === "location" && (
         <motion.div className="content" variants={variants}>
           <p>Where are you?</p>
-          <button onClick={() => proceed('action')}>MOOS Space Berlin</button>
+          <button onClick={() => proceed("action")}>MOOS Space Berlin</button>
           <button onClick={() => onEnter()}>At the Club</button>
           <button onClick={() => onEnter()}>At Home</button>
         </motion.div>
       )}
 
-      {phase === 'action' && (
+      {phase === "action" && (
         <motion.div className="content" variants={variants}>
           <p>What would you like to do?</p>
-          <button onClick={() => onEnter()}>I&apos;d like to share an experience</button>
-          <button onClick={() => onEnter()}>I&apos;d like to host at MOOS</button>
-          <button onClick={() => onEnter()}>I&apos;d like to visit MOOS</button>
+          <button onClick={() => onEnter("Share an experience")}>
+            I&apos;d like to share an experience
+          </button>
+          <button onClick={() => onEnter("Host at MOOS")}>
+            I&apos;d like to host at MOOS
+          </button>
+          <button onClick={() => onEnter("Visit MOOS")}>
+            I&apos;d like to visit MOOS
+          </button>
         </motion.div>
       )}
     </motion.div>
