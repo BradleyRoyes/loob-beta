@@ -30,7 +30,7 @@
   margin: 0;
 }
 
-button {
+.splashScreen button {
   padding: 10px 20px;
   margin-top: 20px;
   border: 2px solid transparent; /* Make border transparent to focus on gradient text */
@@ -40,7 +40,7 @@ button {
   -webkit-background-clip: padding-box; /* Ensure the background extends to the padding area */
 }
 
-button:hover {
+.splashScreen button:hover {
   background-color: rgba(255, 255, 255, 0.2); /* Light background on hover for contrast */
   color: black; /* This won't have effect due to gradient text but left for consistency */
 }
