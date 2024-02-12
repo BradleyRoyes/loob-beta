@@ -1,6 +1,6 @@
 // SplashScreen.tsx
 import React, { useState } from 'react';
-import TunnelTransition from './TunnelTransition'; // Adjust if your import path differs
+import TunnelTransition from '../components/TunnelTransition'; // Adjust if your import path differs
 
 const SplashScreen = ({ onEnter }) => {
   const [phase, setPhase] = useState('selectLocation');
