@@ -1,62 +1,53 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import './SplashScreen.css'; // Make sure this CSS is scoped to avoid outside styling issues
+import './SplashScreen.css'; // Ensure this contains the updated styles as provided below
 
 const SplashScreen: React.FC<{ onEnter: () => void }> = ({ onEnter }) => {
-  const [phase, setPhase] = useState('selectLocation');
+  const [phase, setPhase] = useState('welcome');
 
-  const handleLocationSelect = (location: string) => {
-    if (location === 'mooseSpaceBerlin') {
-      setPhase('selectAction');
-    } else {
-      setPhase('exit');
-      setTimeout(onEnter, 1000); // Delay to allow animation to complete
-    }
+  const proceed = (nextPhase: string) => {
+    setPhase(nextPhase);
   };
 
-  const handleActionSelect = () => {
-    setPhase('exit');
-    setTimeout(onEnter, 1000);
-  };
-
-  const zoomVariants = {
-    initial: { scale: 0.95, opacity: 0 },
-    animate: { scale: 1, opacity: 1, transition: { duration: 0.5, ease: 'easeInOut' } },
-    exit: { scale: 1.05, opacity: 0, transition: { duration: 0.5, ease: 'easeInOut' } },
+  const variants = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1, transition: { duration: 1.5, ease: 'easeInOut' } },
+    exit: { opacity: 0, transition: { duration: 1.5, ease: 'easeInOut' } },
   };
 
   return (
-    <div className="splashScreen">
-      <motion.div
-        className="options"
-        initial="initial"
-        animate="animate"
-        exit="exit"
-        variants={zoomVariants}
-      >
-        {phase !== 'exit' && (
-          <motion.div className="content" variants={zoomVariants}>
-            <h1>Welcome to Loob</h1>
-            {phase === 'selectLocation' && (
-              <>
-                <p>Where are you?</p>
-                <button onClick={() => handleLocationSelect('mooseSpaceBerlin')}>Moose Space Berlin</button>
-                <button onClick={() => handleLocationSelect('atTheClub')}>At the Club</button>
-                <button onClick={() => handleLocationSelect('atHome')}>At Home</button>
-              </>
-            )}
-            {phase === 'selectAction' && (
-              <>
-                <h2>What would you like to do?</h2>
-                <button onClick={handleActionSelect}>I&apos;d like to share an experience</button>
-                <button onClick={handleActionSelect}>I&apos;d like to host at MOOS</button>
-                <button onClick={handleActionSelect}>I&apos;d like to visit MOOS</button>
-              </>
-            )}
-          </motion.div>
-        )}
-      </motion.div>
-    </div>
+    <motion.div
+      className="splashScreen"
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      variants={variants}
+    >
+      {phase === 'welcome' && (
+        <motion.div className="content" variants={variants}>
+          <h1 className="gradientText">Welcome to Loob</h1>
+          <button onClick={() => proceed('location')}>Continue</button>
+        </motion.div>
+      )}
+
+      {phase === 'location' && (
+        <motion.div className="content" variants={variants}>
+          <p>Where are you?</p>
+          <button onClick={() => proceed('action')}>MOOS Space Berlin</button>
+          <button onClick={() => onEnter()}>At the Club</button>
+          <button onClick={() => onEnter()}>At Home</button>
+        </motion.div>
+      )}
+
+      {phase === 'action' && (
+        <motion.div className="content" variants={variants}>
+          <p>What would you like to do?</p>
+          <button onClick={() => onEnter()}>I'd like to share an experience</button>
+          <button onClick={() => onEnter()}>I'd like to host at MOOS</button>
+          <button onClick={() => onEnter()}>I'd like to visit MOOS</button>
+        </motion.div>
+      )}
+    </motion.div>
   );
 };
 
