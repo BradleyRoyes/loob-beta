@@ -23,7 +23,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onEnter }) => {
         <h1 className="text-2xl font-bold">Welcome to Loob</h1>
         <p>Where are you?</p>
         <button className="px-6 py-2 border border-white rounded transition duration-150" onClick={() => handleLocationSelect("mooseSpaceBerlin")}>
-          MOOS Space Berlin
+          Moose Space Berlin
         </button>
         <button className="px-6 py-2 border border-white rounded transition duration-150" onClick={() => handleLocationSelect("atTheClub")}>
           At the Club
@@ -41,7 +41,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onEnter }) => {
           I'd like to share an experience
         </button>
         <button className="px-6 py-2 border border-white rounded transition duration-150" onClick={handleActionSelect}>
-          I'd like to bring a project to MOOS
+          I'd like to host at Moose
         </button>
         <button className="px-6 py-2 border border-white rounded transition duration-150" onClick={handleActionSelect}>
           I'd like to visit Moose
