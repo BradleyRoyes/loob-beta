@@ -75,10 +75,11 @@ export default function Page() {
     const analyseMessage = "Analyse our conversation so far";
     append({ content: analyseMessage, role: "user" });
   };
-  
+
+
   return (
     <>
-      {/* Neuron Visual */}
+      {/* Check if showNeuronVisual is true */}
       {showNeuronVisual ? (
         <div style={{ opacity: showNeuronVisual ? 1 : 0, transition: "opacity 1s" }}>
           <Dashboard /> {/* Changed NeuronVisual to Dashboard */}
