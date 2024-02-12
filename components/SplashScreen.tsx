@@ -42,9 +42,9 @@ const SplashScreen: React.FC<{ onEnter: () => void }> = ({ onEnter }) => {
       {phase === 'action' && (
         <motion.div className="content" variants={variants}>
           <p>What would you like to do?</p>
-          <button onClick={() => onEnter()}>I'd like to share an experience</button>
-          <button onClick={() => onEnter()}>I'd like to host at MOOS</button>
-          <button onClick={() => onEnter()}>I'd like to visit MOOS</button>
+          <button onClick={() => onEnter()}>I&apos;d like to share an experience</button>
+          <button onClick={() => onEnter()}>I&apos;d like to host at MOOS</button>
+          <button onClick={() => onEnter()}>I&apos;d like to visit MOOS</button>
         </motion.div>
       )}
     </motion.div>
