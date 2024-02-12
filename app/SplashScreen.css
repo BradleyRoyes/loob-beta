@@ -1,0 +1,35 @@
+/* SplashScreen.css */
+.splashScreen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  background-color: black;
+  color: white;
+  flex-direction: column;
+}
+
+.options {
+  text-align: center;
+}
+
+button {
+  display: block;
+  margin: 20px auto; /* Increase space between buttons */
+  padding: 10px 20px;
+  border: 2px solid white;
+  background-color: transparent;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: white;
+  color: black;
+}
+
+h1, p {
+  margin-bottom: 20px; /* Adjust as needed for spacing */
+}
