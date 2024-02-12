@@ -33,15 +33,15 @@
 .splashScreen button {
   padding: 10px 20px;
   margin-top: 20px;
+  color: black;
   border: 2px solid white; /* Make border transparent to focus on gradient text */
-  background: transparent;
-  color: white;
+  background: linear-gradient(45deg, pink, orange);
   cursor: pointer;
   transition: color 0.3s ease, background-color 0.3s ease;/* Ensure the background extends to the padding area */
   border-radius: 24px;
 }
 
 .splashScreen button:hover {
-  background-color: linear-gradient(45deg, pink, orange); /* Light background on hover for contrast */
+  background-color: white; /* Light background on hover for contrast */
   color: black; /* This won't have effect due to gradient text but left for consistency */
 }
