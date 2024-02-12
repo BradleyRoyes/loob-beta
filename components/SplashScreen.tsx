@@ -1,69 +1,56 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
-const SplashScreen: React.FC<{ onEnter: (action: string) => void }> = ({ onEnter }) => {
+interface SplashScreenProps {
+  onEnter: () => void; // Assuming this triggers the transition to the main content
+}
+
+const SplashScreen: React.FC<SplashScreenProps> = ({ onEnter }) => {
   const [phase, setPhase] = useState("selectLocation");
-  const [location, setLocation] = useState("");
-  const [autoDetectedLocation, setAutoDetectedLocation] = useState("");
 
-  useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const currentLocation = `Lat: ${position.coords.latitude}, Lon: ${position.coords.longitude}`;
-        setAutoDetectedLocation(currentLocation);
-        setLocation(currentLocation);
-      },
-      (error) => console.error(error),
-      { timeout: 10000 }
+  const handleLocationSelect = (location: string) => {
+    // Depending on the location, you could do something specific here
+    setPhase("selectAction");
+  };
+
+  const handleActionSelect = () => {
+    // This function will be called when an action is selected
+    onEnter(); // Proceed to the main content or handle the action specifically
+  };
+
+  if (phase === "selectLocation") {
+    return (
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-black text-white space-y-4">
+        <h1 className="text-2xl font-bold">Welcome to Loob</h1>
+        <p>Where are you?</p>
+        <button className="px-6 py-2 border border-white rounded transition duration-150" onClick={() => handleLocationSelect("mooseSpaceBerlin")}>
+          MOOS Space Berlin
+        </button>
+        <button className="px-6 py-2 border border-white rounded transition duration-150" onClick={() => handleLocationSelect("atTheClub")}>
+          At the Club
+        </button>
+        <button className="px-6 py-2 border border-white rounded transition duration-150" onClick={() => handleLocationSelect("atHome")}>
+          At Home
+        </button>
+      </div>
     );
-  }, []);
+  } else if (phase === "selectAction") {
+    return (
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-black text-white space-y-4">
+        <h1 className="text-2xl font-bold">What would you like to do?</h1>
+        <button className="px-6 py-2 border border-white rounded transition duration-150" onClick={handleActionSelect}>
+          I'd like to share an experience
+        </button>
+        <button className="px-6 py-2 border border-white rounded transition duration-150" onClick={handleActionSelect}>
+          I'd like to bring a project to MOOS
+        </button>
+        <button className="px-6 py-2 border border-white rounded transition duration-150" onClick={handleActionSelect}>
+          I'd like to visit Moose
+        </button>
+      </div>
+    );
+  }
 
-  const transitionToQuestions = () => {
-    setPhase("animate");
-    setTimeout(() => setPhase("askQuestion"), 1000); // Adjust timing as needed
-  };
-
-  const handleQuestionSelect = (action: string) => {
-    onEnter(action);
-  };
-
-  return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black text-white">
-      {phase === "selectLocation" && (
-        <div className="text-center">
-          <h1 className="mb-4 text-4xl font-bold">Welcome to Loob</h1>
-          <select
-            className="mb-4 p-2 border-b border-white bg-transparent text-white appearance-none"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-          >
-            <option value="">Select your location</option>
-            <option value="auto">Auto-Detect Location</option>
-            <option value="Location 1">Location 1</option>
-            <option value="Location 2">Location 2</option>
-          </select>
-          <button className="px-6 py-2 border border-white rounded transition duration-150" onClick={transitionToQuestions}>
-            Confirm Location
-          </button>
-        </div>
-      )}
-
-      {phase === "animate" && <div className="fadeEffect">Loading...</div>}
-
-      {phase === "askQuestion" && (
-        <div className="text-center">
-          <button className="mb-4 px-6 py-2 border border-white rounded transition duration-150" onClick={() => handleQuestionSelect("share")}>
-            I want to share an experience
-          </button>
-          <button className="mb-4 px-6 py-2 border border-white rounded transition duration-150" onClick={() => handleQuestionSelect("visit")}>
-            I want to visit MOOS
-          </button>
-          <button className="px-6 py-2 border border-white rounded transition duration-150" onClick={() => handleQuestionSelect("host")}>
-            I want to host at MOOS
-          </button>
-        </div>
-      )}
-    </div>
-  );
+  return null; // Default return, should not reach here
 };
 
 export default SplashScreen;
