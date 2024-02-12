@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 
-const TunnelTransition = ({ children, isVisible, onExit }) => {
+const TunnelTransition = ({ children, isVisible, onExit = () => {} }) => {
   // Enhanced animation variants for a trippy tunnel effect
   const variants = {
     initial: { 
