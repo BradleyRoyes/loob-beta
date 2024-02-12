@@ -21,7 +21,7 @@
   gap: 20px; /* Space between elements */
 }
 
-.gradientText, p, button {
+.gradientText {
   background: linear-gradient(45deg, pink, orange);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -33,14 +33,14 @@
 .splashScreen button {
   padding: 10px 20px;
   margin-top: 20px;
-  border: 2px solid transparent; /* Make border transparent to focus on gradient text */
+  border: 2px solid white; /* Make border transparent to focus on gradient text */
   background: transparent;
+  color: white;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-  -webkit-background-clip: padding-box; /* Ensure the background extends to the padding area */
+  transition: color 0.3s ease, background-color 0.3s ease;/* Ensure the background extends to the padding area */
 }
 
 .splashScreen button:hover {
-  background-color: rgba(255, 255, 255, 0.2); /* Light background on hover for contrast */
+  background-color: white; /* Light background on hover for contrast */
   color: black; /* This won't have effect due to gradient text but left for consistency */
 }
