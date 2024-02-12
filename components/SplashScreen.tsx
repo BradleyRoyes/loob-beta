@@ -16,46 +16,47 @@ const SplashScreen: React.FC<{ onEnter: () => void }> = ({ onEnter }) => {
 
   const handleActionSelect = () => {
     setPhase('exit');
-    setTimeout(onEnter, 1000); // Delay to allow animation to complete
+    setTimeout(onEnter, 1000);
   };
 
-  // Animation variants for a subtle zoom effect
-  const containerVariants = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
-    exit: { opacity: 0, y: -20, transition: { duration: 0.5, ease: 'easeIn' } },
+  const zoomVariants = {
+    initial: { scale: 0.95, opacity: 0 },
+    animate: { scale: 1, opacity: 1, transition: { duration: 0.5, ease: 'easeInOut' } },
+    exit: { scale: 1.05, opacity: 0, transition: { duration: 0.5, ease: 'easeInOut' } },
   };
 
   return (
-    <motion.div
-      className="splashScreen"
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      variants={containerVariants}
-    >
-      {phase !== 'exit' && (
-        <motion.div className="content" variants={containerVariants}>
-          <h1>Welcome to Loob</h1>
-          {phase === 'selectLocation' && (
-            <>
-              <p>Where are you?</p>
-              <button onClick={() => handleLocationSelect('mooseSpaceMOOS')}>MOOS Space Berlin</button>
-              <button onClick={() => handleLocationSelect('atTheClub')}>At the Club</button>
-              <button onClick={() => handleLocationSelect('atHome')}>At Home</button>
-            </>
-          )}
-          {phase === 'selectAction' && (
-            <>
-              <h2>What would you like to do?</h2>
-              <button onClick={handleActionSelect}>I'd like to share an experience</button>
-              <button onClick={handleActionSelect}>I'd like to host at MOOS</button>
-              <button onClick={handleActionSelect}>I'd like to visit MOOS</button>
-            </>
-          )}
-        </motion.div>
-      )}
-    </motion.div>
+    <div className="splashScreen">
+      <motion.div
+        className="options"
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        variants={zoomVariants}
+      >
+        {phase !== 'exit' && (
+          <motion.div className="content" variants={zoomVariants}>
+            <h1>Welcome to Loob</h1>
+            {phase === 'selectLocation' && (
+              <>
+                <p>Where are you?</p>
+                <button onClick={() => handleLocationSelect('mooseSpaceBerlin')}>Moose Space Berlin</button>
+                <button onClick={() => handleLocationSelect('atTheClub')}>At the Club</button>
+                <button onClick={() => handleLocationSelect('atHome')}>At Home</button>
+              </>
+            )}
+            {phase === 'selectAction' && (
+              <>
+                <h2>What would you like to do?</h2>
+                <button onClick={handleActionSelect}>I&apos;d like to share an experience</button>
+                <button onClick={handleActionSelect}>I&apos;d like to host at MOOS</button>
+                <button onClick={handleActionSelect}>I&apos;d like to visit MOOS</button>
+              </>
+            )}
+          </motion.div>
+        )}
+      </motion.div>
+    </div>
   );
 };
 
