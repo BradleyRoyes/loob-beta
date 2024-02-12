@@ -12,6 +12,7 @@ import MessageCollector from "../components/MessageCollector"; // Adjust the imp
 import { v4 as uuidv4 } from "uuid";
 import SplashScreen from "../components/SplashScreen"; // Adjust the import path as necessary
 import AnalyseButton from "../components/AnalyseButton";
+import { motion } from "framer-motion";
 
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } =
@@ -74,10 +75,11 @@ export default function Page() {
     const analyseMessage = "Analyse our conversation so far";
     append({ content: analyseMessage, role: "user" });
   };
-
-  if (showNeuronVisual) {
-    return (
-      <>
+return (
+  <>
+    {/* Neuron Visual */}
+    {showNeuronVisual && (
+      <div style={{ opacity: showNeuronVisual ? 1 : 0, transition: "opacity 1s" }}>
         <Dashboard /> {/* Changed NeuronVisual to Dashboard */}
         <button
           onClick={() => setShowNeuronVisual(false)}
@@ -86,37 +88,13 @@ export default function Page() {
         >
           Back to Chat
         </button>
-      </>
-    );
-    // return (
-    //   <>
-    //     <MessageCollector
-    //       messages={messages}
-    //       showDashboard={showNeuronVisual}
-    //       setCollectedJsonMessages={setCollectedJsonMessages}
-    //     />
-    //     <Dashboard jsonMessages={collectedJsonMessages} />
-    //     <button
-    //       onClick={() => setShowNeuronVisual(false)}
-    //       className="button-dash"
-    //     >
-    //       Back to Chat
-    //     </button>
-    //   </>
-    // );
-  }
+      </div>
+    )}
 
-  return showSplash ? (
-    <SplashScreen onEnter={() => setShowSplash(false)} />
-  ) : (
-    <>
-      <style>
-        {`
-          .h-screen-adjusted {
-            height: calc(var(--vh, 1vh) * 100);
-          }
-        `}
-      </style>
+    {/* Splash Screen */}
+    {showSplash ? (
+      <SplashScreen onEnter={() => setShowSplash(false)} />
+    ) : (
       <main className="flex h-screen-adjusted flex-col items-center justify-center pt-0">
         <section
           ref={chatContainerRef}
@@ -131,7 +109,7 @@ export default function Page() {
               <div className="flex gap-1">
                 <ThemeButton />
                 <button onClick={() => setConfigureOpen(true)}>
-                  {/* Configuration Button SVG replaced here */}
+                  {/* Configuration Button SVG */}
                   <svg
                     width="24"
                     height="25"
@@ -214,6 +192,6 @@ export default function Page() {
           />
         )}
       </main>
-    </>
-  );
-}
+    )}
+  </>
+);
