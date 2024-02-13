@@ -51,7 +51,7 @@ const Dashboard = () => {
       case 'settings':
         return <div className="tab-content">Settings will be available here.</div>;
       default:
-        return <div className="tab-content">This tab's content is under development.</div>;
+        return <div className="tab-content">This tab&aposs content is under development.</div>;
     }
   };
 
