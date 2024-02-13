@@ -68,3 +68,30 @@ body.dark-mode {
 }
 
 /* Additional styles for visualization SVGs might need to be applied inline or through JS if using libraries like D3 */
+
+/* Add to Dashboard.css */
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: linear-gradient(45deg, pink, orange); /* Gradient background */
+  box-shadow: 0 -2px 4px rgba(0,0,0,0.1); /* Subtle shadow for elevation effect */
+  padding: 10px 0;
+}
+
+.bottom-nav button {
+  background: transparent;
+  border: none;
+  color: white; /* For better contrast against the gradient */
+  padding: 10px 15px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+
+  /* Optional: Add :hover effect */
+  &:hover {
+    opacity: 0.8;
+  }
+}

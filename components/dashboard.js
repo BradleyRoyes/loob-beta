@@ -1,80 +1,101 @@
-import React, { useState } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import './Dashboard.css'; // Ensure you've created this CSS file with the provided styles
+// Step 1: Import necessary libraries and components
+import React, { useEffect, useRef, useState } from "react";
+import * as d3 from "d3";
+import cloud from "d3-cloud";
+import {
+  PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis,
+  CartesianGrid, Tooltip, Legend,
+} from "recharts";
+import ThemeButton from "./ThemeButton";
 
-// Mock data for charts
-const moodData = [
+// Step 2: Define sample data for the dashboard's visualizations
+const sampleWordsData = [
+  { text: "happy", frequency: 20, sentiment: "positive" },
+  { text: "sad", frequency: 15, sentiment: "negative" },
+  { text: "love", frequency: 18, sentiment: "positive" },
+  { text: "angry", frequency: 12, sentiment: "negative" },
+  { text: "excited", frequency: 25, sentiment: "positive" },
+];
+
+const sampleMoodData = [
   { name: "Positive", value: 63 },
   { name: "Negative", value: 37 },
+  { name: "Neutral", value: 20 },
 ];
 
-const sentimentData = [
-  { name: "Session 1", value: 240 },
-  { name: "Session 2", value: 456 },
-  { name: "Session 3", value: 139 },
+const sampleSentimentData = [
+  { name: "Positive", value: 25 },
+  { name: "Negative", value: 15 },
+  { name: "Neutral", value: 10 },
 ];
 
-// Colors for pie chart
-const COLORS = ['#FFBB28', '#FF8042'];
+const sampleConversationLengthData = [
+  { name: "Session 1", length: 10 },
+  { name: "Session 2", length: 15 },
+  { name: "Session 3", length: 8 },
+  { name: "Session 4", length: 12 },
+  { name: "Session 5", length: 20 },
+];
 
 const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState('home');
+  const [theme, setTheme] = useState("dark");
+  const [activeTab, setActiveTab] = useState('insights');
+  const wordCloudRef = useRef(null);
 
-  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
-    const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
+  useEffect(() => {
+    if (sampleWordsData.length > 0 && wordCloudRef.current) {
+      drawWordCloud(sampleWordsData);
+    }
+  }, [sampleWordsData]); // Use sampleWordsData here
 
+  const drawWordCloud = (wordsData) => {
+    // Word cloud drawing logic will be implemented here
+  };
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'insights':
+        return renderInsights();
+      case 'map':
+        return <div className="tab-content">Map View Coming Soon!</div>;
+      case 'settings':
+        return <div className="tab-content">Settings Placeholder</div>;
+      default:
+        return <div>Content Not Found</div>;
+    }
+  };
+
+  const renderInsights = () => {
     return (
-      <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
-        {`${(percent * 100).toFixed(0)}%`}
-      </text>
+      <>
+        <div className="visualization-container mb-4">
+          <h2 className="chatbot-text-primary text-xl mb-2">Common Words</h2>
+          <div ref={wordCloudRef} className="word-cloud-container" />
+        </div>
+        {/* Mood Distribution, Sentiment Analysis, and Conversation Length Analysis */}
+        {/* Implement the render functions for each visualization here */}
+      </>
     );
   };
 
+  // Corrected return statement with the entire component structure
   return (
-    <div className="dashboard">
-      <div className="profile">
-        <div className="profile-info">
-          <img src="/path-to-your-profile-image.jpg" alt="Profile" className="profile-pic" />
-          <h1>User Name</h1>
-        </div>
-      </div>
+    <main className={`dashboard ${theme}`}>
+      <header className="dashboard-header">
+        <h1>Dashboard</h1>
+        <ThemeButton theme={theme} setTheme={setTheme} />
+      </header>
 
       <div className="content">
-        {activeTab === 'home' && (
-          <>
-            <h2>Journal Insights</h2>
-            <div className="charts">
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie data={moodData} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" dataKey="value" label={renderCustomizedLabel}>
-                    {moodData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]}/>)}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            {/* Additional charts or visualizations can be similarly added */}
-          </>
-        )}
-
-        {activeTab === 'map' && (
-          <div className="map-feature">
-            {/* Placeholder for map feature */}
-            <h2>Map Feature Coming Soon!</h2>
-          </div>
-        )}
-
-        {/* Additional tabs content */}
+        {renderContent()}
       </div>
 
-      <nav className="bottom-nav">
-        <button onClick={() => setActiveTab('home')}>Home</button>
+      <footer className="bottom-nav">
+        <button onClick={() => setActiveTab('insights')}>Insights</button>
         <button onClick={() => setActiveTab('map')}>Map</button>
         <button onClick={() => setActiveTab('settings')}>Settings</button>
-      </nav>
-    </div>
+      </footer>
+    </main>
   );
 };
 
