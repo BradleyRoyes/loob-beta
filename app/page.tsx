@@ -24,8 +24,6 @@ export default function Page() {
   const [configureOpen, setConfigureOpen] = useState(false);
   const [showNeuronVisual, setShowNeuronVisual] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
-  const [fadeIn, setFadeIn] = useState(false);
-
 
   const chatContainerRef = useRef(null);
 
@@ -33,18 +31,6 @@ export default function Page() {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    if (!showSplash) {
-      const timer = setTimeout(() => setFadeIn(true), 100); // Start fade-in after the splash screen
-      return () => clearTimeout(timer);
-    }
-  }, [showSplash]);
-
-  const fadeInStyle = {
-    opacity: fadeIn ? 1 : 0,
-    transition: "opacity 1s ease-in-out",
   };
 
   useEffect(() => {
@@ -123,7 +109,7 @@ export default function Page() {
   }
 
   return showSplash ? (
-    <SplashScreen onEnter={() => setShowSplash(false)} />
+    <SplashScreen onEnter={handleEnter} />
   ) : (
     <>
       <style>
@@ -133,7 +119,7 @@ export default function Page() {
           }
         `}
       </style>
-        <main className="flex h-screen-adjusted flex-col items-center justify-center pt-0" style={fadeInStyle}>
+      <main className="flex h-screen-adjusted flex-col items-center justify-center pt-0">
         <section
           ref={chatContainerRef}
           className="chatbot-section flex flex-col origin:w-[800px] w-full origin:h-[735px] h-full rounded-md p-2 md:p-6"
@@ -142,7 +128,7 @@ export default function Page() {
             <div className="flex justify-between items-center">
               <h1 className="chatbot-text-primary text-6xl md:text-7xl font-extrabold tracking-wide">
                 <span className="text-5xl md:text-7xl">loob</span>
-                <span className="text-lg md:text-xl font-normal"> an app</span>
+                <span className="text-lg md:text-xl font-normal"> the app</span>
               </h1>
               <div className="flex gap-1">
                 <ThemeButton />
@@ -173,7 +159,7 @@ export default function Page() {
               </div>
             </div>
             <p className="chatbot-text-secondary-inverse text-lg md:text-xl mt-1 md:mt-2 font-medium">
-              by seks.design
+              recreating recreation
             </p>
           </div>
           <div className="flex-1 relative overflow-y-auto my-4 md:my-6">
