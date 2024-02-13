@@ -142,7 +142,7 @@ export default function Page() {
             <div className="flex justify-between items-center">
               <h1 className="chatbot-text-primary text-6xl md:text-7xl font-extrabold tracking-wide">
                 <span className="text-5xl md:text-7xl">loob</span>
-                <span className="text-lg md:text-xl font-normal"> the app</span>
+                <span className="text-lg md:text-xl font-normal"> an app</span>
               </h1>
               <div className="flex gap-1">
                 <ThemeButton />
@@ -173,7 +173,7 @@ export default function Page() {
               </div>
             </div>
             <p className="chatbot-text-secondary-inverse text-lg md:text-xl mt-1 md:mt-2 font-medium">
-              recreating recreation
+              by seks.design
             </p>
           </div>
           <div className="flex-1 relative overflow-y-auto my-4 md:my-6">
