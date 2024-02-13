@@ -17,6 +17,17 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
     exit: { opacity: 0, transition: { duration: 1.5, ease: "easeInOut" } },
   };
 
+  // Automatically proceed from the welcome phase after a delay
+  useEffect(() => {
+    if (phase === "welcome") {
+      const timer = setTimeout(() => {
+        proceed("location");
+      }, 3000); // Adjust the duration as needed, 3000ms = 3 seconds
+
+      return () => clearTimeout(timer); // Cleanup the timer
+    }
+  }, [phase, proceed]);
+
   return (
     <motion.div
       className="splashScreen"
@@ -28,7 +39,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "welcome" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText">Welcome to Loob</h1>
-          <button onClick={() => proceed("location")}>Continue</button>
+          {/* Button removed, will automatically proceed */}
         </motion.div>
       )}
 
