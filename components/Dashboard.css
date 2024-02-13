@@ -1,97 +1,204 @@
-:root {
-  /* Light theme colors */
-  --background-color-light: #f0f2f5;
-  --text-color-light: #333;
-  --header-background-light: #ffffff;
-  --nav-background-light: #e7e7e7;
+import React, { useEffect, useRef, useState } from "react";
+import * as d3 from "d3";
+import cloud from "d3-cloud";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+} from "recharts";
+import ThemeButton from "./ThemeButton";
 
-  /* Dark theme colors */
-  --background-color-dark: #181818;
-  --text-color-dark: #ccc;
-  --header-background-dark: #202020;
-  --nav-background-dark: #333;
+const sampleWordsData = [
+  { text: "happy", frequency: 20, sentiment: "positive" },
+  { text: "sad", frequency: 15, sentiment: "negative" },
+  { text: "love", frequency: 18, sentiment: "positive" },
+  { text: "angry", frequency: 12, sentiment: "negative" },
+  { text: "excited", frequency: 25, sentiment: "positive" },
+];
 
-  /* Gradient colors */
-  --gradient-start: pink;
-  --gradient-end: orange;
-}
+const sampleMoodData = [
+  { name: "Positive", value: 40 },
+  { name: "Negative", value: 30 },
+  { name: "Neutral", value: 20 },
+];
 
-body.light-mode {
-  --background-color: var(--background-color-light);
-  --text-color: var(--text-color-light);
-  --header-background: var(--header-background-light);
-  --nav-background: var(--nav-background-light);
-}
+const sampleSentimentData = [
+  { name: "Positive", value: 25 },
+  { name: "Negative", value: 15 },
+  { name: "Neutral", value: 10 },
+];
 
-body.dark-mode {
-  --background-color: var(--background-color-dark);
-  --text-color: var(--text-color-dark);
-  --header-background: var(--header-background-dark);
-  --nav-background: var(--nav-background-dark);
-}
+const sampleConversationLengthData = [
+  { name: "Session 1", length: 10 },
+  { name: "Session 2", length: 15 },
+  { name: "Session 3", length: 8 },
+  { name: "Session 4", length: 12 },
+  { name: "Session 5", length: 20 },
+];
 
-.dashboard {
-  background-color: var(--background-color);
-  color: var(--text-color);
-  min-height: 100vh;
-}
+const Dashboard = () => {
+  const [theme, setTheme] = useState("dark");
+  const [wordsData, setWordsData] = useState(sampleWordsData);
+  const [moodData, setMoodData] = useState(sampleMoodData);
+  const [sentimentData, setSentimentData] = useState(sampleSentimentData);
+  const [conversationLengthData, setConversationLengthData] = useState(
+    sampleConversationLengthData,
+  );
+  const wordCloudRef = useRef();
+  const barChartRef = useRef();
+  const lineChartRef = useRef();
 
-.dashboard-header {
-  background-color: var(--header-background);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
+  useEffect(() => {
+    if (wordsData.length > 0) {
+      drawWordCloud(wordsData);
+    }
+  }, [wordsData]);
 
-.dashboard-nav {
-  background-color: var(--nav-background);
-}
+  console.log(wordsData);
 
-/* Gradient styles for text and buttons */
-.gradient-text, .dashboard-nav a, .button {
-  background: linear-gradient(45deg, var(--gradient-start), var(--gradient-end));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
+  const drawWordCloud = (words) => {
+    d3.select(wordCloudRef.current).selectAll("*").remove();
 
-.button {
-  border: 2px solid transparent;
-  background-clip: padding-box;
-  cursor: pointer;
-}
+    const container = wordCloudRef.current;
+    const containerWidth = container.offsetWidth; // Full width of the container
+    const containerHeight = container.offsetHeight; // Height of the container
 
-.button:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-}
+    const layout = cloud()
+      .size([containerWidth, containerHeight]) // Use dynamic size
+      .words(
+        words.map((d) => ({
+          text: d.text,
+          size: d.frequency * 3 + 3,
+          sentiment: d.sentiment,
+        })),
+      )
+      .padding(5)
+      .rotate(() => (~~(Math.random() * 6) - 3) * 30)
+      .font("Impact")
+      .fontSize((d) => d.size)
+      .on("end", draw);
 
-/* Visualization containers */
-.visualization-container {
-  /* This class can be used to style the containers of your charts or word clouds */
-}
+    layout.start();
 
-/* Additional styles for visualization SVGs might need to be applied inline or through JS if using libraries like D3 */
+    function draw(words) {
+      const svg = d3
+        .select(wordCloudRef.current)
+        .append("svg")
+        .attr("width", layout.size()[0])
+        .attr("height", layout.size()[1])
+        .append("g")
+        .attr(
+          "transform",
+          `translate(${layout.size()[0] / 2},${layout.size()[1] / 2})`,
+        );
 
-/* Add to Dashboard.css */
-.bottom-nav {
-  display: flex;
-  justify-content: space-around;
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  background: linear-gradient(45deg, pink, orange); /* Gradient background */
-  box-shadow: 0 -2px 4px rgba(0,0,0,0.1); /* Subtle shadow for elevation effect */
-  padding: 10px 0;
-}
+      svg
+        .selectAll("text")
+        .data(words)
+        .enter()
+        .append("text")
+        .style("font-size", (d) => d.size + "px")
+        .style("font-family", "Nunito")
+        .style("fill", (d) => {
+          console.log(`Word: ${d.text}, Sentiment: ${d.sentiment}`);
+          if (d.sentiment === "positive") {
+            return "#9fe2bf"; // Greenish color for positive
+          } else if (d.sentiment === "negative") {
+            return "#faa0a0"; // Reddish color for negative
+          } else {
+            return "#6B6F73"; // Fallback color (e.g., for neutral or undefined sentiment)
+          }
+        })
+        .attr("text-anchor", "middle")
+        .attr("transform", (d) => `translate(${[d.x, d.y]})rotate(${d.rotate})`)
+        .text((d) => d.text);
+    }
+  };
 
-.bottom-nav button {
-  background: transparent;
-  border: none;
-  color: white; /* For better contrast against the gradient */
-  padding: 10px 15px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: opacity 0.3s ease;
+  return (
+    <main
+      className={`flex flex-col items-center justify-center min-h-screen py-4 ${
+        theme === "dark" ? "dark" : "light"
+      }`}
+    >
+      <section className="chatbot-section max-w-4xl w-full overflow-hidden rounded-md shadow-lg">
+        <div className="p-4">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="chatbot-text-primary text-3xl font-bold">
+              Dashboard
+            </h1>
+            <ThemeButton theme={theme} setTheme={setTheme} />
+          </div>
+          <div className="flex flex-wrap justify-around">
+            <div className="visualization-container mb-4">
+              <h2 className="chatbot-text-primary text-xl mb-2">
+                Common words
+              </h2>
+              <div ref={wordCloudRef} className="word-cloud-container" />
+            </div>
+            <div className="visualization-container mb-4">
+              <h2 className="chatbot-text-primary text-xl mb-2">
+                Mood Distribution
+              </h2>
+              <PieChart width={300} height={300}>
+                <Pie
+                  data={moodData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
+                  label
+                >
+                  {moodData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={["#82ca9d", "#8884d8", "#ffc658"][index % 3]}
+                    />
+                  ))}
+                </Pie>
+              </PieChart>
+            </div>
+            <div className="visualization-container mb-4">
+              <h2 className="chatbot-text-primary text-xl mb-2">
+                Sentiment Analysis
+              </h2>
+              <BarChart width={300} height={300} data={sentimentData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="value" fill="#82ca9d" />
+              </BarChart>
+            </div>
+            <div className="visualization-container mb-4">
+              <h2 className="chatbot-text-primary items-center justify-center text-xl mb-2">
+                Conversation Length Analysis
+              </h2>
+              <LineChart width={300} height={300} data={conversationLengthData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="length" stroke="#8884d8" />
+              </LineChart>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+};
 
-  /* Optional: Add :hover effect */
-  &:hover {
-    opacity: 0.8;
-  }
-}
+export default Dashboard;
