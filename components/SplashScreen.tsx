@@ -35,13 +35,13 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "location" && (
         <motion.div className="content" variants={variants}>
           <p>Where are you?</p>
-          <button onClick={() => proceed("action")}>MOOS Space Berlin</button>
-          <button onClick={() => onEnter()}>At the Club</button>
-          <button onClick={() => onEnter()}>At Home</button>
+          <button onClick={() => proceed("moos")}>MOOS Space Berlin</button>
+          <button onClick={() => proceed("club")}>At the Club</button>
+          <button onClick={() => proceed("home")}>At Home</button>
         </motion.div>
       )}
 
-      {phase === "action" && (
+      {phase === "moos" && (
         <motion.div className="content" variants={variants}>
           <p>What would you like to do?</p>
           <button
@@ -56,6 +56,33 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
           </button>
           <button onClick={() => onEnter("I'd like to visit MOOS")}>
             I&apos;d like to visit MOOS
+          </button>
+        </motion.div>
+      )}
+
+      {phase === "club" && (
+        <motion.div className="content" variants={variants}>
+          <p>What would you like to do?</p>
+          <button onClick={() => onEnter("I'd like to share an experience")}>
+            I&apos;d like to share an experience
+          </button>
+          <button onClick={() => onEnter("I'm having a difficult time")}>
+            I&apos;m having a difficult time
+          </button>
+        </motion.div>
+      )}
+
+      {phase === "home" && (
+        <motion.div className="content" variants={variants}>
+          <p>What would you like to do?</p>
+          <button onClick={() => onEnter("I'd like to share an experience")}>
+            I&apos;d like to share an experience
+          </button>
+          <button onClick={() => onEnter("I want to journal")}>
+            I want to journal
+          </button>
+          <button onClick={() => onEnter("I'm having a difficult time")}>
+            I&apos;m having a difficult time
           </button>
         </motion.div>
       )}
