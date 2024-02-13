@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react"; // Add useEffect here
 import { motion } from "framer-motion";
 import "./SplashScreen.css"; // Ensure this contains the updated styles as provided below
 
