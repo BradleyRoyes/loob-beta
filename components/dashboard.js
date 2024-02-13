@@ -7,7 +7,7 @@ import {
   CartesianGrid, Tooltip, Legend,
 } from "recharts";
 import ThemeButton from "./ThemeButton";
-import './dashboard.css'; // Assuming dashboard.css exists and is correctly styled
+import './Dashboard.css'; // Assuming dashboard.css exists and is correctly styled
 
 // Step 2: Define sample data for the dashboard's visualizations
 const sampleWordsData = [
