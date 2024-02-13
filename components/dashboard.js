@@ -40,56 +40,74 @@ const sampleConversationLengthData = [
 const Dashboard = () => {
   const [theme, setTheme] = useState("dark");
   const [activeTab, setActiveTab] = useState('insights');
-  const wordCloudRef = useRef(null);
 
-  useEffect(() => {
-    if (sampleWordsData.length > 0 && wordCloudRef.current) {
-      drawWordCloud(sampleWordsData);
-    }
-  }, [sampleWordsData]); // Use sampleWordsData here
-
-  const drawWordCloud = (wordsData) => {
-    // Word cloud drawing logic will be implemented here
-  };
-
+  // Simplified content rendering function
   const renderContent = () => {
     switch (activeTab) {
       case 'insights':
         return renderInsights();
       case 'map':
-        return <div className="tab-content">Map View Coming Soon!</div>;
+        return <div className="tab-content">Map feature is planned.</div>;
       case 'settings':
-        return <div className="tab-content">Settings Placeholder</div>;
+        return <div className="tab-content">Settings will be available here.</div>;
       default:
-        return <div>Content Not Found</div>;
+        return <div className="tab-content">This tab's content is under development.</div>;
     }
   };
 
+  // Function to render the insights tab
   const renderInsights = () => {
     return (
       <>
-        <div className="visualization-container mb-4">
-          <h2 className="chatbot-text-primary text-xl mb-2">Common Words</h2>
-          <div ref={wordCloudRef} className="word-cloud-container" />
+        {/* Mood Distribution Pie Chart */}
+        <div className="visualization-container">
+          <h2>Mood Distribution</h2>
+          <PieChart width={400} height={400}>
+            <Pie data={sampleMoodData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={150} fill="#8884d8" label>
+              {sampleMoodData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={['#0088FE', '#00C49F', '#FFBB28'][index % 3]}/>
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
         </div>
-        {/* Mood Distribution, Sentiment Analysis, and Conversation Length Analysis */}
-        {/* Implement the render functions for each visualization here */}
+        {/* Sentiment Analysis Bar Chart */}
+        <div className="visualization-container">
+          <h2>Sentiment Analysis</h2>
+          <BarChart width={500} height={300} data={sampleSentimentData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="value" fill="#82ca9d" />
+          </BarChart>
+        </div>
+        {/* Conversation Length Line Chart */}
+        <div className="visualization-container">
+          <h2>Conversation Length Analysis</h2>
+          <LineChart width={500} height={300} data={sampleConversationLengthData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Line type="monotone" dataKey="length" stroke="#8884d8" />
+          </LineChart>
+        </div>
       </>
     );
   };
 
-  // Corrected return statement with the entire component structure
   return (
     <main className={`dashboard ${theme}`}>
       <header className="dashboard-header">
         <h1>Dashboard</h1>
         <ThemeButton theme={theme} setTheme={setTheme} />
       </header>
-
       <div className="content">
         {renderContent()}
       </div>
-
       <footer className="bottom-nav">
         <button onClick={() => setActiveTab('insights')}>Insights</button>
         <button onClick={() => setActiveTab('map')}>Map</button>
