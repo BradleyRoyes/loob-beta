@@ -24,6 +24,8 @@ export default function Page() {
   const [configureOpen, setConfigureOpen] = useState(false);
   const [showNeuronVisual, setShowNeuronVisual] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [fadeIn, setFadeIn] = useState(false);
+
 
   const chatContainerRef = useRef(null);
 
@@ -31,6 +33,18 @@ export default function Page() {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    if (!showSplash) {
+      const timer = setTimeout(() => setFadeIn(true), 100); // Start fade-in after the splash screen
+      return () => clearTimeout(timer);
+    }
+  }, [showSplash]);
+
+  const fadeInStyle = {
+    opacity: fadeIn ? 1 : 0,
+    transition: "opacity 1s ease-in-out",
   };
 
   useEffect(() => {
@@ -109,7 +123,7 @@ export default function Page() {
   }
 
   return showSplash ? (
-    <SplashScreen onEnter={handleEnter} />
+    <SplashScreen onEnter={() => setShowSplash(false)} />
   ) : (
     <>
       <style>
@@ -119,7 +133,7 @@ export default function Page() {
           }
         `}
       </style>
-      <main className="flex h-screen-adjusted flex-col items-center justify-center pt-0">
+        <main className="flex h-screen-adjusted flex-col items-center justify-center pt-0" style={fadeInStyle}>
         <section
           ref={chatContainerRef}
           className="chatbot-section flex flex-col origin:w-[800px] w-full origin:h-[735px] h-full rounded-md p-2 md:p-6"
