@@ -71,6 +71,7 @@ const Dashboard = () => {
     const container = wordCloudRef.current;
     const containerWidth = container.offsetWidth; // Full width of the container
     const containerHeight = container.offsetHeight; // Height of the container
+    const gradientColors = ['#FFB6C1', '#FF7E50', '#FF4500']; // Pink to Orange Gradient
 
     const layout = cloud()
       .size([containerWidth, containerHeight]) // Use dynamic size
@@ -149,24 +150,22 @@ const Dashboard = () => {
               <h2 className="chatbot-text-primary text-xl mb-2">
                 Mood Distribution
               </h2>
+            
               <PieChart width={300} height={300}>
                 <Pie
                   data={moodData}
                   cx="50%"
                   cy="50%"
                   outerRadius={100}
-                  fill="#8884d8"
                   dataKey="value"
                   label
                 >
                   {moodData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={["#82ca9d", "#8884d8", "#ffc658"][index % 3]}
-                    />
+                    <Cell key={`cell-${index}`} fill={gradientColors[index % gradientColors.length]} />
                   ))}
                 </Pie>
               </PieChart>
+
             </div>
             <div className="visualization-container mb-4">
               <h2 className="chatbot-text-primary text-xl mb-2">
@@ -178,7 +177,7 @@ const Dashboard = () => {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="value" fill="#82ca9d" />
+                <Bar dataKey="value" fill="#FF7E50" /> {/* Orange color for bars */}
               </BarChart>
             </div>
             <div className="visualization-container mb-4">
@@ -191,7 +190,7 @@ const Dashboard = () => {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="length" stroke="#8884d8" />
+                <Line type="monotone" dataKey="length" stroke="#FF7E50" /> {/* Orange color for the line */}
               </LineChart>
             </div>
           </div>
