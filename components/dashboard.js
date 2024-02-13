@@ -1,15 +1,22 @@
-// Step 1: Import necessary libraries and components
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import cloud from "d3-cloud";
 import {
-  PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis,
-  CartesianGrid, Tooltip, Legend,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
 } from "recharts";
 import ThemeButton from "./ThemeButton";
-import './Dashboard.css'; // Assuming dashboard.css exists and is correctly styled
 
-// Step 2: Define sample data for the dashboard's visualizations
 const sampleWordsData = [
   { text: "happy", frequency: 20, sentiment: "positive" },
   { text: "sad", frequency: 15, sentiment: "negative" },
@@ -19,8 +26,8 @@ const sampleWordsData = [
 ];
 
 const sampleMoodData = [
-  { name: "Positive", value: 63 },
-  { name: "Negative", value: 37 },
+  { name: "Positive", value: 40 },
+  { name: "Negative", value: 30 },
   { name: "Neutral", value: 20 },
 ];
 
@@ -38,45 +45,158 @@ const sampleConversationLengthData = [
   { name: "Session 5", length: 20 },
 ];
 
-
 const Dashboard = () => {
   const [theme, setTheme] = useState("dark");
-  const [activeTab, setActiveTab] = useState('insights');
+  const [wordsData, setWordsData] = useState(sampleWordsData);
+  const [moodData, setMoodData] = useState(sampleMoodData);
+  const [sentimentData, setSentimentData] = useState(sampleSentimentData);
+  const [conversationLengthData, setConversationLengthData] = useState(
+    sampleConversationLengthData,
+  );
+  const wordCloudRef = useRef();
+  const barChartRef = useRef();
+  const lineChartRef = useRef();
 
-  // Function to switch between tabs
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'insights':
-        return renderInsights();
-      case 'map':
-        return <div className="tab-content">Map feature coming soon.</div>;
-      case 'settings':
-        return <div className="tab-content">Settings will be available here.</div>;
-      default:
-        return <div className="tab-content">Content under development.</div>;
+  useEffect(() => {
+    if (wordsData.length > 0) {
+      drawWordCloud(wordsData);
+    }
+  }, [wordsData]);
+
+  console.log(wordsData);
+
+  const drawWordCloud = (words) => {
+    d3.select(wordCloudRef.current).selectAll("*").remove();
+
+    const container = wordCloudRef.current;
+    const containerWidth = container.offsetWidth; // Full width of the container
+    const containerHeight = container.offsetHeight; // Height of the container
+
+    const layout = cloud()
+      .size([containerWidth, containerHeight]) // Use dynamic size
+      .words(
+        words.map((d) => ({
+          text: d.text,
+          size: d.frequency * 3 + 3,
+          sentiment: d.sentiment,
+        })),
+      )
+      .padding(5)
+      .rotate(() => (~~(Math.random() * 6) - 3) * 30)
+      .font("Impact")
+      .fontSize((d) => d.size)
+      .on("end", draw);
+
+    layout.start();
+
+    function draw(words) {
+      const svg = d3
+        .select(wordCloudRef.current)
+        .append("svg")
+        .attr("width", layout.size()[0])
+        .attr("height", layout.size()[1])
+        .append("g")
+        .attr(
+          "transform",
+          `translate(${layout.size()[0] / 2},${layout.size()[1] / 2})`,
+        );
+
+      svg
+        .selectAll("text")
+        .data(words)
+        .enter()
+        .append("text")
+        .style("font-size", (d) => d.size + "px")
+        .style("font-family", "Nunito")
+        .style("fill", (d) => {
+          console.log(`Word: ${d.text}, Sentiment: ${d.sentiment}`);
+          if (d.sentiment === "positive") {
+            return "#9fe2bf"; // Greenish color for positive
+          } else if (d.sentiment === "negative") {
+            return "#faa0a0"; // Reddish color for negative
+          } else {
+            return "#6B6F73"; // Fallback color (e.g., for neutral or undefined sentiment)
+          }
+        })
+        .attr("text-anchor", "middle")
+        .attr("transform", (d) => `translate(${[d.x, d.y]})rotate(${d.rotate})`)
+        .text((d) => d.text);
     }
   };
 
-  // Insights rendering logic
-  const renderInsights = () => {
-    // Implementing visualization containers...
-  };
-
-  // Main component structure with header navigation
   return (
-    <main className={`dashboard ${theme}`}>
-      <header className="dashboard-header">
-        <h1>Dashboard</h1>
-        <div className="navigation">
-          <ThemeButton theme={theme} setTheme={setTheme} />
-          <button onClick={() => setActiveTab('insights')}>Insights</button>
-          <button onClick={() => setActiveTab('map')}>Map</button>
-          <button onClick={() => setActiveTab('settings')}>Settings</button>
+    <main
+      className={`flex flex-col items-center justify-center min-h-screen py-4 ${
+        theme === "dark" ? "dark" : "light"
+      }`}
+    >
+      <section className="chatbot-section max-w-4xl w-full overflow-hidden rounded-md shadow-lg">
+        <div className="p-4">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="chatbot-text-primary text-3xl font-bold">
+              Dashboard
+            </h1>
+            <ThemeButton theme={theme} setTheme={setTheme} />
+          </div>
+          <div className="flex flex-wrap justify-around">
+            <div className="visualization-container mb-4">
+              <h2 className="chatbot-text-primary text-xl mb-2">
+                Common words
+              </h2>
+              <div ref={wordCloudRef} className="word-cloud-container" />
+            </div>
+            <div className="visualization-container mb-4">
+              <h2 className="chatbot-text-primary text-xl mb-2">
+                Mood Distribution
+              </h2>
+              <PieChart width={300} height={300}>
+                <Pie
+                  data={moodData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
+                  label
+                >
+                  {moodData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={["#82ca9d", "#8884d8", "#ffc658"][index % 3]}
+                    />
+                  ))}
+                </Pie>
+              </PieChart>
+            </div>
+            <div className="visualization-container mb-4">
+              <h2 className="chatbot-text-primary text-xl mb-2">
+                Sentiment Analysis
+              </h2>
+              <BarChart width={300} height={300} data={sentimentData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="value" fill="#82ca9d" />
+              </BarChart>
+            </div>
+            <div className="visualization-container mb-4">
+              <h2 className="chatbot-text-primary items-center justify-center text-xl mb-2">
+                Conversation Length Analysis
+              </h2>
+              <LineChart width={300} height={300} data={conversationLengthData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="length" stroke="#8884d8" />
+              </LineChart>
+            </div>
+          </div>
         </div>
-      </header>
-      <div className="content">
-        {renderContent()}
-      </div>
+      </section>
     </main>
   );
 };
