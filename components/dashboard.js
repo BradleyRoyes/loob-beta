@@ -41,26 +41,40 @@ const Dashboard = () => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    let frameCount = 0;
-    let animationFrameId;
+    if (canvas && canvas.getContext) {
+      const ctx = canvas.getContext("2d");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
 
-    // Animation function
-    const render = () => {
-      frameCount++;
-      const currentEntryIndex = frameCount % dataEntries.length; // Loop through data entries
-      const currentEntry = dataEntries[currentEntryIndex];
-      const color = moodToColor(currentEntry.mood); // Determine color based on current entry's mood
-      drawMovingPixel(ctx, frameCount, color); // Pass color to drawing function
-      animationFrameId = window.requestAnimationFrame(render);
-    };
+      let frameCount = 0;
+      let animationFrameId;
 
-    render();
+      // Simplified render function for testing
+      const render = () => {
+        frameCount++;
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // Clear canvas
 
-    return () => {
-      window.cancelAnimationFrame(animationFrameId);
-    };
-  }, [dataEntries]); // Dependency on dataEntries to update the drawing when entries change
+        // Use a fixed color for testing
+        const color = "rgba(255, 0, 0, 0.5)"; // Red, semi-transparent
+        ctx.fillStyle = color;
+        const x = ctx.canvas.width / 2;
+        const y = ctx.canvas.height / 2;
+        ctx.beginPath();
+        ctx.arc(x, y, 5 + (frameCount % 50), 0, 2 * Math.PI); // Modulo for dynamic radius
+        ctx.fill();
+
+        console.log("Drawing at:", x, y, "with color", color); // Log for debugging
+
+        animationFrameId = window.requestAnimationFrame(render);
+      };
+
+      render();
+
+      return () => {
+        window.cancelAnimationFrame(animationFrameId);
+      };
+    }
+  }, []);
 
   return (
     <main
