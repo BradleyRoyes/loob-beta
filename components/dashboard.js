@@ -4,67 +4,63 @@ const Dashboard = () => {
   const canvasRef = useRef(null);
   const [theme, setTheme] = useState("dark");
 
-  // Sample data - You might want to fetch or dynamically update this
+  // Sample data entries
   const [dataEntries] = useState([
     {
       mood: "Negative",
       keywords: ["difficult time", "shrooms", "sad", "angry"],
     },
-    // Add more sample data entries as needed
+    {
+      mood: "Positive",
+      keywords: ["difficult time", "shrooms", "sad", "angry"],
+    },
+    // Add more entries as needed
   ]);
 
-  // Function to map mood to a pastel color
+  // Function to map mood to a color
   const moodToColor = (mood) => {
-    const pastelColors = {
-      Negative: "#f6dfeb", // Example pastel purple
+    const moodColors = {
+      Negative: "rgba(255, 0, 0, 0.5)", // Red for negative mood
+      Positive: "rgba(0, 255, 0, 0.5)",
       // Define more mappings as needed
     };
-    return pastelColors[mood] || "#ffffff"; // Default to white
+    return moodColors[mood] || "rgba(0, 0, 0, 0.5)"; // Default color
   };
 
-  // Recursive function to draw fractal (simplified example)
-  const drawFractal = (ctx, startX, startY, length, angle, depth, color) => {
-    if (depth === 0) return;
-
-    const endX = startX + length * Math.cos(angle);
-    const endY = startY + length * Math.sin(angle);
-
+  // Function to draw moving pixels
+  const drawMovingPixel = (ctx, frameCount, color) => {
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // Clear canvas for each animation frame
+    ctx.fillStyle = color; // Use color based on mood
+    // Dynamic movement based on frameCount
+    const x = ctx.canvas.width / 2 + Math.sin(frameCount * 0.05) * 200; // Horizontal movement
+    const y = ctx.canvas.height / 2 + Math.cos(frameCount * 0.05) * 200; // Vertical movement
     ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    ctx.lineTo(endX, endY);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = depth;
-    ctx.stroke();
-
-    // Recursively draw the next branches
-    drawFractal(ctx, endX, endY, length * 0.7, angle - 0.2, depth - 1, color);
-    drawFractal(ctx, endX, endY, length * 0.7, angle + 0.2, depth - 1, color);
+    ctx.arc(x, y, 5, 0, 2 * Math.PI); // Draw circle as moving pixel
+    ctx.fill();
   };
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-    canvas.width = window.innerWidth; // Adjust as needed
-    canvas.height = window.innerHeight; // Adjust as needed
+    let frameCount = 0;
+    let animationFrameId;
 
-    // Clear canvas before redrawing
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Animation function
+    const render = () => {
+      frameCount++;
+      const currentEntryIndex = frameCount % dataEntries.length; // Loop through data entries
+      const currentEntry = dataEntries[currentEntryIndex];
+      const color = moodToColor(currentEntry.mood); // Determine color based on current entry's mood
+      drawMovingPixel(ctx, frameCount, color); // Pass color to drawing function
+      animationFrameId = window.requestAnimationFrame(render);
+    };
 
-    // Draw a fractal for each data entry
-    dataEntries.forEach((entry, index) => {
-      const color = moodToColor(entry.mood);
-      // Example starting parameters for the fractal
-      drawFractal(
-        ctx,
-        canvas.width / 2,
-        canvas.height - 20,
-        60,
-        -Math.PI / 2,
-        10,
-        color,
-      );
-    });
-  }, [dataEntries]); // Redraw when dataEntries changes
+    render();
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+    };
+  }, [dataEntries]); // Dependency on dataEntries to update the drawing when entries change
 
   return (
     <main
@@ -76,7 +72,6 @@ const Dashboard = () => {
         <div className="p-4">
           <h1 className="chatbot-text-primary text-3xl font-bold">Dashboard</h1>
           <div className="visualization-container mb-4">
-            {/* Canvas for generative art */}
             <canvas ref={canvasRef} />
           </div>
         </div>
