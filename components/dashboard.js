@@ -3,8 +3,10 @@ import React, { useEffect, useRef } from "react";
 const Dashboard = () => {
   const canvasRef = useRef(null);
   const points = useRef([]);
-  const maxNodes = 10;
+  const maxNodes = 50; // Updated to reflect the potential for 50 nodes
   const connectionDistance = 100;
+  const redThreadLength = useRef(0); // Length of the red thread, increases over time
+  const redThreadSpeed = 0.005; // Speed at which the red thread grows, adjust as needed
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -19,46 +21,38 @@ const Dashboard = () => {
         y: Math.random() * canvas.height,
         vx: (Math.random() - 0.5) * 2, // Velocity in X
         vy: (Math.random() - 0.5) * 2, // Velocity in Y
-        radius: Math.random() * 2 + 1,
+        radius: Math.random() * 2 + 1, // Increased radius for visibility
       });
     }
 
     const draw = () => {
-      ctx.fillStyle = "black"; // Set background color
-      ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill background
-      updatePoints(); // Update points' positions based on their velocities
-      drawPoints(ctx); // Draw points
-      drawConnections(ctx); // Draw connections between close points
-      requestAnimationFrame(draw); // Create an animation loop
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      updatePoints();
+      drawPoints(ctx);
+      drawConnections(ctx);
+      drawRedThread(ctx); // Draw the evolving red thread
+      requestAnimationFrame(draw);
     };
 
     draw();
   }, []);
 
-  // Update points' positions
   const updatePoints = () => {
     points.current.forEach((point) => {
       point.x += point.vx;
       point.y += point.vy;
 
       // Reverse velocity if the point hits the canvas boundary
-      if (point.x <= 0 || point.x >= canvasRef.current.width) point.vx *= -1;
-      if (point.y <= 0 || point.y >= canvasRef.current.height) point.vy *= -1;
+      if (point.x <= 0 || point.x >= canvas.width) point.vx *= -1;
+      if (point.y <= 0 || point.y >= canvas.height) point.vy *= -1;
     });
+    redThreadLength.current += redThreadSpeed; // Incrementally increase the red thread length
   };
 
-  // Draw points
   const drawPoints = (ctx) => {
     points.current.forEach((point) => {
-      // Create a radial gradient to simulate a glow effect
-      const gradient = ctx.createRadialGradient(
-        point.x,
-        point.y,
-        0,
-        point.x,
-        point.y,
-        point.radius * 2,
-      );
+      const gradient = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, point.radius * 2);
       gradient.addColorStop(0, "white");
       gradient.addColorStop(1, "black");
 
@@ -69,9 +63,8 @@ const Dashboard = () => {
     });
   };
 
-  // Draw connections between close points
   const drawConnections = (ctx) => {
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.2)"; // Set connection color
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
     points.current.forEach((point, index) => {
       for (let i = index + 1; i < points.current.length; i++) {
         const other = points.current[i];
@@ -86,12 +79,32 @@ const Dashboard = () => {
     });
   };
 
-  return (
-    <canvas
-      ref={canvasRef}
-      style={{ display: "block", background: "black" }}
-    ></canvas>
-  );
+  // Draw the red thread connecting nodes over time
+  const drawRedThread = (ctx) => {
+    let length = redThreadLength.current;
+    ctx.strokeStyle = "red"; // Red thread color
+    ctx.beginPath();
+    for (let i = 0; i < points.current.length && length > 0; i++) {
+      if (i === 0) {
+        ctx.moveTo(points.current[i].x, points.current[i].y);
+      } else {
+        const distance = Math.hypot(points.current[i].x - points.current[i - 1].x, points.current[i].y - points.current[i - 1].y);
+        if (length - distance > 0) {
+          ctx.lineTo(points.current[i].x, points.current[i].y);
+        } else {
+          // Calculate intermediate point for partial line
+          const ratio = length / distance;
+          const intermediateX = points.current[i - 1].x + ratio * (points.current[i].x - points.current[i - 1].x);
+          const intermediateY = points.current[i - 1].y + ratio * (points.current[i].y - points.current[i - 1].y);
+          ctx.lineTo(intermediateX, intermediateY);
+        }
+        length -= distance;
+      }
+    }
+    ctx.stroke();
+  };
+
+  return <canvas ref={canvasRef} style={{ display: "block", background: "black" }}></canvas>;
 };
 
 export default Dashboard;
