@@ -70,25 +70,28 @@ const Dashboard = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
 
-      let maxDepth = 0; // Start with a small depth
+      let maxDepth = 0;
       let animationFrameId;
 
       const render = () => {
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // Clear canvas for each frame
+        // Optionally clear the canvas less frequently
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-        // Start drawing the fractal from the bottom center of the canvas
+        // Log to ensure this function runs
+        console.log("Rendering fractal at depth", maxDepth);
+
         drawBranch(
           ctx,
           canvas.width / 2,
-          canvas.height,
-          100,
+          canvas.height - 20,
+          120,
           -Math.PI / 2,
           0,
           maxDepth,
         );
 
-        maxDepth += 0.1; // Increase depth for animation effect
-        if (maxDepth > 10) maxDepth = 10; // Limit the depth to prevent it from growing indefinitely
+        maxDepth += 0.05; // Slow the increase to see the growth
+        if (maxDepth > 10) maxDepth = 10; // Or adjust as necessary for your design
 
         animationFrameId = window.requestAnimationFrame(render);
       };
