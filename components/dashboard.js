@@ -1,61 +1,31 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import cloud from "d3-cloud";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-} from "recharts";
+import axios from "axios";
 import ThemeButton from "./ThemeButton";
-
-const sampleWordsData = [
-  { text: "happy", frequency: 20, sentiment: "positive" },
-  { text: "sad", frequency: 15, sentiment: "negative" },
-  { text: "love", frequency: 18, sentiment: "positive" },
-  { text: "angry", frequency: 12, sentiment: "negative" },
-  { text: "excited", frequency: 25, sentiment: "positive" },
-];
-
-const sampleMoodData = [
-  { name: "Positive", value: 40 },
-  { name: "Negative", value: 30 },
-  { name: "Neutral", value: 20 },
-];
-
-const sampleSentimentData = [
-  { name: "Positive", value: 25 },
-  { name: "Negative", value: 15 },
-  { name: "Neutral", value: 10 },
-];
-
-const sampleConversationLengthData = [
-  { name: "Session 1", length: 10 },
-  { name: "Session 2", length: 15 },
-  { name: "Session 3", length: 8 },
-  { name: "Session 4", length: 12 },
-  { name: "Session 5", length: 20 },
-];
 
 const Dashboard = () => {
   const [theme, setTheme] = useState("dark");
-  const [wordsData, setWordsData] = useState(sampleWordsData);
-  const [moodData, setMoodData] = useState(sampleMoodData);
-  const [sentimentData, setSentimentData] = useState(sampleSentimentData);
-  const [conversationLengthData, setConversationLengthData] = useState(
-    sampleConversationLengthData,
-  );
+  const [wordsData, setWordsData] = useState([]);
+  const [moodData, setMoodData] = useState([]);
+  const [sentimentData, setSentimentData] = useState([]);
+  const [conversationLengthData, setConversationLengthData] = useState([]);
   const wordCloudRef = useRef();
-  const barChartRef = useRef();
-  const lineChartRef = useRef();
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const response = await axios.get("/api/chat/DataPull");
+      const { mood, keywords } = response.data;
+      setMoodData(mood);
+      setWordsData(keywords);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
 
   useEffect(() => {
     if (wordsData.length > 0) {
@@ -63,23 +33,21 @@ const Dashboard = () => {
     }
   }, [wordsData]);
 
-  console.log(wordsData);
-
   const drawWordCloud = (words) => {
     d3.select(wordCloudRef.current).selectAll("*").remove();
 
     const container = wordCloudRef.current;
-    const containerWidth = container.offsetWidth; // Full width of the container
-    const containerHeight = container.offsetHeight; // Height of the container
+    const containerWidth = container.offsetWidth;
+    const containerHeight = container.offsetHeight;
 
     const layout = cloud()
-      .size([containerWidth, containerHeight]) // Use dynamic size
+      .size([containerWidth, containerHeight])
       .words(
         words.map((d) => ({
           text: d.text,
           size: d.frequency * 3 + 3,
           sentiment: d.sentiment,
-        })),
+        }))
       )
       .padding(5)
       .rotate(() => (~~(Math.random() * 6) - 3) * 30)
@@ -98,7 +66,7 @@ const Dashboard = () => {
         .append("g")
         .attr(
           "transform",
-          `translate(${layout.size()[0] / 2},${layout.size()[1] / 2})`,
+          `translate(${layout.size()[0] / 2},${layout.size()[1] / 2})`
         );
 
       svg
@@ -109,17 +77,19 @@ const Dashboard = () => {
         .style("font-size", (d) => d.size + "px")
         .style("font-family", "Nunito")
         .style("fill", (d) => {
-          console.log(`Word: ${d.text}, Sentiment: ${d.sentiment}`);
           if (d.sentiment === "positive") {
-            return "#9fe2bf"; // Greenish color for positive
+            return "#9fe2bf";
           } else if (d.sentiment === "negative") {
-            return "#faa0a0"; // Reddish color for negative
+            return "#faa0a0";
           } else {
-            return "#6B6F73"; // Fallback color (e.g., for neutral or undefined sentiment)
+            return "#6B6F73";
           }
         })
         .attr("text-anchor", "middle")
-        .attr("transform", (d) => `translate(${[d.x, d.y]})rotate(${d.rotate})`)
+        .attr(
+          "transform",
+          (d) => `translate(${[d.x, d.y]})rotate(${d.rotate})`
+        )
         .text((d) => d.text);
     }
   };
@@ -145,55 +115,7 @@ const Dashboard = () => {
               </h2>
               <div ref={wordCloudRef} className="word-cloud-container" />
             </div>
-            <div className="visualization-container mb-4">
-              <h2 className="chatbot-text-primary text-xl mb-2">
-                Mood Distribution
-              </h2>
-              <PieChart width={300} height={300}>
-                <Pie
-                  data={moodData}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label
-                >
-                  {moodData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={["#82ca9d", "#8884d8", "#ffc658"][index % 3]}
-                    />
-                  ))}
-                </Pie>
-              </PieChart>
-            </div>
-            <div className="visualization-container mb-4">
-              <h2 className="chatbot-text-primary text-xl mb-2">
-                Sentiment Analysis
-              </h2>
-              <BarChart width={300} height={300} data={sentimentData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="value" fill="#82ca9d" />
-              </BarChart>
-            </div>
-            <div className="visualization-container mb-4">
-              <h2 className="chatbot-text-primary items-center justify-center text-xl mb-2">
-                Conversation Length Analysis
-              </h2>
-              <LineChart width={300} height={300} data={conversationLengthData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="length" stroke="#8884d8" />
-              </LineChart>
-            </div>
+            {/* Add other visualizations here */}
           </div>
         </div>
       </section>
