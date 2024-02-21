@@ -27,16 +27,40 @@ const Dashboard = () => {
     return moodColors[mood] || "rgba(0, 0, 0, 0.5)"; // Default color
   };
 
-  // Function to draw moving pixels
-  const drawMovingPixel = (ctx, frameCount, color) => {
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // Clear canvas for each animation frame
-    ctx.fillStyle = color; // Use color based on mood
-    // Dynamic movement based on frameCount
-    const x = ctx.canvas.width / 2 + Math.sin(frameCount * 0.05) * 200; // Horizontal movement
-    const y = ctx.canvas.height / 2 + Math.cos(frameCount * 0.05) * 200; // Vertical movement
+  const drawBranch = (ctx, startX, startY, length, angle, depth, maxDepth) => {
+    if (depth > maxDepth) return;
+
+    const endX = startX + length * Math.cos(angle);
+    const endY = startY + length * Math.sin(angle);
+
     ctx.beginPath();
-    ctx.arc(x, y, 5, 0, 2 * Math.PI); // Draw circle as moving pixel
-    ctx.fill();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(endX, endY);
+    ctx.strokeStyle = `rgba(0,0,0,${1 - depth / maxDepth})`; // Fade color with depth
+    ctx.lineWidth = maxDepth - depth; // Thinner lines for branches farther away
+    ctx.stroke();
+
+    const newLength = length * 0.7; // Each branch is 70% the length of its parent
+    const angleSpread = Math.PI / 6; // Angle between branches
+
+    drawBranch(
+      ctx,
+      endX,
+      endY,
+      newLength,
+      angle - angleSpread,
+      depth + 1,
+      maxDepth,
+    );
+    drawBranch(
+      ctx,
+      endX,
+      endY,
+      newLength,
+      angle + angleSpread,
+      depth + 1,
+      maxDepth,
+    );
   };
 
   useEffect(() => {
@@ -46,23 +70,25 @@ const Dashboard = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
 
-      let frameCount = 0;
+      let maxDepth = 0; // Start with a small depth
       let animationFrameId;
 
-      // Adjust this part to control the clear behavior
-      // If you don't want the flashing effect, consider clearing less frequently or adjusting what's being drawn
       const render = () => {
-        frameCount++;
-        // Optionally, clear the canvas less frequently or not at all, depending on the desired effect
-        // ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // Clear canvas for each frame
 
-        const color = "rgba(255, 0, 0, 0.5)"; // Semi-transparent red
-        ctx.fillStyle = color;
-        const x = ctx.canvas.width / 2 + Math.sin(frameCount * 0.05) * 200;
-        const y = ctx.canvas.height / 2 + Math.cos(frameCount * 0.05) * 200;
-        ctx.beginPath();
-        ctx.arc(x, y, 5, 0, 2 * Math.PI);
-        ctx.fill();
+        // Start drawing the fractal from the bottom center of the canvas
+        drawBranch(
+          ctx,
+          canvas.width / 2,
+          canvas.height,
+          100,
+          -Math.PI / 2,
+          0,
+          maxDepth,
+        );
+
+        maxDepth += 0.1; // Increase depth for animation effect
+        if (maxDepth > 10) maxDepth = 10; // Limit the depth to prevent it from growing indefinitely
 
         animationFrameId = window.requestAnimationFrame(render);
       };
@@ -73,7 +99,7 @@ const Dashboard = () => {
         window.cancelAnimationFrame(animationFrameId);
       };
     }
-  }, []); // Dependency array is still empty for continuous animation from mount
+  }, []);
 
   return (
     <main
