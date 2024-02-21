@@ -14,19 +14,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Connect to the 'messages' collection in your database
     const messagesCollection = await astraDb.collection('messages');
 
-    // Fetch all mood and keywords entries from the database
-    const moodAndKeywords = await messagesCollection.find({}, {
-      projection: { mood: 1, keywords: 1 }
-    });
+   // Fetch all mood and keywords entries from the database
+const moodAndKeywordsCursor = await messagesCollection.find({}, {
+  projection: { mood: 1, keywords: 1 }
+});
+const moodAndKeywords = await moodAndKeywordsCursor.toArray();
 
-    // Extract mood and keywords from each entry
-    const moodData = moodAndKeywords.map(entry => entry.mood);
-    const keywordsData = moodAndKeywords.reduce((acc, entry) => {
-      if (entry.keywords) {
-        return acc.concat(entry.keywords);
-      }
-      return acc;
-    }, []);
+// Now you can safely use .map() and .reduce() on moodAndKeywords
+const moodData = moodAndKeywords.map(entry => entry.mood);
+const keywordsData = moodAndKeywords.reduce((acc, entry) => {
+  if (entry.keywords) {
+    return acc.concat(entry.keywords);
+  }
+  return acc;
+}, []);
+
 
     // Send the mood and keywords data as the API response
     res.status(200).json({ mood: moodData, keywords: keywordsData });
