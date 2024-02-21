@@ -74,8 +74,7 @@ const Dashboard = () => {
       let animationFrameId;
 
       const render = () => {
-        // Optionally clear the canvas less frequently
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // Clear canvas for each frame
 
         // Log to ensure this function runs
         console.log("Rendering fractal at depth", maxDepth);
@@ -84,7 +83,7 @@ const Dashboard = () => {
           ctx,
           canvas.width / 2,
           canvas.height - 20,
-          120,
+          100,
           -Math.PI / 2,
           0,
           maxDepth,
