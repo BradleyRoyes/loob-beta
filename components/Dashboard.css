@@ -62,6 +62,12 @@ body.dark-mode {
   background-color: rgba(255, 255, 255, 0.2);
 }
 
+.fractal-canvas {
+  width: 100%;
+  height: auto;
+  background-color: #f5f5f5; /* Light background color */
+}
+
 /* Visualization containers */
 .visualization-container {
   /* This class can be used to style the containers of your charts or word clouds */
