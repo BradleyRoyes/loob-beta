@@ -41,7 +41,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (canvas && canvas.getContext) {
+    if (canvas) {
       const ctx = canvas.getContext("2d");
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -49,21 +49,20 @@ const Dashboard = () => {
       let frameCount = 0;
       let animationFrameId;
 
-      // Simplified render function for testing
+      // Adjust this part to control the clear behavior
+      // If you don't want the flashing effect, consider clearing less frequently or adjusting what's being drawn
       const render = () => {
         frameCount++;
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // Clear canvas
+        // Optionally, clear the canvas less frequently or not at all, depending on the desired effect
+        // ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-        // Use a fixed color for testing
-        const color = "rgba(255, 0, 0, 0.5)"; // Red, semi-transparent
+        const color = "rgba(255, 0, 0, 0.5)"; // Semi-transparent red
         ctx.fillStyle = color;
-        const x = ctx.canvas.width / 2;
-        const y = ctx.canvas.height / 2;
+        const x = ctx.canvas.width / 2 + Math.sin(frameCount * 0.05) * 200;
+        const y = ctx.canvas.height / 2 + Math.cos(frameCount * 0.05) * 200;
         ctx.beginPath();
-        ctx.arc(x, y, 5 + (frameCount % 50), 0, 2 * Math.PI); // Modulo for dynamic radius
+        ctx.arc(x, y, 5, 0, 2 * Math.PI);
         ctx.fill();
-
-        console.log("Drawing at:", x, y, "with color", color); // Log for debugging
 
         animationFrameId = window.requestAnimationFrame(render);
       };
@@ -74,7 +73,7 @@ const Dashboard = () => {
         window.cancelAnimationFrame(animationFrameId);
       };
     }
-  }, []);
+  }, []); // Dependency array is still empty for continuous animation from mount
 
   return (
     <main
