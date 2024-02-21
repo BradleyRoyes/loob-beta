@@ -10,10 +10,6 @@ const Dashboard = () => {
       mood: "Negative",
       keywords: ["difficult time", "shrooms", "sad", "angry"],
     },
-    {
-      mood: "Positive",
-      keywords: ["difficult time", "shrooms", "sad", "angry"],
-    },
     // Add more entries as needed
   ]);
 
@@ -21,85 +17,45 @@ const Dashboard = () => {
   const moodToColor = (mood) => {
     const moodColors = {
       Negative: "rgba(255, 0, 0, 0.5)", // Red for negative mood
-      Positive: "rgba(0, 255, 0, 0.5)",
       // Define more mappings as needed
     };
-    return moodColors[mood] || "rgba(0, 0, 0, 0.5)"; // Default color
+    return moodColors[mood] || "rgba(0, 255, 0, 0.5)"; // Default color
   };
 
-  const drawBranch = (ctx, startX, startY, length, angle, depth, maxDepth) => {
-    if (depth > maxDepth) return;
-
-    const endX = startX + length * Math.cos(angle);
-    const endY = startY + length * Math.sin(angle);
-
+  // Function to draw moving pixels
+  const drawMovingPixel = (ctx, frameCount, color) => {
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // Clear canvas for each animation frame
+    ctx.fillStyle = color; // Use color based on mood
+    // Dynamic movement based on frameCount
+    const x = ctx.canvas.width / 2 + Math.sin(frameCount * 0.05) * 200; // Horizontal movement
+    const y = ctx.canvas.height / 2 + Math.cos(frameCount * 0.05) * 200; // Vertical movement
     ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    ctx.lineTo(endX, endY);
-    ctx.strokeStyle = `rgba(255,0,0,${1 - depth / maxDepth})`; // Fade color with depth
-    ctx.lineWidth = maxDepth - depth; // Thinner lines for branches farther away
-    ctx.stroke();
-
-    const newLength = length * 0.7; // Each branch is 70% the length of its parent
-    const angleSpread = Math.PI / 6; // Angle between branches
-
-    drawBranch(
-      ctx,
-      endX,
-      endY,
-      newLength,
-      angle - angleSpread,
-      depth + 1,
-      maxDepth,
-    );
-    drawBranch(
-      ctx,
-      endX,
-      endY,
-      newLength,
-      angle + angleSpread,
-      depth + 1,
-      maxDepth,
-    );
+    ctx.arc(x, y, 5, 0, 2 * Math.PI); // Draw circle as moving pixel
+    ctx.fill();
   };
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext("2d");
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+    const ctx = canvas.getContext("2d");
+    let frameCount = 0;
+    let animationFrameId;
 
-      let maxDepth = 0; // Start with a small depth
-      let animationFrameId;
+    // Animation function
+    const render = () => {
+      frameCount++;
+      const currentEntryIndex = frameCount % dataEntries.length; // Loop through data entries
+      const currentEntry = dataEntries[currentEntryIndex];
+      const color = moodToColor(currentEntry.mood); // Determine color based on current entry's mood
+      drawMovingPixel(ctx, frameCount, color); // Pass color to drawing function
+      animationFrameId = window.requestAnimationFrame(render);
+    };
 
-      const render = () => {
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // Clear canvas for each frame
+    render();
 
-        // Start drawing the fractal from the bottom center of the canvas
-        drawBranch(
-          ctx,
-          canvas.width / 2,
-          canvas.height,
-          100,
-          -Math.PI / 2,
-          0,
-          maxDepth,
-        );
-
-        maxDepth += 0.1; // Increase depth for animation effect
-        if (maxDepth > 10) maxDepth = 10; // Limit the depth to prevent it from growing indefinitely
-
-        animationFrameId = window.requestAnimationFrame(render);
-      };
-
-      render();
-
-      return () => {
-        window.cancelAnimationFrame(animationFrameId);
-      };
-    }
-  }, []);
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+    };
+  }, [dataEntries]); // Dependency on dataEntries to update the drawing when entries change
 
   return (
     <main
