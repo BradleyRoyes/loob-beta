@@ -1,93 +1,95 @@
-import React, { useEffect, useRef } from 'react';
 
-const Dashboard = () => {
-  const canvasRef = useRef(null);
-  const points = useRef([]);
-  const maxNodes = 50; // Consider your need for up to 50 nodes
-  const connectionDistance = 100;
-  const updateInterval = useRef(null); // To control the update rate
+import React, { useEffect, useRef } from 'react';
+import * as THREE from 'three';
+
+const Visualization = () => {
+  const mount = useRef(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    // Scene setup
+    const width = mount.current.clientWidth;
+    const height = mount.current.clientHeight;
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(width, height);
+    mount.current.appendChild(renderer.domElement);
 
-    // Initialize nodes with position, velocity, and radius
+    // Camera position
+    camera.position.set(0, 0, 100);
+
+    // Nodes setup
+    const nodes = [];
+    const nodeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    const nodeGeometry = new THREE.SphereGeometry(1, 32, 32);
+    const maxNodes = 30;
+
+    // Create nodes
     for (let i = 0; i < maxNodes; i++) {
-      points.current.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 2,
-        vy: (Math.random() - 0.5) * 2,
-        radius: Math.random() * 2 + 1,
-      });
+      const node = new THREE.Mesh(nodeGeometry, nodeMaterial);
+      node.position.x = (Math.random() - 0.5) * 50;
+      node.position.y = (Math.random() - 0.5) * 50;
+      node.position.z = (Math.random() - 0.5) * 50;
+      scene.add(node);
+      nodes.push(node);
     }
 
-    // Start the drawing loop
-    const draw = () => {
-      ctx.fillStyle = 'black';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      updatePoints();
-      drawPoints(ctx);
-      drawConnections(ctx);
-      requestAnimationFrame(draw);
+    // Red thread setup
+    const threadMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+    const threadGeometry = new THREE.BufferGeometry();
+    const threadPositions = new Float32Array(maxNodes * 3); // 3 vertices per point
+    threadGeometry.setAttribute('position', new THREE.BufferAttribute(threadPositions, 3));
+
+    const redThread = new THREE.Line(threadGeometry, threadMaterial);
+    scene.add(redThread);
+
+    // Update thread to connect nodes dynamically
+    const updateThread = () => {
+      const positions = redThread.geometry.attributes.position.array;
+      let index = 0;
+      nodes.forEach((node, i) => {
+        positions[index++] = node.position.x;
+        positions[index++] = node.position.y;
+        positions[index++] = node.position.z;
+      });
+      redThread.geometry.attributes.position.needsUpdate = true;
     };
 
-    draw();
+    // Animation loop
+    const animate = () => {
+      requestAnimationFrame(animate);
 
-    // Cleanup on component unmount
+      // Rotate nodes for visual effect
+      nodes.forEach(node => {
+        node.rotation.x += 0.01;
+        node.rotation.y += 0.01;
+      });
+
+      updateThread(); // Update thread positions based on nodes
+      renderer.render(scene, camera);
+    };
+
+    animate();
+
+    // Handle resize
+    const handleResize = () => {
+      const width = mount.current.clientWidth;
+      const height = mount.current.clientHeight;
+      renderer.setSize(width, height);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
     return () => {
-      if (updateInterval.current) {
-        clearInterval(updateInterval.current);
-      }
+      mount.current.removeChild(renderer.domElement);
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 
-  // Update points' positions
-  const updatePoints = () => {
-    points.current.forEach(point => {
-      point.x += point.vx;
-      point.y += point.vy;
-
-      // Reverse velocity at canvas boundaries
-      if (point.x <= 0 || point.x >= canvasRef.current.width) point.vx *= -1;
-      if (point.y <= 0 || point.y >= canvasRef.current.height) point.vy *= -1;
-    });
-  };
-
-  // Draw points
-  const drawPoints = ctx => {
-    points.current.forEach(point => {
-      const gradient = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, point.radius * 2);
-      gradient.addColorStop(0, 'white');
-      gradient.addColorStop(1, 'black');
-
-      ctx.fillStyle = gradient;
-      ctx.beginPath();
-      ctx.arc(point.x, point.y, point.radius * 2, 0, Math.PI * 2);
-      ctx.fill();
-    });
-  };
-
-  // Draw connections between points within a certain distance
-  const drawConnections = ctx => {
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    points.current.forEach((point, index) => {
-      for (let i = index + 1; i < points.current.length; i++) {
-        const other = points.current[i];
-        const distance = Math.hypot(point.x - other.x, point.y - other.y);
-        if (distance < connectionDistance) {
-          ctx.beginPath();
-          ctx.moveTo(point.x, point.y);
-          ctx.lineTo(other.x, other.y);
-          ctx.stroke();
-        }
-      }
-    });
-  };
-
-  return <canvas ref={canvasRef} style={{ display: 'block', background: 'black' }}></canvas>;
+  return <div ref={mount} style={{ width: '100vw', height: '100vh' }} />;
 };
 
 export default Dashboard;
