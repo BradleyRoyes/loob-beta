@@ -36,8 +36,8 @@ const Dashboard = () => {
     ctx.beginPath();
     ctx.moveTo(startX, startY);
     ctx.lineTo(endX, endY);
-    ctx.strokeStyle = `rgba(0,0,0,${1 - depth / maxDepth})`; // Fade color with depth
-    ctx.lineWidth = maxDepth - depth; // Thinner lines for branches farther away
+    ctx.strokeStyle = `rgba(255,0,0,${1 - depth / maxDepth})`; // Fade color with depth
+    ctx.lineWidth = maxDepth - depth + 1; // Thinner lines for branches farther away
     ctx.stroke();
 
     const newLength = length * 0.7; // Each branch is 70% the length of its parent
