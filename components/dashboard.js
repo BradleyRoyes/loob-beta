@@ -1,97 +1,75 @@
 import React, { useEffect, useRef, useState } from "react";
-import * as d3 from "d3";
-import cloud from "d3-cloud";
 import axios from "axios";
 import ThemeButton from "./ThemeButton";
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 const Dashboard = () => {
   const [theme, setTheme] = useState("dark");
-  const [wordsData, setWordsData] = useState([]);
-  const [moodData, setMoodData] = useState([]);
-  const [sentimentData, setSentimentData] = useState([]);
-  const [conversationLengthData, setConversationLengthData] = useState([]);
-  const wordCloudRef = useRef();
+  const [data, setData] = useState({ mood: [], keywords: [] });
+  const visualRef = useRef();
+  const [scene, setScene] = useState(null); // Store the scene object
 
   useEffect(() => {
     fetchData();
+    // Update data every minute
+    const intervalId = setInterval(fetchData, 60000);
+    return () => clearInterval(intervalId); // Cleanup on unmount
   }, []);
 
   const fetchData = async () => {
     try {
       const response = await axios.get("/api/chat/DataPull");
-      const { mood, keywords } = response.data;
-      setMoodData(mood);
-      setWordsData(keywords);
+      setData(response.data);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
 
   useEffect(() => {
-    if (wordsData.length > 0) {
-      drawWordCloud(wordsData);
+    if (data.keywords.length > 0) {
+      initThreeJS();
     }
-  }, [wordsData]);
+  }, [data]);
 
-  const drawWordCloud = (words) => {
-    d3.select(wordCloudRef.current).selectAll("*").remove();
-
-    const container = wordCloudRef.current;
-    const containerWidth = container.offsetWidth;
-    const containerHeight = container.offsetHeight;
-
-    const layout = cloud()
-      .size([containerWidth, containerHeight])
-      .words(
-        words.map((d) => ({
-          text: d.text,
-          size: d.frequency * 3 + 3,
-          sentiment: d.sentiment,
-        }))
-      )
-      .padding(5)
-      .rotate(() => (~~(Math.random() * 6) - 3) * 30)
-      .font("Impact")
-      .fontSize((d) => d.size)
-      .on("end", draw);
-
-    layout.start();
-
-    function draw(words) {
-      const svg = d3
-        .select(wordCloudRef.current)
-        .append("svg")
-        .attr("width", layout.size()[0])
-        .attr("height", layout.size()[1])
-        .append("g")
-        .attr(
-          "transform",
-          `translate(${layout.size()[0] / 2},${layout.size()[1] / 2})`
-        );
-
-      svg
-        .selectAll("text")
-        .data(words)
-        .enter()
-        .append("text")
-        .style("font-size", (d) => d.size + "px")
-        .style("font-family", "Nunito")
-        .style("fill", (d) => {
-          if (d.sentiment === "positive") {
-            return "#9fe2bf";
-          } else if (d.sentiment === "negative") {
-            return "#faa0a0";
-          } else {
-            return "#6B6F73";
-          }
-        })
-        .attr("text-anchor", "middle")
-        .attr(
-          "transform",
-          (d) => `translate(${[d.x, d.y]})rotate(${d.rotate})`
-        )
-        .text((d) => d.text);
+  const initThreeJS = () => {
+    if (scene) {
+      while(scene.children.length > 0){ 
+        scene.remove(scene.children[0]); 
+      }
+    } else {
+      const newScene = new THREE.Scene();
+      setScene(newScene);
     }
+
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    visualRef.current.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+
+    const geometry = new THREE.BoxGeometry();
+    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    const cube = new THREE.Mesh(geometry, material);
+    scene.add(cube);
+
+    camera.position.z = 5;
+
+    const animate = function () {
+      requestAnimationFrame(animate);
+
+      cube.rotation.x += 0.01;
+      cube.rotation.y += 0.01;
+
+      renderer.render(scene, camera);
+    };
+
+    animate();
+
+    // Adjust this part to incorporate your data into the visualization
+    // For example, you could adjust the color or size of the cube based on mood
+    // Or add more objects based on the keywords array
   };
 
   return (
@@ -109,13 +87,12 @@ const Dashboard = () => {
             <ThemeButton theme={theme} setTheme={setTheme} />
           </div>
           <div className="flex flex-wrap justify-around">
-            <div className="visualization-container mb-4">
+            <div className="visualization-container mb-4" style={{ width: '100%', height: '500px' }}>
               <h2 className="chatbot-text-primary text-xl mb-2">
-                Common words
+                Mood and Keywords Visualization
               </h2>
-              <div ref={wordCloudRef} className="word-cloud-container" />
+              <div ref={visualRef} style={{ width: '100%', height: '100%' }} />
             </div>
-            {/* Add other visualizations here */}
           </div>
         </div>
       </section>
