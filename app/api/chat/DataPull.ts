@@ -43,4 +43,5 @@ export default async function handler(
     console.error("Error fetching mood and keywords data:", error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
+  console.log("its here");
 }
