@@ -1,95 +1,67 @@
-
-import React, { useEffect, useRef } from 'react';
-import * as THREE from 'three';
+import React, { useEffect, useRef } from "react";
 
 const Dashboard = () => {
-  const mount = useRef(null);
+  const canvasRef = useRef(null);
 
-  useEffect(() => {
-    // Scene setup
-    const width = mount.current.clientWidth;
-    const height = mount.current.clientHeight;
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer();
-    renderer.setSize(width, height);
-    mount.current.appendChild(renderer.domElement);
-
-    // Camera position
-    camera.position.set(0, 0, 100);
-
-    // Nodes setup
-    const nodes = [];
-    const nodeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const nodeGeometry = new THREE.SphereGeometry(1, 32, 32);
-    const maxNodes = 30;
-
-    // Create nodes
-    for (let i = 0; i < maxNodes; i++) {
-      const node = new THREE.Mesh(nodeGeometry, nodeMaterial);
-      node.position.x = (Math.random() - 0.5) * 50;
-      node.position.y = (Math.random() - 0.5) * 50;
-      node.position.z = (Math.random() - 0.5) * 50;
-      scene.add(node);
-      nodes.push(node);
+  class Particle {
+    constructor(x, y, mood) {
+      this.x = x;
+      this.y = y;
+      this.size = 5; // Default size of the particle
+      this.speedX = (Math.random() - 0.5) * 2; // Horizontal velocity
+      this.speedY = (Math.random() - 0.5) * 2; // Vertical velocity
+      this.color =
+        mood === "Positive" ? "rgba(0, 255, 0, 0.8)" : "rgba(255, 0, 0, 0.8)"; // Color based on mood
     }
 
-    // Red thread setup
-    const threadMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
-    const threadGeometry = new THREE.BufferGeometry();
-    const threadPositions = new Float32Array(maxNodes * 3); // 3 vertices per point
-    threadGeometry.setAttribute('position', new THREE.BufferAttribute(threadPositions, 3));
+    update() {
+      // Update particle position
+      this.x += this.speedX;
+      this.y += this.speedY;
+      // Implement simple boundary collision so particles stay within canvas
+      if (this.x <= 0 || this.x >= window.innerWidth) this.speedX *= -1;
+      if (this.y <= 0 || this.y >= window.innerHeight) this.speedY *= -1;
+    }
 
-    const redThread = new THREE.Line(threadGeometry, threadMaterial);
-    scene.add(redThread);
+    draw(ctx) {
+      // Draw the particle
+      ctx.fillStyle = this.color;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
 
-    // Update thread to connect nodes dynamically
-    const updateThread = () => {
-      const positions = redThread.geometry.attributes.position.array;
-      let index = 0;
-      nodes.forEach((node, i) => {
-        positions[index++] = node.position.x;
-        positions[index++] = node.position.y;
-        positions[index++] = node.position.z;
-      });
-      redThread.geometry.attributes.position.needsUpdate = true;
-    };
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    // Animation loop
+    // Create particles based on data entries
+    let particles = [
+      new Particle(100, 100, "Positive"),
+      new Particle(200, 200, "Negative"),
+      // Add more particles as needed
+    ];
+
     const animate = () => {
-      requestAnimationFrame(animate);
-
-      // Rotate nodes for visual effect
-      nodes.forEach(node => {
-        node.rotation.x += 0.01;
-        node.rotation.y += 0.01;
+      ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+      particles.forEach((particle) => {
+        particle.update(); // Update particle position
+        particle.draw(ctx); // Draw particle
       });
-
-      updateThread(); // Update thread positions based on nodes
-      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
     };
 
     animate();
-
-    // Handle resize
-    const handleResize = () => {
-      const width = mount.current.clientWidth;
-      const height = mount.current.clientHeight;
-      renderer.setSize(width, height);
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    // Cleanup
-    return () => {
-      mount.current.removeChild(renderer.domElement);
-      window.removeEventListener('resize', handleResize);
-    };
   }, []);
 
-  return <div ref={mount} style={{ width: '100vw', height: '100vh' }} />;
+  return (
+    <div className="visualization-container">
+      <canvas ref={canvasRef}></canvas>
+    </div>
+  );
 };
 
 export default Dashboard;
