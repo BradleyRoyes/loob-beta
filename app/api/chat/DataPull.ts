@@ -3,19 +3,11 @@ import { AstraDB } from "@datastax/astra-db-ts";
 
 // It's crucial to ensure that your AstraDB instance is initialized outside of the request handler
 // to avoid the cost of reinitialiating it on every request.
-let astraDb;
-
-// This function ensures that the AstraDB instance is created only once.
-function getAstraDbInstance() {
-  if (!astraDb) {
-    astraDb = new AstraDB(
-      process.env.ASTRA_DB_APPLICATION_TOKEN,
-      process.env.ASTRA_DB_ENDPOINT,
-      process.env.ASTRA_DB_NAMESPACE,
-    );
-  }
-  return astraDb;
-}
+const astraDb = new AstraDB(
+  process.env.ASTRA_DB_APPLICATION_TOKEN,
+  process.env.ASTRA_DB_ENDPOINT,
+  process.env.ASTRA_DB_NAMESPACE,
+);
 
 console.log("something");
 
@@ -30,9 +22,8 @@ export async function GET(req: any, res: any) {
   console.log("reachable");
   try {
     // Make sure to call the function to get or initialize the AstraDB instance.
-    const db = getAstraDbInstance();
     // Connect to the 'messages' collection in your database
-    const messagesCollection = await db.collection("messages");
+    const messagesCollection = await astraDb.collection("messages");
 
     // Adjusted the find query to potentially handle any issues with empty projections or cursor handling.
     const moodAndKeywords = await messagesCollection.find(
