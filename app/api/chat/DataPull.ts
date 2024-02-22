@@ -19,10 +19,10 @@ function getAstraDbInstance() {
 
 console.log("something");
 
-export async function POST(req: any, res: any) {
-  res.status(200).json({ message: "API is reachable post" });
-  console.log("reachable post");
-}
+// export async function POST(req: any, res: any) {
+//   res.status(200).json({ message: "API is reachable post" });
+//   console.log("reachable post");
+// }
 
 // Define the API route handler to fetch moods and keywords
 export async function GET(req: any, res: any) {
