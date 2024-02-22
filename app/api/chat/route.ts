@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { NextApiRequest, NextApiResponse } from "next";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 import { AstraDB } from "@datastax/astra-db-ts";
 import { v4 as uuidv4 } from "uuid";
@@ -68,7 +69,25 @@ async function saveMessageToDatabase(
   await messagesCollection.insertOne(messageData);
 }
 
-export async function POST(req: any) {
+// Unified API route handler
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
+  switch (req.method) {
+    case "POST":
+      await handlePost(req);
+      break;
+    case "GET":
+      await handleGet(req, res);
+      break;
+    default:
+      res.setHeader("Allow", ["GET", "POST"]);
+      res.status(405).end(`Method ${req.method} Not Allowed`);
+  }
+}
+
+async function handlePost(req: any) {
   try {
     const { messages, useRag, llm, similarityMetric, sessionId } =
       await req.json();
@@ -167,5 +186,32 @@ important!!! when you recieve the message "*** Analyse our conversation so far *
   } catch (e) {
     console.error(e);
     throw e;
+  }
+}
+
+async function handleGet(req: NextApiRequest, res: NextApiResponse) {
+  // Your data pulling (GET) logic here...
+  const db = astraDb;
+  try {
+    const messagesCollection = await db.collection("messages");
+    const moodAndKeywords = await messagesCollection.find(
+      {},
+      {
+        projection: { mood: 1, keywords: 1 },
+      },
+    );
+
+    const moodData = moodAndKeywords.map((entry) => entry.mood);
+    const keywordsData = moodAndKeywords.reduce((acc, entry) => {
+      if (entry.keywords) {
+        return acc.concat(entry.keywords);
+      }
+      return acc;
+    }, []);
+
+    res.status(200).json({ mood: moodData, keywords: keywordsData });
+  } catch (error) {
+    console.error("Error fetching mood and keywords data:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 }

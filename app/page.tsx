@@ -96,7 +96,7 @@ export default function Page() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch("../app/api/chat/DataPull");
+        const res = await fetch("../app/api/chat/route");
         const data = await res.json();
         setMoodAndKeywords(data);
       } catch (error) {
