@@ -17,6 +17,8 @@ function getAstraDbInstance() {
   return astraDb;
 }
 
+console.log("something")
+
 // Define the API route handler to fetch moods and keywords
 export default async function handler(
   req: NextApiRequest,
