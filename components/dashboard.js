@@ -1,94 +1,67 @@
 import React, { useEffect, useRef } from "react";
-import * as THREE from "three";
 
 const Dashboard = () => {
-  const mountRef = useRef(null);
+  const canvasRef = useRef(null);
+
+  class Particle {
+    constructor(x, y, mood) {
+      this.x = x;
+      this.y = y;
+      this.size = 5; // Default size of the particle
+      this.speedX = (Math.random() - 0.5) * 2; // Horizontal velocity
+      this.speedY = (Math.random() - 0.5) * 2; // Vertical velocity
+      this.color =
+        mood === "Positive" ? "rgba(0, 255, 0, 0.8)" : "rgba(255, 0, 0, 0.8)"; // Color based on mood
+    }
+
+    update() {
+      // Update particle position
+      this.x += this.speedX;
+      this.y += this.speedY;
+      // Implement simple boundary collision so particles stay within canvas
+      if (this.x <= 0 || this.x >= window.innerWidth) this.speedX *= -1;
+      if (this.y <= 0 || this.y >= window.innerHeight) this.speedY *= -1;
+    }
+
+    draw(ctx) {
+      // Draw the particle
+      ctx.fillStyle = this.color;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
 
   useEffect(() => {
-    // Setup
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setClearColor("#000000"); // Black background
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    camera.position.z = 500;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    // Add renderer to the DOM
-    mountRef.current.appendChild(renderer.domElement);
+    // Create particles based on data entries
+    let particles = [
+      new Particle(100, 100, "Positive"),
+      new Particle(200, 200, "Negative"),
+      // Add more particles as needed
+    ];
 
-    // Create nodes
-    const nodes = [];
-    const nodeMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF }); // White nodes
-    const nodeGeometry = new THREE.SphereGeometry(5, 32, 32); // Small sphere geometry for nodes
-
-    // Invisible Sphere to guide node movement
-    const invisibleSphere = new THREE.SphereGeometry(200, 32, 32);
-
-    for (let i = 0; i < 20; i++) {
-      const node = new THREE.Mesh(nodeGeometry, nodeMaterial);
-      const vertex = invisibleSphere.vertices[Math.floor(Math.random() * invisibleSphere.vertices.length)];
-      node.position.set(vertex.x, vertex.y, vertex.z);
-      scene.add(node);
-      nodes.push(node);
-    }
-
-    // Relationships (Lines)
-    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xFFFFFF }); // White lines for initial relationships
-    const relationships = [];
-
-    // Animate Nodes
     const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+      particles.forEach((particle) => {
+        particle.update(); // Update particle position
+        particle.draw(ctx); // Draw particle
+      });
       requestAnimationFrame(animate);
-
-      // Move nodes and update relationships
-      nodes.forEach(node => {
-        const speed = 0.5;
-        const direction = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5);
-        node.position.add(direction.multiplyScalar(speed)).clampLength(0, 200); // Keep nodes within invisible sphere
-      });
-
-      // Clear old relationships
-      relationships.forEach(line => {
-        scene.remove(line);
-      });
-      relationships.length = 0;
-
-      // Create new relationships based on proximity
-      nodes.forEach((node, index) => {
-        for (let j = index + 1; j < nodes.length; j++) {
-          const distance = node.position.distanceTo(nodes[j].position);
-          if (distance < 100) { // Threshold for connection
-            const geometry = new THREE.Geometry();
-            geometry.vertices.push(node.position);
-            geometry.vertices.push(nodes[j].position);
-            const line = new THREE.Line(geometry, lineMaterial);
-            scene.add(line);
-            relationships.push(line);
-          }
-        }
-      });
-
-      renderer.render(scene, camera);
     };
-
-    // Handle window resizing
-    window.addEventListener("resize", onWindowResize, false);
-    function onWindowResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    }
 
     animate();
-
-    // Cleanup
-    return () => {
-      mountRef.current.removeChild(renderer.domElement);
-      window.removeEventListener("resize", onWindowResize, false);
-    };
   }, []);
 
-  return <div ref={mountRef} />;
+  return (
+    <div className="visualization-container">
+      <canvas ref={canvasRef}></canvas>
+    </div>
+  );
 };
 
 export default Dashboard;
