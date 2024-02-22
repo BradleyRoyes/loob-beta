@@ -17,13 +17,15 @@ function getAstraDbInstance() {
   return astraDb;
 }
 
-console.log("something")
+console.log("something");
+
+export async function POST(req: any, res: any) {
+  res.status(200).json({ message: "API is reachable" });
+  console.log("reachable");
+}
 
 // Define the API route handler to fetch moods and keywords
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+export async function GET(req: any, res: any) {
   res.status(200).json({ message: "API is reachable" });
   console.log("reachable");
   try {
