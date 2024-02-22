@@ -9,10 +9,7 @@ const astraDb = new AstraDB(
 );
 
 // Define the API route handler to fetch moods and keywords
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+export async function GET(req: NextApiRequest, res: NextApiResponse) {
   try {
     // Connect to the 'messages' collection in your database
     const messagesCollection = await astraDb.collection("messages");
