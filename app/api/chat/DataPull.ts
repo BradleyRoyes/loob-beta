@@ -22,6 +22,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
+  res.status(200).json({ message: "API is reachable" });
+  console.log("reachable");
   try {
     // Make sure to call the function to get or initialize the AstraDB instance.
     const db = getAstraDbInstance();
