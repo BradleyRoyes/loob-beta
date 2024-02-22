@@ -2,7 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
-const Visualization = () => {
+const dashboard = () => {
   const mount = useRef(null);
 
   useEffect(() => {
@@ -92,4 +92,4 @@ const Visualization = () => {
   return <div ref={mount} style={{ width: '100vw', height: '100vh' }} />;
 };
 
-export default Dashboard;
+export default dashboard;
