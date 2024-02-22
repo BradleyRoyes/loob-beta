@@ -3,97 +3,88 @@ import * as THREE from "three";
 
 const Dashboard = () => {
   const mountRef = useRef(null);
-  const nodes = [];
-  const connections = [];
-  const maxDistance = 50; // Max distance for forming a connection
-  let frameId;
 
   useEffect(() => {
+    // Setup
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setClearColor("#000000"); // Black background
+    renderer.setSize(window.innerWidth, window.innerHeight);
     camera.position.z = 500;
 
-    const renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    // Add renderer to the DOM
     mountRef.current.appendChild(renderer.domElement);
 
     // Create nodes
-    const nodeGeometry = new THREE.SphereGeometry(5, 32, 32);
-    const nodeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const nodes = [];
+    const nodeMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF }); // White nodes
+    const nodeGeometry = new THREE.SphereGeometry(5, 32, 32); // Small sphere geometry for nodes
+
+    // Invisible Sphere to guide node movement
+    const invisibleSphere = new THREE.SphereGeometry(200, 32, 32);
+
     for (let i = 0; i < 20; i++) {
-      const nodeMesh = new THREE.Mesh(nodeGeometry, nodeMaterial);
-      nodeMesh.position.x = Math.random() * 400 - 200;
-      nodeMesh.position.y = Math.random() * 400 - 200;
-      nodeMesh.position.z = Math.random() * 400 - 200;
-      nodeMesh.userData = {
-        velocity: new THREE.Vector3(-0.5 + Math.random(), -0.5 + Math.random(), -0.5 + Math.random()),
-        connectedness: Math.ceil(Math.random() * 10) // Random connectedness score from 1 to 10
-      };
-      scene.add(nodeMesh);
-      nodes.push(nodeMesh);
+      const node = new THREE.Mesh(nodeGeometry, nodeMaterial);
+      const vertex = invisibleSphere.vertices[Math.floor(Math.random() * invisibleSphere.vertices.length)];
+      node.position.set(vertex.x, vertex.y, vertex.z);
+      scene.add(node);
+      nodes.push(node);
     }
 
-    // Animation loop
+    // Relationships (Lines)
+    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xFFFFFF }); // White lines for initial relationships
+    const relationships = [];
+
+    // Animate Nodes
     const animate = () => {
-      frameId = window.requestAnimationFrame(animate);
+      requestAnimationFrame(animate);
 
-      // Move nodes and update connections
+      // Move nodes and update relationships
+      nodes.forEach(node => {
+        const speed = 0.5;
+        const direction = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5);
+        node.position.add(direction.multiplyScalar(speed)).clampLength(0, 200); // Keep nodes within invisible sphere
+      });
+
+      // Clear old relationships
+      relationships.forEach(line => {
+        scene.remove(line);
+      });
+      relationships.length = 0;
+
+      // Create new relationships based on proximity
       nodes.forEach((node, index) => {
-        // Simple movement logic (replace with Perlin noise or another algorithm for organic movement)
-        node.position.add(node.userData.velocity);
-        // Keep nodes within a spherical boundary
-        if (node.position.length() > 250) {
-          node.userData.velocity.negate();
-        }
-
-        // Update connections based on proximity and connectedness
         for (let j = index + 1; j < nodes.length; j++) {
-          const otherNode = nodes[j];
-          const distance = node.position.distanceTo(otherNode.position);
-          if (distance < maxDistance) {
-            // Optionally, use connectedness score here to influence connection strength or visibility
-            let material = new THREE.LineBasicMaterial({ color: 0x00ff00 });
-            let geometry = new THREE.Geometry();
+          const distance = node.position.distanceTo(nodes[j].position);
+          if (distance < 100) { // Threshold for connection
+            const geometry = new THREE.Geometry();
             geometry.vertices.push(node.position);
-            geometry.vertices.push(otherNode.position);
-            let line = new THREE.Line(geometry, material);
+            geometry.vertices.push(nodes[j].position);
+            const line = new THREE.Line(geometry, lineMaterial);
             scene.add(line);
-            connections.push(line);
+            relationships.push(line);
           }
         }
       });
 
-      // Remove old connections
-      while (connections.length) {
-        let line = connections.pop();
-        scene.remove(line);
-        line.geometry.dispose();
-        line.material.dispose();
-      }
-
       renderer.render(scene, camera);
     };
 
-    animate();
-
-    // Resize
-    window.addEventListener('resize', onWindowResize, false);
+    // Handle window resizing
+    window.addEventListener("resize", onWindowResize, false);
     function onWindowResize() {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
+    animate();
+
     // Cleanup
     return () => {
-      cancelAnimationFrame(frameId);
       mountRef.current.removeChild(renderer.domElement);
-      nodes.forEach(node => scene.remove(node));
-      connections.forEach(line => {
-        scene.remove(line);
-        line.geometry.dispose();
-        line.material.dispose();
-      });
+      window.removeEventListener("resize", onWindowResize, false);
     };
   }, []);
 
