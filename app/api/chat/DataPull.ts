@@ -22,18 +22,19 @@ export async function GET(req: any, res: any) {
   console.log("reachable");
   try {
     // Make sure to call the function to get or initialize the AstraDB instance.
+
     // Connect to the 'messages' collection in your database
     const messagesCollection = await astraDb.collection("messages");
 
-    // Adjusted the find query to potentially handle any issues with empty projections or cursor handling.
-    const moodAndKeywords = await messagesCollection.find(
-      {},
-      {
-        projection: { mood: 1, keywords: 1 },
-      },
-    );
+    // Perform the find operation to get the cursor
+    const cursor = await messagesCollection.find({}, {
+      projection: { mood: 1, keywords: 1 },
+    });
 
-    // The revised logic here assumes the updated find method returns the documents array directly.
+    // Convert the cursor to an array
+    const moodAndKeywords = await cursor.toArray(); // This line is crucial
+
+    // Now you can use .map() and .reduce() on moodAndKeywords
     const moodData = moodAndKeywords.map((entry) => entry.mood);
     const keywordsData = moodAndKeywords.reduce((acc, entry) => {
       if (entry.keywords) {
