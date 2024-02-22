@@ -70,7 +70,7 @@ async function saveMessageToDatabase(
 }
 
 // Unified API route handler
-export default async function handler(
+export default async function options(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
