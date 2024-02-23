@@ -68,9 +68,9 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
   return (
     <div style={modalOverlayStyle} onClick={onClose}>
       <div className="modal-content" style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
-        <div style={headerStyle}>Thanks for playing</div>
+        <div style={headerStyle}>thanks for chatting</div>
         <p style={quoteStyle}>
-          To be relevant in a living system is to generate vitality. What is that? <br/> Its relationships that build relationships that build relationships:<br/> 3rd & 4th order relational process is real systemic work. <br/> No KPI can measure it. This is #WarmData
+          To be relevant in a living system is to generate vitality. <br/> What is that? Its relationships that build relationships <br/> that build relationships: <br/> 3rd & 4th order relational process <br/>  is real systemic work. <br/> No KPI can measure it. <br/>  This is #WarmData
         </p>
         <button style={buttonStyle} onClick={reloadApp}>
           New Chat
