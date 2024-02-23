@@ -1,5 +1,4 @@
 import React, { useState, useEffect, CSSProperties } from "react";
-import "./app/globals.css"; // Adjust the path to where your CSS file is located
 
 interface ModalOverlayProps {
   onClose: () => void;
@@ -14,6 +13,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Inline CSS for modal overlay, including background fading
   const modalOverlayStyle: CSSProperties = {
     position: "fixed",
     top: 0,
@@ -30,6 +30,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     transition: "opacity 1s ease-in-out", // Faster transition
   };
 
+  // Inline CSS for modal content
   const modalContentStyle: CSSProperties = {
     textAlign: "center",
     zIndex: 20,
@@ -39,16 +40,19 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     padding: "20px",
   };
 
+  // Inline CSS for header
   const headerStyle: CSSProperties = {
     fontSize: "24px",
     fontWeight: "bold",
     marginBottom: "10px",
   };
 
+  // Inline CSS for quote
   const quoteStyle: CSSProperties = {
     fontStyle: "italic",
   };
 
+  // Inline CSS for button
   const buttonStyle: CSSProperties = {
     background: "linear-gradient(to right, #FF6B6B, #FFA36B)",
     border: "none",
@@ -65,32 +69,12 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     window.location.reload();
   };
 
-  // Generate simple dots for background
-  const generateDots = () => {
-    let dots = [];
-    for (let i = 0; i < 50; i++) { // Generates 50 dots
-      let style = {
-        top: `${Math.random() * 100}%`,
-        left: `${Math.random() * 100}%`,
-        animationDuration: `${Math.random() * 5 + 5}s`, // Random duration between 5 to 10 seconds
-        animationDelay: `${Math.random() * 2}s`, // Random delay
-      };
-      dots.push(<div key={i} className="dot" style={style}></div>);
-    }
-    return dots;
-  };
-
   return (
     <div style={modalOverlayStyle} onClick={onClose}>
-      <div className="background-dots">
-        {generateDots()}
-      </div>
       <div className="modal-content" style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
         <div style={headerStyle}>Thanks for playing</div>
         <p style={quoteStyle}>
-          To be relevant in a living system is to generate vitality. What is that? <br /> Its relationships that build relationships that build relationships: <br />
-          3rd & 4th order relational process is real systemic work. <br />
-          No KPI can measure it. This is #WarmData
+          "To be relevant in a living system is to generate vitality. What is that? Its relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData"
         </p>
         <button style={buttonStyle} onClick={reloadApp}>
           New Chat
