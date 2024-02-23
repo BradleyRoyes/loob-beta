@@ -179,7 +179,7 @@ export async function POST(req: any) {
 
         console.log("Sending analysis data:", { analysis });
         // Emit analysis data using Pusher
-        pusher.trigger("my-channel", "my-event", { analysis });
+        pusher.trigger("my-channel", "my-event", { message: "Test message" });
 
         // Save the completion along with any analysis
         await saveMessageToDatabase(

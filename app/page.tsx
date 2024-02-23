@@ -105,7 +105,7 @@ export default function Page() {
   if (showNeuronVisual) {
     return (
       <>
-        <Dashboard /> 
+        <Dashboard />
         <button
           onClick={() => setShowNeuronVisual(false)}
           className="button-dash flex rounded-md fixed top-4 right-4 items-center justify-center px-2.5"
@@ -129,7 +129,7 @@ export default function Page() {
         `}
       </style>
       <main className="flex h-screen-adjusted flex-col items-center justify-center pt-0">
-        {showModal && <ModalOverlay onClose={() => setShowModal(false)} />}
+        {/* {showModal && <ModalOverlay onClose={() => setShowModal(false)} />} */}
 
         <section
           ref={chatContainerRef}
