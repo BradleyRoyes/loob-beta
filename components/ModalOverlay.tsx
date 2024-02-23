@@ -28,11 +28,11 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     zIndex: 9999,
   };
 
-  const modalContentStyle = {
+  const modalContentStyle: CSSProperties = {
     textAlign: "center",
   };
 
-  const modalTextStyle = {
+  const modalTextStyle: CSSProperties = {
     fontFamily: "'Nunito', sans-serif",
     fontSize: "18px",
     lineHeight: "1.8",
