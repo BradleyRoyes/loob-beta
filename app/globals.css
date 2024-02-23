@@ -145,7 +145,7 @@ body {
   display: inline-block;
   position: relative;
   color: var(--text-primary);
-  background: linear-gradient(to left, #ffafbd → #ffc3a0); /* Gradient from pink to orange */
+  background: linear-gradient(to left, #cc2b5e, #753a88); /* Gradient from pink to orange */
   border-radius: 10px;
   border-bottom-left-radius: 0px;
   padding: 10px;
@@ -154,7 +154,7 @@ body {
 .talk-bubble.user {
   text-align: right;
   color: var(--text-primary);
-  background: linear-gradient(to right, #42275a → #734b6d); /* Gradient from pink to orange */
+  background: linear-gradient(to right, #ffafbd, #ffc3a0); /* Gradient from pink to orange */
   border-radius: 10px;
   border-bottom-right-radius: 0px;
   padding: 10px;
@@ -165,7 +165,7 @@ body {
   left: -1px;
   bottom: 2px;
   transform: translateY(100%) rotateY(180deg);
-  fill: #ffc3a0; /* Set to left-most color for non-user bubbles */
+  fill: #cc2b5e; /* Set to left-most color for non-user bubbles */
 }
 
 .talk-bubble.user svg {
@@ -173,7 +173,7 @@ body {
   left: auto;
   bottom: 2px;
   transform: translateY(100%);
-  fill: #734b6d; /* Set to right-most color for user bubbles */
+  fill: #ffc3a0; /* Set to right-most color for user bubbles */
 }
 
 .dot-flashing {
