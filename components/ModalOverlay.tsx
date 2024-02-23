@@ -20,7 +20,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
       } else {
         clearInterval(interval);
       }
-    }, 50);
+    }, 16); // Faster typing speed
 
     return () => clearInterval(interval);
   }, [currentIndex]);
@@ -46,7 +46,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
   const modalTextStyle: CSSProperties = {
     fontFamily: "'Nunito', sans-serif", // Global font family
     fontSize: "20px", // Increased font size
-    lineHeight: "2", // Increased line height
+    lineHeight: "2.5", // Increased line height
     padding: "20px",
   };
 
@@ -62,10 +62,31 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     margin: "20px",
   };
 
+  // Function to insert line breaks every 7 words
+  const insertLineBreaks = (text: string): JSX.Element => {
+    const words = text.split(" ");
+    const chunks = [];
+    let i = 0;
+    while (i < words.length) {
+      chunks.push(words.slice(i, i + 7).join(" "));
+      i += 7;
+    }
+    return (
+      <>
+        {chunks.map((chunk, index) => (
+          <React.Fragment key={index}>
+            {chunk}
+            <br />
+          </React.Fragment>
+        ))}
+      </>
+    );
+  };
+
   return (
     <div style={modalOverlayStyle} onClick={onClose}>
       <div className="modal-content" style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
-        <p style={modalTextStyle}>{typedText}</p>
+        <p style={modalTextStyle}>{insertLineBreaks(typedText)}</p>
         <button style={buttonStyle} onClick={onClose}>
           New Chat
         </button>
