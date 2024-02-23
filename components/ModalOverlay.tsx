@@ -42,7 +42,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
   };
 
   const buttonStyle = {
-    background: "linear-gradient(to left, #ac38cc, #753a88)",
+    background: "linear-gradient(to left, #42275a, #734b6d)",
     border: "none",
     borderRadius: "4px",
     color: "#FFFFFF",
