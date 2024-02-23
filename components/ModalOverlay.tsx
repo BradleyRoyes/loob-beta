@@ -18,24 +18,20 @@ const ModalOverlay: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     scene.add(grid);
 
     // Text creation
-    const fontLoader = new THREE.FontLoader();
-    fontLoader.load("https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/fonts/helvetiker_regular.typeface.json", (font) => {
-      const fullText = "To be relevant in a living system is to generate vitality. What is that? Its relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData";
-      const words = fullText.split(" ");
-      const lines = [];
-      for (let i = 0; i < words.length; i += 7) {
-        lines.push(words.slice(i, i + 7).join(" "));
-      }
-      const textGeometry = new THREE.TextGeometry(lines.join("\n"), {
-        font: font,
-        size: 0.3,
-        height: 0.1,
-      });
-      const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-      const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-      textMesh.position.set(0, 0, -5);
-      scene.add(textMesh);
+    const fullText = "To be relevant in a living system is to generate vitality. What is that? Its relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData";
+    const words = fullText.split(" ");
+    const lines = [];
+    for (let i = 0; i < words.length; i += 7) {
+      lines.push(words.slice(i, i + 7).join(" "));
+    }
+    const textGeometry = new THREE.TextGeometry(lines.join("\n"), {
+      size: 0.3,
+      height: 0.1,
     });
+    const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+    textMesh.position.set(0, 0, -5);
+    scene.add(textMesh);
 
     // Camera positioning
     camera.position.z = 5;
