@@ -184,7 +184,7 @@ export async function POST(req: any) {
             .trigger("my-channel", "my-event", { analysis })
             .then(() =>
               console.log(
-                `Event ${event} triggered on channel ${"my-channel"}`,
+                `Event ${"my-event"} triggered on channel ${"my-channel"}`,
               ),
             )
             .catch((err) =>
