@@ -14,6 +14,16 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE,
 );
 
+const Pusher = require("pusher");
+
+const pusher = new Pusher({
+  appId: "1761208",
+  key: "facc28e7df1eec1d7667",
+  secret: "79b0023a6876ad35a230",
+  cluster: "eu",
+  useTLS: true,
+});
+
 function parseAnalysis(content: string) {
   // Regex to find the JSON part within curly braces, accounting for nested structures
   const regex =
@@ -160,6 +170,11 @@ important!!! when you recieve the message "*** Analyse our conversation so far *
           "assistant",
           analysis,
         );
+
+        // Emit analysis data using Pusher
+        pusher.trigger("my-channel", "my-event", {
+          analysis,
+        });
       },
     });
 

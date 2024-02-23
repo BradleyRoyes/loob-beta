@@ -1,10 +1,31 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import Pusher from 'pusher-js';
 
 const Dashboard = () => {
   const canvasRef = useRef(null);
   const points = useRef([]);
   const maxNodes = 10;
   const connectionDistance = 100;
+  const [analysisData, setAnalysisData] = useState({ Mood: '', Keywords: [] });
+
+  useEffect(() => {
+    // Initialize Pusher and subscribe to the channel for real-time updates
+    const pusher = new Pusher('facc28e7df1eec1d7667', {
+      cluster: 'eu',
+      encrypted: true,
+    });
+
+    const channel = pusher.subscribe('my-channel');
+    channel.bind('my-event', function(data) {
+      // Update the dashboard with the new analysis data
+      setAnalysisData(data.analysis);
+    });
+
+    return () => {
+      channel.unbind_all();
+      channel.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -72,10 +93,17 @@ const Dashboard = () => {
   };
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{ display: "block", background: "white" }}
-    ></canvas>
+    <div>
+      <canvas
+        ref={canvasRef}
+        style={{ display: "block", background: "white", position: "absolute", zIndex: -1 }}
+      ></canvas>
+      <div style={{ position: "absolute", top: "10px", left: "10px", zIndex: 1, background: "rgba(255, 255, 255, 0.7)", padding: "10px", borderRadius: "8px" }}>
+        <h2>Analysis Data</h2>
+        <p>Mood: {analysisData.Mood}</p>
+        <p>Keywords: {analysisData.Keywords.join(', ')}</p>
+      </div>
+    </div>
   );
 };
 
