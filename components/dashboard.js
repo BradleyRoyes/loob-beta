@@ -16,7 +16,9 @@ const Dashboard = () => {
     });
 
     const channel = pusher.subscribe("my-channel");
+
     channel.bind("my-event", function (data) {
+      console.log("Received data:", data);
       // Update the dashboard with the new analysis data
       setAnalysisData(data.analysis);
     });
@@ -24,7 +26,7 @@ const Dashboard = () => {
     return () => {
       channel.unbind_all();
       channel.unsubscribe();
-      pusher.disconnect();
+      // pusher.disconnect();
     };
   }, []);
 
