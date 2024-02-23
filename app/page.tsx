@@ -99,7 +99,7 @@ export default function Page() {
   const handleAnalyseButtonClick = () => {
     const analyseMessage = "Analyse our conversation so far";
     append({ content: analyseMessage, role: "user" });
-    setShowNeuronVisual(true);
+    // setShowNeuronVisual(true);
     setShowModal(true);
   };
 
