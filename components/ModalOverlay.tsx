@@ -1,7 +1,7 @@
 import React from "react";
 
-const ModalOverlay = ({ onClose }) => {
-  const modalOverlayStyle = {
+const ModalOverlay = ({ onClose }: { onClose: () => void }) => {
+  const modalOverlayStyle: React.CSSProperties = {
     position: "fixed",
     top: 0,
     left: 0,
@@ -13,7 +13,7 @@ const ModalOverlay = ({ onClose }) => {
     alignItems: "center",
   };
 
-  const modalContentStyle = {
+  const modalContentStyle: React.CSSProperties = {
     backgroundColor: "white",
     padding: "20px",
     borderRadius: "8px",
@@ -21,13 +21,13 @@ const ModalOverlay = ({ onClose }) => {
     maxWidth: "80%",
   };
 
-  const modalTextStyle = {
+  const modalTextStyle: React.CSSProperties = {
     fontSize: "16px",
     lineHeight: "1.5",
     marginBottom: "20px",
   };
 
-  const modalButtonStyle = {
+  const modalButtonStyle: React.CSSProperties = {
     padding: "10px 20px",
     fontSize: "16px",
     backgroundColor: "#007bff",
