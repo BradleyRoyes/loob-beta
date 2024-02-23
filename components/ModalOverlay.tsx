@@ -7,8 +7,8 @@ interface ModalOverlayProps {
 
 const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
   const modalOverlayStyle: CSSProperties = {
-    backgroundColor: "rgba(0, 0, 0, 0.8)", // Semi-transparent black background
-    color: "#FFFFFF", // White text color
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    color: "#FFFFFF",
     position: "fixed",
     top: 0,
     left: 0,
@@ -17,8 +17,8 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    zIndex: 9999, // Ensures the modal is displayed above other content
-    animation: "fade-in 2s ease-in-out forwards", // Trippy fade-in animation
+    zIndex: 9999,
+    animation: "fade-in 2s ease-in-out forwards",
   };
 
   const modalContentStyle: CSSProperties = {
@@ -26,21 +26,23 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
   };
 
   const modalTextStyle: CSSProperties = {
-    fontFamily: "'Nunito', sans-serif", // Global font family
-    fontSize: "20px", // Increased font size
-    lineHeight: "2.5", // Increased line height
+    fontFamily: "'Nunito', sans-serif",
+    fontSize: "18px", // Slightly smaller font size
+    lineHeight: "1.8", // Reduced line height
     padding: "20px",
+    animation: "fadeInText 3s ease-in-out forwards", // Text fade-in animation
+    opacity: 0, // Start with text invisible
   };
 
   const buttonStyle: CSSProperties = {
-    background: "linear-gradient(to left, #ac38cc, #753a88)", // Gradient similar to bubbles
+    background: "linear-gradient(to left, #ac38cc, #753a88)",
     border: "none",
     borderRadius: "4px",
     color: "#FFFFFF",
     padding: "10px 20px",
     cursor: "pointer",
-    fontSize: "16px", // Global font size
-    fontFamily: "'Nunito', sans-serif", // Global font family
+    fontSize: "16px",
+    fontFamily: "'Nunito', sans-serif",
     margin: "20px",
   };
 
@@ -69,12 +71,29 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     <div style={modalOverlayStyle} onClick={onClose}>
       <div className="modal-content" style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
         <p style={modalTextStyle}>{insertLineBreaks("To be relevant in a living system is to generate vitality. What is that? Its relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData")}</p>
-        <button style={buttonStyle} onClick={onClose}>
-          New Chat
+        <button
+          style={buttonStyle}
+          onClick={() => window.location.reload()} // Reloads the entire app
+        >
+          new chat
         </button>
       </div>
     </div>
   );
+};
+
+// Add keyframes for the fade-in effect
+const globalStyle: CSSProperties = {
+  "@global": {
+    "@keyframes fadeInText": {
+      from: { opacity: 0 },
+      to: { opacity: 1 },
+    },
+    "@keyframes fade-in": {
+      "0%": { opacity: 0 },
+      "100%": { opacity: 1 },
+    },
+  },
 };
 
 export default ModalOverlay;
