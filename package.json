@@ -29,6 +29,7 @@
     "openai": "^4.26.1",
     "p5": "^1.9.0",
     "pusher": "^5.2.0",
+    "pusher-js": "^8.4.0-rc2",
     "react": "^18",
     "react-dom": "^18",
     "react-markdown": "^9.0.0",
