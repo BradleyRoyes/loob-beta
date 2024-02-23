@@ -35,6 +35,20 @@ export default function Page() {
     mood: [],
     keywords: [],
   });
+  // Function to fetch mood and keywords data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/api/chat/DataPull');
+        const data = await res.json();
+        setMoodAndKeywords(data);
+      } catch (error) {
+        console.error("Failed to fetch mood and keywords:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleCloseModal = () => {
     setShowModal(false);
