@@ -30,10 +30,10 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
 
   const modalContentStyle: CSSProperties = {
     textAlign: "center",
+    fontFamily: "'Nunito', sans-serif",
   };
 
   const modalTextStyle: CSSProperties = {
-    fontFamily: "'Nunito', sans-serif",
     fontSize: "18px",
     lineHeight: "1.8",
     padding: "20px",
@@ -57,11 +57,26 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     window.location.reload();
   };
 
+  // Function to add line breaks every 6 words
+  const addLineBreaks = (text: string) => {
+    const words = text.split(' ');
+    const result: JSX.Element[] = [];
+    for (let i = 0; i < words.length; i += 6) {
+      result.push(
+        <span key={i}>
+          {words.slice(i, i + 6).join(' ')}
+          <br />
+        </span>
+      );
+    }
+    return result;
+  };
+
   return (
     <div style={modalOverlayStyle} onClick={onClose}>
       <div className="modal-content" style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
         <p style={modalTextStyle}>
-          To be relevant in a living system is to generate vitality. What is that? Its relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData
+          {addLineBreaks("To be relevant in a living system is to generate vitality. What is that? Its relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData")}
         </p>
         <button style={buttonStyle} onClick={reloadApp}>
           New Chat
