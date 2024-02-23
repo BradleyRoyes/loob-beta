@@ -99,6 +99,11 @@ export default function Page() {
   const handleAnalyseButtonClick = () => {
     const analyseMessage = "Analyse our conversation so far";
     append({ content: analyseMessage, role: "user" });
+    setShowNeuronVisual(true);
+    setShowModal(true);
+  };
+
+  if (showNeuronVisual) {
     return (
       <>
         <Dashboard />
@@ -111,23 +116,7 @@ export default function Page() {
         </button>
       </>
     );
-    setShowModal(true);
-  };
-
-  // if (showNeuronVisual) {
-  //   return (
-  //     <>
-  //       <Dashboard />
-  //       <button
-  //         onClick={() => setShowNeuronVisual(false)}
-  //         className="button-dash flex rounded-md fixed top-4 right-4 items-center justify-center px-2.5"
-  //         style={{ fontWeight: "500" }}
-  //       >
-  //         Back to Chat
-  //       </button>
-  //     </>
-  //   );
-  // }
+  }
 
   return showSplash ? (
     <SplashScreen onEnter={handleEnter} />
