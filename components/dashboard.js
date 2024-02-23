@@ -20,6 +20,8 @@ const Dashboard = () => {
       // Update the dashboard with the new analysis data
       setAnalysisData(data.analysis);
     });
+    console.log(analysisData.Mood);
+    console.log(analysisData.Keywords);
 
     return () => {
       channel.unbind_all();
