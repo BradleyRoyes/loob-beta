@@ -14,8 +14,6 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE,
 );
 
-let inMemAnalysis = {};
-
 function parseAnalysis(content: string) {
   // Regex to find the JSON part within curly braces, accounting for nested structures
   const regex =
@@ -104,10 +102,6 @@ export async function POST(req: any) {
     for (const message of messages) {
       const analysis =
         message.role === "assistant" ? parseAnalysis(message.content) : null;
-      // Generate a unique identifier for each message to use as a key
-      const messageKey = uuidv4();
-      inMemAnalysis[messageKey] = analysis;
-
       await saveMessageToDatabase(
         sessionId,
         message.content,
@@ -121,14 +115,14 @@ export async function POST(req: any) {
       {
         role: "system",
         content: `
-        
+
           You are an AI designed to help capture interesting information about the user's current experience at Moos Space in Berlin and give sentiment and keyword analysis for every message users share.
 
 important!!! when you recieve the message "*** Analyse our conversation so far ***" you will respond only with an analysis( of the users messsages only) in json format containing mood and a list of thematically relavant keywords. like this:
 
  ***Loob Magic Analysis: Following this line, provide a structured analysis in JSON format of the users mood( positive, negative, or neutral) and keywords (from the users half of the conversation).
 
-        
+
           apart from json analysis, In your interactions:
           - utilizing techniques of compassionate inquiry, CBT, and psychedelic integration.
           - Never ask the user how you can help or assist them, instead ask them to tell you more about their day or recent experience (at Moos ideally)
