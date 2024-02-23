@@ -15,7 +15,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
   }, []); // Empty dependency array means this effect runs once on mount
 
   const modalOverlayStyle: CSSProperties = {
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
     color: "#FFFFFF",
     position: "fixed",
     top: 0,
@@ -42,7 +42,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
   };
 
   const buttonStyle: CSSProperties = {
-    background: "linear-gradient(to right, #FF6B6B, #FFA36B)",
+    background: "linear-gradient(to right, #ffafbd, #ffc3a0)",
     border: "none",
     borderRadius: "4px",
     color: "#FFFFFF",
