@@ -43,31 +43,31 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
 
       {phase === "learnMore" && (
         <motion.div className="content" variants={variants}>
-          <button onClick={() => onEnter("I'd like to Learn More about MOOS")}>
-            I&apos;sd like to Learn More about MOOS
+          <button onClick={() => onEnter("Tell me about EDS")}>
+            Tell me about EDS
           </button>
-          <button onClick={() => onEnter("I'd like to Learn more about EDS")}>
-            I&apos;sd like to Learn more about EDS
+          <button onClick={() => onEnter("Tell me about MOOS")}>
+            Tell me about MOOS
           </button>
           <button onClick={() => proceed("feedback")}>
-            I&apos;sd like to Share some feedback
+            I&apos;sd like to share some feedback
           </button>
         </motion.div>
       )}
 
       {phase === "feedback" && (
         <motion.div className="content" variants={variants}>
-          <button onClick={() => onEnter("I'd like to share feedback on the Twisttea bar")}>
-            I&apos;sd Like to Share feedback on the Twisttea bar
+          <button onClick={() => onEnter("I'd like to share feedback on the TwistTea bar")}>
+            I&apos;sd like to share feedback on the Twisttea bar
           </button>
-          <button onClick={() => onEnter("I'd like to Share feedback on the LoobLab")}>
-            I&apos;sd Like to Share feedback on the LoobLab
+          <button onClick={() => onEnter("I'd like to share feedback on you, Loob")}>
+            I&apos;sd like to share feedback on you, Loob
           </button>
-          <button onClick={() => onEnter("I'd like to Share feedback on the Sound Sauna")}>
-            I&apos;sd Like to Share feedback on the Sound Sauna
+          <button onClick={() => onEnter("I'd like to share feedback on the SoundSauna")}>
+            I&apos;sd like to share feedback on the SoundSauna
           </button>
-          <button onClick={() => onEnter("I'd like to Share feedback on the Aroma Space")}>
-            I&apos;sd Like to Share feedback on the Aroma Space
+          <button onClick={() => onEnter("I'd like to share feedback on the AromaSpace")}>
+            I&apos;sd like to share feedback on the AromaSpace
           </button>
           <button onClick={() => onEnter("I'd like to talk about something else")}>
             I&apos;sd like to talk about something else
