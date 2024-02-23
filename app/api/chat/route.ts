@@ -24,6 +24,11 @@ const pusher = new Pusher({
   useTLS: true,
 });
 
+// Optionally listen for global connection events if needed
+pusher.connection.bind("connected", () => {
+  console.log("Pusher connection established");
+});
+
 function triggerPusherEvent(channel, event, data) {
   pusher
     .trigger(channel, event, data)
