@@ -25,6 +25,7 @@ const pusher = new Pusher({
 });
 
 function triggerPusherEvent(channel, event, data) {
+  console.log("inside trigger");
   pusher
     .trigger(channel, event, data)
     .then(() => console.log(`Event ${event} triggered on channel ${channel}`))
@@ -175,7 +176,6 @@ export async function POST(req: any) {
         const analysis = parseAnalysis(completion);
 
         console.log("Sending analysis data:", { analysis });
-        console.log("test");
         // Emit analysis data using Pusher
         triggerPusherEvent("my-channel", "my-event", {
           analysis,
