@@ -170,7 +170,7 @@ export default function Page() {
               </div>
             </div>
             <p className="chatbot-text-secondary-inverse text-lg md:text-xl mt-1 md:mt-2 font-medium">
-              recreating recreation
+              Experience Design Studio 001
             </p>
           </div>
           <div className="flex-1 relative overflow-y-auto my-4 md:my-6">
