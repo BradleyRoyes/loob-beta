@@ -181,6 +181,7 @@ export async function POST(req: any) {
           analysis,
         );
 
+        console.log("Sending analysis data:", { analysis });
         // Emit analysis data using Pusher through the new function
         triggerPusherEvent("my-channel", "my-event", {
           analysis,
