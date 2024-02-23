@@ -44,13 +44,13 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "learnMore" && (
         <motion.div className="content" variants={variants}>
           <button onClick={() => onEnter("I'd like to Learn More about MOOS")}>
-            I'd like to Learn More about MOOS
+            I&apos;sd like to Learn More about MOOS
           </button>
           <button onClick={() => onEnter("I'd like to Learn more about EDS")}>
-            I'd like to Learn more about EDS
+            I&apos;sd like to Learn more about EDS
           </button>
           <button onClick={() => proceed("feedback")}>
-            I'd like to Share some feedback
+            I&apos;sd like to Share some feedback
           </button>
         </motion.div>
       )}
@@ -58,19 +58,19 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "feedback" && (
         <motion.div className="content" variants={variants}>
           <button onClick={() => onEnter("I'd like to share feedback on the Twisttea bar")}>
-            Share feedback on the Twisttea bar
+            I&apos;sd Like to Share feedback on the Twisttea bar
           </button>
           <button onClick={() => onEnter("I'd like to Share feedback on the LoobLab")}>
-            Share feedback on the LoobLab
+            I&apos;sd Like to Share feedback on the LoobLab
           </button>
           <button onClick={() => onEnter("I'd like to Share feedback on the Sound Sauna")}>
-            Share feedback on the Sound Sauna
+            I&apos;sd Like to Share feedback on the Sound Sauna
           </button>
           <button onClick={() => onEnter("I'd like to Share feedback on the Aroma Space")}>
-            Share feedback on the Aroma Space
+            I&apos;sd Like to Share feedback on the Aroma Space
           </button>
           <button onClick={() => onEnter("I'd like to talk about something else")}>
-            I'd like to talk about something else
+            I&apos;sd like to talk about something else
           </button>
         </motion.div>
       )}
