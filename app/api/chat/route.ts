@@ -175,5 +175,3 @@ important!!! when you recieve the message "*** Analyse our conversation so far *
     throw e;
   }
 }
-
-console.log("analysis", inMemAnalysis);
