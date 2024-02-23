@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { CSSProperties } from "react";
 import * as THREE from "three";
 
@@ -11,7 +11,21 @@ interface ModalOverlayProps {
 }
 
 const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      setMousePosition({ x: event.clientX, y: event.clientY });
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -71,6 +85,8 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     justifyContent: "center",
     alignItems: "center",
     zIndex: 9999, // Ensures the modal is displayed above other content
+    backgroundColor: "rgba(0, 0, 0, 0.9)", // Semi-transparent black background
+    animation: "fade-in 2s ease-in-out forwards", // Trippy fade-in animation
   };
 
   const modalContentStyle: CSSProperties = {
@@ -115,12 +131,25 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
   return (
     <div style={modalOverlayStyle} onClick={onClose}>
       <div className="modal-content" style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
-        <p style={{ margin: 0 }}>{insertLineBreaks("To be relevant in a living system is to generate vitality.")}</p>
+        <p style={{ margin: 0, fontSize: "20px", lineHeight: "1.5" }}>
+          {insertLineBreaks("To be relevant in a living system is to generate vitality. What is that? Its relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData")}
+        </p>
         <button style={buttonStyle} onClick={onClose}>
           New Chat
         </button>
       </div>
-      <div ref={containerRef}></div>
+      <div ref={containerRef} style={{ position: "fixed", top: 0, left: 0, pointerEvents: "none", zIndex: 9998 }}>
+        <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }} pointerEvents="none">
+          <defs>
+            <filter id="goo">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+              <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0   0 1 0 0 0   0 0 1 0 0   0 0 0 15 -8" result="goo" />
+              <feBlend in="SourceGraphic" in2="goo" />
+            </filter>
+          </defs>
+          <circle cx={mousePosition.x} cy={mousePosition.y} r="40" fill="#ffffff" filter="url(#goo)" />
+        </svg>
+      </div>
     </div>
   );
 };
