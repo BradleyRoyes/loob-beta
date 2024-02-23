@@ -1,10 +1,6 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { CSSProperties } from "react";
 import * as THREE from "three";
-
-// Import FontLoader and TextGeometry from separate modules
-import { FontLoader } from "three/examples/jsm/loaders/FontLoader";
-import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry";
 
 interface ModalOverlayProps {
   onClose: () => void;
@@ -12,8 +8,6 @@ interface ModalOverlayProps {
 
 const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-
-  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
@@ -28,14 +22,12 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
   }, []);
 
   useEffect(() => {
-    if (!containerRef.current) return;
-
     // Three.js initialization
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    containerRef.current.appendChild(renderer.domElement);
+    document.body.appendChild(renderer.domElement);
 
     // Grid creation
     const gridSize = 10;
@@ -45,9 +37,9 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     scene.add(grid);
 
     // Text creation
-    const fontLoader = new FontLoader();
+    const fontLoader = new THREE.FontLoader();
     fontLoader.load("https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/fonts/helvetiker_regular.typeface.json", (font) => {
-      const textGeometry = new TextGeometry("To be relevant in a living system is to generate vitality.", {
+      const textGeometry = new THREE.TextGeometry("To be relevant in a living system is to generate vitality.", {
         font: font,
         size: 0.3,
         height: 0.1,
@@ -86,13 +78,14 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     alignItems: "center",
     zIndex: 9999, // Ensures the modal is displayed above other content
     backgroundColor: "rgba(0, 0, 0, 0.9)", // Semi-transparent black background
-    animation: "fade-in 2s ease-in-out forwards", // Trippy fade-in animation
   };
 
   const modalContentStyle: CSSProperties = {
     textAlign: "center",
     position: "absolute",
     zIndex: 10000, // Ensure the content is above the Three.js background
+    color: "#FFFFFF", // White text color
+    padding: "20px",
   };
 
   const buttonStyle: CSSProperties = {
@@ -108,7 +101,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
   };
 
   // Function to insert line breaks every 7 words
-  const insertLineBreaks = (text: string): JSX.Element => {
+  const insertLineBreaks = (text: string): string => {
     const words = text.split(" ");
     const chunks = [];
     let i = 0;
@@ -116,39 +109,20 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
       chunks.push(words.slice(i, i + 7).join(" "));
       i += 7;
     }
-    return (
-      <>
-        {chunks.map((chunk, index) => (
-          <React.Fragment key={index}>
-            {chunk}
-            <br />
-          </React.Fragment>
-        ))}
-      </>
-    );
+    return chunks.join("\n");
   };
 
   return (
     <div style={modalOverlayStyle} onClick={onClose}>
       <div className="modal-content" style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
         <p style={{ margin: 0, fontSize: "20px", lineHeight: "1.5" }}>
-          {insertLineBreaks("To be relevant in a living system is to generate vitality. What is that? Its relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData")}
+          {insertLineBreaks(
+            "To be relevant in a living system is to generate vitality. What is that? Its relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData"
+          )}
         </p>
         <button style={buttonStyle} onClick={onClose}>
           New Chat
         </button>
-      </div>
-      <div ref={containerRef} style={{ position: "fixed", top: 0, left: 0, pointerEvents: "none", zIndex: 9998 }}>
-        <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }} pointerEvents="none">
-          <defs>
-            <filter id="goo">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
-              <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0   0 1 0 0 0   0 0 1 0 0   0 0 0 15 -8" result="goo" />
-              <feBlend in="SourceGraphic" in2="goo" />
-            </filter>
-          </defs>
-          <circle cx={mousePosition.x} cy={mousePosition.y} r="40" fill="#ffffff" filter="url(#goo)" />
-        </svg>
       </div>
     </div>
   );
