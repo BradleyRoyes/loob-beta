@@ -173,13 +173,6 @@ export async function POST(req: any) {
       onCompletion: async (completion: string) => {
         // Perform analysis on completion content
         const analysis = parseAnalysis(completion);
-        // Save the completion along with any analysis
-        await saveMessageToDatabase(
-          sessionId,
-          completion,
-          "assistant",
-          analysis,
-        );
 
         console.log("Sending analysis data:", { analysis });
         console.log("test");
@@ -187,6 +180,14 @@ export async function POST(req: any) {
         triggerPusherEvent("my-channel", "my-event", {
           analysis,
         });
+
+        // Save the completion along with any analysis
+        await saveMessageToDatabase(
+          sessionId,
+          completion,
+          "assistant",
+          analysis,
+        );
       },
     });
 
