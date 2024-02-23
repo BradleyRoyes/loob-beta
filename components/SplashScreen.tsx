@@ -44,10 +44,10 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "learnMore" && (
         <motion.div className="content" variants={variants}>
           <button onClick={() => onEnter("Tell me about EDS")}>
-            Tell me about EDS
+            Tell me more about EDS
           </button>
           <button onClick={() => onEnter("Tell me about MOOS")}>
-            Tell me about MOOS
+            Tell me about more MOOS
           </button>
           <button onClick={() => proceed("feedback")}>
             I&apos;d like to share some feedback
