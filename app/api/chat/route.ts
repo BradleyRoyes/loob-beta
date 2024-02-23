@@ -29,15 +29,6 @@ const pusher = new Pusher({
 //   console.log("Pusher connection established");
 // });
 
-if (pusher.connection.state === "connected") {
-  console.log("Pusher is already connected.");
-} else {
-  // Handle not connected state if needed, such as informing the user or retrying a connection.
-  // Note: Pusher automatically attempts to reconnect.
-  console.log("Waiting for Pusher to connect...");
-  // You might set up a listener for the 'connected' event if specific actions need to be taken once connected.
-}
-
 function triggerPusherEvent(channel, event, data) {
   pusher
     .trigger(channel, event, data)
