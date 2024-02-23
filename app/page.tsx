@@ -14,7 +14,6 @@ import SplashScreen from "../components/SplashScreen"; // Adjust the import path
 import AnalyseButton from "../components/AnalyseButton";
 import PromptSuggestionRow from "../components/PromptSuggestions/PromptSuggestionsRow";
 import ModalOverlay from "../components/ModalOverlay";
-import { useAnalysisData } from "../components/AnalysisDataContext";
 
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } =
@@ -103,27 +102,10 @@ export default function Page() {
     setShowModal(true);
   };
 
-  const { setAnalysisData } = useAnalysisData(); // Use the setAnalysisData function from components
-
-  useEffect(() => {
-    // Example fetch function to get analysis data
-    const fetchAnalysisData = async () => {
-      try {
-        const response = await fetch("../app/api/chat/route"); // Adjust API endpoint as necessary
-        const data = await response.json();
-        setAnalysisData(data); // Update context with fetched analysis data
-      } catch (error) {
-        console.error("Failed to fetch analysis data", error);
-      }
-    };
-
-    fetchAnalysisData();
-  }, [setAnalysisData]); // Dependency array includes setAnalysisData to avoid unnecessary fetches
-
   if (showNeuronVisual) {
     return (
       <>
-        <Dashboard /> {/* Changed NeuronVisual to Dashboard*/}
+        {/* <Dashboard /> {/* Changed NeuronVisual to Dashboard */}
         <button
           onClick={() => setShowNeuronVisual(false)}
           className="button-dash flex rounded-md fixed top-4 right-4 items-center justify-center px-2.5"
@@ -132,7 +114,7 @@ export default function Page() {
           Back to Chat
         </button>
       </>
-  );
+    );
   }
 
   return showSplash ? (
@@ -251,4 +233,4 @@ export default function Page() {
       </main>
     </>
   );
-}
+}  
