@@ -16,6 +16,7 @@ import PromptSuggestionRow from "../components/PromptSuggestions/PromptSuggestio
 import ModalOverlay from "../components/ModalOverlay";
 
 
+
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } =
     useChat();
@@ -122,7 +123,7 @@ export default function Page() {
     append({ content: analyseMessage, role: "user" });
     setShowModal(true);
   };
-
+  
   if (showNeuronVisual) {
     return (
       <>
