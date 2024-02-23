@@ -14,6 +14,8 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE,
 );
 
+let analysis;
+
 function parseAnalysis(content: string) {
   // Regex to find the JSON part within curly braces, accounting for nested structures
   const regex =
@@ -22,7 +24,7 @@ function parseAnalysis(content: string) {
 
   if (match) {
     try {
-      const analysis = JSON.parse(match[0]);
+      analysis = JSON.parse(match[0]);
       if (analysis.mood && Array.isArray(analysis.keywords)) {
         return { Mood: analysis.mood, Keywords: analysis.keywords };
       }
@@ -30,6 +32,7 @@ function parseAnalysis(content: string) {
       console.error("Failed to parse JSON from content", error);
     }
   }
+  console.log(analysis);
   return null;
 }
 
