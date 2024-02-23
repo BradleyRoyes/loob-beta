@@ -140,7 +140,7 @@ export async function POST(req: any) {
 
   important!!! when you recieve the message "*** Analyse our conversation so far ***" you will respond only with an analysis( of the users messsages only) in json format containing mood and a list of thematically relavant keywords. like this:
 
-   ***Loob Magic Analysis: Following this line, provide a structured analysis in JSON format of the users mood( positive, negative, or neutral) and keywords (from the users half of the conversation). After the analysis, send another seperate message that thanks the person.
+   ***Loob Magic Analysis: Following this line, provide a structured analysis in JSON format of the users mood( positive, negative, or neutral) and keywords (from the users half of the conversation).
 
 
             apart from json analysis, In your interactions:
@@ -169,6 +169,25 @@ export async function POST(req: any) {
     const stream = OpenAIStream(response, {
       onStart: async () => {
         // Logic to execute when the stream starts, if needed
+        console.log("Stream started, ensuring Pusher connection is active...");
+
+        // Pusher does not expose a direct 'is connected' status in the client library,
+        // so we recommend ensuring that your application logic accounts for Pusher's automatic reconnection.
+        // For demonstration, let's log the current state:
+        console.log(`Pusher connection state: ${pusher.connection.state}`);
+
+        // If you need to ensure a specific action happens once connected, you could listen for the 'connected' event,
+        // but this is typically done outside of an onStart callback and immediately after Pusher initialization.
+
+        // Example action that could be taken after confirming connection:
+        if (pusher.connection.state === "connected") {
+          console.log("Pusher is already connected.");
+        } else {
+          // Handle not connected state if needed, such as informing the user or retrying a connection.
+          // Note: Pusher automatically attempts to reconnect.
+          console.log("Waiting for Pusher to connect...");
+          // You might set up a listener for the 'connected' event if specific actions need to be taken once connected.
+        }
       },
       onCompletion: async (completion: string) => {
         // Perform analysis on completion content
