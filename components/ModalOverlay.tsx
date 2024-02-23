@@ -1,14 +1,63 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { CSSProperties } from "react";
+import * as THREE from "three";
 
 interface ModalOverlayProps {
   onClose: () => void;
 }
 
 const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    // Three.js initialization
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    containerRef.current.appendChild(renderer.domElement);
+
+    // Grid creation
+    const gridSize = 10;
+    const gridStep = 1;
+    const grid = new THREE.GridHelper(gridSize, gridSize, 0xffffff, 0x000000);
+    grid.position.y = -0.5;
+    scene.add(grid);
+
+    // Text creation
+    const fontLoader = new THREE.FontLoader();
+    fontLoader.load("https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/fonts/helvetiker_regular.typeface.json", (font) => {
+      const textGeometry = new THREE.TextGeometry("To be relevant in a living system is to generate vitality.", {
+        font: font,
+        size: 0.3,
+        height: 0.1,
+      });
+      const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+      textMesh.position.set(-2, 1, -5);
+      scene.add(textMesh);
+    });
+
+    // Camera positioning
+    camera.position.z = 5;
+
+    // Animation loop
+    const animate = () => {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    // Clean up
+    return () => {
+      scene.remove(grid);
+      renderer.dispose();
+    };
+  }, []);
+
   const modalOverlayStyle: CSSProperties = {
-    backgroundColor: "rgba(0, 0, 0, 0.8)", // Semi-transparent black background
-    color: "#FFFFFF", // White text color
     position: "fixed",
     top: 0,
     left: 0,
@@ -18,18 +67,12 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     justifyContent: "center",
     alignItems: "center",
     zIndex: 9999, // Ensures the modal is displayed above other content
-    animation: "fade-in 2s ease-in-out forwards", // Trippy fade-in animation
   };
 
   const modalContentStyle: CSSProperties = {
     textAlign: "center",
-  };
-
-  const modalTextStyle: CSSProperties = {
-    fontFamily: "'Nunito', sans-serif", // Global font family
-    fontSize: "20px", // Increased font size
-    lineHeight: "2.5", // Increased line height
-    padding: "20px",
+    position: "absolute",
+    zIndex: 10000, // Ensure the content is above the Three.js background
   };
 
   const buttonStyle: CSSProperties = {
@@ -68,11 +111,12 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
   return (
     <div style={modalOverlayStyle} onClick={onClose}>
       <div className="modal-content" style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
-        <p style={modalTextStyle}>{insertLineBreaks("To be relevant in a living system is to generate vitality. What is that? Its relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData")}</p>
+        <p style={{ margin: 0 }}>{insertLineBreaks("To be relevant in a living system is to generate vitality.")}</p>
         <button style={buttonStyle} onClick={onClose}>
           New Chat
         </button>
       </div>
+      <div ref={containerRef}></div>
     </div>
   );
 };
