@@ -164,9 +164,8 @@ body {
   position: absolute;
   left: -1px;
   bottom: 2px;
-  background: linear-gradient(to right, #ffafbd, #ffc3a0); /* Gradient from pink to orange */
   transform: translateY(100%) rotateY(180deg);
-  fill: var(--background-bubble-secondary);
+  fill: #cc2b5e; /* Set to left-most color for non-user bubbles */
 }
 
 .talk-bubble.user svg {
@@ -174,7 +173,7 @@ body {
   left: auto;
   bottom: 2px;
   transform: translateY(100%);
-  fill: var(--background-bubble-primary);
+  fill: #ffc3a0; /* Set to right-most color for user bubbles */
 }
 
 .dot-flashing {
