@@ -168,6 +168,28 @@ body {
   fill: var(--background-bubble-secondary);
 }
 
+/* Light Mode */
+.light .talk-bubble.user {
+  background: linear-gradient(to right, pink, orange);
+  color: var(--text-primary);
+}
+
+.light .talk-bubble {
+  background: linear-gradient(to right, #666666, orange);
+  color: var(--text-secondary-inverse);
+}
+
+/* Dark Mode */
+.dark .talk-bubble.user {
+  background: linear-gradient(to right, pink, orange);
+  color: var(--text-primary);
+}
+
+.dark .talk-bubble {
+  background: linear-gradient(to right, #666666, orange);
+  color: var(--text-secondary-inverse);
+}
+
 .talk-bubble.user svg {
   right: -1px;
   left: auto;
