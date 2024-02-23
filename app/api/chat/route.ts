@@ -175,6 +175,8 @@ export async function POST(req: any) {
         // Perform analysis on completion content
         const analysis = parseAnalysis(completion);
 
+        console.log("test");
+
         console.log("Sending analysis data:", { analysis });
         // Emit analysis data using Pusher
         triggerPusherEvent("my-channel", "my-event", {
