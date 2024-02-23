@@ -181,6 +181,7 @@ important!!! when you recieve the message "*** Analyse our conversation so far *
           analysis,
         );
 
+        console.log("Sending analysis data:", { analysis });
         // Emit analysis data using Pusher through the new function
         triggerPusherEvent("my-channel", "my-event", {
           analysis,
