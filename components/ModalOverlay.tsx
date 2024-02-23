@@ -7,7 +7,7 @@ const ModalOverlay = ({ onClose }) => {
       <div className="modal-content">
         <p>
           To be relevant in a living system is to generate vitality. What is
-          that? It's relationships that build relationships that build
+          that? Its relationships that build relationships that build
           relationships: 3rd & 4th order relational process is real systemic
           work. No KPI can measure it. This is #WarmData
         </p>
