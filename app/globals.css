@@ -144,8 +144,8 @@ body {
   text-align: left;
   display: inline-block;
   position: relative;
-  color: var(--text-secondary-inverse);
-  background: linear-gradient(to left, #7c5a60, orange); /* Gradient from pink to orange */
+  color: var(--text-primary);
+  background: linear-gradient(to left, #cc2b5e, #753a88); /* Gradient from pink to orange */
   border-radius: 10px;
   border-bottom-left-radius: 0px;
   padding: 10px;
@@ -154,7 +154,7 @@ body {
 .talk-bubble.user {
   text-align: right;
   color: var(--text-primary);
-  background: linear-gradient(to right, pink, orange); /* Gradient from pink to orange */
+  background: linear-gradient(to right, #ffafbd, #ffc3a0); /* Gradient from pink to orange */
   border-radius: 10px;
   border-bottom-right-radius: 0px;
   padding: 10px;
@@ -164,6 +164,7 @@ body {
   position: absolute;
   left: -1px;
   bottom: 2px;
+  background: linear-gradient(to right, #ffafbd, #ffc3a0); /* Gradient from pink to orange */
   transform: translateY(100%) rotateY(180deg);
   fill: var(--background-bubble-secondary);
 }
