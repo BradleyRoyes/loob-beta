@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from "react"; // Add useEffect here
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import "./SplashScreen.css"; // Ensure this contains the updated styles as provided below
+import "./SplashScreen.css";
 
 const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
   onEnter,
@@ -17,16 +17,15 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
     exit: { opacity: 0, transition: { duration: 1.5, ease: "easeInOut" } },
   };
 
-  // Automatically proceed from the welcome phase after a delay
   useEffect(() => {
     if (phase === "welcome") {
       const timer = setTimeout(() => {
-        proceed("location");
-      }, 3000); // Adjust the duration as needed, 3000ms = 3 seconds
+        proceed("learnMore");
+      }, 3000); // Adjust the duration as needed
 
       return () => clearTimeout(timer); // Cleanup the timer
     }
-  }, [phase, proceed]);
+  }, [phase]);
 
   return (
     <motion.div
@@ -39,64 +38,44 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "welcome" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText">Welcome to Loob</h1>
-          {/* Button removed, will automatically proceed */}
         </motion.div>
       )}
 
-      {phase === "location" && (
+      {phase === "learnMore" && (
         <motion.div className="content" variants={variants}>
-          <p>Where are you?</p>
-          <button onClick={() => proceed("moos")}>MOOS Space Berlin</button>
-          <button onClick={() => proceed("club")}>At the Club</button>
-          <button onClick={() => proceed("home")}>At Home</button>
-        </motion.div>
-      )}
-
-      {phase === "moos" && (
-        <motion.div className="content" variants={variants}>
-          <p>What would you like to do?</p>
-          <button
-            onClick={() =>
-              onEnter("I'd like to share an experience I'm having at MOOS")
-            }
-          >
-            I&apos;d like to share an experience
+          <button onClick={() => onEnter("I'd like to Learn More about MOOS")}>
+            I&apos;sd like to Learn More about MOOS
           </button>
-          <button onClick={() => onEnter("I want to learn more about MOOS")}>
-            I&apos;d like to host at MOOS
+          <button onClick={() => onEnter("I'd like to Learn more about EDS")}>
+            I&apos;sd like to Learn more about EDS
           </button>
-          <button onClick={() => onEnter("What's happening at MOOS this week?")}>
-            I&apos;d like to visit MOOS
+          <button onClick={() => proceed("feedback")}>
+            I&apos;sd like to Share some feedback
           </button>
         </motion.div>
       )}
 
-      {phase === "club" && (
+      {phase === "feedback" && (
         <motion.div className="content" variants={variants}>
-          <p>What would you like to do?</p>
-          <button onClick={() => onEnter("I'd like to share an experience")}>
-            I&apos;d like to share an experience
+          <button onClick={() => onEnter("I'd like to share feedback on the Twisttea bar")}>
+            I&apos;sd Like to Share feedback on the Twisttea bar
           </button>
-          <button onClick={() => onEnter("I'm having a difficult time")}>
-            I&apos;m having a difficult time
+          <button onClick={() => onEnter("I'd like to Share feedback on the LoobLab")}>
+            I&apos;sd Like to Share feedback on the LoobLab
+          </button>
+          <button onClick={() => onEnter("I'd like to Share feedback on the Sound Sauna")}>
+            I&apos;sd Like to Share feedback on the Sound Sauna
+          </button>
+          <button onClick={() => onEnter("I'd like to Share feedback on the Aroma Space")}>
+            I&apos;sd Like to Share feedback on the Aroma Space
+          </button>
+          <button onClick={() => onEnter("I'd like to talk about something else")}>
+            I&apos;sd like to talk about something else
           </button>
         </motion.div>
       )}
 
-      {phase === "home" && (
-        <motion.div className="content" variants={variants}>
-          <p>What would you like to do?</p>
-          <button onClick={() => onEnter("I'd like to share an experience")}>
-            I&apos;d like to share an experience
-          </button>
-          <button onClick={() => onEnter("I want to journal")}>
-            I want to journal
-          </button>
-          <button onClick={() => onEnter("I'm having a difficult time")}>
-            I&apos;m having a difficult time
-          </button>
-        </motion.div>
-      )}
+      {/* Ensure other phases are handled as they were, without introducing new functionality or variables */}
     </motion.div>
   );
 };
