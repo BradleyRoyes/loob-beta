@@ -25,7 +25,6 @@ const pusher = new Pusher({
 });
 
 function triggerPusherEvent(channel, event, data) {
-  console.log("inside trigger");
   pusher
     .trigger(channel, event, data)
     .then(() => console.log(`Event ${event} triggered on channel ${channel}`))
@@ -181,7 +180,8 @@ export async function POST(req: any) {
           // Check if analysis is not null
           console.log("Sending analysis data:", { analysis });
           // Emit analysis data using Pusher
-          pusher.trigger("my-channel", "my-event", { analysis });
+          // pusher.trigger("my-channel", "my-event", { analysis });
+          triggerPusherEvent("my-channel", "my-event", analysis);
         } else {
           console.log("Analysis is null, not sending data.");
         }
