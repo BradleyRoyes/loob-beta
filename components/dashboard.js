@@ -9,6 +9,32 @@ const Dashboard = () => {
   const [analysisData, setAnalysisData] = useState({ Mood: "", Keywords: [] });
 
   useEffect(() => {
+    // Define the global error handler
+    const globalErrorHandler = (message, source, lineno, colno, error) => {
+      console.log(
+        "Caught an error:",
+        message,
+        "from",
+        source,
+        "line",
+        lineno,
+        "column",
+        colno,
+      );
+      console.error(error);
+      return true; // Prevents the firing of the default event handler
+    };
+
+    // Set the global error handler
+    window.onerror = globalErrorHandler;
+
+    // Cleanup function to remove the global error handler when the component unmounts
+    return () => {
+      window.onerror = null;
+    };
+  }, []); // Empty dependency array ensures this effect runs only once on mount
+
+  useEffect(() => {
     // Initialize Pusher and subscribe to the channel for real-time updates
     const pusher = new Pusher("facc28e7df1eec1d7667", {
       cluster: "eu",
@@ -21,6 +47,19 @@ const Dashboard = () => {
     channel.bind("my-event", function (data) {
       console.log("Received data:", data);
       setAnalysisData(data.analysis);
+    });
+
+    // Bind to the subscription succeeded event
+    channel.bind("pusher:subscription_succeeded", function () {
+      console.log("Successfully subscribed to 'my-channel'");
+    });
+
+    // Handle subscription error
+    channel.bind("pusher:subscription_error", function (statusCode) {
+      console.error(
+        `Failed to subscribe to 'my-channel'. Status code: ${statusCode}`,
+      );
+      console.log("subscription failed");
     });
 
     return () => {
