@@ -17,11 +17,11 @@ const Dashboard = () => {
 
     const channel = pusher.subscribe("my-channel");
     channel.bind("my-event", function (data) {
+      console.log("Received data:", data);
       // Update the dashboard with the new analysis data
       setAnalysisData(data.analysis);
     });
-    console.log(analysisData.Mood);
-    console.log(analysisData.Keywords);
+    
 
     return () => {
       channel.unbind_all();
