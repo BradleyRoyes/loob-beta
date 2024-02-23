@@ -129,7 +129,7 @@ export default function Page() {
         `}
       </style>
       <main className="flex h-screen-adjusted flex-col items-center justify-center pt-0">
-        {showModal && <ModalOverlay onClose={() => setShowModal(false)} theme={/* pass theme value */} />}
+        {showModal && <ModalOverlay onClose={() => setShowModal(false)} />}
 
         <section
           ref={chatContainerRef}
