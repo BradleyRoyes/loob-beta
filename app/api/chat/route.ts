@@ -24,6 +24,15 @@ const pusher = new Pusher({
   useTLS: true,
 });
 
+function triggerPusherEvent(channel, event, data) {
+  pusher
+    .trigger(channel, event, data)
+    .then(() => console.log(`Event ${event} triggered on channel ${channel}`))
+    .catch((err) =>
+      console.error(`Error triggering event on channel ${channel}:`, err),
+    );
+}
+
 function parseAnalysis(content: string) {
   // Regex to find the JSON part within curly braces, accounting for nested structures
   const regex =
@@ -172,8 +181,8 @@ important!!! when you recieve the message "*** Analyse our conversation so far *
           analysis,
         );
 
-        // Emit analysis data using Pusher
-        pusher.trigger("my-channel", "my-event", {
+        // Emit analysis data using Pusher through the new function
+        triggerPusherEvent("my-channel", "my-event", {
           analysis,
         });
       },
