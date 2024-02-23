@@ -2,6 +2,10 @@ import React, { useRef, useEffect } from "react";
 import { CSSProperties } from "react";
 import * as THREE from "three";
 
+// Import FontLoader and TextGeometry from separate modules
+import { FontLoader } from "three/examples/jsm/loaders/FontLoader";
+import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry";
+
 interface ModalOverlayProps {
   onClose: () => void;
 }
@@ -27,9 +31,9 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     scene.add(grid);
 
     // Text creation
-    const fontLoader = new THREE.FontLoader();
+    const fontLoader = new FontLoader();
     fontLoader.load("https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/fonts/helvetiker_regular.typeface.json", (font) => {
-      const textGeometry = new THREE.TextGeometry("To be relevant in a living system is to generate vitality.", {
+      const textGeometry = new TextGeometry("To be relevant in a living system is to generate vitality.", {
         font: font,
         size: 0.3,
         height: 0.1,
