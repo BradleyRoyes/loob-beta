@@ -12,6 +12,30 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    // Function to create floating white pixels
+    const createFloatingPixels = () => {
+      const pixel = document.createElement("div");
+      pixel.classList.add("floating-pixel");
+      pixel.style.width = "2px";
+      pixel.style.height = "2px";
+      pixel.style.background = "#FFFFFF";
+      pixel.style.position = "fixed";
+      pixel.style.top = `${Math.random() * window.innerHeight}px`;
+      pixel.style.left = `${Math.random() * window.innerWidth}px`;
+      document.body.appendChild(pixel);
+
+      // Remove pixel after 3 seconds
+      setTimeout(() => {
+        document.body.removeChild(pixel);
+      }, 3000);
+    };
+
+    // Interval to continuously create floating pixels
+    const interval = setInterval(createFloatingPixels, 100);
+    return () => clearInterval(interval);
+  }, []);
+
   const modalOverlayStyle: CSSProperties = {
     position: "fixed",
     top: 0,
