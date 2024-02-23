@@ -26,7 +26,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
 
   const addLineBreaks = (text: string) => {
     const words = text.split(" ");
-    const result: string[] = [];
+    let result: string[] = [];
     for (let i = 0; i < words.length; i += 6) {
       result.push(words.slice(i, i + 6).join(" "));
     }
