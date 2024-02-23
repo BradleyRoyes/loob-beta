@@ -1,20 +1,21 @@
 import React from "react";
 
-const ModalOverlay = ({ onClose }: { onClose: () => void }) => {
+const ModalOverlay = ({ onClose, theme }: { onClose: () => void; theme: string }) => {
   const modalOverlayStyle: React.CSSProperties = {
     position: "fixed",
     top: 0,
     left: 0,
     width: "100%",
     height: "100%",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: theme === "dark" ? "rgba(0, 0, 0, 0.5)" : "rgba(255, 255, 255, 0.5)",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 9999, // Set a high z-index value
   };
 
   const modalContentStyle: React.CSSProperties = {
-    backgroundColor: "white",
+    backgroundColor: theme === "dark" ? "#232324" : "white",
     padding: "20px",
     borderRadius: "8px",
     textAlign: "center",
@@ -25,16 +26,18 @@ const ModalOverlay = ({ onClose }: { onClose: () => void }) => {
     fontSize: "16px",
     lineHeight: "1.5",
     marginBottom: "20px",
+    color: theme === "dark" ? "#FFFFFF" : "#090909",
   };
 
   const modalButtonStyle: React.CSSProperties = {
     padding: "10px 20px",
     fontSize: "16px",
-    backgroundColor: "#007bff",
+    backgroundColor: theme === "dark" ? "#9946B9" : "#007bff",
     color: "white",
     border: "none",
     borderRadius: "4px",
     cursor: "pointer",
+    backgroundImage: theme === "dark" ? "linear-gradient(to right, #9946B9, #753a88)" : "linear-gradient(to right, #007bff, #0056b3)",
   };
 
   return (
