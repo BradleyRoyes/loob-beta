@@ -105,7 +105,7 @@ export default function Page() {
   if (showNeuronVisual) {
     return (
       <>
-        {/* <Dashboard /> {/* Changed NeuronVisual to Dashboard */}
+        <Dashboard /> /* Changed NeuronVisual to Dashboard*/
         <button
           onClick={() => setShowNeuronVisual(false)}
           className="button-dash flex rounded-md fixed top-4 right-4 items-center justify-center px-2.5"
