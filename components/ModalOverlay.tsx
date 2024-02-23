@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { CSSProperties } from "react";
 
 interface ModalOverlayProps {
@@ -6,8 +6,27 @@ interface ModalOverlayProps {
 }
 
 const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
+  const [typedText, setTypedText] = useState("");
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const textToType =
+    "To be relevant in a living system is to generate vitality. What is that? Its relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData";
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (currentIndex <= textToType.length) {
+        setTypedText(textToType.substring(0, currentIndex));
+        setCurrentIndex((prevIndex) => prevIndex + 1);
+      } else {
+        clearInterval(interval);
+      }
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [currentIndex]);
+
   const modalOverlayStyle: CSSProperties = {
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent black background
+    backgroundColor: "rgba(0, 0, 0, 0.8)", // Semi-transparent black background
     color: "#FFFFFF", // White text color
     position: "fixed",
     top: 0,
@@ -26,8 +45,8 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
 
   const modalTextStyle: CSSProperties = {
     fontFamily: "'Nunito', sans-serif", // Global font family
-    fontSize: "16px", // Global font size
-    lineHeight: "1.5",
+    fontSize: "20px", // Increased font size
+    lineHeight: "2", // Increased line height
     padding: "20px",
   };
 
@@ -43,35 +62,10 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     margin: "20px",
   };
 
-  // Function to insert line breaks every 7 words
-  const insertLineBreaks = (text: string): JSX.Element => {
-    const words = text.split(" ");
-    const chunks = [];
-    let i = 0;
-    while (i < words.length) {
-      chunks.push(words.slice(i, i + 7).join(" "));
-      i += 7;
-    }
-    return (
-      <>
-        {chunks.map((chunk, index) => (
-          <React.Fragment key={index}>
-            {chunk}
-            <br />
-          </React.Fragment>
-        ))}
-      </>
-    );
-  };
-
   return (
     <div style={modalOverlayStyle} onClick={onClose}>
       <div className="modal-content" style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
-        <p style={modalTextStyle}>
-          {insertLineBreaks(
-            "To be relevant in a living system is to generate vitality. What is that? Its relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData"
-          )}
-        </p>
+        <p style={modalTextStyle}>{typedText}</p>
         <button style={buttonStyle} onClick={onClose}>
           New Chat
         </button>
