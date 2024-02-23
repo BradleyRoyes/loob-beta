@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { CSSProperties } from "react";
 
 interface ModalOverlayProps {
@@ -6,25 +6,6 @@ interface ModalOverlayProps {
 }
 
 const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
-  const [typedText, setTypedText] = useState("");
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  const textToType =
-    "To be relevant in a living system is to generate vitality. What is that? Its relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData";
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (currentIndex <= textToType.length) {
-        setTypedText(textToType.substring(0, currentIndex));
-        setCurrentIndex((prevIndex) => prevIndex + 1);
-      } else {
-        clearInterval(interval);
-      }
-    }, 16); // Faster typing speed
-
-    return () => clearInterval(interval);
-  }, [currentIndex]);
-
   const modalOverlayStyle: CSSProperties = {
     backgroundColor: "rgba(0, 0, 0, 0.8)", // Semi-transparent black background
     color: "#FFFFFF", // White text color
@@ -37,6 +18,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     justifyContent: "center",
     alignItems: "center",
     zIndex: 9999, // Ensures the modal is displayed above other content
+    animation: "fade-in 2s ease-in-out forwards", // Trippy fade-in animation
   };
 
   const modalContentStyle: CSSProperties = {
@@ -86,7 +68,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
   return (
     <div style={modalOverlayStyle} onClick={onClose}>
       <div className="modal-content" style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
-        <p style={modalTextStyle}>{insertLineBreaks(typedText)}</p>
+        <p style={modalTextStyle}>{insertLineBreaks("To be relevant in a living system is to generate vitality. What is that? Its relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData")}</p>
         <button style={buttonStyle} onClick={onClose}>
           New Chat
         </button>
