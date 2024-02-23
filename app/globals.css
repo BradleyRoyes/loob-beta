@@ -145,7 +145,7 @@ body {
   display: inline-block;
   position: relative;
   color: var(--text-secondary-inverse);
-  background-color: var(--background-bubble-secondary);
+  background: linear-gradient(to right, pink, orange); /* Gradient from pink to orange */
   border-radius: 10px;
   border-bottom-left-radius: 0px;
   padding: 10px;
@@ -154,7 +154,7 @@ body {
 .talk-bubble.user {
   text-align: right;
   color: var(--text-primary);
-  background-color: var(--background-bubble-primary);
+  background: linear-gradient(to right, pink, orange); /* Gradient from pink to orange */
   border-radius: 10px;
   border-bottom-right-radius: 0px;
   padding: 10px;
