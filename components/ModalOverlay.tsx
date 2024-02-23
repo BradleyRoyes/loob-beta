@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { ReactP5Wrapper } from "react-p5-wrapper";
-import NodeBackground from "./NodeBackground"; // Ensure this path matches where you save NodeBackground.js
 
 const ModalOverlay = ({ onClose }) => {
   const [opacity, setOpacity] = useState(0);
@@ -20,17 +18,22 @@ const ModalOverlay = ({ onClose }) => {
     justifyContent: "center",
     alignItems: "center",
     zIndex: 10,
+    background: "linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab)",
+    backgroundSize: "400% 400%",
+    animation: "gradientBG 15s ease infinite",
   };
 
   const modalContentStyle = {
     textAlign: "center",
-    zIndex: 20, // Ensure modal content is above the canvas
+    zIndex: 20,
     position: "relative",
     color: "#FFFFFF",
     fontFamily: "'Nunito', sans-serif",
     padding: "20px",
     opacity: opacity,
     transition: "opacity 3s ease-in-out",
+    background: "rgba(0, 0, 0, 0.8)", // Optional: Adds readability
+    borderRadius: "10px", // Optional: Adds style
   };
 
   const buttonStyle = {
@@ -51,7 +54,6 @@ const ModalOverlay = ({ onClose }) => {
 
   return (
     <div style={modalOverlayStyle} onClick={onClose}>
-      <ReactP5Wrapper sketch={NodeBackground} />
       <div className="modal-content" style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
         <p>
           To be relevant in a living system is to generate vitality. <br />What is that? <br /> Its relationships that build relationships that build relationships: <br />3rd & 4th order relational process is real systemic work. <br />No KPI can measure it. <br />This is #WarmData

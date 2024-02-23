@@ -313,3 +313,15 @@ body {
   align-items: center; /* Center vertically */
   margin: 0 auto; /* Ensure it's centered horizontally if within a wider section */
 }
+
+@keyframes gradientBG {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
