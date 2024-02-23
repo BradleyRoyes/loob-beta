@@ -8,7 +8,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
   const [opacity, setOpacity] = useState(0);
 
   useEffect(() => {
-    const timer = setTimeout(() => setOpacity(1), 50); // Adjusted for faster fade-in
+    const timer = setTimeout(() => setOpacity(1), 25); // Adjusted for faster fade-in
     return () => clearTimeout(timer);
   }, []);
 
@@ -23,7 +23,8 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     justifyContent: "center",
     alignItems: "center",
     zIndex: 10,
-    background: "rgba(0,0,0,0.8)",
+    background: "rgba(0,0,0,0.9)",
+    backdropFilter: "blur(5px)",
     opacity: opacity,
     transition: "opacity 1s ease-in-out",
   };
@@ -38,13 +39,14 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
   };
 
   const headerStyle: CSSProperties = {
-    fontSize: "20px",
+    fontSize: "18px",
     fontWeight: "bold",
     marginBottom: "10px",
   };
 
   const quoteStyle: CSSProperties = {
     fontStyle: "italic",
+    padding: "10px 10px",
   };
 
   const buttonStyle: CSSProperties = {
@@ -54,7 +56,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     color: "#FFFFFF",
     padding: "10px 20px",
     cursor: "pointer",
-    fontSize: "14px",
+    fontSize: "12px",
     fontFamily: "'Nunito', sans-serif",
     margin: "20px",
   };
