@@ -180,8 +180,20 @@ export async function POST(req: any) {
           // Check if analysis is not null
           console.log("Sending analysis data:", { analysis });
           // Emit analysis data using Pusher
-          // pusher.trigger("my-channel", "my-event", { analysis });
-          triggerPusherEvent("my-channel", "my-event", analysis);
+          pusher
+            .trigger("my-channel", "my-event", { analysis })
+            .then(() =>
+              console.log(
+                `Event ${event} triggered on channel ${"my-channel"}`,
+              ),
+            )
+            .catch((err) =>
+              console.error(
+                `Error triggering event on channel ${"my-channel"}:`,
+                err,
+              ),
+            );
+          // triggerPusherEvent("my-channel", "my-event", analysis);
         } else {
           console.log("Analysis is null, not sending data.");
         }
