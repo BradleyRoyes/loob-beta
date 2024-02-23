@@ -8,12 +8,10 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
   const [opacity, setOpacity] = useState(0);
 
   useEffect(() => {
-    // Faster fade-in effect
     const timer = setTimeout(() => setOpacity(1), 50); // Adjusted for faster fade-in
     return () => clearTimeout(timer);
   }, []);
 
-  // Inline CSS for modal overlay, including background fading
   const modalOverlayStyle: CSSProperties = {
     position: "fixed",
     top: 0,
@@ -27,10 +25,9 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     zIndex: 10,
     background: "rgba(0,0,0,0.8)",
     opacity: opacity,
-    transition: "opacity 1s ease-in-out", // Faster transition
+    transition: "opacity 1s ease-in-out",
   };
 
-  // Inline CSS for modal content
   const modalContentStyle: CSSProperties = {
     textAlign: "center",
     zIndex: 20,
@@ -40,19 +37,16 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     padding: "20px",
   };
 
-  // Inline CSS for header
   const headerStyle: CSSProperties = {
-    fontSize: "24px",
+    fontSize: "20px",
     fontWeight: "bold",
     marginBottom: "10px",
   };
 
-  // Inline CSS for quote
   const quoteStyle: CSSProperties = {
     fontStyle: "italic",
   };
 
-  // Inline CSS for button
   const buttonStyle: CSSProperties = {
     background: "linear-gradient(to right, #FF6B6B, #FFA36B)",
     border: "none",
@@ -60,7 +54,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     color: "#FFFFFF",
     padding: "10px 20px",
     cursor: "pointer",
-    fontSize: "16px",
+    fontSize: "14px",
     fontFamily: "'Nunito', sans-serif",
     margin: "20px",
   };
@@ -74,7 +68,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
       <div className="modal-content" style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
         <div style={headerStyle}>Thanks for playing</div>
         <p style={quoteStyle}>
-          "To be relevant in a living system is to generate vitality. What is that? Its relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData"
+          To be relevant in a living system is to generate vitality. What is that? <br/> Its relationships that build relationships that build relationships:<br/> 3rd & 4th order relational process is real systemic work. <br/> No KPI can measure it. This is #WarmData
         </p>
         <button style={buttonStyle} onClick={reloadApp}>
           New Chat
