@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from "react";
 
 const ModalOverlay = ({ onClose }) => {
   const [opacity, setOpacity] = useState(0);
@@ -8,8 +7,8 @@ const ModalOverlay = ({ onClose }) => {
     return () => clearTimeout(timer);
   }, []);
 
-  const modalOverlayStyle = {
-    position: "fixed",
+  const modalOverlayStyle: CSSProperties = {
+    position: "fixed", // Now correctly typed
     top: 0,
     left: 0,
     width: "100%",
@@ -18,12 +17,12 @@ const ModalOverlay = ({ onClose }) => {
     justifyContent: "center",
     alignItems: "center",
     zIndex: 10,
-    background: "linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab)",
-    backgroundSize: "400% 400%",
-    animation: "gradientBG 15s ease infinite",
+    background: "rgba(0,0,0,0.8)", // Example background style
+    backgroundSize: "cover", // Example background style
+    animation: "yourAnimation 5s infinite", // Example animation
   };
 
-  const modalContentStyle = {
+  const modalContentStyle: CSSProperties = {
     textAlign: "center",
     zIndex: 20,
     position: "relative",
@@ -32,11 +31,9 @@ const ModalOverlay = ({ onClose }) => {
     padding: "20px",
     opacity: opacity,
     transition: "opacity 3s ease-in-out",
-    background: "rgba(0, 0, 0, 0.8)", // Optional: Adds readability
-    borderRadius: "10px", // Optional: Adds style
   };
 
-  const buttonStyle = {
+  const buttonStyle: CSSProperties = {
     background: "linear-gradient(to right, #FF6B6B, #FFA36B)",
     border: "none",
     borderRadius: "4px",
@@ -48,9 +45,6 @@ const ModalOverlay = ({ onClose }) => {
     margin: "20px",
   };
 
-  const reloadApp = () => {
-    window.location.reload();
-  };
 
   return (
     <div style={modalOverlayStyle} onClick={onClose}>
