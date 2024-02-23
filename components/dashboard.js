@@ -46,7 +46,7 @@ const Dashboard = () => {
 
     channel.bind("my-event", function (data) {
       console.log("Raw received data:", data);
-      console.log("Received data:", data.analysis);
+      console.log("Received data:", data.message);
       // setAnalysisData(data.analysis);
     });
 

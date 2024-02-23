@@ -182,7 +182,7 @@ export async function POST(req: any) {
         // triggerPusherEvent("my-channel", "my-event", {
         //   analysis,
         // });
-        pusher.trigger("my-channel", "my-event", { analysis: analysis });
+        pusher.trigger("my-channel", "my-event", { message: "analysis" });
 
         // Save the completion along with any analysis
         await saveMessageToDatabase(
