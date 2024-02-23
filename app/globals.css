@@ -61,9 +61,7 @@
 }
 
 body {
-  background: linear-gradient(to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
+  background: linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
   font-family: 'Nunito';
 }
 
@@ -144,8 +142,8 @@ body {
   text-align: left;
   display: inline-block;
   position: relative;
-  color: var(--text-secondary-inverse);
-  background-color: var(--background-bubble-secondary);
+  color: #000000; /* Black text for better contrast */
+  background: linear-gradient(to right, pink, orange); /* Gradient from pink to orange */
   border-radius: 10px;
   border-bottom-left-radius: 0px;
   padding: 10px;
@@ -153,11 +151,35 @@ body {
 
 .talk-bubble.user {
   text-align: right;
-  color: var(--text-primary);
-  background-color: var(--background-bubble-primary);
+  color: #000000; /* Black text for better contrast */
+  background: linear-gradient(to right, pink, orange); /* Gradient from pink to orange */
   border-radius: 10px;
   border-bottom-right-radius: 0px;
   padding: 10px;
+}
+
+.talk-bubble::before {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+.talk-bubble.user::before {
+  border-color: transparent pink transparent transparent;
+  border-width: 10px;
+  top: 50%;
+  right: 100%;
+  margin-top: -10px;
+}
+
+.talk-bubble::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
 }
 
 .talk-bubble svg {
@@ -178,8 +200,6 @@ body {
 
 .dot-flashing {
   position: relative;
-  /* padding-left: 8px; */
-  /* padding-right: 8px; */
   width: var(--processing-dot-size);
   height: var(--processing-dot-size);
   border-radius: 100%;
