@@ -1,5 +1,5 @@
 import React, { useState, useEffect, CSSProperties } from "react";
-import "./App.css"; // Adjust the path to where your CSS file is located
+import "./app/globals.css"; // Adjust the path to where your CSS file is located
 
 interface ModalOverlayProps {
   onClose: () => void;
