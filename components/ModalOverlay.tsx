@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import styles from "./ModalOverlay.module.css"; // Import CSS module
+import styles from "../app/ModalOverlay.module.css";
 
 interface ModalOverlayProps {
   onClose: () => void;
