@@ -177,12 +177,14 @@ export async function POST(req: any) {
 
         console.log("test");
 
-        console.log("Sending analysis data:", { analysis });
-        // Emit analysis data using Pusher
-        // triggerPusherEvent("my-channel", "my-event", {
-        //   analysis,
-        // });
-        pusher.trigger("my-channel", "my-event", { analysis });
+        if (analysis !== null) {
+          // Check if analysis is not null
+          console.log("Sending analysis data:", { analysis });
+          // Emit analysis data using Pusher
+          pusher.trigger("my-channel", "my-event", { analysis });
+        } else {
+          console.log("Analysis is null, not sending data.");
+        }
 
         // Save the completion along with any analysis
         await saveMessageToDatabase(
