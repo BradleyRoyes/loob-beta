@@ -10,7 +10,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
 
   useEffect(() => {
     // Gradually change opacity to 1 to achieve the fade-in effect
-    const timer = setTimeout(() => setOpacity(1), 100); // Start fade-in after 100ms
+    const timer = setTimeout(() => setOpacity(1), 50); // Start fade-in after 100ms
     return () => clearTimeout(timer); // Clean up timeout
   }, []); // Empty dependency array means this effect runs once on mount
 
@@ -33,12 +33,16 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     fontFamily: "'Nunito', sans-serif",
   };
 
+  const modalHeaderStyle: CSSProperties = {
+    fontSize: "24px",
+    fontWeight: "bold",
+    marginBottom: "20px",
+  };
+
   const modalTextStyle: CSSProperties = {
     fontSize: "18px",
     lineHeight: "1.8",
     padding: "20px",
-    opacity: opacity, // Apply dynamic opacity
-    transition: "opacity 3s ease-in-out", // Smooth transition for the opacity
     fontStyle: "italic", // Making the text italic
   };
 
@@ -58,29 +62,32 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     window.location.reload();
   };
 
-  // Function to add line breaks every 6 words and fade in text line by line
-  const addLineBreaksAndFadeIn = (text: string) => {
+  // Function to add line breaks every 6 words
+  const addLineBreaks = (text: string) => {
     const words = text.split(' ');
     const result: JSX.Element[] = [];
-    words.forEach((word, index) => {
-      const delay = index * 100; // Adjust the delay time as needed
+    for (let i = 0; i < words.length; i += 6) {
       result.push(
-        <span key={index} style={{ opacity: 0, transition: `opacity 1s ease-in-out ${delay}ms`, display: "inline-block" }}>
-          {word} {index % 6 === 5 && <br />} {/* Add line break after every 6 words */}
+        <span key={i}>
+          {words.slice(i, i + 6).join(' ')}
+          <br />
         </span>
       );
-    });
+    }
     return result;
   };
 
   return (
     <div style={modalOverlayStyle} onClick={onClose}>
       <div className="modal-content" style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
+        <h2 style={modalHeaderStyle}>Thanks for playing</h2>
         <p style={modalTextStyle}>
-          {addLineBreaksAndFadeIn("To be relevant in a living system is to generate vitality. What is that? Its relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData.")}
+          <em>
+            {addLineBreaks("To be relevant in a living system is to generate vitality. What is that? Its relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData.")}
+          </em>
         </p>
         <button style={buttonStyle} onClick={reloadApp}>
-          New Chat
+          new chat
         </button>
       </div>
     </div>
