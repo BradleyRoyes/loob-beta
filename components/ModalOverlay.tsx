@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, CSSProperties } from "react";
 
 interface ModalOverlayProps {
   onClose: () => void;
@@ -14,7 +14,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     return () => clearTimeout(timer); // Clean up timeout
   }, []); // Empty dependency array means this effect runs once on mount
 
-  const modalOverlayStyle = {
+  const modalOverlayStyle: CSSProperties = {
     backgroundColor: "rgba(0, 0, 0, 0.8)",
     color: "#FFFFFF",
     position: "fixed",
@@ -41,8 +41,8 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     transition: "opacity 3s ease-in-out", // Smooth transition for the opacity
   };
 
-  const buttonStyle = {
-    background: "linear-gradient(to left, #42275a, #734b6d)",
+  const buttonStyle: CSSProperties = {
+    background: "linear-gradient(to right, #FF6B6B, #FFA36B)",
     border: "none",
     borderRadius: "4px",
     color: "#FFFFFF",
@@ -53,13 +53,17 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     margin: "20px",
   };
 
+  const reloadApp = () => {
+    window.location.reload();
+  };
+
   return (
     <div style={modalOverlayStyle} onClick={onClose}>
       <div className="modal-content" style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
         <p style={modalTextStyle}>
           To be relevant in a living system is to generate vitality. What is that? Its relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData
         </p>
-        <button style={buttonStyle} onClick={() => window.location.reload()}>
+        <button style={buttonStyle} onClick={reloadApp}>
           New Chat
         </button>
       </div>
