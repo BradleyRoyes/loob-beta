@@ -42,12 +42,14 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       )}
 
       {phase === "learnMore" && (
+      
         <motion.div className="content" variants={variants}>
+          <h1 className="gradientText">tell me more about</h1>
           <button onClick={() => onEnter("Tell me about EDS")}>
-            Tell me more about EDS
+            EDS
           </button>
           <button onClick={() => onEnter("Tell me about MOOS")}>
-            Tell me about more MOOS
+            MOOS
           </button>
           <button onClick={() => proceed("feedback")}>
             I&apos;d like to share some feedback
@@ -57,20 +59,21 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
 
       {phase === "feedback" && (
         <motion.div className="content" variants={variants}>
+          <h1 className="gradientText">I&apos;d like to share feedback on</h1>
           <button onClick={() => onEnter("I'd like to share feedback on the TwistTea bar")}>
-            I&apos;d like to share feedback on the Twisttea bar
+            TwistTea bar
           </button>
-          <button onClick={() => onEnter("I'd like to share feedback on you, Loob")}>
-            I&apos;d like to share feedback on you, Loob
+          <button onClick={() => onEnter("I'd like to share feedback on AromaAlchemy space")}>
+            AromaAlchemy
           </button>
           <button onClick={() => onEnter("I'd like to share feedback on the SoundSauna")}>
-            I&apos;d like to share feedback on the SoundSauna
+            SoundSauna
           </button>
-          <button onClick={() => onEnter("I'd like to share feedback on the AromaSpace")}>
-            I&apos;d like to share feedback on the AromaSpace
+          <button onClick={() => onEnter("I'd like to share feedback on you. Loob AI")}>
+            you, Loob AI
           </button>
           <button onClick={() => onEnter("I'd like to talk about something else")}>
-            I&apos;d like to talk about something else
+            something else
           </button>
         </motion.div>
       )}
