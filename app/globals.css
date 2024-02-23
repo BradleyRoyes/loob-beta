@@ -145,7 +145,7 @@ body {
   display: inline-block;
   position: relative;
   color: var(--text-primary);
-  background: linear-gradient(to left, #ac38cc, #753a88); /* Gradient from pink to orange */
+  background: linear-gradient(to left, #42275a, #734b6d); /* Gradient from pink to orange */
   border-radius: 10px;
   border-bottom-left-radius: 0px;
   padding: 10px;
@@ -165,7 +165,7 @@ body {
   left: -1px;
   bottom: 2px;
   transform: translateY(100%) rotateY(180deg);
-  fill: #753a88; /* Set to left-most color for non-user bubbles */
+  fill: #734b6d; /* Set to left-most color for non-user bubbles */
 }
 
 .talk-bubble.user svg {
