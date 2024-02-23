@@ -38,6 +38,7 @@ function parseAnalysis(content: string) {
       }
     } catch (error) {
       console.error("Failed to parse JSON from content", error);
+      return null;
     }
   }
   return null;
