@@ -30,11 +30,6 @@ export default function Page() {
 
   const [collectedJsonMessages, setCollectedJsonMessages] = useState([]);
 
-  const [moodAndKeywords, setMoodAndKeywords] = useState({
-    mood: [],
-    keywords: [],
-  });
-
   const handleCloseModal = () => {
     setShowModal(false);
     window.location.reload(); // Reload the app
@@ -99,20 +94,6 @@ export default function Page() {
     window.addEventListener("resize", adjustAppHeight); // Add resize listener
 
     return () => window.removeEventListener("resize", adjustAppHeight); // Cleanup
-  }, []);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch("../app/api/DataPull");
-        const data = await res.json();
-        setMoodAndKeywords(data);
-      } catch (error) {
-        console.error("Failed to fetch mood and keywords:", error);
-      }
-    };
-
-    fetchData();
   }, []);
 
   const handleAnalyseButtonClick = () => {
@@ -248,16 +229,6 @@ export default function Page() {
             setConfiguration={setConfiguration}
           />
         )}
-        <div>
-          <h2>Mood</h2>
-          {moodAndKeywords.mood.map((mood, index) => (
-            <p key={index}>{mood}</p>
-          ))}
-          <h2>Keywords</h2>
-          {moodAndKeywords.keywords.map((keyword, index) => (
-            <p key={index}>{keyword}</p>
-          ))}
-        </div>
       </main>
     </>
   );
