@@ -50,7 +50,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
             Tell me about MOOS
           </button>
           <button onClick={() => proceed("feedback")}>
-            I&apos;sd like to share some feedback
+            I&apos;d like to share some feedback
           </button>
         </motion.div>
       )}
@@ -58,19 +58,19 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "feedback" && (
         <motion.div className="content" variants={variants}>
           <button onClick={() => onEnter("I'd like to share feedback on the TwistTea bar")}>
-            I&apos;sd like to share feedback on the Twisttea bar
+            I&apos;d like to share feedback on the Twisttea bar
           </button>
           <button onClick={() => onEnter("I'd like to share feedback on you, Loob")}>
-            I&apos;sd like to share feedback on you, Loob
+            I&apos;d like to share feedback on you, Loob
           </button>
           <button onClick={() => onEnter("I'd like to share feedback on the SoundSauna")}>
-            I&apos;sd like to share feedback on the SoundSauna
+            I&apos;d like to share feedback on the SoundSauna
           </button>
           <button onClick={() => onEnter("I'd like to share feedback on the AromaSpace")}>
-            I&apos;sd like to share feedback on the AromaSpace
+            I&apos;d like to share feedback on the AromaSpace
           </button>
           <button onClick={() => onEnter("I'd like to talk about something else")}>
-            I&apos;sd like to talk about something else
+            I&apos;d like to talk about something else
           </button>
         </motion.div>
       )}
