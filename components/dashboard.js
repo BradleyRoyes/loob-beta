@@ -45,7 +45,7 @@ const Dashboard = () => {
     const channel = pusher.subscribe("my-channel");
 
     channel.bind("my-event", function (data) {
-      console.log("Received data:", data);
+      console.log("Received data:", data.analysis);
       setAnalysisData(data.analysis);
     });
 
