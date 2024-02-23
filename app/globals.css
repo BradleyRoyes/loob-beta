@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css?family=Varela+Round');
+@import url('https://fonts.googleapis.com/css?family=Nunito');
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@500&display=swap');
 
 @tailwind base;
@@ -20,7 +21,7 @@
   --text-tertiary: #6B6F73;
   --shadow-primary: 0px 6px 16px 0px #0A0A0A1F, 0px 4px 14px 0px #0A0A0A14, 0px 8px 10px 0px #0A0A0A14;
   --processing-dot-size: 4px;
-  --font-family-primary: 'Nunito';
+  --font-family-primary: 'Ninuto';
 }
 
 .dark {
@@ -35,8 +36,10 @@
   --border-primary: #262626;
   --background-start-rgb: 23, 23, 23;
   --background-end-rgb: 28, 28, 28;
+  --font-family-primary: 'Nunito';
 }
 
+/* Fonts */
 /* latin-ext */
 @font-face {
   font-family: 'Varela Round';
@@ -56,11 +59,13 @@
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+/* Body */
 body {
   background: linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
   font-family: 'Nunito';
 }
 
+/* Chatbot Section */
 .chatbot-section {
   background-color: var(--text-primary);
   box-shadow: var(--shadow-primary);
@@ -78,6 +83,7 @@ body {
   fill: var(--text-primary-inverse);
 }
 
+/* Text Colors */
 .chatbot-text-primary {
   color: var(--text-primary-inverse);
 }
@@ -94,6 +100,7 @@ body {
   color: var(--text-tertiary);
 }
 
+/* Input Field */
 .chatbot-input {
   color: var(--text-primary-inverse);
   border: 1px solid var(--border-primary);
@@ -104,6 +111,7 @@ body {
   color: var(--text-secondary);
 }
 
+/* Send Button */
 .chatbot-send-button {
   background-color: var(--text-primary-inverse);
   color: var(--text-primary);
@@ -113,6 +121,7 @@ body {
   fill: var(--text-primary);
 }
 
+/* Buttons */
 .chatbot-button-primary {
   background-color: var(--text-primary-inverse);
   color: var(--text-primary);
@@ -133,12 +142,13 @@ body {
   fill: var(--text-tertiary);
 }
 
+/* Chat Bubbles */
 .talk-bubble {
   text-align: left;
   display: inline-block;
   position: relative;
   color: var(--text-secondary-inverse);
-  background: linear-gradient(to right, pink, orange);
+  background: linear-gradient(to right, pink, orange); /* Gradient from pink to orange */
   border-radius: 10px;
   border-bottom-left-radius: 0px;
   padding: 10px;
@@ -147,28 +157,208 @@ body {
 .talk-bubble.user {
   text-align: right;
   color: var(--text-primary);
-  background: linear-gradient(to right, pink, orange);
+  background: linear-gradient(to right, pink, orange); /* Gradient from pink to orange */
   border-radius: 10px;
   border-bottom-right-radius: 0px;
   padding: 10px;
 }
 
-.talk-bubble svg {
+/* Triangle Elements */
+.talk-bubble::before {
+  content: '';
   position: absolute;
-  left: -1px;
-  bottom: 2px;
-  transform: translateY(100%) rotateY(180deg);
-  fill: var(--background-bubble-secondary);
+  width: 0;
+  height: 0;
+  border-style: solid;
 }
 
-.light .talk-bubble {
-  background: linear-gradient(to right, #ECEFF1, #FFCCBC);
+.talk-bubble.user::before {
+  border-color: transparent pink transparent transparent;
+  border-width: 10px;
+  top: 50%;
+  right: 100%;
+  margin-top: -10px;
+}
+
+.talk-bubble::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+.talk-bubble.user::after {
+  border-color: transparent orange transparent transparent;
+  border-width: 10px;
+  top: 50%;
+  left: 100%;
+  margin-top: -10px;
+}
+
+/* Dark Mode */
+.dark .chatbot-section {
+  background-color: var(--background-bubble-secondary);
+  border-color: var(--border-primary);
+}
+
+.dark .chatbot-header svg {
+  fill: var(--text-secondary-inverse);
+}
+
+.dark .chatbot-text-primary {
+  color: var(--text-secondary-inverse);
+}
+
+.dark .chatbot-text-secondary {
   color: var(--text-primary-inverse);
+}
+
+.dark .chatbot-text-secondary-inverse {
+  color: var(--text-primary);
+}
+
+.dark .chatbot-text-tertiary {
+  color: var(--text-primary);
+}
+
+.dark .chatbot-input {
+  color: var(--text-secondary-inverse);
+  border: 1px solid var(--border-primary);
+}
+
+.dark .chatbot-input::placeholder {
+  color: var(--text-primary);
+}
+
+.dark .chatbot-send-button {
+  background-color: var(--text-secondary-inverse);
+  color: var(--text-secondary);
+}
+
+.dark .chatbot-send-button svg {
+  fill: var(--text-secondary);
+}
+
+.dark .chatbot-button-primary {
+  background-color: var(--text-secondary-inverse);
+  color: var(--text-secondary);
+}
+
+.dark .chatbot-button-secondary {
+  border: 1px solid var(--border-primary);
+  color: var(--text-secondary-inverse);
+}
+
+.dark .chatbot-faq-link {
+  border: 1px solid var(--border-primary);
+  border-radius: 24px;
+  color: var(--background-bubble-primary);
+}
+
+.dark .chatbot-faq-link svg {
+  fill: var(--text-tertiary);
 }
 
 .dark .talk-bubble {
-  background: linear-gradient(to right, #333333, #FFA726);
+  color: var(--text-primary);
+}
+
+.dark .talk-bubble.user {
+  color: var(--text-secondary-inverse);
+}
+
+.dark .talk-bubble::before {
+  border-color: transparent var(--background-bubble-secondary) transparent transparent;
+}
+
+.dark .talk-bubble.user::before {
+  border-color: transparent var(--background-bubble-primary) transparent transparent;
+}
+
+.dark .talk-bubble::after {
+  border-color: transparent var(--background-bubble-secondary) transparent transparent;
+}
+
+.dark .talk-bubble.user::after {
+  border-color: transparent var(--background-bubble-primary) transparent transparent;
+}
+
+/* Toggle Styles */
+.toggle-background {
+  background-color: var(--background-bubble-primary);
+}
+
+.toggle-boarder {
+  border: 1px solid var(--background-bubble-primary);
+}
+
+.vercel-link {
   color: var(--text-primary-inverse);
+  background-color: var(--text-primary);
+  border-color: var(--border-primary);
+}
+
+.vercel-link hr {
+  border-color: var(--border-primary);
+}
+
+.word-cloud-container {
+  max-width: 100%;
+  height: auto;
+  overflow: hidden;
+  text-align: center;
+}
+
+.visualization-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.word-cloud-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  overflow: auto;
+}
+
+@media (max-width: 768px) {
+  .chatbot-section {
+    padding: 2rem 1rem;
+  }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .chatbot-section {
+    margin: 0 10px;
+  }
+}
+
+.button-dash {
+  padding: 4px 11px;
+  color: var(--text-primary);
+  background-color: #000000;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.dark .button-dash {
+  background-color: #ffffff;
+  color: var(--text-primary);
+}
+
+.word-cloud-container {
+  width: 100%;
+  height: 400px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
 }
 
 .dot-flashing {
@@ -216,81 +406,9 @@ body {
   0% {
     background-color: var(--text-tertiary);
   }
-  50%, 100% {
+
+  50%,
+  100% {
     background-color: rgba(152, 128, 255, 0.2);
   }
-}
-
-.prompt-button {
-  background-color: var(--background-soft);
-  color: var(--text-primary-main);
-}
-
-.toggle-background {
-  background-color: var(--background-bubble-primary);
-}
-
-.toggle-boarder {
-  border: 1px solid var(--background-bubble-primary);
-}
-
-.vercel-link {
-  color: var(--text-primary-inverse);
-  background-color: var(--text-primary);
-  border-color: var(--border-primary);
-}
-
-.vercel-link hr {
-  border-color: var(--border-primary);
-}
-
-.word-cloud-container {
-  max-width: 100%;
-  height: auto;
-  overflow: hidden;
-  text-align: center;
-}
-
-@media (max-width: 768px) {
-  .chatbot-section {
-    padding: 2rem 1rem;
-  }
-  .grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.visualization-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.word-cloud-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  overflow: auto;
-}
-
-.button-dash {
-  padding: 4px 11px;
-  color: var(--text-primary);
-  background-color: #000000;
-  transition: background-color 0.3s, color 0.3s;
-}
-
-.dark .button-dash {
-  background-color: #ffffff;
-}
-
-.word-cloud-container {
-  width: 100%;
-  height: 400px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 0 auto;
 }
