@@ -1,5 +1,10 @@
+import React, { useState, useEffect, CSSProperties } from "react";
 
-const ModalOverlay = ({ onClose }) => {
+interface ModalOverlayProps {
+  onClose: () => void;
+}
+
+const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
   const [opacity, setOpacity] = useState(0);
 
   useEffect(() => {
@@ -8,7 +13,7 @@ const ModalOverlay = ({ onClose }) => {
   }, []);
 
   const modalOverlayStyle: CSSProperties = {
-    position: "fixed", // Now correctly typed
+    position: "fixed",
     top: 0,
     left: 0,
     width: "100%",
@@ -17,9 +22,9 @@ const ModalOverlay = ({ onClose }) => {
     justifyContent: "center",
     alignItems: "center",
     zIndex: 10,
-    background: "rgba(0,0,0,0.8)", // Example background style
-    backgroundSize: "cover", // Example background style
-    animation: "yourAnimation 5s infinite", // Example animation
+    background: "rgba(0,0,0,0.8)", // Simple dark background
+    opacity: opacity,
+    transition: "opacity 3s ease-in-out",
   };
 
   const modalContentStyle: CSSProperties = {
@@ -29,8 +34,6 @@ const ModalOverlay = ({ onClose }) => {
     color: "#FFFFFF",
     fontFamily: "'Nunito', sans-serif",
     padding: "20px",
-    opacity: opacity,
-    transition: "opacity 3s ease-in-out",
   };
 
   const buttonStyle: CSSProperties = {
@@ -45,12 +48,18 @@ const ModalOverlay = ({ onClose }) => {
     margin: "20px",
   };
 
+  const reloadApp = () => {
+    window.location.reload();
+  };
 
   return (
     <div style={modalOverlayStyle} onClick={onClose}>
       <div className="modal-content" style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
         <p>
-          To be relevant in a living system is to generate vitality. <br />What is that? <br /> Its relationships that build relationships that build relationships: <br />3rd & 4th order relational process is real systemic work. <br />No KPI can measure it. <br />This is #WarmData
+          To be relevant in a living system is to generate vitality. <br />
+          What is that? <br /> Its relationships that build relationships that build relationships: <br />
+          3rd & 4th order relational process is real systemic work. <br />
+          No KPI can measure it. <br />This is #WarmData
         </p>
         <button style={buttonStyle} onClick={reloadApp}>
           New Chat
