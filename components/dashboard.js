@@ -1,14 +1,14 @@
 import React, { useEffect, useRef } from "react";
 import { useAnalysisData } from "../components/AnalysisDataContext";
 const Dashboard = () => {
-  const { analysisData } = useAnalysisData(); // Use the context to access analysis data
+  // const { analysisData } = useAnalysisData(); // Use the context to access analysis data
   const canvasRef = useRef(null);
   const points = useRef([]);
   const maxNodes = 10;
   const connectionDistance = 100;
-  useEffect(() => {
-    console.log("Received analysis data:", analysisData); // Log the analysis data to verify receipt
-  }, [analysisData]); // Add analysisData as a dependency to useEffect to re-run when analysisData changes
+  // useEffect(() => {
+  //   console.log("Received analysis data:", analysisData); // Log the analysis data to verify receipt
+  // }, [analysisData]); // Add analysisData as a dependency to useEffect to re-run when analysisData changes
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
@@ -32,7 +32,7 @@ const Dashboard = () => {
       requestAnimationFrame(draw); // Create an animation loop
     };
     draw();
-  }, [analysisData]); // Add analysisData as a dependency to useEffect to re-run when analysisData changes
+  }); // Add analysisData as a dependency to useEffect to re-run when analysisData changes
   // Update points' positions
   const updatePoints = () => {
     points.current.forEach((point) => {
