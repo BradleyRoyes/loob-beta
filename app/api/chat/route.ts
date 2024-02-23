@@ -14,7 +14,7 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE,
 );
 
-let analysis;
+let inMemAnalysis = {};
 
 function parseAnalysis(content: string) {
   // Regex to find the JSON part within curly braces, accounting for nested structures
@@ -24,7 +24,7 @@ function parseAnalysis(content: string) {
 
   if (match) {
     try {
-      analysis = JSON.parse(match[0]);
+      const analysis = JSON.parse(match[0]);
       if (analysis.mood && Array.isArray(analysis.keywords)) {
         return { Mood: analysis.mood, Keywords: analysis.keywords };
       }
@@ -32,7 +32,6 @@ function parseAnalysis(content: string) {
       console.error("Failed to parse JSON from content", error);
     }
   }
-  console.log(analysis);
   return null;
 }
 
@@ -105,6 +104,10 @@ export async function POST(req: any) {
     for (const message of messages) {
       const analysis =
         message.role === "assistant" ? parseAnalysis(message.content) : null;
+      // Generate a unique identifier for each message to use as a key
+      const messageKey = uuidv4();
+      inMemAnalysis[messageKey] = analysis;
+
       await saveMessageToDatabase(
         sessionId,
         message.content,
@@ -166,6 +169,7 @@ important!!! when you recieve the message "*** Analyse our conversation so far *
       },
     });
 
+    console.log("analysis", inMemAnalysis);
     return new StreamingTextResponse(stream);
   } catch (e) {
     console.error(e);
