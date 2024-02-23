@@ -52,7 +52,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
             MOOS
           </button>
           <button onClick={() => proceed("feedback")}>
-            I&apos;d like to share some feedback
+            I&apos;d like to share feedback
           </button>
         </motion.div>
       )}
