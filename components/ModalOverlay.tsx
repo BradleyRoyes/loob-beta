@@ -1,36 +1,56 @@
-import React, { useState, useEffect } from "react";
-import styles from "../app/ModalOverlay.module.css";
+import React, { useState, useEffect, CSSProperties } from "react";
 
 interface ModalOverlayProps {
   onClose: () => void;
 }
 
 const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
-  const [displayedText, setDisplayedText] = useState("");
-  const [wordIndex, setWordIndex] = useState(0);
+  // State for managing opacity
+  const [opacity, setOpacity] = useState(0);
 
   useEffect(() => {
-    const words = addLineBreaks(
-      "To be relevant in a living system is to generate vitality. What is that? Its relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData."
-    );
-    const timer = setInterval(() => {
-      if (wordIndex < words.length) {
-        setDisplayedText((prevText) => prevText + " " + words[wordIndex]);
-        setWordIndex((prevIndex) => prevIndex + 1);
-      } else {
-        clearInterval(timer);
-      }
-    }, 100); // Adjust the interval to control the speed of the transition
-    return () => clearInterval(timer);
-  }, [wordIndex]);
+    // Gradually change opacity to 1 to achieve the fade-in effect
+    const timer = setTimeout(() => setOpacity(1), 100); // Start fade-in after 100ms
+    return () => clearTimeout(timer); // Clean up timeout
+  }, []); // Empty dependency array means this effect runs once on mount
 
-  const addLineBreaks = (text: string) => {
-    const words = text.split(" ");
-    let result: string[] = [];
-    for (let i = 0; i < words.length; i += 6) {
-      result.push(words.slice(i, i + 6).join(" "));
-    }
-    return result;
+  const modalOverlayStyle: CSSProperties = {
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    color: "#FFFFFF",
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 9999,
+  };
+
+  const modalContentStyle: CSSProperties = {
+    textAlign: "center",
+  };
+
+  const modalTextStyle: CSSProperties = {
+    fontFamily: "'Nunito', sans-serif",
+    fontSize: "18px",
+    lineHeight: "1.8",
+    padding: "20px",
+    opacity: opacity, // Apply dynamic opacity
+    transition: "opacity 3s ease-in-out", // Smooth transition for the opacity
+  };
+
+  const buttonStyle: CSSProperties = {
+    background: "linear-gradient(to right, #FF6B6B, #FFA36B)",
+    border: "none",
+    borderRadius: "4px",
+    color: "#FFFFFF",
+    padding: "10px 20px",
+    cursor: "pointer",
+    fontSize: "16px",
+    fontFamily: "'Nunito', sans-serif",
+    margin: "20px",
   };
 
   const reloadApp = () => {
@@ -38,13 +58,12 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
   };
 
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-        <h2 className={styles.modalHeader}>Thanks for playing</h2>
-        <p className={styles.modalText}>
-          <em>{displayedText}</em>
+    <div style={modalOverlayStyle} onClick={onClose}>
+      <div className="modal-content" style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
+        <p style={modalTextStyle}>
+          To be relevant in a living system is to generate vitality. What is that? Its relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData
         </p>
-        <button className={styles.button} onClick={reloadApp}>
+        <button style={buttonStyle} onClick={reloadApp}>
           New Chat
         </button>
       </div>
