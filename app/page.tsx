@@ -57,9 +57,6 @@ export default function Page() {
 
   const [showModal, setShowModal] = useState(false);
 
-  const handleAnalyseButtonClick = () => {
-    setShowModal(true);
-  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -137,6 +134,7 @@ export default function Page() {
   const handleAnalyseButtonClick = () => {
     const analyseMessage = "Analyse our conversation so far";
     append({ content: analyseMessage, role: "user" });
+    setShowModal(true);
   };
 
   if (showNeuronVisual) {
