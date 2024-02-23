@@ -169,10 +169,11 @@ important!!! when you recieve the message "*** Analyse our conversation so far *
       },
     });
 
-    console.log("analysis", inMemAnalysis);
     return new StreamingTextResponse(stream);
   } catch (e) {
     console.error(e);
     throw e;
   }
 }
+
+console.log("analysis", inMemAnalysis);
