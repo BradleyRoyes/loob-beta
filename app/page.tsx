@@ -152,8 +152,9 @@ export default function Page() {
         `}
       </style>
       <main className="flex h-screen-adjusted flex-col items-center justify-center pt-0">
-        {showModal && (
-          <ModalOverlay onClose={() => setShowModal(false)} />
+      {showModal && (
+        <ModalOverlay onClose={() => setShowModal(false)} />
+      )}
         <section
           ref={chatContainerRef}
           className="chatbot-section flex flex-col origin:w-[800px] w-full origin:h-[735px] h-full rounded-md p-2 md:p-6"
