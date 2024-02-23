@@ -15,11 +15,11 @@ const Dashboard = () => {
       encrypted: true,
     });
 
+    console.log("Attempting to subscribe to Pusher channel");
     const channel = pusher.subscribe("my-channel");
 
     channel.bind("my-event", function (data) {
       console.log("Received data:", data);
-      // Update the dashboard with the new analysis data
       setAnalysisData(data.analysis);
     });
 
