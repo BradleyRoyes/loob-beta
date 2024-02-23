@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import styles from "./ModalOverlay.module.css"; // Import CSS module
 
 interface ModalOverlayProps {
   onClose: () => void;
@@ -32,63 +33,19 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     return result;
   };
 
-  const modalOverlayStyle: React.CSSProperties = {
-    backgroundColor: "rgba(0, 0, 0, 0.9)",
-    color: "#FFFFFF",
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 9999,
-  };
-
-  const modalContentStyle: React.CSSProperties = {
-    textAlign: "center",
-    fontFamily: "'Nunito', sans-serif",
-  };
-
-  const modalHeaderStyle: React.CSSProperties = {
-    fontSize: "24px",
-    fontWeight: "bold",
-    marginBottom: "20px",
-  };
-
-  const modalTextStyle: React.CSSProperties = {
-    fontSize: "18px",
-    lineHeight: "1.8",
-    padding: "20px",
-    fontStyle: "italic", // Making the text italic
-  };
-
-  const buttonStyle: React.CSSProperties = {
-    background: "linear-gradient(to right, #ffafbd, #ffc3a0)",
-    border: "none",
-    borderRadius: "4px",
-    color: "#FFFFFF",
-    padding: "10px 20px",
-    cursor: "pointer",
-    fontSize: "16px",
-    fontFamily: "'Nunito', sans-serif",
-    margin: "20px",
-  };
-
   const reloadApp = () => {
     window.location.reload();
   };
 
   return (
-    <div style={modalOverlayStyle} onClick={onClose}>
-      <div className="modal-content" style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
-        <h2 style={modalHeaderStyle}>Thanks for playing</h2>
-        <p style={modalTextStyle}>
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <h2 className={styles.modalHeader}>Thanks for playing</h2>
+        <p className={styles.modalText}>
           <em>{displayedText}</em>
         </p>
-        <button style={buttonStyle} onClick={reloadApp}>
-          new chat
+        <button className={styles.button} onClick={reloadApp}>
+          New Chat
         </button>
       </div>
     </div>
