@@ -1,60 +1,78 @@
-import React, { useEffect } from "react";
-import * as THREE from "three";
+import React from "react";
+import { CSSProperties } from "react";
 
-const ModalOverlay: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  useEffect(() => {
-    // Three.js initialization
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+interface ModalOverlayProps {
+  onClose: () => void;
+}
 
-    // Grid creation
-    const gridSize = 10;
-    const gridStep = 1;
-    const grid = new THREE.GridHelper(gridSize, gridSize, 0xffffff, 0x000000);
-    grid.position.y = -0.5;
-    scene.add(grid);
+const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
+  const modalOverlayStyle: CSSProperties = {
+    backgroundColor: "rgba(0, 0, 0, 0.8)", // Semi-transparent black background
+    color: "#FFFFFF", // White text color
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 9999, // Ensures the modal is displayed above other content
+    animation: "fade-in 2s ease-in-out forwards", // Trippy fade-in animation
+  };
 
-    // Text creation
-    const fullText = "To be relevant in a living system is to generate vitality. What is that? Its relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData";
-    const words = fullText.split(" ");
-    const lines = [];
-    for (let i = 0; i < words.length; i += 7) {
-      lines.push(words.slice(i, i + 7).join(" "));
+  const modalContentStyle: CSSProperties = {
+    textAlign: "center",
+  };
+
+  const modalTextStyle: CSSProperties = {
+    fontFamily: "'Nunito', sans-serif", // Global font family
+    fontSize: "20px", // Increased font size
+    lineHeight: "2.5", // Increased line height
+    padding: "20px",
+  };
+
+  const buttonStyle: CSSProperties = {
+    background: "linear-gradient(to left, #ac38cc, #753a88)", // Gradient similar to bubbles
+    border: "none",
+    borderRadius: "4px",
+    color: "#FFFFFF",
+    padding: "10px 20px",
+    cursor: "pointer",
+    fontSize: "16px", // Global font size
+    fontFamily: "'Nunito', sans-serif", // Global font family
+    margin: "20px",
+  };
+
+  // Function to insert line breaks every 7 words
+  const insertLineBreaks = (text: string): JSX.Element => {
+    const words = text.split(" ");
+    const chunks = [];
+    let i = 0;
+    while (i < words.length) {
+      chunks.push(words.slice(i, i + 7).join(" "));
+      i += 7;
     }
-    const textGeometry = new THREE.TextGeometry(lines.join("\n"), {
-      size: 0.3,
-      height: 0.1,
-    });
-    const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-    textMesh.position.set(0, 0, -5);
-    scene.add(textMesh);
-
-    // Camera positioning
-    camera.position.z = 5;
-
-    // Animation loop
-    const animate = () => {
-      requestAnimationFrame(animate);
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    // Clean up
-    return () => {
-      scene.remove(grid);
-      renderer.dispose();
-    };
-  }, []);
+    return (
+      <>
+        {chunks.map((chunk, index) => (
+          <React.Fragment key={index}>
+            {chunk}
+            <br />
+          </React.Fragment>
+        ))}
+      </>
+    );
+  };
 
   return (
-    <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%" }} onClick={onClose}>
-      <button style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }} onClick={onClose}>
-        Close Modal
-      </button>
+    <div style={modalOverlayStyle} onClick={onClose}>
+      <div className="modal-content" style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
+        <p style={modalTextStyle}>{insertLineBreaks("To be relevant in a living system is to generate vitality. What is that? Its relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData")}</p>
+        <button style={buttonStyle} onClick={onClose}>
+          New Chat
+        </button>
+      </div>
     </div>
   );
 };
