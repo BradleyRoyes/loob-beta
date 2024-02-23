@@ -89,7 +89,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
   };
 
   const buttonStyle: CSSProperties = {
-    background: "linear-gradient(to left, #ac38cc, #753a88)", // Gradient similar to bubbles
+    background: "linear-gradient(to left, #ffafbd, #ffc3a0)", // Gradient similar to bubbles
     border: "none",
     borderRadius: "4px",
     color: "#FFFFFF",
