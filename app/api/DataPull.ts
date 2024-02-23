@@ -18,8 +18,9 @@ console.log("something");
 
 // Define the API route handler to fetch moods and keywords
 export async function GET(req: any, res: any) {
-  res.status(200).json({ message: "API is reachable" });
   console.log("reachable");
+  res.status(200).json({ message: "API is reachable" });
+
   try {
     // Make sure to call the function to get or initialize the AstraDB instance.
 
@@ -27,9 +28,12 @@ export async function GET(req: any, res: any) {
     const messagesCollection = await astraDb.collection("messages");
 
     // Perform the find operation to get the cursor
-    const cursor = await messagesCollection.find({}, {
-      projection: { mood: 1, keywords: 1 },
-    });
+    const cursor = await messagesCollection.find(
+      {},
+      {
+        projection: { mood: 1, keywords: 1 },
+      },
+    );
 
     // Convert the cursor to an array
     const moodAndKeywords = await cursor.toArray(); // This line is crucial
@@ -49,9 +53,9 @@ export async function GET(req: any, res: any) {
     // Send the mood and keywords data as the API response
     res.status(200).json({ mood: moodData, keywords: keywordsData });
   } catch (error) {
+    console.log("here2");
     console.error("Error fetching mood and keywords data:", error.message);
     res.status(500).json({ error: "Internal Server Error" });
-    console.log("here2");
   }
   console.log("here3");
 }
