@@ -274,8 +274,10 @@ const Dashboard = () => {
   // Adjust drawConnections to draw the permanent line based on the sequence of points in permanentLine
   // Draw connections between close points with fading effect
   const drawConnections = (ctx) => {
+    console.log("inside connections");
     points.current.forEach((point, index) => {
       for (let i = index + 1; i < points.current.length; i++) {
+        console.log("inside connections2");
         const other = points.current[i];
         const distance = Math.hypot(point.x - other.x, point.y - other.y);
         console.log("here2");
