@@ -276,10 +276,10 @@
       const { width, height } = ctx.canvas;
 
       // Define parameters for the squiggly line
-      let posX = width;
-      let posY = height / 2;
-      let velX = -1;
-      let velY = 0;
+      let posX = width; // Start from the right side of the canvas
+      let posY = height; // Start from the bottom of the canvas
+      let velX = -1; // Move towards the left
+      let velY = -1; // Move upwards
 
       // Update the position of the line endpoint based on noise
       posX += velX;
