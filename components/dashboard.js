@@ -173,6 +173,7 @@ const Dashboard = () => {
       vy: vy,
       radius: Math.random() * 2 + 1,
       trail: [], // Store previous positions for the trailing effect
+      keywords: keywords,
     });
   };
 
@@ -233,7 +234,13 @@ const Dashboard = () => {
           ctx.beginPath();
           ctx.moveTo(point.x, point.y);
           ctx.lineTo(other.x, other.y);
-          ctx.strokeStyle = "rgba(255, 255, 255, 0.1)"; // Adjust the opacity of the connections
+          
+          // Determine if both points share the most common keyword
+          const shareCommonKeyword = point.keywords.includes(mostCommonKeyword) && other.keywords.includes(mostCommonKeyword);
+
+          // Use red for connections where both points share the most common keyword
+          ctx.strokeStyle = shareCommonKeyword ? "red" : "rgba(255, 255, 255, 0.1)";
+
           ctx.stroke();
         }
       }
