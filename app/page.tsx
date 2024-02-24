@@ -100,7 +100,7 @@ export default function Page() {
     const analyseMessage = "Analyse our conversation so far";
     append({ content: analyseMessage, role: "user" });
     // setShowNeuronVisual(true);
-    setShowModal(true);
+    // setShowModal(true);
   };
 
   if (showNeuronVisual) {
