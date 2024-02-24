@@ -136,51 +136,6 @@ const Dashboard = () => {
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
   }, [analysisData.Keywords]);
-
-  useEffect(() => {
-    // Assuming points are already added to points.current
-    if (points.current.length >= 2) {
-      // Randomly select two distinct points
-      const index1 = Math.floor(Math.random() * points.current.length);
-      let index2 = Math.floor(Math.random() * points.current.length);
-      while (index1 === index2) {
-        // Ensure they are distinct
-        index2 = Math.floor(Math.random() * points.current.length);
-      }
-
-      // Form the initial permanent connection
-      const initialConnection = `${index1}-${index2}`;
-      setPermanentConnections([initialConnection]);
-    }
-  }, []);
-
-  useEffect(() => {
-    // Initialize the permanentLine with two unique points if not already done
-    if (points.current.length >= 2 && permanentLine.length === 0) {
-      let startIndexes = [];
-      while (startIndexes.length < 2) {
-        let newIndex = Math.floor(Math.random() * points.current.length);
-        if (!startIndexes.includes(newIndex)) {
-          startIndexes.push(newIndex);
-        }
-      }
-      setPermanentLine(startIndexes);
-    }
-
-    // Periodically add a new point to the permanentLine every 15 minutes
-    const intervalId = setInterval(() => {
-      if (points.current.length > permanentLine.length) {
-        let nextPoint;
-        do {
-          nextPoint = Math.floor(Math.random() * points.current.length);
-        } while (permanentLine.includes(nextPoint));
-
-        setPermanentLine(prevLine => [...prevLine, nextPoint]);
-      }
-    }, 60000);//900000); // 15 minutes in milliseconds
-
-    return () => clearInterval(intervalId);
-  }, [permanentLine]);
   
   
   const updatePoints = (noiseGen) => {
@@ -305,23 +260,6 @@ const Dashboard = () => {
         }
       }
     });
-
-    // Additionally, draw the permanent line based on points in permanentLine
-    for (let i = 0; i < permanentLine.length - 1; i++) {
-      const pointIndex = permanentLine[i];
-      const nextPointIndex = permanentLine[i + 1];
-      const point = points.current[pointIndex];
-      const nextPoint = points.current[nextPointIndex];
-
-      // Calculate opacity based on index distance
-      const opacity = 1 - i / (permanentLine.length - 1);
-
-      ctx.beginPath();
-      ctx.moveTo(point.x, point.y);
-      ctx.lineTo(nextPoint.x, nextPoint.y);
-      ctx.strokeStyle = `rgba(255, 0, 0, ${opacity})`; // Red for the permanent line with fading effect
-      ctx.stroke();
-    }
   };
   return (
     <div>

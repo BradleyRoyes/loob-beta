@@ -174,8 +174,6 @@ export async function POST(req: any) {
         // Perform analysis on completion content
         const analysis = parseAnalysis(completion);
 
-        console.log("test");
-
         if (analysis !== null) {
           // Check if analysis is not null
           console.log("Sending analysis data:", { analysis });
