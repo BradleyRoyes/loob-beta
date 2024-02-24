@@ -263,46 +263,6 @@ const Dashboard = () => {
     });
   };
 
-  // Update points' positions
-  const updatePoints = (noiseGen) => {
-    points.current.forEach((point, index) => {
-      // Check if the current point is part of a permanent connection
-      const isPartOfPermanentConnection = permanentConnections.some(
-        (connection) => {
-          const [start, end] = connection.split("-").map(Number);
-          return start === index || end === index;
-        },
-      );
-
-      if (!isPartOfPermanentConnection) {
-        // Apply Perlin noise for natural movement if not part of a permanent connection
-        const noiseX = noiseGen.simplex2(point.x * 0.01, point.y * 0.01);
-        const noiseY = noiseGen.simplex2(point.y * 0.01, point.x * 0.01);
-
-        point.vx += noiseX * 0.03; // Adjust velocity based on Perlin noise
-        point.vy += noiseY * 0.03;
-      } else {
-        // Optionally, apply a different logic for points that are part of a permanent connection
-        // For example, you might want to reduce the velocity to make the movement less pronounced
-        point.vx *= 0.95; // Slow down the velocity by a certain factor
-        point.vy *= 0.95;
-      }
-
-      // Update point position
-      point.x += point.vx;
-      point.y += point.vy;
-
-      // Boundary check to reverse the velocity if the point hits the canvas edge
-      if (point.x <= 0 || point.x >= canvasRef.current.width) point.vx *= -1;
-      if (point.y <= 0 || point.y >= canvasRef.current.height) point.vy *= -1;
-
-      // Manage the trail for visual effect
-      point.trail.push({ x: point.x, y: point.y });
-      if (point.trail.length > 10) {
-        point.trail.shift();
-      }
-    });
-  };
 
   // Draw points
   const drawPoints = (ctx) => {
