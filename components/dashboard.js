@@ -184,48 +184,48 @@ const Dashboard = () => {
   }, [permanentLine]);
 
   const updatePoints = (noiseGen) => {
-    points.current.forEach((point, index) => {
-      // Initially assume the point is not part of a permanent connection
-      let isPartOfPermanentLine = false;
+      points.current.forEach((point, index) => {
+          // Initially assume the point is not part of a permanent connection
+          let isPartOfPermanentLine = false;
 
-      // Check if the current point's index is in the permanentLine array
-      if (permanentLine.includes(index)) {
-        isPartOfPermanentLine = true;
-      }
+          // Check if the current point's index is in the permanentLine array
+          if (permanentLine.includes(index)) {
+              isPartOfPermanentLine = true;
+          }
 
-      if (!isPartOfPermanentLine) {
-        // Apply Perlin noise for natural movement if not part of a permanent line
-        const noiseX = noiseGen.simplex2(point.x * 0.01, point.y * 0.01);
-        const noiseY = noiseGen.simplex2(point.y * 0.01, point.x * 0.01);
+          if (!isPartOfPermanentLine) {
+              // Apply Perlin noise for natural movement if not part of a permanent line
+              const noiseX = noiseGen.simplex2(point.x * 0.01, point.y * 0.01);
+              const noiseY = noiseGen.simplex2(point.y * 0.01, point.x * 0.01);
 
-        point.vx += noiseX * 0.03; // Adjust velocity based on Perlin noise
-        point.vy += noiseY * 0.03;
-      } else {
-        // For points that are part of the permanent line, you might want to
-        // apply a different logic or skip the update to maintain the line integrity
-        // For now, let's slightly reduce their velocity to demonstrate this concept
-        point.vx *= 0.95;
-        point.vy *= 0.95;
-      }
+              point.vx += noiseX * 0.03; // Adjust velocity based on Perlin noise
+              point.vy += noiseY * 0.03;
+          } else {
+              // For points that are part of the permanent line, you might want to 
+              // apply a different logic or skip the update to maintain the line integrity
+              // For now, let's slightly reduce their velocity to demonstrate this concept
+              point.vx *= 0.95;
+              point.vy *= 0.95;
+          }
 
-      // Update point position
-      point.x += point.vx;
-      point.y += point.vy;
+          // Update point position
+          point.x += point.vx;
+          point.y += point.vy;
 
-      // Boundary check to reverse the velocity if the point hits the canvas edge
-      if (point.x <= 0 || point.x >= canvasRef.current.width) {
-        point.vx *= -1;
-      }
-      if (point.y <= 0 || point.y >= canvasRef.current.height) {
-        point.vy *= -1;
-      }
+          // Boundary check to reverse the velocity if the point hits the canvas edge
+          if (point.x <= 0 || point.x >= canvasRef.current.width) {
+              point.vx *= -1;
+          }
+          if (point.y <= 0 || point.y >= canvasRef.current.height) {
+              point.vy *= -1;
+          }
 
-      // Manage the trail for visual effect
-      point.trail.push({ x: point.x, y: point.y });
-      if (point.trail.length > 10) {
-        point.trail.shift();
-      }
-    });
+          // Manage the trail for visual effect
+          point.trail.push({ x: point.x, y: point.y });
+          if (point.trail.length > 10) {
+              point.trail.shift();
+          }
+      });
   };
 
   // Function to add a new point with velocity based on the mood
