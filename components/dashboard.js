@@ -142,8 +142,8 @@ const Dashboard = () => {
       (Math.random() < 0.5 ? -1 : 1);
 
     points.current.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
+      x: Math.random() * canvasRef.current.width,
+      y: Math.random() * canvasRef.current.height,
       vx: vx,
       vy: vy,
       radius: Math.random() * 2 + 1,
