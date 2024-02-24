@@ -155,8 +155,8 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    // Initialize the permanentLine with two unique points if not already done
-    if (points.current.length >= 2 && permanentLine.length === 0) {
+    // Only attempt to update permanentLine if there are enough points and no permanent connections have been set
+    if (points.current.length >= 2 && permanentLine.length < 2) {
       let startIndexes = [];
       while (startIndexes.length < 2) {
         let newIndex = Math.floor(Math.random() * points.current.length);
@@ -166,6 +166,8 @@ const Dashboard = () => {
       }
       setPermanentLine(startIndexes);
     }
+  }, [points.current.length]); // Depend on the number of points
+
 
     // Periodically add a new point to the permanentLine every 15 minutes
     const intervalId = setInterval(() => {
@@ -196,8 +198,8 @@ const Dashboard = () => {
               const noiseX = noiseGen.simplex2(point.x * 0.01, point.y * 0.01);
               const noiseY = noiseGen.simplex2(point.y * 0.01, point.x * 0.01);
 
-              point.vx += noiseX * 0.01; // Adjust velocity based on Perlin noise
-              point.vy += noiseY * 0.01;
+              point.vx += noiseX * 0.02; // Adjust velocity based on Perlin noise
+              point.vy += noiseY * 0.02;
           } else {
               // For points that are part of the permanent line, you might want to 
               // apply a different logic or skip the update to maintain the line integrity
@@ -265,44 +267,47 @@ const Dashboard = () => {
       trail: [], // Store previous positions for the trailing effect
     });
   };
+  
   const drawPoints = (ctx) => {
     points.current.forEach((point) => {
-      // Draw tracer tails
-      ctx.beginPath();
-      for (let i = 0; i < point.trail.length; i++) {
-        const p = point.trail[i];
-        const opacity = (i + 1) / point.trail.length; // Increase opacity towards the current position
-        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`; // Use calculated opacity for the trail
-        ctx.arc(p.x, p.y, point.radius, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Draw current position
       ctx.beginPath();
       ctx.arc(point.x, point.y, point.radius, 0, Math.PI * 2);
-      ctx.fillStyle = "white"; // Current position is fully opaque
+      ctx.fillStyle = "white"; // Set point color to white
       ctx.fill();
+
+      // Draw whispy, fading trail
+      for (let i = 0; i < point.trail.length; i++) {
+        const p = point.trail[i];
+        const opacity = (i + 1) / point.trail.length; // Gradually decrease opacity
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, point.radius * (1 - opacity), 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${opacity * 0.5})`; // Adjust opacity for ethereal effect
+        ctx.fill();
+      }
     });
   };
 
 
   // Draw connections between close points
   // Adjust drawConnections to draw the permanent line based on the sequence of points in permanentLine
-  const drawConnections = (ctx) => {
-    points.current.forEach((point, index) => {
-      for (let i = index + 1; i < points.current.length; i++) {
-        const other = points.current[i];
-        const distance = Math.hypot(point.x - other.x, point.y - other.y);
-        if (distance < connectionDistance) {
-          const opacity = 1 - distance / connectionDistance; // Calculate opacity based on distance
-          ctx.beginPath();
-          ctx.moveTo(point.x, point.y);
-          ctx.lineTo(other.x, other.y);
-          ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`; // Use calculated opacity for line
-          ctx.stroke();
-        }
-      }
-    });
+// Inside drawConnections function
+// Additionally, draw the permanent line based on points in permanentLine
+for (let i = 0; i < permanentLine.length - 1; i++) {
+  const pointIndex = permanentLine[i];
+  const nextPointIndex = permanentLine[i + 1];
+  // Ensure these points exist before attempting to draw
+  if (points.current[pointIndex] && points.current[nextPointIndex]) {
+    const point = points.current[pointIndex];
+    const nextPoint = points.current[nextPointIndex];
+
+    ctx.beginPath();
+    ctx.moveTo(point.x, point.y);
+    ctx.lineTo(nextPoint.x, nextPoint.y);
+    ctx.strokeStyle = "red"; // Red for the permanent line
+    ctx.stroke();
+  }
+}
+
 
     // Draw permanent lines with a distinct color and opacity
     for (let i = 0; i < permanentLine.length - 1; i++) {
