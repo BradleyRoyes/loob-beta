@@ -213,7 +213,7 @@ const Dashboard = () => {
     });
   };
 
-  const drawConnections = (ctx) => {
+  const drawConnections = (ctx, commonKeyword) => {
     // Temporary array to track new permanent connections identified in this frame
     let newPermanentConnections = [];
 
