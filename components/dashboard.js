@@ -59,7 +59,7 @@ const Dashboard = () => {
         console.log("Updated analysis data:", updatedData); // Log the updated state for debugging
 
         // Add a new point for every new data received
-        addNewPoint();
+        addNewPoint(updatedData.Mood.toLowerCase());
 
         return updatedData;
       });
@@ -102,14 +102,41 @@ const Dashboard = () => {
     draw();
   }, []);
 
-  // Function to add a new point
-  const addNewPoint = () => {
+  // Function to add a new point with velocity based on the mood
+  const addNewPoint = (mood) => {
     const canvas = canvasRef.current;
+
+    // Define velocity ranges based on mood
+    let velocityRange;
+    switch (mood) {
+      case "positive":
+        velocityRange = { min: 1.5, max: 2.0 }; // Fast
+        break;
+      case "neutral":
+        velocityRange = { min: 0.75, max: 1.25 }; // Medium
+        break;
+      case "negative":
+        velocityRange = { min: 0.25, max: 0.5 }; // Slow
+        break;
+      default:
+        velocityRange = { min: 0.75, max: 1.25 }; // Default to medium if mood is undefined or unknown
+    }
+
+    // Generate velocity within the selected range
+    const vx =
+      (Math.random() * (velocityRange.max - velocityRange.min) +
+        velocityRange.min) *
+      (Math.random() < 0.5 ? -1 : 1);
+    const vy =
+      (Math.random() * (velocityRange.max - velocityRange.min) +
+        velocityRange.min) *
+      (Math.random() < 0.5 ? -1 : 1);
+
     points.current.push({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
-      vx: (Math.random() - 0.5) * 2,
-      vy: (Math.random() - 0.5) * 2,
+      vx: vx,
+      vy: vy,
       radius: Math.random() * 2 + 1,
     });
   };
@@ -173,9 +200,9 @@ const Dashboard = () => {
           borderRadius: "8px",
         }}
       >
-        <h2>Analysis Data</h2>
+        {/* <h2>Analysis Data</h2>
         <p>Mood: {analysisData.Mood}</p>
-        <p>Keywords: {analysisData.Keywords.join(", ")}</p>
+        <p>Keywords: {analysisData.Keywords.join(", ")}</p> */}
       </div>
     </div>
   );
