@@ -229,24 +229,45 @@ const Dashboard = () => {
   };
 
   // Function to add a new point with velocity based on the mood
-  const addNewPoint = (mood) => {
-    const canvas = canvasRef.current;
+// Add New Point function
+const addNewPoint = (mood) => {
+  const canvas = canvasRef.current;
+  const data = analysisData; // Corrected declaration
+  let velocityRange;
+  switch (mood) {
+    case "positive":
+      velocityRange = { min: 0.5, max: 0.67 }; // Fast
+      break;
+    case "neutral":
+      velocityRange = { min: 0.25, max: 0.42 }; // Medium
+      break;
+    case "negative":
+      velocityRange = { min: 0.08, max: 0.17 }; // Slow
+      break;
+    default:
+      velocityRange = { min: 0.25, max: 0.42 }; // Default to medium if mood is undefined or unknown
+  }
 
-    // Define velocity ranges based on mood (slowed down by a factor of 3)
-    let velocityRange;
-    switch (mood) {
-      case "positive":
-        velocityRange = { min: 1.5, max: 2.0 }; // Fast
-        break;
-      case "neutral":
-        velocityRange = { min: 0.75, max: 1.25 }; // Medium
-        break;
-      case "negative":
-        velocityRange = { min: 0.25, max: 0.5 }; // Slow
-        break;
-      default:
-        velocityRange = { min: 0.75, max: 1.25 }; // Default to medium if mood is undefined or unknown
-    }
+  const vx =
+    (Math.random() * (velocityRange.max - velocityRange.min) +
+      velocityRange.min) *
+    (Math.random() < 0.5 ? -1 : 1);
+  const vy =
+    (Math.random() * (velocityRange.max - velocityRange.min) +
+      velocityRange.min) *
+    (Math.random() < 0.5 ? -1 : 1);
+
+  points.current.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    vx: vx,
+    vy: vy,
+    radius: Math.random() * 2 + 1,
+    trail: [],
+    keywords: data.analysis.Keywords,
+  });
+};
+
 
     // Generate velocity within the selected range
     const vx =
