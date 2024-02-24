@@ -9,6 +9,7 @@ const Dashboard = () => {
   const connectionDistance = 100;
   const [analysisData, setAnalysisData] = useState({ Mood: "", Keywords: [] });
   const [mostCommonKeyword, setMostCommonKeyword] = useState("");
+  const [permanentLine, setPermanentLine] = useState([]);
 
   useEffect(() => {
     // Define the global error handler
@@ -136,6 +137,92 @@ const Dashboard = () => {
     return () => clearInterval(intervalId);
   }, [analysisData.Keywords]);
 
+  useEffect(() => {
+    // Assuming points are already added to points.current
+    if (points.current.length >= 2) {
+      // Randomly select two distinct points
+      const index1 = Math.floor(Math.random() * points.current.length);
+      let index2 = Math.floor(Math.random() * points.current.length);
+      while (index1 === index2) {
+        // Ensure they are distinct
+        index2 = Math.floor(Math.random() * points.current.length);
+      }
+
+      // Form the initial permanent connection
+      const initialConnection = `${index1}-${index2}`;
+      setPermanentConnections([initialConnection]);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Assuming points are populated
+    if (points.current.length > 2 && permanentLine.length === 0) {
+      // Select two random points to start the line
+      const startPoints = [
+        Math.floor(Math.random() * points.current.length),
+        Math.floor(Math.random() * points.current.length),
+      ];
+      setPermanentLine(startPoints);
+    }
+
+    const intervalId = setInterval(
+      () => {
+        if (points.current.length > permanentLine.length) {
+          // Find a point not yet in the line to add
+          let nextPoint;
+          do {
+            nextPoint = Math.floor(Math.random() * points.current.length);
+          } while (permanentLine.includes(nextPoint));
+
+          setPermanentLine((permanentLine) => [...permanentLine, nextPoint]);
+        }
+      },
+      60000, //15 * 60 * 1000,
+    ); // Every 15 minutes
+
+    return () => clearInterval(intervalId);
+  }, [permanentLine]);
+
+  const updatePoints = (noiseGen) => {
+    points.current.forEach((point, index) => {
+      // Check if the current point is part of a permanent connection
+      const isPartOfPermanentConnection = permanentConnections.some(
+        (connection) => {
+          const [start, end] = connection.split("-").map(Number);
+          return start === index || end === index;
+        },
+      );
+
+      if (!isPartOfPermanentConnection) {
+        // Apply Perlin noise for natural movement if not part of a permanent connection
+        const noiseX = noiseGen.simplex2(point.x * 0.01, point.y * 0.01);
+        const noiseY = noiseGen.simplex2(point.y * 0.01, point.x * 0.01);
+
+        point.vx += noiseX * 0.03; // Adjust velocity based on Perlin noise
+        point.vy += noiseY * 0.03;
+      } else {
+        // Optionally, apply a different logic for points that are part of a permanent connection
+        // For example, you might want to reduce the velocity to make the movement less pronounced
+        point.vx *= 0.95; // Slow down the velocity by a certain factor
+        point.vy *= 0.95;
+      }
+
+      // Update point position
+      point.x += point.vx;
+      point.y += point.vy;
+
+      // Boundary check to reverse the velocity if the point hits the canvas edge
+      if (point.x <= 0 || point.x >= canvasRef.current.width) point.vx *= -1;
+      if (point.y <= 0 || point.y >= canvasRef.current.height) point.vy *= -1;
+
+      // Manage the trail for visual effect
+      point.trail.push({ x: point.x, y: point.y });
+      if (point.trail.length > 10) {
+        point.trail.shift();
+      }
+    });
+  };
+
   // Function to add a new point with velocity based on the mood
   const addNewPoint = (mood) => {
     const canvas = canvasRef.current;
@@ -178,28 +265,42 @@ const Dashboard = () => {
 
   // Update points' positions
   const updatePoints = (noiseGen) => {
-    points.current.forEach((point) => {
-      // Add current position to trail
-      point.trail.push({ x: point.x, y: point.y });
+    points.current.forEach((point, index) => {
+      // Check if the current point is part of a permanent connection
+      const isPartOfPermanentConnection = permanentConnections.some(
+        (connection) => {
+          const [start, end] = connection.split("-").map(Number);
+          return start === index || end === index;
+        },
+      );
 
-      // Limit the trail length to 10 for a subtle tracer effect
-      if (point.trail.length > 10) {
-        point.trail.shift();
+      if (!isPartOfPermanentConnection) {
+        // Apply Perlin noise for natural movement if not part of a permanent connection
+        const noiseX = noiseGen.simplex2(point.x * 0.01, point.y * 0.01);
+        const noiseY = noiseGen.simplex2(point.y * 0.01, point.x * 0.01);
+
+        point.vx += noiseX * 0.03; // Adjust velocity based on Perlin noise
+        point.vy += noiseY * 0.03;
+      } else {
+        // Optionally, apply a different logic for points that are part of a permanent connection
+        // For example, you might want to reduce the velocity to make the movement less pronounced
+        point.vx *= 0.95; // Slow down the velocity by a certain factor
+        point.vy *= 0.95;
       }
 
-      // Use Perlin noise for natural movement
-      const noiseX = noiseGen.simplex2(point.x * 0.01, point.y * 0.01);
-      const noiseY = noiseGen.simplex2(point.y * 0.01, point.x * 0.01);
-
-      point.vx += noiseX * 0.03; // Adjust velocity based on Perlin noise (slower)
-      point.vy += noiseY * 0.03;
-
+      // Update point position
       point.x += point.vx;
       point.y += point.vy;
 
-      // Use canvasRef.current to access the canvas dimensions
+      // Boundary check to reverse the velocity if the point hits the canvas edge
       if (point.x <= 0 || point.x >= canvasRef.current.width) point.vx *= -1;
       if (point.y <= 0 || point.y >= canvasRef.current.height) point.vy *= -1;
+
+      // Manage the trail for visual effect
+      point.trail.push({ x: point.x, y: point.y });
+      if (point.trail.length > 10) {
+        point.trail.shift();
+      }
     });
   };
 
@@ -229,13 +330,16 @@ const Dashboard = () => {
       for (let i = index + 1; i < points.current.length; i++) {
         const other = points.current[i];
         const distance = Math.hypot(point.x - other.x, point.y - other.y);
-        if (distance < connectionDistance) {
-          ctx.beginPath();
-          ctx.moveTo(point.x, point.y);
-          ctx.lineTo(other.x, other.y);
-          ctx.strokeStyle = "rgba(255, 255, 255, 0.1)"; // Adjust the opacity of the connections
-          ctx.stroke();
-        }
+
+        // Check if this connection is part of the permanent line
+        const isPermanent =
+          permanentLine.includes(index) && permanentLine.includes(i);
+
+        ctx.beginPath();
+        ctx.moveTo(point.x, point.y);
+        ctx.lineTo(other.x, other.y);
+        ctx.strokeStyle = isPermanent ? "red" : "rgba(255, 255, 255, 0.1)"; // Permanent connections in red
+        ctx.stroke();
       }
     });
   };
