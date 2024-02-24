@@ -272,35 +272,38 @@
       }
     };
 
-    const drawSquigglyLine = (ctx) => {
-      const { width, height } = ctx.canvas;
+      const drawSquigglyLine = (ctx) => {
+        const { width, height } = ctx.canvas;
 
-      // Define parameters for the squiggly line
-      let posX = width; // Start from the right side of the canvas
-      let posY = height; // Start from the bottom of the canvas
-      let velX = -1; // Move towards the left
-      let velY = -1; // Move upwards
+        // Define parameters for the squiggly line
+        let posX = width; // Start from the right side of the canvas
+        let posY = height; // Start from the bottom of the canvas
+        let velX = -1; // Move towards the left
+        let velY = -1; // Move upwards
 
-      // Update the position of the line endpoint based on noise
-      posX += velX;
-      posY += velY + Math.random() * 4 - 2; // Add some randomness to posY to create the squiggle effect
+        // Add some randomness to the vertical velocity to create a squiggle effect
+        velY += Math.random() * 4 - 2;
 
-      // Add the new point to the points array
-      squigglyLine.current.points.push({ x: posX, y: posY });
+        // Update the position of the line endpoint
+        posX += velX;
+        posY += velY;
 
-      // Set the composite operation to ensure the red line is drawn on top of the black background
-      ctx.globalCompositeOperation = 'source-over';
+        // Add the new point to the points array
+        squigglyLine.current.points.push({ x: posX, y: posY });
 
-      // Clear the canvas and redraw the entire squiggly line
-      ctx.beginPath();
-      ctx.moveTo(squigglyLine.current.points[0].x, squigglyLine.current.points[0].y);
-      for (let i = 1; i < squigglyLine.current.points.length; i++) {
-        const point = squigglyLine.current.points[i];
-        ctx.lineTo(point.x, point.y);
-      }
-      ctx.strokeStyle = 'red'; // Set stroke color to red
-      ctx.lineWidth = 2;
-      ctx.stroke();
+        // Set the stroke color to red
+        ctx.strokeStyle = 'red';
+
+        // Begin drawing the squiggly line
+        ctx.beginPath();
+        ctx.moveTo(squigglyLine.current.points[0].x, squigglyLine.current.points[0].y);
+        for (let i = 1; i < squigglyLine.current.points.length; i++) {
+          const point = squigglyLine.current.points[i];
+          ctx.lineTo(point.x, point.y);
+        }
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      };
 
       // Reset the global composite operation to its default value
       ctx.globalCompositeOperation = 'source-over';
