@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import axios from 'axios';
 
 function AudioRecorder() {
     const [recording, setRecording] = useState(false);
-    const [audioBlob, setAudioBlob] = useState(null);
+    const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null); // Use useRef to keep a mutable reference
 
     const startRecording = () => {
         navigator.mediaDevices.getUserMedia({ audio: true })
@@ -12,38 +13,46 @@ function AudioRecorder() {
                 mediaRecorder.start();
                 setRecording(true);
 
-                const audioChunks = [];
-                mediaRecorder.addEventListener("dataavailable", event => {
+                const audioChunks: BlobPart[] = [];
+                mediaRecorder.ondataavailable = event => {
                     audioChunks.push(event.data);
-                });
+                };
 
-                mediaRecorder.addEventListener("stop", () => {
+                mediaRecorder.onstop = () => {
                     const audioBlob = new Blob(audioChunks);
                     setAudioBlob(audioBlob);
-                    setRecording(false);
-                });
+                };
+
+                mediaRecorderRef.current = mediaRecorder; // Store the mediaRecorder instance in the ref
             });
     };
 
     const stopRecording = () => {
-        if (recording) {
-            // This assumes mediaRecorder is in the scope; adjust as necessary.
-            mediaRecorder.stop();
-        }
+        if (!recording || !mediaRecorderRef.current) return;
+
+        mediaRecorderRef.current.stop(); // Use the ref to access the mediaRecorder instance
+        setRecording(false);
     };
 
-    const sendAudio = () => {
+    const sendAudio = async () => {
+        if (!audioBlob) {
+            console.error('No audio to send');
+            return;
+        }
+
         const formData = new FormData();
         formData.append('audio', audioBlob, 'audio.webm');
 
-        axios.post('/transcribe-audio', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        }).then(response => {
+        try {
+            const response = await axios.post('/transcribe-audio', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
             console.log('Transcription:', response.data);
             // Handle the response data (transcription result) as needed
-        }).catch(error => {
+        } catch (error) {
             console.error('Error sending audio for transcription:', error);
-        });
+        }
     };
 
     return (
