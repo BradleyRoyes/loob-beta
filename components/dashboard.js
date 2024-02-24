@@ -106,139 +106,152 @@ const Dashboard = () => {
 
     draw();
   }, []);
-    // Function to add a new point with velocity based on the mood
-    const addNewPoint = (mood) => {
-      const canvas = canvasRef.current;
 
-      // Define velocity ranges based on mood (slowed down by a factor of 3)
-      let velocityRange;
-      switch (mood) {
-        case "positive":
-          velocityRange = { min: 0.5, max: 0.67 }; // Fast
-          break;
-        case "neutral":
-          velocityRange = { min: 0.25, max: 0.42 }; // Medium
-          break;
-        case "negative":
-          velocityRange = { min: 0.08, max: 0.17 }; // Slow
-          break;
-        default:
-          velocityRange = { min: 0.25, max: 0.42 }; // Default to medium if mood is undefined or unknown
-      }
+  // Function to add a new point with velocity based on the mood
+  const addNewPoint = (mood) => {
+    const canvas = canvasRef.current;
 
-      // Generate velocity within the selected range
-      const vx =
-        (Math.random() * (velocityRange.max - velocityRange.min) +
-          velocityRange.min) *
-        (Math.random() < 0.5 ? -1 : 1);
-      const vy =
-        (Math.random() * (velocityRange.max - velocityRange.min) +
-          velocityRange.min) *
-        (Math.random() < 0.5 ? -1 : 1);
+    // Define velocity ranges based on mood (slowed down by a factor of 3)
+    let velocityRange;
+    switch (mood) {
+      case "positive":
+        velocityRange = { min: 0.5, max: 0.67 }; // Fast
+        break;
+      case "neutral":
+        velocityRange = { min: 0.25, max: 0.42 }; // Medium
+        break;
+      case "negative":
+        velocityRange = { min: 0.08, max: 0.17 }; // Slow
+        break;
+      default:
+        velocityRange = { min: 0.25, max: 0.42 }; // Default to medium if mood is undefined or unknown
+    }
 
-      points.current.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: vx,
-        vy: vy,
-        radius: Math.random() * 2 + 1,
-        trail: [], // Store previous positions for the trailing effect
-      });
-    };
+    // Generate velocity within the selected range
+    const vx =
+      (Math.random() * (velocityRange.max - velocityRange.min) +
+        velocityRange.min) *
+      (Math.random() < 0.5 ? -1 : 1);
+    const vy =
+      (Math.random() * (velocityRange.max - velocityRange.min) +
+        velocityRange.min) *
+      (Math.random() < 0.5 ? -1 : 1);
 
-    // Update points' positions
-    const updatePoints = (noiseGen) => {
-      points.current.forEach((point) => {
-        // Add current position to trail
-        point.trail.push({ x: point.x, y: point.y });
-
-        // Limit the trail length to 10 for a subtle tracer effect
-        if (point.trail.length > 10) {
-          point.trail.shift();
-        }
-
-        // Use Perlin noise for natural movement
-        const noiseX = noiseGen.simplex2(point.x * 0.01, point.y * 0.01);
-        const noiseY = noiseGen.simplex2(point.y * 0.01, point.x * 0.01);
-
-        point.vx += noiseX * 0.03; // Adjust velocity based on Perlin noise (slower)
-        point.vy += noiseY * 0.03;
-
-        point.x += point.vx;
-        point.y += point.vy;
-
-        // Use canvasRef.current to access the canvas dimensions
-        if (point.x <= 0 || point.x >= canvasRef.current.width) point.vx *= -1;
-        if (point.y <= 0 || point.y >= canvasRef.current.height) point.vy *= -1;
-      });
-    };
-
-    // Draw points
-    const drawPoints = (ctx) => {
-      points.current.forEach((point) => {
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, point.radius, 0, Math.PI * 2);
-        ctx.fillStyle = "white"; // Set point color to white
-        ctx.fill();
-
-        // Draw subtle trail
-        ctx.beginPath();
-        ctx.moveTo(point.trail[0].x, point.trail[0].y);
-        for (let i = 1; i < point.trail.length; i++) {
-          const p = point.trail[i];
-          ctx.lineTo(p.x, p.y);
-        }
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.05)"; // Adjust the opacity of the trail
-        ctx.stroke();
-      });
-    };
-
-    // Draw connections between close points
-    const drawConnections = (ctx) => {
-      points.current.forEach((point, index) => {
-        for (let i = index + 1; i < points.current.length; i++) {
-          const other = points.current[i];
-          const distance = Math.hypot(point.x - other.x, point.y - other.y);
-          if (distance < connectionDistance) {
-            ctx.beginPath();
-            ctx.moveTo(point.x, point.y);
-            ctx.lineTo(other.x, other.y);
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.1)"; // Adjust the opacity of the connections
-            ctx.stroke();
-          }
-        }
-      });
-    };
-
-    return (
-      <div>
-        <canvas
-          ref={canvasRef}
-          style={{
-            display: "block",
-            background: "black", // Set canvas background color to black
-            position: "absolute",
-            zIndex: -1,
-          }}
-        ></canvas>
-        <div
-          style={{
-            position: "absolute",
-            top: "10px",
-            left: "10px",
-            zIndex: 1,
-            color: "white", // Set text color to white
-            background: "rgba(0, 0, 0, 0.7)", // Set background color to black with opacity
-            padding: "10px",
-            borderRadius: "8px",
-          }}
-        >
-          {/* <h2>Analysis Data</h2>
-          <p>Mood: {analysisData.Mood}</p>
-          <p>Keywords: {analysisData.Keywords.join(", ")}</p> */}
-        </div>
-      </div>
-    );
+    points.current.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: vx,
+      vy: vy,
+      radius: Math.random() * 2 + 1,
+      trail: [], // Store previous positions for the trailing effect
+      keywords: generateRandomKeywords(), // Generate random keywords for testing
+    });
   };
 
-  export default Dashboard;
+  // Generate random keywords for testing
+  const generateRandomKeywords = () => {
+    const keywords = ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"];
+    const numKeywords = Math.floor(Math.random() * keywords.length) + 1;
+    const selectedKeywords = [];
+    for (let i = 0; i < numKeywords; i++) {
+      selectedKeywords.push(keywords[Math.floor(Math.random() * keywords.length)]);
+    }
+    return selectedKeywords;
+  };
+
+  // Update points' positions
+  const updatePoints = (noiseGen) => {
+    points.current.forEach((point) => {
+      // Add current position to trail
+      point.trail.push({ x: point.x, y: point.y });
+
+      // Limit the trail length to 10 for a subtle tracer effect
+      if (point.trail.length > 10) {
+        point.trail.shift();
+      }
+
+      // Use Perlin noise for natural movement
+      const noiseX = noiseGen.simplex2(point.x * 0.01, point.y * 0.01);
+      const noiseY = noiseGen.simplex2(point.y * 0.01, point.x * 0.01);
+
+      point.vx += noiseX * 0.03; // Adjust velocity based on Perlin noise (slower)
+      point.vy += noiseY * 0.03;
+
+      point.x += point.vx;
+      point.y += point.vy;
+
+      // Use canvasRef.current to access the canvas dimensions
+      if (point.x <= 0 || point.x >= canvasRef.current.width) point.vx *= -1;
+      if (point.y <= 0 || point.y >= canvasRef.current.height) point.vy *= -1;
+    });
+  };
+
+  // Draw points
+  const drawPoints = (ctx) => {
+    points.current.forEach((point) => {
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, point.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "white"; // Set point color to white
+      ctx.fill();
+
+      // Draw subtle trail
+      ctx.beginPath();
+      ctx.moveTo(point.trail[0].x, point.trail[0].y);
+      for (let i = 1; i < point.trail.length; i++) {
+        const p = point.trail[i];
+        ctx.lineTo(p.x, p.y);
+      }
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.05)"; // Adjust the opacity of the trail
+      ctx.stroke();
+    });
+  };
+
+  // Draw connections between close points
+  const drawConnections = (ctx) => {
+    points.current.forEach((point, index) => {
+      for (let i = index + 1; i < points.current.length; i++) {
+        const other = points.current[i];
+        const distance = Math.hypot(point.x - other.x, point.y - other.y);
+        if (distance < connectionDistance) {
+          ctx.beginPath();
+          ctx.moveTo(point.x, point.y);
+          ctx.lineTo(other.x, other.y);
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.1)"; // Adjust the opacity of the connections
+          ctx.stroke();
+        }
+      }
+    });
+  };
+
+  return (
+    <div>
+      <canvas
+        ref={canvasRef}
+        style={{
+          display: "block",
+          background: "black", // Set canvas background color to black
+          position: "absolute",
+          zIndex: -1,
+        }}
+      ></canvas>
+      <div
+        style={{
+          position: "absolute",
+          top: "10px",
+          left: "10px",
+          zIndex: 1,
+          color: "white", // Set text color to white
+          background: "rgba(0, 0, 0, 0.7)", // Set background color to black with opacity
+          padding: "10px",
+          borderRadius: "8px",
+        }}
+      >
+        {/* <h2>Analysis Data</h2>
+        <p>Mood: {analysisData.Mood}</p>
+        <p>Keywords: {analysisData.Keywords.join(", ")}</p> */}
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;
