@@ -201,7 +201,7 @@ const updatePoints = (noiseGen) => {
     if (point.y <= 0 || point.y >= canvasRef.current.height) point.vy *= -1;
   });
 };
-
+// Draw Points function
 const drawPoints = (ctx) => {
   points.current.forEach((point) => {
     ctx.beginPath();
@@ -209,6 +209,7 @@ const drawPoints = (ctx) => {
     ctx.fillStyle = "white";
     ctx.fill();
 
+    // Draw subtle trail
     ctx.beginPath();
     ctx.moveTo(point.trail[0].x, point.trail[0].y);
     for (let i = 1; i < point.trail.length; i++) {
@@ -219,6 +220,7 @@ const drawPoints = (ctx) => {
     ctx.stroke();
   });
 };
+
 
 const drawConnections = (ctx) => {
   points.current.forEach((point, index) => {
