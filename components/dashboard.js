@@ -9,7 +9,6 @@ const Dashboard = () => {
   const connectionDistance = 100;
   const [analysisData, setAnalysisData] = useState({ Mood: "", Keywords: [] });
   const [mostCommonKeyword, setMostCommonKeyword] = useState("");
-  const [permanentLine, setPermanentLine] = useState([]);
 
   useEffect(() => {
     // Define the global error handler
@@ -27,6 +26,8 @@ const Dashboard = () => {
       console.error(error);
       return true; // Prevents the firing of the default event handler
     };
+
+
 
     // Set the global error handler
     window.onerror = globalErrorHandler;
@@ -58,6 +59,38 @@ const Dashboard = () => {
             ...(data.analysis.Keywords || []),
           ],
         };
+
+        const spawnTestPoints = () => {
+          const canvas = canvasRef.current;
+          for (let i = 0; i < 20; i++) {
+            points.current.push({
+              x: Math.random() * canvas.width,
+              y: Math.random() * canvas.height,
+              vx: (Math.random() * 2 - 1) * 2, // Random velocity between -2 and 2
+              vy: (Math.random() * 2 - 1) * 2,
+              radius: Math.random() * 2 + 1,
+              trail: [],
+            });
+          }
+        };
+
+        const drawConnections = (ctx) => {
+          points.current.forEach((point, index) => {
+            for (let i = index + 1; i < points.current.length; i++) {
+              const other = points.current[i];
+              const distance = Math.hypot(point.x - other.x, point.y - other.y);
+              if (distance < connectionDistance) {
+                const opacity = 1 - distance / connectionDistance; // Closer points are more visible
+                ctx.beginPath();
+                ctx.moveTo(point.x, point.y);
+                ctx.lineTo(other.x, other.y);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+                ctx.stroke();
+              }
+            }
+          });
+        };
+
 
         console.log("Updated analysis data:", updatedData); // Log the updated state for debugging
 
@@ -137,95 +170,6 @@ const Dashboard = () => {
     return () => clearInterval(intervalId);
   }, [analysisData.Keywords]);
 
-  useEffect(() => {
-    // Assuming points are already added to points.current
-    if (points.current.length >= 2) {
-      // Randomly select two distinct points
-      const index1 = Math.floor(Math.random() * points.current.length);
-      let index2 = Math.floor(Math.random() * points.current.length);
-      while (index1 === index2) {
-        // Ensure they are distinct
-        index2 = Math.floor(Math.random() * points.current.length);
-      }
-
-      // Form the initial permanent connection
-      const initialConnection = `${index1}-${index2}`;
-      setPermanentConnections([initialConnection]);
-    }
-  }, []);
-
-  useEffect(() => {
-    // Initialize the permanentLine with two unique points if not already done
-    if (points.current.length >= 2 && permanentLine.length === 0) {
-      let startIndexes = [];
-      while (startIndexes.length < 2) {
-        let newIndex = Math.floor(Math.random() * points.current.length);
-        if (!startIndexes.includes(newIndex)) {
-          startIndexes.push(newIndex);
-        }
-      }
-      setPermanentLine(startIndexes);
-    }
-
-    // Periodically add a new point to the permanentLine every 15 minutes
-    const intervalId = setInterval(() => {
-      if (points.current.length > permanentLine.length) {
-        let nextPoint;
-        do {
-          nextPoint = Math.floor(Math.random() * points.current.length);
-        } while (permanentLine.includes(nextPoint));
-
-        setPermanentLine(prevLine => [...prevLine, nextPoint]);
-      }
-    }, 60000);//900000); // 15 minutes in milliseconds
-
-    return () => clearInterval(intervalId);
-  }, [permanentLine]);
-  const updatePoints = (noiseGen) => {
-      points.current.forEach((point, index) => {
-          // Initially assume the point is not part of a permanent connection
-          let isPartOfPermanentLine = false;
-
-          // Check if the current point's index is in the permanentLine array
-          if (permanentLine.includes(index)) {
-              isPartOfPermanentLine = true;
-          }
-
-          if (!isPartOfPermanentLine) {
-              // Apply Perlin noise for natural movement if not part of a permanent line
-              const noiseX = noiseGen.simplex2(point.x * 0.01, point.y * 0.01);
-              const noiseY = noiseGen.simplex2(point.y * 0.01, point.x * 0.01);
-
-              point.vx += noiseX * 0.03; // Adjust velocity based on Perlin noise
-              point.vy += noiseY * 0.03;
-          } else {
-              // For points that are part of the permanent line, you might want to 
-              // apply a different logic or skip the update to maintain the line integrity
-              // For now, let's slightly reduce their velocity to demonstrate this concept
-              point.vx *= 0.95;
-              point.vy *= 0.95;
-          }
-
-          // Update point position
-          point.x += point.vx;
-          point.y += point.vy;
-
-          // Boundary check to reverse the velocity if the point hits the canvas edge
-          if (point.x <= 0 || point.x >= canvasRef.current.width) {
-              point.vx *= -1;
-          }
-          if (point.y <= 0 || point.y >= canvasRef.current.height) {
-              point.vy *= -1;
-          }
-
-          // Manage the trail for visual effect
-          point.trail.push({ x: point.x, y: point.y });
-          if (point.trail.length > 10) {
-              point.trail.shift();
-          }
-      });
-  };
-
   // Function to add a new point with velocity based on the mood
   const addNewPoint = (mood) => {
     const canvas = canvasRef.current;
@@ -234,16 +178,16 @@ const Dashboard = () => {
     let velocityRange;
     switch (mood) {
       case "positive":
-        velocityRange = { min: 1.5, max: 2.0 }; // Fast
+        velocityRange = { min: 0.5, max: 0.67 }; // Fast
         break;
       case "neutral":
-        velocityRange = { min: 0.75, max: 1.25 }; // Medium
+        velocityRange = { min: 0.25, max: 0.42 }; // Medium
         break;
       case "negative":
-        velocityRange = { min: 0.25, max: 0.5 }; // Slow
+        velocityRange = { min: 0.08, max: 0.17 }; // Slow
         break;
       default:
-        velocityRange = { min: 0.75, max: 1.25 }; // Default to medium if mood is undefined or unknown
+        velocityRange = { min: 0.25, max: 0.42 }; // Default to medium if mood is undefined or unknown
     }
 
     // Generate velocity within the selected range
@@ -263,6 +207,34 @@ const Dashboard = () => {
       vy: vy,
       radius: Math.random() * 2 + 1,
       trail: [], // Store previous positions for the trailing effect
+      keywords: keywords,
+    });
+  };
+
+  // Update points' positions
+  const updatePoints = (noiseGen) => {
+    points.current.forEach((point) => {
+      // Add current position to trail
+      point.trail.push({ x: point.x, y: point.y });
+
+      // Limit the trail length to 10 for a subtle tracer effect
+      if (point.trail.length > 20) {
+        point.trail.shift();
+      }
+
+      // Use Perlin noise for natural movement
+      const noiseX = noiseGen.simplex2(point.x * 0.01, point.y * 0.01);
+      const noiseY = noiseGen.simplex2(point.y * 0.01, point.x * 0.01);
+
+      point.vx += noiseX * 0.03; // Adjust velocity based on Perlin noise (slower)
+      point.vy += noiseY * 0.03;
+
+      point.x += point.vx;
+      point.y += point.vy;
+
+      // Use canvasRef.current to access the canvas dimensions
+      if (point.x <= 0 || point.x >= canvasRef.current.width) point.vx *= -1;
+      if (point.y <= 0 || point.y >= canvasRef.current.height) point.vy *= -1;
     });
   };
 
@@ -287,9 +259,7 @@ const Dashboard = () => {
   };
 
   // Draw connections between close points
-  // Adjust drawConnections to draw the permanent line based on the sequence of points in permanentLine
   const drawConnections = (ctx) => {
-    // Draw all connections in default style
     points.current.forEach((point, index) => {
       for (let i = index + 1; i < points.current.length; i++) {
         const other = points.current[i];
@@ -298,25 +268,17 @@ const Dashboard = () => {
           ctx.beginPath();
           ctx.moveTo(point.x, point.y);
           ctx.lineTo(other.x, other.y);
-          ctx.strokeStyle = "rgba(255, 255, 255, 0.5)"; // Adjust the opacity of the connections
+
+          // Determine if both points share the most common keyword
+          const shareCommonKeyword = point.keywords.includes(mostCommonKeyword) && other.keywords.includes(mostCommonKeyword);
+
+          // Use red for connections where both points share the most common keyword
+          ctx.strokeStyle = shareCommonKeyword ? "red" : "rgba(255, 255, 255, 0.1)";
+
           ctx.stroke();
         }
       }
     });
-
-    // Additionally, draw the permanent line based on points in permanentLine
-    for (let i = 0; i < permanentLine.length - 1; i++) {
-      const pointIndex = permanentLine[i];
-      const nextPointIndex = permanentLine[i + 1];
-      const point = points.current[pointIndex];
-      const nextPoint = points.current[nextPointIndex];
-
-      ctx.beginPath();
-      ctx.moveTo(point.x, point.y);
-      ctx.lineTo(nextPoint.x, nextPoint.y);
-      ctx.strokeStyle = "red"; // Red for the permanent line
-      ctx.stroke();
-    }
   };
 
   return (
