@@ -19,6 +19,7 @@
     "d3": "^7.8.5",
     "d3-cloud": "^1.2.7",
     "express": "^4.18.2",
+    "form-data": "^4.0.0",
     "formidable": "^3.5.1",
     "framer-motion": "^11.0.3",
     "fs.promises": "^0.1.2",
@@ -51,5 +52,8 @@
     "eslint-config-prettier": "^9.0.0",
     "postcss": "^8",
     "tailwindcss": "^3"
+  }
+  "engines": {
+    "node": "18.17.0"
   }
 }
