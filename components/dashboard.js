@@ -278,9 +278,10 @@ const Dashboard = () => {
       for (let i = index + 1; i < points.current.length; i++) {
         const other = points.current[i];
         const distance = Math.hypot(point.x - other.x, point.y - other.y);
+        console.log("here2");
         if (distance < connectionDistance) {
           // Determine if this connection should be red (5% chance)
-          const isRed = Math.random() < 0.5;
+          const isRed = Math.random() < 0.9;
           console.log("here");
           console.log("isred", isRed);
 
@@ -292,8 +293,10 @@ const Dashboard = () => {
           
           // Set color based on whether it's red or not
           if (isRed) {
+            console.log("here3");
             ctx.strokeStyle = `rgba(255, 0, 0, ${opacity})`; // Red for the connection
           } else {
+            console.log("here4");
             ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`; // White for other connections
           }
           ctx.stroke();
