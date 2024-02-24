@@ -281,6 +281,7 @@ const Dashboard = () => {
         if (distance < connectionDistance) {
           // Determine if this connection should be red (5% chance)
           const isRed = Math.random() < 0.5;
+          console.log("isred", isRed);
 
           // Calculate opacity based on distance
           const opacity = 1 - distance / connectionDistance;
