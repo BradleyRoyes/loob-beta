@@ -10,6 +10,7 @@ const Dashboard = () => {
   const [analysisData, setAnalysisData] = useState({ Mood: "", Keywords: [] });
   const [mostCommonKeyword, setMostCommonKeyword] = useState("");
   const [permanentLine, setPermanentLine] = useState([]);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     // Define the global error handler
@@ -36,6 +37,17 @@ const Dashboard = () => {
       window.onerror = null;
     };
   }, []); // Empty dependency array ensures this effect runs only once on mount
+
+  useEffect(() => {
+    if (mostCommonKeyword) {
+      setShowModal(true); // Show the modal with the keyword
+      const timer = setTimeout(() => {
+        setShowModal(false); // Hide the modal after a few seconds
+      }, 5000); // Adjust time as needed
+
+      return () => clearTimeout(timer);
+    }
+  }, [mostCommonKeyword]);
 
   useEffect(() => {
     // Initialize Pusher and subscribe to the channel for real-time updates
@@ -287,6 +299,12 @@ const Dashboard = () => {
           <p>Keywords: {analysisData.Keywords.join(", ")}</p> */}
         <p>Most Common Keyword: {mostCommonKeyword}</p>{" "}
         {/* Display the most common keyword */}
+      </div>
+      {/* Modal Overlay */}
+      <div className={`modal-overlay ${showModal ? 'show' : 'hide'}`}>
+        <div className="modal-content">
+          {mostCommonKeyword}
+        </div>
       </div>
     </div>
   );
