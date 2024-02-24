@@ -288,17 +288,19 @@ const Dashboard = () => {
 
   // Draw connections between close points
   // Adjust drawConnections to draw the permanent line based on the sequence of points in permanentLine
+  // Draw connections between close points with fading effect
   const drawConnections = (ctx) => {
-    // Draw all connections in default style
     points.current.forEach((point, index) => {
       for (let i = index + 1; i < points.current.length; i++) {
         const other = points.current[i];
         const distance = Math.hypot(point.x - other.x, point.y - other.y);
         if (distance < connectionDistance) {
+          // Calculate opacity based on distance
+          const opacity = 1 - distance / connectionDistance;
           ctx.beginPath();
           ctx.moveTo(point.x, point.y);
           ctx.lineTo(other.x, other.y);
-          ctx.strokeStyle = "rgba(255, 255, 255, 0.5)"; // Adjust the opacity of the connections
+          ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`; // Adjust the opacity of the connections
           ctx.stroke();
         }
       }
@@ -311,14 +313,16 @@ const Dashboard = () => {
       const point = points.current[pointIndex];
       const nextPoint = points.current[nextPointIndex];
 
+      // Calculate opacity based on index distance
+      const opacity = 1 - i / (permanentLine.length - 1);
+
       ctx.beginPath();
       ctx.moveTo(point.x, point.y);
       ctx.lineTo(nextPoint.x, nextPoint.y);
-      ctx.strokeStyle = "red"; // Red for the permanent line
+      ctx.strokeStyle = `rgba(255, 0, 0, ${opacity})`; // Red for the permanent line with fading effect
       ctx.stroke();
     }
   };
-
   return (
     <div>
       <canvas
