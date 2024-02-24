@@ -5,10 +5,9 @@ import { Noise } from "noisejs"; // Import the Noise object from noisejs
 const Dashboard = () => {
   const canvasRef = useRef(null);
   const points = useRef([]);
-  const keywordCounts = useRef({});
+  const maxNodes = 10;
   const connectionDistance = 100;
-  const [commonKeyword, setCommonKeyword] = useState("");
-  const [permanentConnections, setPermanentConnections] = useState([]); // New state to track permanent connections
+  const [analysisData, setAnalysisData] = useState({ Mood: "", Keywords: [] });
 
   useEffect(() => {
     // Define the global error handler
@@ -49,21 +48,22 @@ const Dashboard = () => {
     channel.bind("my-event", function (data) {
       // console.log("Raw received data:", data);
       console.log("Received data:", data.analysis);
+      setAnalysisData((prevAnalysisData) => {
+        const updatedData = {
+          Mood: data.analysis.Mood,
+          Keywords: [
+            ...prevAnalysisData.Keywords,
+            ...(data.analysis.Keywords || []),
+          ],
+        };
 
-      const keywords = data.analysis.Keywords || [];
-      keywords.forEach((keyword) => {
-        keywordCounts.current[keyword] =
-          (keywordCounts.current[keyword] || 0) + 1;
+        console.log("Updated analysis data:", updatedData); // Log the updated state for debugging
+
+        // Add a new point for every new data received
+        addNewPoint(updatedData.Mood.toLowerCase());
+
+        return updatedData;
       });
-
-      // Determine the most common keyword after each message is received
-      const currentCommonKeyword = Object.keys(keywordCounts.current).reduce(
-        (a, b) => (keywordCounts.current[a] > keywordCounts.current[b] ? a : b),
-        "",
-      );
-      setCommonKeyword(currentCommonKeyword);
-
-      addNewPoint(data.analysis.Mood.toLowerCase(), keywords);
     });
 
     // Bind to the subscription succeeded event
@@ -79,25 +79,12 @@ const Dashboard = () => {
       console.log("subscription failed");
     });
 
-    // Periodically determine the most common keyword
-    const intervalId = setInterval(() => {
-      const mostCommonKeyword = Object.keys(keywordCounts.current).reduce(
-        (a, b) => (keywordCounts.current[a] > keywordCounts.current[b] ? a : b),
-        "",
-      );
-      if (mostCommonKeyword !== commonKeyword) {
-        setCommonKeyword(mostCommonKeyword);
-        setPermanentConnections([]); // Reset permanent connections when the most common keyword changes
-      }
-    }, 60000); // Check every minute for testing
-
     return () => {
-      clearInterval(intervalId);
       channel.unbind_all();
       channel.unsubscribe();
       // pusher.disconnect();
     };
-  }, [commonKeyword]);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -113,21 +100,21 @@ const Dashboard = () => {
       ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the canvas with black color
       updatePoints(noiseGen); // Pass the noise generator to the update function
       drawPoints(ctx);
-      drawConnections(ctx, commonKeyword);
+      drawConnections(ctx);
       requestAnimationFrame(draw);
     };
 
     draw();
-  }, [commonKeyword, permanentConnections]);
+  }, []);
   // Function to add a new point with velocity based on the mood
-  const addNewPoint = (mood, keywords) => {
-    // const canvas = canvasRef.current;
+  const addNewPoint = (mood) => {
+    const canvas = canvasRef.current;
 
     // Define velocity ranges based on mood (slowed down by a factor of 3)
     let velocityRange;
     switch (mood) {
       case "positive":
-        velocityRange = { min: 1.5, max: 2.0 }; // Fast
+        velocityRange = { min: 1.5, max: 1.75.0 }; // Fast
         break;
       case "neutral":
         velocityRange = { min: 0.75, max: 1.25 }; // Medium
@@ -150,52 +137,37 @@ const Dashboard = () => {
       (Math.random() < 0.5 ? -1 : 1);
 
     points.current.push({
-      x: Math.random() * canvasRef.current.width,
-      y: Math.random() * canvasRef.current.height,
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
       vx: vx,
       vy: vy,
       radius: Math.random() * 2 + 1,
       trail: [], // Store previous positions for the trailing effect
-      keywords: keywords,
     });
   };
 
+  // Update points' positions
   const updatePoints = (noiseGen) => {
-    points.current.forEach((point, index) => {
-      // Check if the point is defined to prevent runtime errors
-      if (!point) {
-        console.error(`Point at index ${index} is undefined`);
-        return; // Skip this iteration if the point is undefined
+    points.current.forEach((point) => {
+      // Add current position to trail
+      point.trail.push({ x: point.x, y: point.y });
+
+      // Limit the trail length to 10 for a subtle tracer effect
+      if (point.trail.length > 10) {
+        point.trail.shift();
       }
 
-      let hasPermanentConnection = false;
+      // Use Perlin noise for natural movement
+      const noiseX = noiseGen.simplex2(point.x * 0.01, point.y * 0.01);
+      const noiseY = noiseGen.simplex2(point.y * 0.01, point.x * 0.01);
 
-      // Check if this point has any permanent connection
-      permanentConnections.forEach((connection) => {
-        const [point1Index, point2Index] = connection.split("-").map(Number);
-        // Check if either end of the connection includes the current point
-        if (index === point1Index || index === point2Index) {
-          hasPermanentConnection = true;
-        }
-      });
+      point.vx += noiseX * 0.03; // Adjust velocity based on Perlin noise (slower)
+      point.vy += noiseY * 0.03;
 
-      // Proceed with noise-based velocity updates only if there's no permanent connection
-      if (!hasPermanentConnection) {
-        // Use Perlin noise for natural movement
-        const noiseX = noiseGen.simplex2(point.x * 0.01, point.y * 0.01);
-        const noiseY = noiseGen.simplex2(point.y * 0.01, point.x * 0.01);
-
-        point.vx += noiseX * 0.2; // Adjust velocity based on Perlin noise
-        point.vy += noiseY * 0.2;
-      }
-      // Else, you might want to either limit the movement or keep the point stationary
-      // This part of logic is up to your application's requirements
-
-      // Update point position, ensuring it's defined
       point.x += point.vx;
       point.y += point.vy;
 
-      // Boundary check to reverse the velocity if the point hits the canvas edge
+      // Use canvasRef.current to access the canvas dimensions
       if (point.x <= 0 || point.x >= canvasRef.current.width) point.vx *= -1;
       if (point.y <= 0 || point.y >= canvasRef.current.height) point.vy *= -1;
     });
@@ -221,36 +193,17 @@ const Dashboard = () => {
     });
   };
 
-  const drawConnections = (ctx, commonKeyword) => {
-    // Temporary array to track new permanent connections identified in this frame
-    let newPermanentConnections = [];
-
+  // Draw connections between close points
+  const drawConnections = (ctx) => {
     points.current.forEach((point, index) => {
       for (let i = index + 1; i < points.current.length; i++) {
         const other = points.current[i];
         const distance = Math.hypot(point.x - other.x, point.y - other.y);
-
         if (distance < connectionDistance) {
           ctx.beginPath();
           ctx.moveTo(point.x, point.y);
           ctx.lineTo(other.x, other.y);
-
-          // Check if both points have the common keyword
-          if (
-            point.keywords.includes(commonKeyword) &&
-            other.keywords.includes(commonKeyword)
-          ) {
-            ctx.strokeStyle = "red"; // Red for connections based on the most common keyword
-
-            // Add to permanent connections if not already included
-            const connection = `${index}-${i}`;
-            if (!permanentConnections.includes(connection)) {
-              setPermanentConnections((prev) => [...prev, connection]);
-            }
-          } else {
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.1)"; // Default connection color
-          }
-
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.1)"; // Adjust the opacity of the connections
           ctx.stroke();
         }
       }
