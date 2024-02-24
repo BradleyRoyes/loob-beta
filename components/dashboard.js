@@ -301,7 +301,7 @@ const Dashboard = () => {
         {/* Display the most common keyword */}
       </div>
       {/* Modal Overlay */}
-      <div className={`modal-overlay ${showModal ? 'show' : 'hide'}`}>
+      <div className={`modal-overlay ${showModal ? 'show' : ''}`}>
         <div className="modal-content">
           {mostCommonKeyword}
         </div>
