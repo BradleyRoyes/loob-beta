@@ -1,4 +1,4 @@
-run = "tsx index.ts"
+run = "npx ts-node index.ts"
 entrypoint = "index.ts"
 hidden = [".config", "package-lock.json", "tsconfig.json"]
 modules = ["nodejs-20:v8-20230920-bd784b9"]
@@ -28,6 +28,6 @@ requiredFiles = [".replit", "replit.nix", ".config"]
     start = "typescript-language-server --stdio"
 
 [deployment]
-run = ["tsx", "index.ts"]
+run = ["npx", "ts-node", "index.ts"]
 deploymentTarget = "cloudrun"
 ignorePorts = false
