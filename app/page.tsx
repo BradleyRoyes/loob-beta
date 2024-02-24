@@ -6,7 +6,7 @@ import Footer from "../components/Footer";
 import Configure from "../components/Configure";
 import ThemeButton from "../components/ThemeButton";
 import useConfiguration from "./hooks/useConfiguration";
-import AudioRecorder from "../components/AudioRecorder";
+// import AudioRecorder from "../components/AudioRecorder";
 import Dashboard from "../components/dashboard"; // Changed NeuronVisual to Dashboard
 import MessageCollector from "../components/MessageCollector"; // Adjust the import path as necessary
 import { v4 as uuidv4 } from "uuid";
