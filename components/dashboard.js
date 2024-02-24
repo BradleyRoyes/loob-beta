@@ -272,38 +272,37 @@
       }
     };
 
-      const drawSquigglyLine = (ctx) => {
-        const { width, height } = ctx.canvas;
+    const drawSquigglyLine = (ctx) => {
+      const { width, height } = ctx.canvas;
 
-        // Define parameters for the squiggly line
-        let posX = width; // Start from the right side of the canvas
-        let posY = height; // Start from the bottom of the canvas
-        let velX = -1; // Move towards the left
-        let velY = -1; // Move upwards
+      let posX = width; // Start from the right side of the canvas
+      let posY = height; // Start from the bottom of the canvas
+      let velX = -1; // Move towards the left
+      let velY = -1; // Move upwards
 
-        // Add some randomness to the vertical velocity to create a squiggle effect
-        velY += Math.random() * 4 - 2;
+      // Add some randomness to the vertical velocity to create a squiggle effect
+      velY += Math.random() * 4 - 2;
 
-        // Update the position of the line endpoint
-        posX += velX;
-        posY += velY;
+      // Update the position of the line endpoint
+      posX += velX;
+      posY += velY;
 
-        // Add the new point to the points array
-        squigglyLine.current.points.push({ x: posX, y: posY });
+      // Add the new point to the points array
+      squigglyLine.current.points.push({ x: posX, y: posY });
 
-        // Set the stroke color to red
-        ctx.strokeStyle = 'red';
+      // Set the stroke color to red
+      ctx.strokeStyle = 'red';
 
-        // Begin drawing the squiggly line
-        ctx.beginPath();
-        ctx.moveTo(squigglyLine.current.points[0].x, squigglyLine.current.points[0].y);
-        for (let i = 1; i < squigglyLine.current.points.length; i++) {
-          const point = squigglyLine.current.points[i];
-          ctx.lineTo(point.x, point.y);
-        }
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      };
+      // Begin drawing the squiggly line
+      ctx.beginPath();
+      ctx.moveTo(squigglyLine.current.points[0].x, squigglyLine.current.points[0].y);
+      for (let i = 1; i < squigglyLine.current.points.length; i++) {
+        const point = squigglyLine.current.points[i];
+        ctx.lineTo(point.x, point.y);
+      }
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    };
 
       // Reset the global composite operation to its default value
       ctx.globalCompositeOperation = 'source-over';
