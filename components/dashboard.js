@@ -275,16 +275,21 @@
     const drawSquigglyLine = (ctx) => {
       const { width, height } = ctx.canvas;
 
+      // Define parameters for the squiggly line
       let posX = width;
       let posY = height / 2;
       let velX = -1;
       let velY = 0;
 
+      // Update the position of the line endpoint based on noise
       posX += velX;
-      posY += velY;
+      posY += velY + Math.random() * 4 - 2; // Add some randomness to posY to create the squiggle effect
 
+      // Add the new point to the points array
       squigglyLine.current.points.push({ x: posX, y: posY });
 
+      // Clear the canvas and redraw the entire squiggly line
+      ctx.clearRect(0, 0, width, height);
       ctx.beginPath();
       ctx.moveTo(squigglyLine.current.points[0].x, squigglyLine.current.points[0].y);
       for (let i = 1; i < squigglyLine.current.points.length; i++) {
@@ -295,6 +300,7 @@
       ctx.lineWidth = 2;
       ctx.stroke();
     };
+
 
     return (
       <div>
