@@ -120,8 +120,9 @@ const Dashboard = () => {
       point.x += point.vx;
       point.y += point.vy;
 
-      if (point.x <= 0 || point.x >= canvas.width) point.vx *= -1;
-      if (point.y <= 0 || point.y >= canvas.height) point.vy *= -1;
+      // Use canvasRef.current to access the canvas dimensions
+      if (point.x <= 0 || point.x >= canvasRef.current.width) point.vx *= -1;
+      if (point.y <= 0 || point.y >= canvasRef.current.height) point.vy *= -1;
     });
   };
 
