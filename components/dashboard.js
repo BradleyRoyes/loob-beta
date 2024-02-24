@@ -279,12 +279,21 @@ const Dashboard = () => {
         const other = points.current[i];
         const distance = Math.hypot(point.x - other.x, point.y - other.y);
         if (distance < connectionDistance) {
+          // Determine if this connection should be red (5% chance)
+          const isRed = Math.random() < 0.05;
+
           // Calculate opacity based on distance
           const opacity = 1 - distance / connectionDistance;
           ctx.beginPath();
           ctx.moveTo(point.x, point.y);
           ctx.lineTo(other.x, other.y);
-          ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`; // Adjust the opacity of the connections
+          
+          // Set color based on whether it's red or not
+          if (isRed) {
+            ctx.strokeStyle = `rgba(255, 0, 0, ${opacity})`; // Red for the connection
+          } else {
+            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`; // White for other connections
+          }
           ctx.stroke();
         }
       }
