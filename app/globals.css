@@ -61,13 +61,25 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  0% {
+    opacity: 0;
+    transform: scale(1); /* Start smaller */
+  }
+  100% {
+    opacity: 1;
+    transform: scale(3); /* Scale up to normal size */
+  }
 }
 
 @keyframes fadeOut {
-  from { opacity: 1; }
-  to { opacity: 0; }
+  0% {
+    opacity: 1;
+    transform: scale(3); /* Start at normal size */
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.5); /* End smaller */
+  }
 }
 
 .modal-overlay {
@@ -81,6 +93,16 @@
   border-radius: 10px;
   z-index: 1000; /* Ensure it's above other content */
   display: none; /* Initially don't display the modal */
+}
+
+.modal-content {
+  padding: 20px;
+  background: var(--background-bubble-secondary);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-size: 3rem; /* Increase font size for drama */
+  text-align: center; /* Center the text */
+  animation-fill-mode: forwards; /* Keep the state at the end of the animation */
 }
 
 .modal-overlay.show {
