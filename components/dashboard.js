@@ -263,7 +263,6 @@ const Dashboard = () => {
     });
   };
 
-
   // Draw points
   const drawPoints = (ctx) => {
     points.current.forEach((point) => {
@@ -285,23 +284,36 @@ const Dashboard = () => {
   };
 
   // Draw connections between close points
+  // Adjust drawConnections to draw the permanent line based on the sequence of points in permanentLine
   const drawConnections = (ctx) => {
+    // Draw all connections in default style
     points.current.forEach((point, index) => {
       for (let i = index + 1; i < points.current.length; i++) {
         const other = points.current[i];
         const distance = Math.hypot(point.x - other.x, point.y - other.y);
-
-        // Check if this connection is part of the permanent line
-        const isPermanent =
-          permanentLine.includes(index) && permanentLine.includes(i);
-
-        ctx.beginPath();
-        ctx.moveTo(point.x, point.y);
-        ctx.lineTo(other.x, other.y);
-        ctx.strokeStyle = isPermanent ? "red" : "rgba(255, 255, 255, 0.1)"; // Permanent connections in red
-        ctx.stroke();
+        if (distance < connectionDistance) {
+          ctx.beginPath();
+          ctx.moveTo(point.x, point.y);
+          ctx.lineTo(other.x, other.y);
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.1)"; // Adjust the opacity of the connections
+          ctx.stroke();
+        }
       }
     });
+
+    // Additionally, draw the permanent line based on points in permanentLine
+    for (let i = 0; i < permanentLine.length - 1; i++) {
+      const pointIndex = permanentLine[i];
+      const nextPointIndex = permanentLine[i + 1];
+      const point = points.current[pointIndex];
+      const nextPoint = points.current[nextPointIndex];
+
+      ctx.beginPath();
+      ctx.moveTo(point.x, point.y);
+      ctx.lineTo(nextPoint.x, nextPoint.y);
+      ctx.strokeStyle = "red"; // Red for the permanent line
+      ctx.stroke();
+    }
   };
 
   return (
