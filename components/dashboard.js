@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import Pusher from "pusher-js";
+import { noise } from "noisejs"; // Import the noise library
 
 const Dashboard = () => {
   const canvasRef = useRef(null);
@@ -91,9 +92,12 @@ const Dashboard = () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
+    // Initialize Perlin noise generator
+    const noiseGen = new noise.Noise(Math.random());
+
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      updatePoints();
+      updatePoints(noiseGen); // Pass the noise generator to the update function
       drawPoints(ctx);
       drawConnections(ctx);
       requestAnimationFrame(draw);
@@ -138,12 +142,28 @@ const Dashboard = () => {
       vx: vx,
       vy: vy,
       radius: Math.random() * 2 + 1,
+      trail: [], // Store previous positions for the trailing effect
     });
   };
 
   // Update points' positions
-  const updatePoints = () => {
+  const updatePoints = (noiseGen) => {
     points.current.forEach((point) => {
+      // Add current position to trail
+      point.trail.push({ x: point.x, y: point.y });
+
+      // Limit the trail length
+      if (point.trail.length > 20) {
+        point.trail.shift();
+      }
+
+      // Use Perlin noise for natural movement
+      const noiseX = noiseGen.simplex2(point.x * 0.01, point.y * 0.01);
+      const noiseY = noiseGen.simplex2(point.y * 0.01, point.x * 0.01);
+
+      point.vx += noiseX * 0.1; // Adjust velocity based on Perlin noise
+      point.vy += noiseY * 0.1;
+
       point.x += point.vx;
       point.y += point.vy;
 
@@ -159,6 +179,16 @@ const Dashboard = () => {
       ctx.beginPath();
       ctx.arc(point.x, point.y, point.radius, 0, Math.PI * 2);
       ctx.fill();
+
+      // Draw trail
+      ctx.beginPath();
+      ctx.moveTo(point.trail[0].x, point.trail[0].y);
+      for (let i = 1; i < point.trail.length; i++) {
+        const p = point.trail[i];
+        ctx.lineTo(p.x, p.y);
+      }
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.1)"; // Adjust the opacity of the trail
+      ctx.stroke();
     });
   };
 
