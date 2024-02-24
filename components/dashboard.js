@@ -155,44 +155,32 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
+    // Initialize the permanentLine with two unique points if not already done
     if (points.current.length >= 2 && permanentLine.length === 0) {
-      const startIndices = [Math.floor(Math.random() * points.current.length), Math.floor(Math.random() * points.current.length)].filter((value, index, self) => self.indexOf(value) === index);
-      if (startIndices.length < 2) { // Ensure two unique indices
-        startIndices.push((startIndices[0] + 1) % points.current.length);
-      }
-      setPermanentLine(startIndices);
-    }
-  }, [points.current]);
-
-  useEffect(() => {
-    // Assuming points are populated
-    if (points.current.length > 2 && permanentLine.length === 0) {
-      // Select two random points to start the line
-      const startPoints = [
-        Math.floor(Math.random() * points.current.length),
-        Math.floor(Math.random() * points.current.length),
-      ];
-      setPermanentLine(startPoints);
-    }
-
-    const intervalId = setInterval(
-      () => {
-        if (points.current.length > permanentLine.length) {
-          // Find a point not yet in the line to add
-          let nextPoint;
-          do {
-            nextPoint = Math.floor(Math.random() * points.current.length);
-          } while (permanentLine.includes(nextPoint));
-
-          setPermanentLine((permanentLine) => [...permanentLine, nextPoint]);
+      let startIndexes = [];
+      while (startIndexes.length < 2) {
+        let newIndex = Math.floor(Math.random() * points.current.length);
+        if (!startIndexes.includes(newIndex)) {
+          startIndexes.push(newIndex);
         }
-      },
-      60000, //15 * 60 * 1000,
-    ); // Every 15 minutes
+      }
+      setPermanentLine(startIndexes);
+    }
+
+    // Periodically add a new point to the permanentLine every 15 minutes
+    const intervalId = setInterval(() => {
+      if (points.current.length > permanentLine.length) {
+        let nextPoint;
+        do {
+          nextPoint = Math.floor(Math.random() * points.current.length);
+        } while (permanentLine.includes(nextPoint));
+
+        setPermanentLine(prevLine => [...prevLine, nextPoint]);
+      }
+    }, 60000);//900000); // 15 minutes in milliseconds
 
     return () => clearInterval(intervalId);
   }, [permanentLine]);
-
   const updatePoints = (noiseGen) => {
       points.current.forEach((point, index) => {
           // Initially assume the point is not part of a permanent connection
