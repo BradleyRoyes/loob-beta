@@ -43,7 +43,7 @@ const Dashboard = () => {
       setShowModal(true); // Show the modal with the keyword
       const timer = setTimeout(() => {
         setShowModal(false); // Hide the modal after a few seconds
-      }, 5000); // Adjust time as needed
+      }, 6000); // Adjust time as needed
 
       return () => clearTimeout(timer);
     }
@@ -143,7 +143,7 @@ const Dashboard = () => {
     };
 
     // Interval to calculate the most common keyword every minute
-    const intervalId = setInterval(calculateMostCommonKeyword, 60000); // Adjust to 60000 for 1 minute
+    const intervalId = setInterval(calculateMostCommonKeyword, 30000); // Adjust to 60000 for 1 minute
 
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
