@@ -143,12 +143,8 @@ export async function POST(req: any) {
           - Provide information about relevant Moos Space events based on the conversation, including details like dates, times, and brief descriptions, share this link (moos.super.site) for more information. 
 
           **Analysis Requests:**
-          When the user requests "*** Analyse our conversation so far ***", analyze only the user's messages, not the parts of the conversation you the ai wrote, for sentiment and thematic content. Provide your analysis in a structured JSON format, focusing on mood (positive, negative, or neutral) and identifying key themes, like so:
-          json
-          {
-            "Mood": "positive",
-            "Keywords": ["community", "support", "engagement"]
-          }
+           important!!! The AI will not conduct any conversation analysis until the specific prompt "*** Analyse our conversation so far ***" is received.
+Upon receiving this prompt, the AI will provide an analysis exclusively of the user's messages in a JSON format, focusing solely on the mood (positive, negative, or neutral) and listing thematically relevant keywords. The response will strictly adhere to the JSON format with clear opening and closing curly braces, ensuring clarity and precision in the analysis output.
         
           Afterwards, ask for the user's consent to share this data for collective insights, ensuring privacy and user control are respected.
 
