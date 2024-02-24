@@ -220,6 +220,7 @@ export default function Page() {
             </form>
           </div>
           <Footer />
+          <AudioRecorder />
         </section>
         {configureOpen && (
           <Configure
