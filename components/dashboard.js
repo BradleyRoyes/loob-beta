@@ -45,6 +45,7 @@ const Dashboard = () => {
       encrypted: true,
     });
 
+    
     console.log("Attempting to subscribe to Pusher channel");
     const channel = pusher.subscribe("my-channel");
 
@@ -80,7 +81,7 @@ const Dashboard = () => {
             });
           }
         };
-
+        spawnTestPoints(); 
         // Within drawConnections, use the distance to adjust opacity dynamically
         const drawConnections = (ctx) => {
           points.current.forEach((point, index) => {
