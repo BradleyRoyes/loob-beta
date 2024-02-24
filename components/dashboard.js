@@ -189,10 +189,6 @@ const Dashboard = () => {
       const noiseX = noiseGen.simplex2(point.x * 0.02, point.y * 0.02);
       const noiseY = noiseGen.simplex2(point.y * 0.02, point.x * 0.02);
 
-      // Adjust velocity based on Perlin noise for wavy movement
-      point.vx += noiseX * 0.1;
-      point.vy += noiseY * 0.1;
-
       // Update point position
       point.x += point.vx;
       point.y += point.vy;
