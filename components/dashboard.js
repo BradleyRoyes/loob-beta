@@ -47,7 +47,19 @@ const Dashboard = () => {
     channel.bind("my-event", function (data) {
       console.log("Raw received data:", data);
       console.log("Received data:", data.analysis);
-      setAnalysisData(data.analysis);
+      setAnalysisData((prevAnalysisData) => {
+        const updatedData = {
+          Mood: data.analysis.Mood,
+          Keywords: [
+            ...prevAnalysisData.Keywords,
+            ...(data.analysis.Keywords || []),
+          ],
+        };
+
+        console.log("Updated analysis data:", updatedData); // Log the updated state for debugging
+
+        return updatedData;
+      });
     });
 
     // Bind to the subscription succeeded event
