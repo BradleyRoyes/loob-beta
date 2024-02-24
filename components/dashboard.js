@@ -81,25 +81,7 @@ const Dashboard = () => {
             });
           }
         };
-        spawnTestPoints(); 
-        // Within drawConnections, use the distance to adjust opacity dynamically
-        const drawConnections = (ctx) => {
-          points.current.forEach((point, index) => {
-            for (let i = index + 1; i < points.current.length; i++) {
-              const other = points.current[i];
-              const distance = Math.hypot(point.x - other.x, point.y - other.y);
-              if (distance < connectionDistance) {
-                const opacity = 1 - distance / connectionDistance; // Closer points are more visible
-                ctx.beginPath();
-                ctx.moveTo(point.x, point.y);
-                ctx.lineTo(other.x, other.y);
-                ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
-                ctx.stroke();
-              }
-            }
-          });
-        };
-
+        
 
         console.log("Updated analysis data:", updatedData); // Log the updated state for debugging
 
@@ -135,6 +117,7 @@ const Dashboard = () => {
     const ctx = canvas.getContext("2d");
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    spawnTestPoints();
 
     // Initialize Perlin noise generator
     const noiseGen = new Noise(Math.random());
@@ -170,6 +153,24 @@ const Dashboard = () => {
 
       console.log(`Most common keyword: ${mostCommon[0]}`, mostCommon[1]);
       setMostCommonKeyword(mostCommon[0]); // Update state with the most common keyword
+    };
+
+    // Within drawConnections, use the distance to adjust opacity dynamically
+    const drawConnections = (ctx) => {
+      points.current.forEach((point, index) => {
+        for (let i = index + 1; i < points.current.length; i++) {
+          const other = points.current[i];
+          const distance = Math.hypot(point.x - other.x, point.y - other.y);
+          if (distance < connectionDistance) {
+            const opacity = 1 - distance / connectionDistance; // Closer points are more visible
+            ctx.beginPath();
+            ctx.moveTo(point.x, point.y);
+            ctx.lineTo(other.x, other.y);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+            ctx.stroke();
+          }
+        }
+      });
     };
 
     // Interval to calculate the most common keyword every minute
