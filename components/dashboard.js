@@ -62,18 +62,26 @@ const Dashboard = () => {
 
         const spawnTestPoints = () => {
           const canvas = canvasRef.current;
+          const mockMoods = ['positive', 'neutral', 'negative']; // Example moods
+          const mockKeywords = ['happy', 'content', 'sad']; // Example keywords
+
           for (let i = 0; i < 20; i++) {
+            const randomMood = mockMoods[Math.floor(Math.random() * mockMoods.length)];
+            const randomKeyword = mockKeywords[Math.floor(Math.random() * mockKeywords.length)];
             points.current.push({
               x: Math.random() * canvas.width,
               y: Math.random() * canvas.height,
-              vx: (Math.random() * 2 - 1) * 2, // Random velocity between -2 and 2
+              vx: (Math.random() * 2 - 1) * 2,
               vy: (Math.random() * 2 - 1) * 2,
               radius: Math.random() * 2 + 1,
               trail: [],
+              mood: randomMood,
+              keywords: [randomKeyword], // Assuming a point can have multiple keywords, start with one for simplicity
             });
           }
         };
 
+        // Within drawConnections, use the distance to adjust opacity dynamically
         const drawConnections = (ctx) => {
           points.current.forEach((point, index) => {
             for (let i = index + 1; i < points.current.length; i++) {
