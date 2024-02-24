@@ -162,32 +162,40 @@ const Dashboard = () => {
 
   const updatePoints = (noiseGen) => {
     points.current.forEach((point, index) => {
+      // Check if the point is defined to prevent runtime errors
+      if (!point) {
+        console.error(`Point at index ${index} is undefined`);
+        return; // Skip this iteration if the point is undefined
+      }
+
       let hasPermanentConnection = false;
 
       // Check if this point has any permanent connection
       permanentConnections.forEach((connection) => {
         const [point1Index, point2Index] = connection.split("-").map(Number);
+        // Check if either end of the connection includes the current point
         if (index === point1Index || index === point2Index) {
           hasPermanentConnection = true;
         }
       });
 
-      // If the point has a permanent connection, we might want to limit or modify its velocity update logic
+      // Proceed with noise-based velocity updates only if there's no permanent connection
       if (!hasPermanentConnection) {
-        // Use Perlin noise for natural movement for points without permanent connections
+        // Use Perlin noise for natural movement
         const noiseX = noiseGen.simplex2(point.x * 0.01, point.y * 0.01);
         const noiseY = noiseGen.simplex2(point.y * 0.01, point.x * 0.01);
 
         point.vx += noiseX * 0.2; // Adjust velocity based on Perlin noise
         point.vy += noiseY * 0.2;
       }
-      // else, you might want to skip updating velocity or apply a different logic for points with permanent connections
+      // Else, you might want to either limit the movement or keep the point stationary
+      // This part of logic is up to your application's requirements
 
-      // Update point position
+      // Update point position, ensuring it's defined
       point.x += point.vx;
       point.y += point.vy;
 
-      // Check for canvas boundaries and reverse velocity if needed
+      // Boundary check to reverse the velocity if the point hits the canvas edge
       if (point.x <= 0 || point.x >= canvasRef.current.width) point.vx *= -1;
       if (point.y <= 0 || point.y >= canvasRef.current.height) point.vy *= -1;
     });
@@ -216,7 +224,7 @@ const Dashboard = () => {
   const drawConnections = (ctx, commonKeyword) => {
     // Temporary array to track new permanent connections identified in this frame
     let newPermanentConnections = [];
-    
+
     points.current.forEach((point, index) => {
       for (let i = index + 1; i < points.current.length; i++) {
         const other = points.current[i];
