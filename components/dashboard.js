@@ -45,7 +45,7 @@ const Dashboard = () => {
     const channel = pusher.subscribe("my-channel");
 
     channel.bind("my-event", function (data) {
-      console.log("Raw received data:", data);
+      // console.log("Raw received data:", data);
       console.log("Received data:", data.analysis);
       setAnalysisData((prevAnalysisData) => {
         const updatedData = {
@@ -57,6 +57,9 @@ const Dashboard = () => {
         };
 
         console.log("Updated analysis data:", updatedData); // Log the updated state for debugging
+
+        // Create a new point for the received data
+        createNewPoint();
 
         return updatedData;
       });
@@ -82,45 +85,80 @@ const Dashboard = () => {
     };
   }, []);
 
-  useEffect(() => {
+  // useEffect(() => {
+  //   const canvas = canvasRef.current;
+  //   const ctx = canvas.getContext("2d");
+  //   canvas.width = window.innerWidth;
+  //   canvas.height = window.innerHeight;
+
+  //   // Initialize points with position, velocity, and radius
+  //   for (let i = 0; i < maxNodes; i++) {
+  //     points.current.push({
+  //       x: Math.random() * canvas.width,
+  //       y: Math.random() * canvas.height,
+  //       vx: (Math.random() - 0.5) * 2, // Velocity in X
+  //       vy: (Math.random() - 0.5) * 2, // Velocity in Y
+  //       radius: Math.random() * 2 + 1,
+  //     });
+  //   }
+
+  // Function to create a new point and clear old ones
+  const createNewPoint = () => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      // Clear existing points
+      points.current = [];
+
+      // Add a new point
+      points.current.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 2 + 1, // Assign a random radius
+      });
+
+      // Redraw
+      drawCanvas();
+    }
+  };
+
+  const drawCanvas = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    // Initialize points with position, velocity, and radius
-    for (let i = 0; i < maxNodes; i++) {
-      points.current.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 2, // Velocity in X
-        vy: (Math.random() - 0.5) * 2, // Velocity in Y
-        radius: Math.random() * 2 + 1,
-      });
-    }
+    // Clear the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
-      updatePoints(); // Update points' positions based on their velocities
-      drawPoints(ctx); // Draw points
-      drawConnections(ctx); // Draw connections between close points
-      requestAnimationFrame(draw); // Create an animation loop
-    };
-
-    draw();
-  }, []);
-
-  // Update points' positions
-  const updatePoints = () => {
-    points.current.forEach((point) => {
-      point.x += point.vx;
-      point.y += point.vy;
-
-      // Reverse velocity if the point hits the canvas boundary
-      if (point.x <= 0 || point.x >= canvasRef.current.width) point.vx *= -1;
-      if (point.y <= 0 || point.y >= canvasRef.current.height) point.vy *= -1;
-    });
+    // Draw points
+    drawPoints(ctx);
   };
+
+  useEffect(drawCanvas, []); // Initial draw
+
+  //   const draw = () => {
+  //     ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+  //     updatePoints(); // Update points' positions based on their velocities
+  //     drawPoints(ctx); // Draw points
+  //     drawConnections(ctx); // Draw connections between close points
+  //     requestAnimationFrame(draw); // Create an animation loop
+  //   };
+
+  //   draw();
+  // }, []);
+
+  // // Update points' positions
+  // const updatePoints = () => {
+  //   points.current.forEach((point) => {
+  //     point.x += point.vx;
+  //     point.y += point.vy;
+
+  //     // Reverse velocity if the point hits the canvas boundary
+  //     if (point.x <= 0 || point.x >= canvasRef.current.width) point.vx *= -1;
+  //     if (point.y <= 0 || point.y >= canvasRef.current.height) point.vy *= -1;
+  //   });
+  // };
 
   // Draw points
   const drawPoints = (ctx) => {
