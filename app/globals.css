@@ -99,6 +99,7 @@
   padding: 20px;
   opacity: 0;
   color: white;
+  text-color:white;
   font-size: 3rem; /* Increase font size for drama */
   text-align: center; /* Center the text */
   animation-fill-mode: forwards; /* Keep the state at the end of the animation */
