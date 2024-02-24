@@ -155,6 +155,16 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
+    if (points.current.length >= 2 && permanentLine.length === 0) {
+      const startIndices = [Math.floor(Math.random() * points.current.length), Math.floor(Math.random() * points.current.length)].filter((value, index, self) => self.indexOf(value) === index);
+      if (startIndices.length < 2) { // Ensure two unique indices
+        startIndices.push((startIndices[0] + 1) % points.current.length);
+      }
+      setPermanentLine(startIndices);
+    }
+  }, [points.current]);
+
+  useEffect(() => {
     // Assuming points are populated
     if (points.current.length > 2 && permanentLine.length === 0) {
       // Select two random points to start the line
