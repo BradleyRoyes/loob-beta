@@ -216,50 +216,37 @@ const Dashboard = () => {
   const drawConnections = (ctx, commonKeyword) => {
     // Temporary array to track new permanent connections identified in this frame
     let newPermanentConnections = [];
-
+    
     points.current.forEach((point, index) => {
       for (let i = index + 1; i < points.current.length; i++) {
         const other = points.current[i];
         const distance = Math.hypot(point.x - other.x, point.y - other.y);
 
-        // Determine if the connection should be drawn based on distance
         if (distance < connectionDistance) {
-          // Check if both points share the common keyword or have an existing permanent connection
-          const connectionKey = `${index}-${i}`;
-          const reverseConnectionKey = `${i}-${index}`; // Because connection could be stored in either order
-          const isPermanent =
-            permanentConnections.includes(connectionKey) ||
-            permanentConnections.includes(reverseConnectionKey);
-          const sharesCommonKeyword =
-            point.keywords.includes(commonKeyword) &&
-            other.keywords.includes(commonKeyword);
-
-          // Determine the color of the connection
-          if (isPermanent || sharesCommonKeyword) {
-            ctx.strokeStyle = "red"; // Red for permanent or common keyword connections
-            // Mark as new permanent connection if not already done
-            if (!isPermanent) {
-              newPermanentConnections.push(connectionKey);
-            }
-          } else {
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.1)"; // Default color for other connections
-          }
-
-          // Draw the connection
           ctx.beginPath();
           ctx.moveTo(point.x, point.y);
           ctx.lineTo(other.x, other.y);
+
+          // Check if both points have the common keyword
+          if (
+            point.keywords.includes(commonKeyword) &&
+            other.keywords.includes(commonKeyword)
+          ) {
+            ctx.strokeStyle = "red"; // Red for connections based on the most common keyword
+
+            // Add to permanent connections if not already included
+            const connection = `${index}-${i}`;
+            if (!permanentConnections.includes(connection)) {
+              setPermanentConnections((prev) => [...prev, connection]);
+            }
+          } else {
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.1)"; // Default connection color
+          }
+
           ctx.stroke();
         }
       }
     });
-
-    // Schedule an update to the permanentConnections state if new permanent connections were identified
-    if (newPermanentConnections.length > 0) {
-      setPermanentConnections((prevConnections) => [
-        ...new Set([...prevConnections, ...newPermanentConnections]),
-      ]);
-    }
   };
 
   return (
