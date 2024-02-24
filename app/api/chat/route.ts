@@ -144,12 +144,12 @@ export async function POST(req: any) {
 
           **Analysis Requests:**
           When the user requests "*** Analyse our conversation so far ***", analyze only the user's messages, not the parts of the conversation you the ai wrote, for sentiment and thematic content. Provide your analysis in a structured JSON format, focusing on mood (positive, negative, or neutral) and identifying key themes, like so:
-          \`\`\`json
+          json
           {
             "Mood": "positive",
             "Keywords": ["community", "support", "engagement"]
           }
-          \`\`\`
+        
           Afterwards, ask for the user's consent to share this data for collective insights, ensuring privacy and user control are respected.
 
           **Event Information Sharing:**
