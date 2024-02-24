@@ -97,8 +97,9 @@
 
 .modal-content {
   padding: 20px;
-  opacity: 0;
-  text-color:white;
+  background: var(--background-bubble-secondary);
+  border-radius: 10px;
+  color: white;
   font-size: 3rem; /* Increase font size for drama */
   text-align: center; /* Center the text */
   animation-fill-mode: forwards; /* Keep the state at the end of the animation */
@@ -106,11 +107,11 @@
 
 .modal-overlay.show {
   display: block;
-  animation: fadeIn 2s forwards; /* Use forwards to keep the state at the end of the animation */
+  animation: fadeIn 1s forwards; /* Use forwards to keep the state at the end of the animation */
 }
 
 .modal-overlay.hide {
-  animation: fadeOut 2s forwards;
+  animation: fadeOut 1s forwards;
 }
 
 body {
