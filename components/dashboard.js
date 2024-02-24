@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import Pusher from "pusher-js";
-import { noise } from "noisejs"; // Import the noise library
+import { Noise } from "noisejs"; // Import the Noise object from noisejs
 
 const Dashboard = () => {
   const canvasRef = useRef(null);
@@ -20,7 +20,7 @@ const Dashboard = () => {
         "line",
         lineno,
         "column",
-        colno,
+        colno
       );
       console.error(error);
       return true; // Prevents the firing of the default event handler
@@ -74,7 +74,7 @@ const Dashboard = () => {
     // Handle subscription error
     channel.bind("pusher:subscription_error", function (statusCode) {
       console.error(
-        `Failed to subscribe to 'my-channel'. Status code: ${statusCode}`,
+        `Failed to subscribe to 'my-channel'. Status code: ${statusCode}`
       );
       console.log("subscription failed");
     });
@@ -93,7 +93,7 @@ const Dashboard = () => {
     canvas.height = window.innerHeight;
 
     // Initialize Perlin noise generator
-    const noiseGen = new noise.Noise(Math.random());
+    const noiseGen = new Noise(Math.random());
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -180,28 +180,30 @@ const Dashboard = () => {
       ctx.arc(point.x, point.y, point.radius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Draw trail
-      ctx.beginPath();
-      ctx.moveTo(point.trail[0].x, point.trail[0].y);
+      // Draw trail with fading effect
       for (let i = 1; i < point.trail.length; i++) {
-        const p = point.trail[i];
-        ctx.lineTo(p.x, p.y);
+        const alpha = i / point.trail.length; // Calculate alpha value for fading
+        ctx.beginPath();
+        ctx.moveTo(point.trail[i - 1].x, point.trail[i - 1].y);
+        ctx.lineTo(point.trail[i].x, point.trail[i].y);
+        ctx.strokeStyle = `rgba(0, 0, 0, ${alpha})`; // Set stroke color with alpha
+        ctx.stroke();
       }
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.1)"; // Adjust the opacity of the trail
-      ctx.stroke();
     });
   };
 
-  // Draw connections between close points
+  // Draw connections between close points with fading effect
   const drawConnections = (ctx) => {
     points.current.forEach((point, index) => {
       for (let i = index + 1; i < points.current.length; i++) {
         const other = points.current[i];
         const distance = Math.hypot(point.x - other.x, point.y - other.y);
         if (distance < connectionDistance) {
+          const alpha = 1 - distance / connectionDistance; // Calculate alpha value based on distance
           ctx.beginPath();
           ctx.moveTo(point.x, point.y);
           ctx.lineTo(other.x, other.y);
+          ctx.strokeStyle = `rgba(0, 0, 0, ${alpha})`; // Set stroke color with alpha
           ctx.stroke();
         }
       }
