@@ -288,17 +288,22 @@
       // Add the new point to the points array
       squigglyLine.current.points.push({ x: posX, y: posY });
 
+      // Set the composite operation to ensure the red line is drawn on top of the black background
+      ctx.globalCompositeOperation = 'source-over';
+
       // Clear the canvas and redraw the entire squiggly line
-      ctx.clearRect(0, 0, width, height);
       ctx.beginPath();
       ctx.moveTo(squigglyLine.current.points[0].x, squigglyLine.current.points[0].y);
       for (let i = 1; i < squigglyLine.current.points.length; i++) {
         const point = squigglyLine.current.points[i];
         ctx.lineTo(point.x, point.y);
       }
-      ctx.strokeStyle = 'red';
+      ctx.strokeStyle = 'red'; // Set stroke color to red
       ctx.lineWidth = 2;
       ctx.stroke();
+
+      // Reset the global composite operation to its default value
+      ctx.globalCompositeOperation = 'source-over';
     };
 
 
