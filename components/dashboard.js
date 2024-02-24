@@ -6,6 +6,7 @@ const Dashboard = () => {
   const canvasRef = useRef(null);
   const points = useRef([]);
   const keywordCounts = useRef({});
+  const connectionDistance = 100;
   const [commonKeyword, setCommonKeyword] = useState("");
   const [permanentConnections, setPermanentConnections] = useState([]); // New state to track permanent connections
 
