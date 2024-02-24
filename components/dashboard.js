@@ -283,7 +283,7 @@ const Dashboard = () => {
         const p = point.trail[i];
         ctx.lineTo(p.x, p.y);
       }
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.05)"; // Adjust the opacity of the trail
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.5)"; // Adjust the opacity of the trail
       ctx.stroke();
     });
   };
