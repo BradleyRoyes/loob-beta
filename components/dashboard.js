@@ -249,7 +249,7 @@ const Dashboard = () => {
           // Set color based on whether it's red or not
           if (isRed) {
             console.log("here3");
-            ctx.strokeStyle = `rgba(255, 0, 0, ${opacity})`; // Red for the connection
+            ctx.strokeStyle = `rgba(255, 105, 110, ${opacity})`; // Red for the connection
           } else {
             console.log("here4");
             ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`; // White for other connections
