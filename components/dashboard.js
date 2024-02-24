@@ -238,10 +238,8 @@ const Dashboard = () => {
         // console.log("here2");
         if (distance < connectionDistance) {
           // Determine if this connection should be red (5% chance)
-          const isRed = Math.random() < 0.9;
-          console.log("here");
-          console.log("isred", isRed);
-
+          const isRed = Math.random() < 0.05;
+          
           // Calculate opacity based on distance
           const opacity = 1 - distance / connectionDistance;
           ctx.beginPath();
