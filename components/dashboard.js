@@ -49,14 +49,18 @@ const Dashboard = () => {
     channel.bind("my-event", function (data) {
       // console.log("Raw received data:", data);
       console.log("Received data:", data.analysis);
-      
+
       const keywords = data.analysis.Keywords || [];
       keywords.forEach((keyword) => {
-        keywordCounts.current[keyword] = (keywordCounts.current[keyword] || 0) + 1;
+        keywordCounts.current[keyword] =
+          (keywordCounts.current[keyword] || 0) + 1;
       });
 
       // Determine the most common keyword after each message is received
-      const currentCommonKeyword = Object.keys(keywordCounts.current).reduce((a, b) => keywordCounts.current[a] > keywordCounts.current[b] ? a : b, "");
+      const currentCommonKeyword = Object.keys(keywordCounts.current).reduce(
+        (a, b) => (keywordCounts.current[a] > keywordCounts.current[b] ? a : b),
+        "",
+      );
       setCommonKeyword(currentCommonKeyword);
 
       addNewPoint(data.analysis.Mood.toLowerCase(), keywords);
@@ -77,7 +81,10 @@ const Dashboard = () => {
 
     // Periodically determine the most common keyword
     const intervalId = setInterval(() => {
-      const mostCommonKeyword = Object.keys(keywordCounts.current).reduce((a, b) => keywordCounts.current[a] > keywordCounts.current[b] ? a : b, "");
+      const mostCommonKeyword = Object.keys(keywordCounts.current).reduce(
+        (a, b) => (keywordCounts.current[a] > keywordCounts.current[b] ? a : b),
+        "",
+      );
       if (mostCommonKeyword !== commonKeyword) {
         setCommonKeyword(mostCommonKeyword);
         setPermanentConnections([]); // Reset permanent connections when the most common keyword changes
@@ -149,32 +156,38 @@ const Dashboard = () => {
       vy: vy,
       radius: Math.random() * 2 + 1,
       trail: [], // Store previous positions for the trailing effect
-      keywords,
+      keywords: keywords,
     });
   };
 
-  // Update points' positions
   const updatePoints = (noiseGen) => {
-    points.current.forEach((point) => {
-      // Add current position to trail
-      point.trail.push({ x: point.x, y: point.y });
+    points.current.forEach((point, index) => {
+      let hasPermanentConnection = false;
 
-      // Limit the trail length to 10 for a subtle tracer effect
-      if (point.trail.length > 10) {
-        point.trail.shift();
+      // Check if this point has any permanent connection
+      permanentConnections.forEach((connection) => {
+        const [point1Index, point2Index] = connection.split("-").map(Number);
+        if (index === point1Index || index === point2Index) {
+          hasPermanentConnection = true;
+        }
+      });
+
+      // If the point has a permanent connection, we might want to limit or modify its velocity update logic
+      if (!hasPermanentConnection) {
+        // Use Perlin noise for natural movement for points without permanent connections
+        const noiseX = noiseGen.simplex2(point.x * 0.01, point.y * 0.01);
+        const noiseY = noiseGen.simplex2(point.y * 0.01, point.x * 0.01);
+
+        point.vx += noiseX * 0.2; // Adjust velocity based on Perlin noise
+        point.vy += noiseY * 0.2;
       }
+      // else, you might want to skip updating velocity or apply a different logic for points with permanent connections
 
-      // Use Perlin noise for natural movement
-      const noiseX = noiseGen.simplex2(point.x * 0.01, point.y * 0.01);
-      const noiseY = noiseGen.simplex2(point.y * 0.01, point.x * 0.01);
-
-      point.vx += noiseX * 0.02; // Adjust velocity based on Perlin noise (slower)
-      point.vy += noiseY * 0.02;
-
+      // Update point position
       point.x += point.vx;
       point.y += point.vy;
 
-      // Use canvasRef.current to access the canvas dimensions
+      // Check for canvas boundaries and reverse velocity if needed
       if (point.x <= 0 || point.x >= canvasRef.current.width) point.vx *= -1;
       if (point.y <= 0 || point.y >= canvasRef.current.height) point.vy *= -1;
     });
@@ -200,36 +213,54 @@ const Dashboard = () => {
     });
   };
 
-  const drawConnections = (ctx, commonKeyword) => {
+  const drawConnections = (ctx) => {
+    // Temporary array to track new permanent connections identified in this frame
+    let newPermanentConnections = [];
+
     points.current.forEach((point, index) => {
       for (let i = index + 1; i < points.current.length; i++) {
         const other = points.current[i];
         const distance = Math.hypot(point.x - other.x, point.y - other.y);
 
+        // Determine if the connection should be drawn based on distance
         if (distance < connectionDistance) {
+          // Check if both points share the common keyword or have an existing permanent connection
+          const connectionKey = `${index}-${i}`;
+          const reverseConnectionKey = `${i}-${index}`; // Because connection could be stored in either order
+          const isPermanent =
+            permanentConnections.includes(connectionKey) ||
+            permanentConnections.includes(reverseConnectionKey);
+          const sharesCommonKeyword =
+            point.keywords.includes(commonKeyword) &&
+            other.keywords.includes(commonKeyword);
+
+          // Determine the color of the connection
+          if (isPermanent || sharesCommonKeyword) {
+            ctx.strokeStyle = "red"; // Red for permanent or common keyword connections
+            // Mark as new permanent connection if not already done
+            if (!isPermanent) {
+              newPermanentConnections.push(connectionKey);
+            }
+          } else {
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.1)"; // Default color for other connections
+          }
+
+          // Draw the connection
           ctx.beginPath();
           ctx.moveTo(point.x, point.y);
           ctx.lineTo(other.x, other.y);
-
-          // Check if both points have the common keyword
-          if (point.keywords.includes(commonKeyword) && other.keywords.includes(commonKeyword)) {
-            ctx.strokeStyle = "red"; // Red for connections based on the most common keyword
-
-            // Add to permanent connections if not already included
-            const connection = `${index}-${i}`;
-            if (!permanentConnections.includes(connection)) {
-              setPermanentConnections((prev) => [...prev, connection]);
-            }
-          } else {
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.1)"; // Default connection color
-          }
-
           ctx.stroke();
         }
       }
     });
-  };
 
+    // Schedule an update to the permanentConnections state if new permanent connections were identified
+    if (newPermanentConnections.length > 0) {
+      setPermanentConnections((prevConnections) => [
+        ...new Set([...prevConnections, ...newPermanentConnections]),
+      ]);
+    }
+  };
 
   return (
     <div>
