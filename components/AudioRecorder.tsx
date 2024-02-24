@@ -1,65 +1,58 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from 'react';
+import axios from 'axios';
 
-interface AudioRecorderProps {
-  onTranscription: (transcription: string) => void;
+function AudioRecorder() {
+    const [recording, setRecording] = useState(false);
+    const [audioBlob, setAudioBlob] = useState(null);
+
+    const startRecording = () => {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                const mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.start();
+                setRecording(true);
+
+                const audioChunks = [];
+                mediaRecorder.addEventListener("dataavailable", event => {
+                    audioChunks.push(event.data);
+                });
+
+                mediaRecorder.addEventListener("stop", () => {
+                    const audioBlob = new Blob(audioChunks);
+                    setAudioBlob(audioBlob);
+                    setRecording(false);
+                });
+            });
+    };
+
+    const stopRecording = () => {
+        if (recording) {
+            // This assumes mediaRecorder is in the scope; adjust as necessary.
+            mediaRecorder.stop();
+        }
+    };
+
+    const sendAudio = () => {
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'audio.webm');
+
+        axios.post('/transcribe-audio', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        }).then(response => {
+            console.log('Transcription:', response.data);
+            // Handle the response data (transcription result) as needed
+        }).catch(error => {
+            console.error('Error sending audio for transcription:', error);
+        });
+    };
+
+    return (
+        <div>
+            <button onClick={startRecording} disabled={recording}>Start Recording</button>
+            <button onClick={stopRecording} disabled={!recording}>Stop Recording</button>
+            <button onClick={sendAudio} disabled={!audioBlob}>Send Audio</button>
+        </div>
+    );
 }
-
-const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription }) => {
-  const [recording, setRecording] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [transcription, setTranscription] = useState<string>(""); // Used to accumulate transcription
-  const speechRecognitionRef = useRef<any>(null);
-
-  useEffect(() => {
-    const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-    if (SpeechRecognition) {
-      speechRecognitionRef.current = new SpeechRecognition();
-      speechRecognitionRef.current.continuous = false; // Stops automatically after a period of silence
-      speechRecognitionRef.current.interimResults = false; // We're only interested in the final result
-
-      speechRecognitionRef.current.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript; // Capture the final result
-        setTranscription(transcript); // Set the final transcription result
-      };
-
-      speechRecognitionRef.current.onerror = (event: any) => {
-        setError(`Error occurred in speech recognition: ${event.error}`);
-      };
-    } else {
-      setError("This browser doesn't support SpeechRecognition.");
-    }
-  }, []);
-
-  const toggleRecording = () => {
-    if (recording) {
-      speechRecognitionRef.current.stop();
-      setRecording(false);
-    } else {
-      setTranscription(""); // Reset transcription for a new session
-      speechRecognitionRef.current.start();
-      setRecording(true);
-      setError(null);
-    }
-  };
-
-  useEffect(() => {
-    if (!recording && transcription) {
-      // Call onTranscription when stopping the recording and if there's transcription available
-      onTranscription(transcription);
-    }
-  }, [recording, transcription, onTranscription]);
-
-  return (
-    <div className="flex items-center">
-      <button
-        onClick={toggleRecording}
-        className={`p-2 rounded-full text-white ${recording ? "bg-red-500" : "bg-green-500"}`}
-      >
-        {recording ? "Stop Recording" : "Start Recording"}
-      </button>
-      {error && <p className="text-red-500 text-xs mt-2">Error: {error}</p>}
-    </div>
-  );
-};
 
 export default AudioRecorder;
