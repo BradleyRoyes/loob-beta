@@ -34,7 +34,6 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "welcome" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText">Welcome to Loob</h1>
-          {/* "Chat" button added, assuming it inherits styles like the other buttons */}
           <button onClick={() => proceed("learnMore")}>
             Chat
           </button>
@@ -44,12 +43,12 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "learnMore" && (
       
         <motion.div className="content" variants={variants}>
-          <h1 className="gradientText">tell me more about</h1>
+          <h1 className="gradientText">Would you like to know more about...</h1>
           <button onClick={() => onEnter("Tell me about EDS")}>
-            EDS
+            EDS?
           </button>
           <button onClick={() => onEnter("Tell me about MOOS")}>
-            MOOS
+            MOOS?
           </button>
           <button onClick={() => proceed("feedback")}>
             I&apos;d like to share feedback
