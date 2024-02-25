@@ -41,21 +41,22 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
   }, []);
 
   const modalOverlayStyle = {
-    position: "fixed",
+    position: "fixed" as "fixed", // Explicitly cast the string as a CSS property value
     top: 0,
     left: 0,
     width: "100%",
     height: "100%",
-    display: "flex",
-    flexDirection: "column" as "column", // Explicitly cast the string as a CSS property value
-    justifyContent: "center",
-    alignItems: "center",
+    display: "flex" as "flex", // This is usually not necessary, but added for consistency
+    flexDirection: "column" as "column",
+    justifyContent: "center" as "center", // This casting is usually not necessary
+    alignItems: "center" as "center", // This casting is usually not necessary
     zIndex: 10,
     background: "rgba(0,0,0,0.85)",
-    backdropFilter: "blur(5px)",
-    opacity: opacity,
+    backdropFilter: "blur(5px)" as const, // Use `as const` for newer CSS properties if TypeScript complains
+    opacity: 1, // Directly use the state value without additional casting
     transition: "opacity 1s ease-in-out",
   };
+
 
 
   const modalContentStyle = {
