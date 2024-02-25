@@ -19,11 +19,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
 
   useEffect(() => {
     if (phase === "welcome") {
-      const timer = setTimeout(() => {
-        proceed("learnMore");
-      }, 3000); // Adjust the duration as needed
-
-      return () => clearTimeout(timer); // Cleanup the timer
+      // Removed the automatic transition to "learnMore" phase
     }
   }, [phase]);
 
@@ -38,9 +34,13 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "welcome" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText">Welcome to Loob</h1>
+          {/* "Chat" button added, assuming it inherits styles like the other buttons */}
+          <button onClick={() => proceed("learnMore")}>
+            Chat
+          </button>
         </motion.div>
       )}
-
+      
       {phase === "learnMore" && (
       
         <motion.div className="content" variants={variants}>
