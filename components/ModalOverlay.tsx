@@ -96,7 +96,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
         <p style={quoteStyle}>
           To be relevant in a living system is to generate vitality.
           <br />
-          What is that? It's relationships that build relationships that build relationships:
+          What is that? Its relationships that build relationships that build relationships:
           <br />
           3rd & 4th order relational process is real systemic work.
           <br />
