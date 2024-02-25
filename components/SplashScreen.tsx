@@ -34,11 +34,23 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "welcome" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText">Welcome to Loob</h1>
-          <button onClick={() => proceed("learnMore")}>
+          <button onClick={() => proceed("introduction")}>
             Enter
           </button>
         </motion.div>
       )}
+
+      {phase === "introduction" && (
+        <motion.div className="content" variants={variants}>
+          <h1 className="gradientText" style={{ fontSize: 'smaller' }}>
+            Hi, I'm Loob, an AI in training being built to one day make events like this one a little more interesting. Tonight is my very first gig! You can chat with me to learn more about MOOS, EDS, harm reduction, and to share an experience. I would love if you did. 
+          </h1>
+          <button onClick={() => proceed("learnMore")}>
+            Continue
+          </button>
+        </motion.div>
+      )}
+
 
       {phase === "learnMore" && (
       
