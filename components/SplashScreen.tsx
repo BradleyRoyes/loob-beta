@@ -66,8 +66,8 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
             Learn about EDS
           </button>
          
-          <button onClick={() => onEnter("can we talk about harm reduction?")}>
-            Talk Harm Reduction
+          <button onClick={() => onEnter("can you give me a bit of harm reduction support/knowledge")}>
+            Harm Reduction
           </button>
         </motion.div>
       )}
