@@ -367,3 +367,12 @@ body {
   align-items: center; /* Center vertically */
   margin: 0 auto; /* Ensure it's centered horizontally if within a wider section */
 }
+
+.modal-text {
+  color: #FFFFFF; /* White text */
+  font-size: 12px; /* Smaller text */
+}
+
+.modal-background {
+  background-color: #000000; /* Black background */
+}
