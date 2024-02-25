@@ -162,7 +162,7 @@ export default function Page() {
                     className="button-dash rounded-md items-center justify-center px-2.5 py-2"
                     style={{ fontWeight: "500" }}
                   >
-                    Insights
+                    Back Stage
                   </button>
                   <div className="relative">
                     <AnalyseButton onClick={handleAnalyseButtonClick} />
