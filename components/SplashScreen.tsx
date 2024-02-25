@@ -52,7 +52,6 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       )}
 
 
-
       {phase === "learnMore" && (
       
         <motion.div className="content" variants={variants}>
