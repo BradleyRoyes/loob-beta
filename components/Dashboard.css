@@ -75,7 +75,6 @@ body.dark-mode {
 
 /* Additional styles for visualization SVGs might need to be applied inline or through JS if using libraries like D3 */
 
-/* Add to Dashboard.css */
 .bottom-nav {
   display: flex;
   justify-content: space-around;
@@ -95,20 +94,36 @@ body.dark-mode {
   font-size: 16px;
   cursor: pointer;
   transition: opacity 0.3s ease;
+}
 
-  /* Optional: Add :hover effect */
-  &:hover {
-    opacity: 0.8;
-  }
+.bottom-nav button:hover {
+  opacity: 0.8;
+}
+
+.canvas-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
 canvas {
   display: block;
-  background: black; // Set canvas background color to black
-  position: fixed; // Change from absolute to fixed to cover the full screen
+  background: black;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   z-index: -1;
+}
+
+.info-container {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1;
+  color: white;
+  background: rgba(0, 0, 0, 0.9);
+  padding: 10px;
+  border-radius: 8px;
 }
