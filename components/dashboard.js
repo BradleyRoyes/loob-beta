@@ -101,11 +101,22 @@ const Dashboard = () => {
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas); // Add event listener for window resize
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    // Cleanup function to remove event listener when component unmounts
-    return () => window.removeEventListener("resize", resizeCanvas);
+    // Initialize Perlin noise generator
+    const noiseGen = new Noise(Math.random());
+
+    const draw = () => {
+      ctx.fillStyle = "black"; // Set background color to black
+      ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the canvas with black color
+      updatePoints(noiseGen); // Pass the noise generator to the update function
+      drawPoints(ctx);
+      drawConnections(ctx);
+      requestAnimationFrame(draw);
+    };
+
+    draw();
   }, []);
 
   useEffect(() => {
@@ -141,12 +152,6 @@ const Dashboard = () => {
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
   }, [analysisData.Keywords]);
-
-  const resizeCanvas = () => {
-    const canvas = canvasRef.current;
-    canvas.width = window.innerWidth * 0.9; // Adjust canvas width to 90% of window width
-    canvas.height = window.innerHeight * 0.9; // Adjust canvas height to 90% of window height
-  };
 
   const updatePoints = (noiseGen) => {
     points.current.forEach((point) => {
@@ -250,14 +255,14 @@ const Dashboard = () => {
   };
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+    <div>
       <canvas
         ref={canvasRef}
         style={{
           display: "block",
           background: "black", // Set canvas background color to black
           position: "absolute",
-          top: "10%", // Add top padding as 5% of the viewport height
+          top: "5%", // Add top padding as 5% of the viewport height
           left: "5%", // Add left padding as 5% of the viewport width
           right: "5%", // Add right padding as 5% of the viewport width
           bottom: "5%", // Add bottom padding as 5% of the viewport height
