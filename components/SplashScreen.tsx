@@ -35,7 +35,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText">Welcome to Loob</h1>
           <button onClick={() => proceed("introduction")}>
-            chat with me
+            enter
           </button>
         </motion.div>
       )}
@@ -53,10 +53,13 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText">Alright Loob, tell me more about</h1>
-          <button onClick={() => onEnter("Tell me about EDS")}>
+          <button onClick={() => onEnter("I would like to share an experience with you.")}>
+            Share Experience
+          </button>
+          <button onClick={() => onEnter("Tell me about EDS.")}>
             EDS
           </button>
-          <button onClick={() => onEnter("Tell me about MOOS")}>
+          <button onClick={() => onEnter("Tell me about MOOS.")}>
             MOOS
           </button>
          
