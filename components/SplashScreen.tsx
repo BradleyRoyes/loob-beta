@@ -34,7 +34,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "welcome" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText">Welcome to Loob</h1>
-          <button onClick={() => proceed("introduction")}>
+          <button onClick={() => proceed("learnMore")}>
             Enter
           </button>
         </motion.div>
