@@ -149,53 +149,53 @@ const Dashboard = () => {
     return () => clearInterval(intervalId);
   }, [analysisData.Keywords]);
   
-  
   const updatePoints = (noiseGen) => {
-    points.current.forEach((point, index) => {
-      // Apply Perlin noise for wavy and random movement
-      const noiseX = noiseGen.simplex2(point.x * 0.02, point.y * 0.02);
-      const noiseY = noiseGen.simplex2(point.y * 0.02, point.x * 0.02);
-
-      // Update point position
+    points.current.forEach((point) => {
+      // Omit the noise-based velocity adjustment to maintain consistent speed
+      // Simply update the point position based on its current velocity
       point.x += point.vx;
       point.y += point.vy;
 
       // Boundary check to reverse the velocity if the point hits the canvas edge
-      if (point.x <= 0 || point.x >= canvasRef.current.width) {
-        point.vx *= -1;
-      }
-      if (point.y <= 0 || point.y >= canvasRef.current.height) {
-        point.vy *= -1;
-      }
+      if (point.x <= 0 || point.x >= canvasRef.current.width) point.vx *= -1;
+      if (point.y <= 0 || point.y >= canvasRef.current.height) point.vy *= -1;
 
       // Manage the trail for visual effect
       point.trail.push({ x: point.x, y: point.y });
-      if (point.trail.length > 10) {
-        point.trail.shift();
-      }
+      if (point.trail.length > 10) point.trail.shift();
     });
   };
 
 
-  // Function to add a new point with velocity based on the mood
-  const addNewPoint = (mood) => {
-    const canvas = canvasRef.current;
+    const addNewPoint = (mood) => {
+      const canvas = canvasRef.current;
+      let velocityRange;
+      switch (mood) {
+        case "positive":
+          velocityRange = { min: 1.5, max: 2.0 }; // Fast
+          break;
+        case "neutral":
+        default: // Neutral serves as default
+          velocityRange = { min: 0.75, max: 1.25 }; // Medium
+          break;
+        case "negative":
+          velocityRange = { min: 0.25, max: 0.5 }; // Slow
+          break;
+      }
 
-    // Define velocity ranges based on mood (slowed down by a factor of 3)
-    let velocityRange;
-    switch (mood) {
-      case "positive":
-        velocityRange = { min: 1.5, max: 2.0 }; // Fast
-        break;
-      case "neutral":
-        velocityRange = { min: 0.75, max: 1.25 }; // Medium
-        break;
-      case "negative":
-        velocityRange = { min: 0.25, max: 0.5 }; // Slow
-        break;
-      default:
-        velocityRange = { min: 0.75, max: 1.25 }; // Default to medium if mood is undefined or unknown
-    }
+      const vx = (Math.random() * (velocityRange.max - velocityRange.min) + velocityRange.min) * (Math.random() < 0.5 ? -1 : 1);
+      const vy = (Math.random() * (velocityRange.max - velocityRange.min) + velocityRange.min) * (Math.random() < 0.5 ? -1 : 1);
+
+      points.current.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: vx,
+        vy: vy,
+        mood: mood, // Store mood to retain speed category
+        radius: Math.random() * 2 + 1,
+        trail: [],
+      });
+    };
 
     // Generate velocity within the selected range
     const vx =
