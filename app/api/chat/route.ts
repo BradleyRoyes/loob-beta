@@ -161,7 +161,7 @@ export async function POST(req: any) {
       ];
     
     const response = await openai.chat.completions.create({
-      model: llm ?? "gpt-4",
+      model: llm ?? "gpt-3.5-turbo",
       stream: true,
       messages: [...ragPrompt, ...messages],
     });
