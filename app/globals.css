@@ -332,6 +332,9 @@ body {
   .grid {
     grid-template-columns: 1fr; /* Stacks charts vertically on smaller screens */
   }
+  .h1 {
+  max-width: 600px;
+  }
 }
 
 .visualization-container {
