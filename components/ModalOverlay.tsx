@@ -1,4 +1,4 @@
-import React, { useState, useEffect, CSSProperties } from "react";
+import React, { useState, useEffect } from "react";
 
 interface ModalOverlayProps {
   onClose: () => void;
@@ -13,7 +13,6 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
   }, []);
 
   useEffect(() => {
-    // Function to create floating white pixels
     const createFloatingPixels = () => {
       const pixel = document.createElement("div");
       pixel.classList.add("floating-pixel");
@@ -25,18 +24,23 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
       pixel.style.left = `${Math.random() * window.innerWidth}px`;
       document.body.appendChild(pixel);
 
-      // Remove pixel after 3 seconds
       setTimeout(() => {
         document.body.removeChild(pixel);
       }, 3000);
     };
 
-    // Interval to continuously create floating pixels
     const interval = setInterval(createFloatingPixels, 100);
-    return () => clearInterval(interval);
+
+    // Cleanup function to trigger pixels on close
+    return () => {
+      clearInterval(interval);
+      for (let i = 0; i < 10; i++) {
+        createFloatingPixels();
+      }
+    };
   }, []);
 
-  const modalOverlayStyle: CSSProperties = {
+  const modalOverlayStyle = {
     position: "fixed",
     top: 0,
     left: 0,
@@ -47,33 +51,24 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     justifyContent: "center",
     alignItems: "center",
     zIndex: 10,
-    background: "rgba(0,0,0,1)",
+    background: "rgba(0,0,0,0.85)",
     backdropFilter: "blur(5px)",
     opacity: opacity,
     transition: "opacity 1s ease-in-out",
   };
 
-  const modalContentStyle: CSSProperties = {
+  const modalContentStyle = {
     textAlign: "center",
     zIndex: 20,
     position: "relative",
     color: "#FFFFFF",
     fontFamily: "'Nunito', sans-serif",
     padding: "20px",
+    maxWidth: "500px",
+    margin: "0 auto",
   };
 
-  const headerStyle: CSSProperties = {
-    fontSize: "18px",
-    fontWeight: "bold",
-    marginBottom: "10px",
-  };
-
-  const quoteStyle: CSSProperties = {
-    fontStyle: "italic",
-    padding: "10px 10px",
-  };
-
-  const buttonStyle: CSSProperties = {
+  const buttonStyle = {
     background: "linear-gradient(to right, #FF6B6B, #FFA36B)",
     border: "none",
     borderRadius: "4px",
@@ -83,20 +78,19 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     fontSize: "12px",
     fontFamily: "'Nunito', sans-serif",
     margin: "20px",
-  };
-
-  const reloadApp = () => {
-    window.location.reload();
+    display: "block",
+    width: "fit-content",
+    margin: "20px auto", // Center button
   };
 
   return (
     <div style={modalOverlayStyle} onClick={onClose}>
-      <div className="modal-content" style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
-        <div style={headerStyle}>thanks for chatting</div>
-        <p style={quoteStyle}>
-          To be relevant in a living system is to generate vitality. <br/> What is that? Its relationships that build relationships that build relationships: <br/> 3rd & 4th order relational process is real systemic work. <br/> No KPI can measure it. This is #WarmData
+      <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
+        <h2>Thanks for chatting</h2>
+        <p>
+          To be relevant in a living system is to generate vitality. What is that? It's relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData.
         </p>
-        <button style={buttonStyle} onClick={reloadApp}>
+        <button style={buttonStyle} onClick={() => window.location.reload()}>
           New Chat
         </button>
       </div>
