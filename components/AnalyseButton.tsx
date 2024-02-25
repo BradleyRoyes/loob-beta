@@ -8,7 +8,7 @@ interface AnalyseButtonProps {
 const AnalyseButton: React.FC<AnalyseButtonProps> = ({ onClick }) => {
   const handleButtonClick = () => {
     // Define the message to be sent when the button is clicked
-    const analyseMessage = "Loob request: Analyse our conversation so far";
+    const analyseMessage = "Loob request: analyse my messages";
     onClick(analyseMessage); // Pass the message to the parent component
   };
 
