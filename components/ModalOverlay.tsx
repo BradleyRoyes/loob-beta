@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, CSSProperties } from "react";
 
 interface ModalOverlayProps {
   onClose: () => void;
@@ -13,6 +13,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
   }, []);
 
   useEffect(() => {
+    // Function to create floating white pixels
     const createFloatingPixels = () => {
       const pixel = document.createElement("div");
       pixel.classList.add("floating-pixel");
@@ -24,53 +25,55 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
       pixel.style.left = `${Math.random() * window.innerWidth}px`;
       document.body.appendChild(pixel);
 
+      // Remove pixel after 3 seconds
       setTimeout(() => {
         document.body.removeChild(pixel);
       }, 3000);
     };
 
+    // Interval to continuously create floating pixels
     const interval = setInterval(createFloatingPixels, 100);
-
-    // Cleanup function to trigger pixels on close
-    return () => {
-      clearInterval(interval);
-      for (let i = 0; i < 10; i++) {
-        createFloatingPixels();
-      }
-    };
+    return () => clearInterval(interval);
   }, []);
 
-  const modalOverlayStyle = {
-    position: "fixed" as "fixed", // Explicitly cast the string as a CSS property value
+  const modalOverlayStyle: CSSProperties = {
+    position: "fixed",
     top: 0,
     left: 0,
     width: "100%",
     height: "100%",
-    display: "flex" as "flex", // This is usually not necessary, but added for consistency
-    flexDirection: "column" as "column",
-    justifyContent: "center" as "center", // This casting is usually not necessary
-    alignItems: "center" as "center", // This casting is usually not necessary
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
     zIndex: 10,
-    background: "rgba(0,0,0,0.85)",
-    backdropFilter: "blur(5px)" as const, // Use `as const` for newer CSS properties if TypeScript complains
-    opacity: 1, // Directly use the state value without additional casting
+    background: "rgba(0,0,0,1)",
+    backdropFilter: "blur(5px)",
+    opacity: opacity,
     transition: "opacity 1s ease-in-out",
   };
 
-
-
-  const modalContentStyle = {
+  const modalContentStyle: CSSProperties = {
     textAlign: "center",
     zIndex: 20,
     position: "relative",
     color: "#FFFFFF",
     fontFamily: "'Nunito', sans-serif",
     padding: "20px",
-    maxWidth: "500px",
-    margin: "0 auto",
   };
 
-  const buttonStyle = {
+  const headerStyle: CSSProperties = {
+    fontSize: "18px",
+    fontWeight: "bold",
+    marginBottom: "10px",
+  };
+
+  const quoteStyle: CSSProperties = {
+    fontStyle: "italic",
+    padding: "10px 10px",
+  };
+
+  const buttonStyle: CSSProperties = {
     background: "linear-gradient(to right, #FF6B6B, #FFA36B)",
     border: "none",
     borderRadius: "4px",
@@ -79,22 +82,21 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     cursor: "pointer",
     fontSize: "12px",
     fontFamily: "'Nunito', sans-serif",
-    display: "block",
-    width: "fit-content",
-    margin: "20px auto", // Center button
+    margin: "20px",
+  };
+
+  const reloadApp = () => {
+    window.location.reload();
   };
 
   return (
     <div style={modalOverlayStyle} onClick={onClose}>
-      <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
-        <h2>Thanks for playing along</h2>
-        <p>
-          <p>
-            To be relevant in a living system is to generate vitality. What is that? <br/>It&apos;s relationships that build relationships that build relationships: <br/>3rd &amp; 4th order relational process is real systemic work.<br/> No KPI can measure it. This is #WarmData.
-          </p>
-
+      <div className="modal-content" style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
+        <div style={headerStyle}>thanks for chatting</div>
+        <p style={quoteStyle}>
+          To be relevant in a living system is to generate vitality. <br/> What is that? Its relationships that build relationships that build relationships: <br/> 3rd & 4th order relational process is real systemic work. <br/> No KPI can measure it. This is #WarmData
         </p>
-        <button style={buttonStyle} onClick={() => window.location.reload()}>
+        <button style={buttonStyle} onClick={reloadApp}>
           New Chat
         </button>
       </div>
