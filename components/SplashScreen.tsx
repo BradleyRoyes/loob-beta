@@ -42,9 +42,9 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
 
       {phase === "introduction" && (
         <motion.div className="content" variants={variants}>
-          <h1 className="gradientText" style={{ fontSize: 'smaller' }}>hi, I&apos;m Loob, an AI in training being built to one day make events like this one a little more interesting. tonight is my very first gig! you can chat with me to share an experience, learn more about EDS, harm reduction, and to leave feedback. </h1>
+          <h1 className="gradientText" style={{ fontSize: 'smaller' }}>hi, I&apos;m Loob, <br/> an AI-in-training being built to one day make events like this one a little more interesting. <br/> Tonight is my very first gig! <br/> it would be great if you would take a moment to chat with me and share an experience you've had at MOOS. Perhaps an event that really moved you, or even something that bugged you that happened here. Everything you share with me is completely anonymous.    </h1>
           <button onClick={() => proceed("learnMore")}>
-            continue
+            Continue
           </button>
         </motion.div>
       )}
@@ -52,22 +52,22 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "learnMore" && (
       
         <motion.div className="content" variants={variants}>
-          <h1 className="gradientText">Alright Loob, tell me more about</h1>
+          <h1 className="gradientText">So, would you like to:</h1>
           <button onClick={() => onEnter("I would like to share an experience with you.")}>
-            Share Experience
-          </button>
-          <button onClick={() => onEnter("Tell me about EDS.")}>
-            EDS
+            Share an Experience
           </button>
           <button onClick={() => onEnter("Tell me about MOOS.")}>
-            MOOS
+            Learn about MOOS
+          </button>
+          <button onClick={() => onEnter("Tell me about EDS and EDS001.")}>
+            Learn about EDS
           </button>
          
           <button onClick={() => onEnter("can we talk about harm reduction?")}>
-            Harm Reduction
+            Talk Harm Reduction
           </button>
           <button onClick={() => proceed("feedback")}>
-            I&apos;d like to share anonymous feedback
+            I&apos;d like to share specific feedback
           </button>
         </motion.div>
       )}
