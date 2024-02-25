@@ -97,7 +97,7 @@ export default function Page() {
   }, []);
 
   const handleAnalyseButtonClick = () => {
-    const analyseMessage = "Analyse our conversation so far";
+    const analyseMessage = "analyse my messages";
     append({ content: analyseMessage, role: "user" });
     setShowModal(true); // Show the modal immediately upon clicking
 
