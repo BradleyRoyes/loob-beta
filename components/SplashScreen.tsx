@@ -42,7 +42,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
 
       {phase === "introduction" && (
         <motion.div className="content" variants={variants}>
-          <h1 className="gradientText" style={{ fontSize: 'smaller' }}>hi, I&apos;m Loob, an AI in training being built to one day make events like this one a little more interesting. tonight is my very first gig! you can chat with me to learn more about MOOS, EDS, harm reduction, and to leave feedback. </h1>
+          <h1 className="gradientText" style={{ fontSize: 'smaller' }}>hi, I&apos;m Loob, an AI in training being built to one day make events like this one a little more interesting. tonight is my very first gig! you can chat with me to share an experience, learn more about EDS, harm reduction, and to leave feedback. </h1>
           <button onClick={() => proceed("learnMore")}>
             continue
           </button>
@@ -61,7 +61,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
           </button>
          
           <button onClick={() => onEnter("can we talk about harm reduction?")}>
-            Harm reduction
+            Harm Reduction
           </button>
           <button onClick={() => proceed("feedback")}>
             I&apos;d like to share anonymous feedback
