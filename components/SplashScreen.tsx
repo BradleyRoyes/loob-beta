@@ -60,7 +60,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
             MOOS
           </button>
           <button onClick={() => proceed("feedback")}>
-            I&apos;d like to share *anonymous* feedback
+            I&apos;d like to share anonymous feedback
           </button>
           <button onClick={() => onEnter("can we talk about harm reduction?")}>
             harm reduction
@@ -71,6 +71,9 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "feedback" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText">I&apos;d like to share feedback on</h1>
+          <button onClick={() => onEnter("I'd like to share some feedback on MOOS")}>
+           MOOS as a community
+          </button>
           <button onClick={() => onEnter("I'd like to share feedback on the TwistTea bar")}>
             TwistTea bar
           </button>
