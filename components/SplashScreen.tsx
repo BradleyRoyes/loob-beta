@@ -52,18 +52,19 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "learnMore" && (
       
         <motion.div className="content" variants={variants}>
-          <h1 className="gradientText">alright Loob, tell me more about</h1>
+          <h1 className="gradientText">Alright Loob, tell me more about</h1>
           <button onClick={() => onEnter("Tell me about EDS")}>
             EDS
           </button>
           <button onClick={() => onEnter("Tell me about MOOS")}>
             MOOS
           </button>
+         
+          <button onClick={() => onEnter("can we talk about harm reduction?")}>
+            Harm reduction
+          </button>
           <button onClick={() => proceed("feedback")}>
             I&apos;d like to share anonymous feedback
-          </button>
-          <button onClick={() => onEnter("can we talk about harm reduction?")}>
-            harm reduction
           </button>
         </motion.div>
       )}
