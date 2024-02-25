@@ -47,7 +47,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     width: "100%",
     height: "100%",
     display: "flex",
-    flexDirection: "column",
+    flexDirection: "column" as "column", // Explicitly cast the string as a CSS property value
     justifyContent: "center",
     alignItems: "center",
     zIndex: 10,
@@ -56,6 +56,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     opacity: opacity,
     transition: "opacity 1s ease-in-out",
   };
+
 
   const modalContentStyle = {
     textAlign: "center",
