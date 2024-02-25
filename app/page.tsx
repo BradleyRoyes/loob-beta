@@ -97,11 +97,22 @@ export default function Page() {
   }, []);
 
   const handleAnalyseButtonClick = () => {
-    const analyseMessage = "Analyse our conversation so far";
-    append({ content: analyseMessage, role: "user" });
-    // setShowNeuronVisual(true);
-    // setShowModal(true);
+      // Send the initial analyse message
+      const analyseMessage = "Analyse our conversation so far";
+      append({ content: analyseMessage, role: "user" });
+
+      // Open the Modal Overlay
+      setShowModal(true);
+
+      // Set a timeout to send another message after a delay of 5 seconds
+      setTimeout(() => {
+          const endChatMessage = "End chat";
+          append({ content: endChatMessage, role: "user" });
+          // Optionally, you could also close the modal or perform other actions here
+          // setShowModal(false);
+      }, 5000); // 5000 milliseconds = 5 seconds
   };
+
 
   if (showNeuronVisual) {
     return (

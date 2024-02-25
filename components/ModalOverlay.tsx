@@ -47,7 +47,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     justifyContent: "center",
     alignItems: "center",
     zIndex: 10,
-    background: "rgba(0,0,0,0.9)",
+    background: "rgba(0,0,0,1)",
     backdropFilter: "blur(5px)",
     opacity: opacity,
     transition: "opacity 1s ease-in-out",
