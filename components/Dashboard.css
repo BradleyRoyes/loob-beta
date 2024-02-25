@@ -101,3 +101,14 @@ body.dark-mode {
     opacity: 0.8;
   }
 }
+
+canvas {
+  display: block;
+  background: black; // Set canvas background color to black
+  position: fixed; // Change from absolute to fixed to cover the full screen
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
