@@ -1,5 +1,3 @@
-import AnalyseButton from '../components/AnalyseButton'; 
-
 const Footer = () => {
   return (
     <footer className="chatbot-text-tertiary flex justify-between text-sm mt-6">
@@ -9,17 +7,10 @@ const Footer = () => {
         href="https://www.seks.design/looblabs/"
         target="_blank"
       >
-
-        
         <span className="px-3">▲</span>
         <hr className="h-full border-r" />
         <span className="px-3">loob.labs</span>
       </a>
-
-      {/* Centered Analyse Button */}
-      <div className="absolute left-1/2 transform -translate-x-1/2">
-        <AnalyseButton />
-      </div>
       <div
         className="ml-auto flex flex-row items-center"
         style={{ whiteSpace: "nowrap" }}
