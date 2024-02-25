@@ -9,7 +9,6 @@ const Dashboard = () => {
   const connectionDistance = 100;
   const [analysisData, setAnalysisData] = useState({ Mood: "", Keywords: [] });
   const [mostCommonKeyword, setMostCommonKeyword] = useState("");
-  const [permanentLine, setPermanentLine] = useState([]);
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
@@ -23,7 +22,7 @@ const Dashboard = () => {
         "line",
         lineno,
         "column",
-        colno,
+        colno
       );
       console.error(error);
       return true; // Prevents the firing of the default event handler
@@ -60,7 +59,6 @@ const Dashboard = () => {
     const channel = pusher.subscribe("my-channel");
 
     channel.bind("my-event", function (data) {
-      // console.log("Raw received data:", data);
       console.log("Received data:", data.analysis);
       setAnalysisData((prevAnalysisData) => {
         const updatedData = {
@@ -88,7 +86,7 @@ const Dashboard = () => {
     // Handle subscription error
     channel.bind("pusher:subscription_error", function (statusCode) {
       console.error(
-        `Failed to subscribe to 'my-channel'. Status code: ${statusCode}`,
+        `Failed to subscribe to 'my-channel'. Status code: ${statusCode}`
       );
       console.log("subscription failed");
     });
@@ -135,20 +133,26 @@ const Dashboard = () => {
 
       const mostCommon = Object.entries(keywordFrequency).reduce(
         (acc, curr) => (curr[1] > acc[1] ? curr : acc),
-        ["", 0],
+        ["", 0]
       );
 
-      console.log(`Most common keyword: ${mostCommon[0]}`, mostCommon[1]);
+      console.log(
+        `Most common keyword: ${mostCommon[0]}`,
+        mostCommon[1]
+      );
       setMostCommonKeyword(mostCommon[0]); // Update state with the most common keyword
     };
 
     // Interval to calculate the most common keyword every minute
-    const intervalId = setInterval(calculateMostCommonKeyword, 30000); // Adjust to 60000 for 1 minute
+    const intervalId = setInterval(
+      calculateMostCommonKeyword,
+      30000
+    ); // Adjust to 60000 for 1 minute
 
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
   }, [analysisData.Keywords]);
-  
+
   const updatePoints = (noiseGen) => {
     points.current.forEach((point) => {
       // Omit the noise-based velocity adjustment to maintain consistent speed
@@ -157,8 +161,10 @@ const Dashboard = () => {
       point.y += point.vy;
 
       // Boundary check to reverse the velocity if the point hits the canvas edge
-      if (point.x <= 0 || point.x >= canvasRef.current.width) point.vx *= -1;
-      if (point.y <= 0 || point.y >= canvasRef.current.height) point.vy *= -1;
+      if (point.x <= 0 || point.x >= canvasRef.current.width)
+        point.vx *= -1;
+      if (point.y <= 0 || point.y >= canvasRef.current.height)
+        point.vy *= -1;
 
       // Manage the trail for visual effect
       point.trail.push({ x: point.x, y: point.y });
@@ -166,38 +172,22 @@ const Dashboard = () => {
     });
   };
 
+  const addNewPoint = (mood) => {
+    const canvas = canvasRef.current;
+    let velocityRange;
+    switch (mood) {
+      case "positive":
+        velocityRange = { min: 1.5, max: 2.0 }; // Fast
+        break;
+      case "neutral":
+      default: // Neutral serves as default
+        velocityRange = { min: 0.75, max: 1.25 }; // Medium
+        break;
+      case "negative":
+        velocityRange = { min: 0.25, max: 0.5 }; // Slow
+        break;
+    }
 
-    const addNewPoint = (mood) => {
-      const canvas = canvasRef.current;
-      let velocityRange;
-      switch (mood) {
-        case "positive":
-          velocityRange = { min: 1.5, max: 2.0 }; // Fast
-          break;
-        case "neutral":
-        default: // Neutral serves as default
-          velocityRange = { min: 0.75, max: 1.25 }; // Medium
-          break;
-        case "negative":
-          velocityRange = { min: 0.25, max: 0.5 }; // Slow
-          break;
-      }
-
-      const vx = (Math.random() * (velocityRange.max - velocityRange.min) + velocityRange.min) * (Math.random() < 0.5 ? -1 : 1);
-      const vy = (Math.random() * (velocityRange.max - velocityRange.min) + velocityRange.min) * (Math.random() < 0.5 ? -1 : 1);
-
-      points.current.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: vx,
-        vy: vy,
-        mood: mood, // Store mood to retain speed category
-        radius: Math.random() * 2 + 1,
-        trail: [],
-      });
-    };
-
-    // Generate velocity within the selected range
     const vx =
       (Math.random() * (velocityRange.max - velocityRange.min) +
         velocityRange.min) *
@@ -212,8 +202,9 @@ const Dashboard = () => {
       y: Math.random() * canvas.height,
       vx: vx,
       vy: vy,
+      mood: mood, // Store mood to retain speed category
       radius: Math.random() * 2 + 1,
-      trail: [], // Store previous positions for the trailing effect
+      trail: [],
     });
   };
 
@@ -238,8 +229,6 @@ const Dashboard = () => {
   };
 
   // Draw connections between close points
-  // Adjust drawConnections to draw the permanent line based on the sequence of points in permanentLine
-  // Draw connections between close points with fading effect
   const drawConnections = (ctx) => {
     points.current.forEach((point, index) => {
       for (let i = index + 1; i < points.current.length; i++) {
@@ -273,6 +262,10 @@ const Dashboard = () => {
           display: "block",
           background: "black", // Set canvas background color to black
           position: "absolute",
+          top: "5%", // Add top padding as 5% of the viewport height
+          left: "5%", // Add left padding as 5% of the viewport width
+          right: "5%", // Add right padding as 5% of the viewport width
+          bottom: "5%", // Add bottom padding as 5% of the viewport height
           zIndex: -1,
         }}
       ></canvas>
@@ -288,17 +281,11 @@ const Dashboard = () => {
           borderRadius: "8px",
         }}
       >
-        {/* <h2>Analysis Data</h2>
-          <p>Mood: {analysisData.Mood}</p>
-          <p>Keywords: {analysisData.Keywords.join(", ")}</p> */}
-        <p>Most Common Keyword: {mostCommonKeyword}</p>{" "}
-        {/* Display the most common keyword */}
+        <p>Most Common Keyword: {mostCommonKeyword}</p>
       </div>
       {/* Modal Overlay */}
-      <div className={`modal-overlay ${showModal ? 'show' : ''}`}>
-        <div className="modal-content">
-          {mostCommonKeyword}
-        </div>
+      <div className={`modal-overlay ${showModal ? "show" : ""}`}>
+        <div className="modal-content">{mostCommonKeyword}</div>
       </div>
     </div>
   );
