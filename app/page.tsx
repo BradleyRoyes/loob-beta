@@ -99,9 +99,15 @@ export default function Page() {
   const handleAnalyseButtonClick = () => {
     const analyseMessage = "Analyse our conversation so far";
     append({ content: analyseMessage, role: "user" });
-    // setShowNeuronVisual(true);
-    // setShowModal(true);
+    setShowModal(true); // Show the modal immediately upon clicking
+
+    // Wait for 5 seconds before appending the "End Chat" message
+    setTimeout(() => {
+      const endChatMessage = "End Chat";
+      append({ content: endChatMessage, role: "user" });
+    }, 5000); // 5000 milliseconds = 5 seconds
   };
+
 
   if (showNeuronVisual) {
     return (
