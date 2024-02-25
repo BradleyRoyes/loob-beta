@@ -42,7 +42,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
 
       {phase === "introduction" && (
         <motion.div className="content" variants={variants}>
-          <h1 className="gradientText" style={{ fontSize: 'smaller' }}>Hi, I&apos;m Loob, <br/> an AI-in-training being built to one day make events like this one a little more interesting. <br/> Tonight is my very first gig! <br/> It would be great if you would take a moment to chat with me and share an experience you've had at MOOS. Could be from tonight or before tonight. Perhaps an event that really moved you, or even something that totally bugged you. There are no wrong answers. Everything you share with me is completely anonymous.  </h1>
+          <h1 className="gradientText" style={{ fontSize: 'smaller' }}>Hi, I&apos;m Loob, <br/> an AI-in-training being built to one day make events like this one a little more interesting. <br/> Tonight is my very first gig! <br/> It would be great if you would take a moment to chat with me and share an experience you've had at MOOS. <br/>Could be from tonight or before tonight. Perhaps an event that really moved you, or even something that totally bugged you.<br/> There are no wrong answers. Everything you share with me is completely anonymous.  </h1>
           <button onClick={() => proceed("learnMore")}>
             Continue
           </button>
@@ -59,7 +59,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
           <button onClick={() => onEnter("Tell me about MOOS.")}>
             Learn about MOOS
           </button>
-          <button onClick={() => onEnter("Tell me about EDS and EDS001.")}>
+          <button onClick={() => onEnter("Tell me about EDS and seks/loob.")}>
             Learn about EDS
           </button>
          
