@@ -42,7 +42,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
 
       {phase === "introduction" && (
         <motion.div className="content" variants={variants}>
-          <h1 className="gradientText" style={{ fontSize: 'smaller' }}>hi, I&apos;m Loob, <br/> an AI-in-training being built to one day make events like this one a little more interesting. <br/> Tonight is my very first gig! <br/> it would be great if you would take a moment to chat with me and share an experience you've had at MOOS. Perhaps an event that really moved you, or even something that bugged you that happened here. Everything you share with me is completely anonymous.    </h1>
+          <h1 className="gradientText" style={{ fontSize: 'smaller' }}>Hi, I&apos;m Loob, <br/> an AI-in-training being built to one day make events like this one a little more interesting. <br/> Tonight is my very first gig! <br/> It would be great if you would take a moment to chat with me and share an experience you've had at MOOS. Could be from tonight or before tonight. Perhaps an event that really moved you, or even something that totally bugged you. There are no wrong answers. Everything you share with me is completely anonymous.  </h1>
           <button onClick={() => proceed("learnMore")}>
             Continue
           </button>
@@ -52,7 +52,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "learnMore" && (
       
         <motion.div className="content" variants={variants}>
-          <h1 className="gradientText">So, would you like to:</h1>
+          <h1 className="gradientText">So, would you like to</h1>
           <button onClick={() => onEnter("I would like to share an experience with you.")}>
             Share an Experience
           </button>
@@ -65,9 +65,6 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
          
           <button onClick={() => onEnter("can we talk about harm reduction?")}>
             Talk Harm Reduction
-          </button>
-          <button onClick={() => proceed("feedback")}>
-            I&apos;d like to share specific feedback
           </button>
         </motion.div>
       )}
