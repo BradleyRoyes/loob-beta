@@ -232,7 +232,7 @@ const Dashboard = () => {
         const p = point.trail[i];
         ctx.lineTo(p.x, p.y);
       }
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.05)"; // Adjust the opacity of the trail
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.07)"; // Adjust the opacity of the trail
       ctx.stroke();
     });
   };
@@ -241,36 +241,30 @@ const Dashboard = () => {
   // Adjust drawConnections to draw the permanent line based on the sequence of points in permanentLine
   // Draw connections between close points with fading effect
   const drawConnections = (ctx) => {
-    // console.log("inside connections");
     points.current.forEach((point, index) => {
       for (let i = index + 1; i < points.current.length; i++) {
-        // console.log("inside connections2");
         const other = points.current[i];
         const distance = Math.hypot(point.x - other.x, point.y - other.y);
-        // console.log("here2");
         if (distance < connectionDistance) {
-          // Determine if this connection should be red (5% chance)
           const isRed = Math.random() < 0.05;
-          
-          // Calculate opacity based on distance
           const opacity = 1 - distance / connectionDistance;
           ctx.beginPath();
           ctx.moveTo(point.x, point.y);
           ctx.lineTo(other.x, other.y);
-          
-          // Set color based on whether it's red or not
+
+          ctx.lineWidth = 2; // Make connection lines thicker
+
           if (isRed) {
-            console.log("here3");
-            ctx.strokeStyle = `rgba(255, 105, 110, ${opacity})`; // Red for the connection
+            ctx.strokeStyle = `rgba(255, 105, 110, ${opacity})`;
           } else {
-            console.log("here4");
-            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`; // White for other connections
+            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
           }
           ctx.stroke();
         }
       }
     });
   };
+
   return (
     <div>
       <canvas
@@ -289,7 +283,7 @@ const Dashboard = () => {
           left: "10px",
           zIndex: 1,
           color: "white", // Set text color to white
-          background: "rgba(0, 0, 0, 0.7)", // Set background color to black with opacity
+          background: "rgba(0, 0, 0, 0.9)", // Set background color to black with opacity
           padding: "10px",
           borderRadius: "8px",
         }}
