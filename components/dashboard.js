@@ -101,22 +101,11 @@ const Dashboard = () => {
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas); // Add event listener for window resize
 
-    // Initialize Perlin noise generator
-    const noiseGen = new Noise(Math.random());
-
-    const draw = () => {
-      ctx.fillStyle = "black"; // Set background color to black
-      ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the canvas with black color
-      updatePoints(noiseGen); // Pass the noise generator to the update function
-      drawPoints(ctx);
-      drawConnections(ctx);
-      requestAnimationFrame(draw);
-    };
-
-    draw();
+    // Cleanup function to remove event listener when component unmounts
+    return () => window.removeEventListener("resize", resizeCanvas);
   }, []);
 
   useEffect(() => {
@@ -152,6 +141,12 @@ const Dashboard = () => {
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
   }, [analysisData.Keywords]);
+
+  const resizeCanvas = () => {
+    const canvas = canvasRef.current;
+    canvas.width = window.innerWidth * 0.9; // Adjust canvas width to 90% of window width
+    canvas.height = window.innerHeight * 0.9; // Adjust canvas height to 90% of window height
+  };
 
   const updatePoints = (noiseGen) => {
     points.current.forEach((point) => {
@@ -255,7 +250,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div>
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <canvas
         ref={canvasRef}
         style={{
