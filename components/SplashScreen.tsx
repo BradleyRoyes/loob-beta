@@ -35,7 +35,16 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText">Welcome to Loob</h1>
           <button onClick={() => proceed("learnMore")}>
-            Chat
+            chat with me
+          </button>
+        </motion.div>
+      )}
+
+      {phase === "introduction" && (
+        <motion.div className="content" variants={variants}>
+          <h1 className="gradientText" style={{ fontSize: 'smaller' }}>Hi, I'm Loob, an AI-in-training created to make events (just like this one) a bit more interesting. Tonight is my very first gig! you can chat with me to learn more about: MOOS, EDS, harm reduction, and to leave feedback. I might also have an easter egg or two to share if you ask nicely </h1>
+          <button onClick={() => proceed("learnMore")}>
+            Continue
           </button>
         </motion.div>
       )}
@@ -43,15 +52,15 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "learnMore" && (
       
         <motion.div className="content" variants={variants}>
-          <h1 className="gradientText">Would you like to know more about...</h1>
+          <h1 className="gradientText">alright Loob, tell me more about</h1>
           <button onClick={() => onEnter("Tell me about EDS")}>
-            EDS?
+            EDS
           </button>
           <button onClick={() => onEnter("Tell me about MOOS")}>
-            MOOS?
+            MOOS
           </button>
           <button onClick={() => proceed("feedback")}>
-            I&apos;d like to share feedback
+            I&apos;d like to share *anonymous* feedback
           </button>
         </motion.div>
       )}
