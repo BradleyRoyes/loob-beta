@@ -17,7 +17,7 @@ const AnalyseButton: React.FC<AnalyseButtonProps> = ({ onClick }) => {
       onClick={handleButtonClick}
       className="prompt-button text-sm py-2 px-4 rounded-lg overflow-hidden whitespace-nowrap focus:outline-none focus:shadow-outline absolute top-full mt-2"
     >
-      End Chat {/* Display the button text */}
+      Submit {/* Display the button text */}
     </button>
   );
 };
