@@ -10,15 +10,16 @@ const Footer = () => {
         target="_blank"
       >
 
-        {/* Centered Analyse Button */}
-        <div className="absolute left-1/2 transform -translate-x-1/2">
-          <AnalyseButton />
-        </div>
         
         <span className="px-3">▲</span>
         <hr className="h-full border-r" />
         <span className="px-3">loob.labs</span>
       </a>
+
+      {/* Centered Analyse Button */}
+      <div className="absolute left-1/2 transform -translate-x-1/2">
+        <AnalyseButton />
+      </div>
       <div
         className="ml-auto flex flex-row items-center"
         style={{ whiteSpace: "nowrap" }}

@@ -77,7 +77,6 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     cursor: "pointer",
     fontSize: "12px",
     fontFamily: "'Nunito', sans-serif",
-    margin: "20px",
     display: "block",
     width: "fit-content",
     margin: "20px auto", // Center button
@@ -88,7 +87,10 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
       <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
         <h2>Thanks for chatting</h2>
         <p>
-          To be relevant in a living system is to generate vitality. What is that? It's relationships that build relationships that build relationships: 3rd & 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData.
+          <p>
+            To be relevant in a living system is to generate vitality. What is that? It&apos;s relationships that build relationships that build relationships: 3rd &amp; 4th order relational process is real systemic work. No KPI can measure it. This is #WarmData.
+          </p>
+
         </p>
         <button style={buttonStyle} onClick={() => window.location.reload()}>
           New Chat
