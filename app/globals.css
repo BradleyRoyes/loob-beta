@@ -94,15 +94,25 @@
   z-index: 1000; /* Ensure it's above other content */
   display: none; /* Initially don't display the modal */
 }
-
 .modal-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   padding: 20px;
-  background: var(--background-bubble-secondary);
+  background: white;
   border-radius: 10px;
-  color: white;
-  font-size: 3rem; /* Increase font size for drama */
-  text-align: center; /* Center the text */
-  animation-fill-mode: forwards; /* Keep the state at the end of the animation */
+  color: var(--text-primary); /* Change to use variable for text color */
+  font-size: 2rem;
+  text-align: center;
+  box-shadow: 0 0 10px darkred; /* Dark red drop shadow */
+  opacity: 0; /* Initially hidden */
+  animation: fade 8s infinite alternate; /* 8 seconds for both fade in and fade out */
+}
+
+@keyframes fade {
+  0%, 100% { opacity: 0; } /* Fully transparent at the beginning and end */
+  50% { opacity: 1; } /* Fully visible at the middle */
 }
 
 .modal-overlay.show {
