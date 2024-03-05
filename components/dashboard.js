@@ -165,7 +165,6 @@ const Dashboard = () => {
         point.vx *= -1;
       if (point.y <= 0 || point.y >= canvasRef.current.height)
         point.vy *= -1;
-
       // Manage the trail for visual effect
       point.trail.push({ x: point.x, y: point.y });
       if (point.trail.length > 10) point.trail.shift();
