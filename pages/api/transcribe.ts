@@ -20,8 +20,19 @@ const readFileAsync = promisify(fs.readFile);
 export default async function handler(req, res) {
   if (req.method === 'POST') {
     // Parse the form data
+    // const fData = await new Promise((resolve, reject) => {
+    //   const form = new formidable.IncomingForm({
+    //     uploadDir: "/tmp",
+    //     keepExtensions: true,
+    //   });
+    //   form.parse(req, (err, fields, files) => {
+    //     if (err) return reject(err);
+    //     resolve({ fields, files });
+    //   });
+    // });
+    
     const form = new formidable.IncomingForm();
-    form.uploadDir = "./";
+    form.uploadDir = "/tmp";
     form.keepExtensions = true;
     const parseForm = promisify(form.parse.bind(form));
     const { fields, files } = await parseForm(req);
@@ -54,3 +65,4 @@ export default async function handler(req, res) {
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
+
