@@ -14,6 +14,7 @@ import SplashScreen from "../components/SplashScreen"; // Adjust the import path
 import AnalyseButton from "../components/AnalyseButton";
 import PromptSuggestionRow from "../components/PromptSuggestions/PromptSuggestionsRow";
 import ModalOverlay from "../components/ModalOverlay";
+import AudioRecorder from '../components/AudioRecorder';
 
 export default function Page() {
   const { append, messages, input, handleInputChange, handleSubmit } =
@@ -21,7 +22,7 @@ export default function Page() {
   const { useRag, llm, similarityMetric, setConfiguration } =
     useConfiguration();
   const [sessionId] = useState(uuidv4());
-  const messagesEndRef = useRef(null);
+  const messagesEndRef = useRef<HTMLElement | null>(null);
   const [configureOpen, setConfigureOpen] = useState(false);
   const [showNeuronVisual, setShowNeuronVisual] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
@@ -62,6 +63,28 @@ export default function Page() {
       role: "user",
     };
     append(msg, { options: { body: { useRag, llm, similarityMetric } } });
+  };
+
+  const onRecordingComplete = async (audioBlob) => {
+    const formData = new FormData();
+    formData.append("audio", audioBlob, "audio.wav"); // 'audio' is the field name expected by the server
+
+    try {
+      // Replace '/api/transcribe' with your actual API route
+      const response = await fetch('/api/transcribe', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server responded with ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Transcription:', data.transcription); // Log the transcription to the console
+    } catch (error) {
+      console.error('Error uploading audio:', error);
+    }
   };
 
   // Update the setShowSplash function to also handle prompts
@@ -197,6 +220,7 @@ export default function Page() {
             ))}
           <div className="flex items-center justify-between gap-2">
             <form className="flex flex-1 gap-2" onSubmit={handleSend}>
+            <AudioRecorder onRecordingComplete={onRecordingComplete} />
               <input
                 onChange={(e) => handleInputChange(e)}
                 value={input}
