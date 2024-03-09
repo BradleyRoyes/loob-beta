@@ -1,3 +1,5 @@
+require('dotenv').config({ path: './.env.local' });
+
 import { AstraDB } from "@datastax/astra-db-ts";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import 'dotenv/config'

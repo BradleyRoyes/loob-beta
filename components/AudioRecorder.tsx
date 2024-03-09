@@ -1,79 +1,48 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 
-function AudioRecorder() {
-    const [recording, setRecording] = useState(false);
-    const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-    const [isUploading, setIsUploading] = useState(false);
-    const [transcription, setTranscription] = useState('');
-    const [error, setError] = useState('');
-    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+const AudioRecorder = ({ onRecordingComplete }) => {
+  const [recording, setRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
 
-    const startRecording = () => {
-        setError('');
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(stream => {
-                const mediaRecorder = new MediaRecorder(stream);
-                mediaRecorder.start();
-                setRecording(true);
-                const audioChunks: BlobPart[] = [];
-                mediaRecorder.ondataavailable = event => {
-                    audioChunks.push(event.data);
-                };
-                mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks);
-                    setAudioBlob(audioBlob);
-                };
-                mediaRecorderRef.current = mediaRecorder;
-            }).catch(err => {
-                setError('Failed to start recording. Please ensure you have given permission to use the microphone.');
-            });
-    };
+  const startRecording = async () => {
+    if (recording) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const newMediaRecorder = new MediaRecorder(stream);
+      // Explicitly type audioChunks as an array of Blob objects
+      let audioChunks: Blob[] = [];
 
-    const stopRecording = () => {
-        if (!recording || !mediaRecorderRef.current) return;
-        mediaRecorderRef.current.stop();
-        setRecording(false);
-    };
+      newMediaRecorder.ondataavailable = event => {
+        audioChunks.push(event.data);
+      };
 
-    const sendAudio = async () => {
-        if (!audioBlob) {
-            console.error('No audio to send');
-            return;
-        }
-        setIsUploading(true);
-        const formData = new FormData();
-        formData.append('audio', audioBlob, 'audio.webm');
+      newMediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        onRecordingComplete(audioBlob);
+        audioChunks = [];
+      };
 
-        try {
-            const response = await fetch('/api/transcribe', {
-                method: 'POST',
-                body: formData,
-            });
-            const data = await response.json();
-            if (response.ok) {
-                setTranscription(data.transcription);
-                console.log('Transcription:', data.transcription);
-            } else {
-                throw new Error(data.message || 'Failed to transcribe audio');
-            }
-        } catch (error) {
-            console.error('Error sending audio for transcription:', error);
-            setError('Error sending audio for transcription.');
-        } finally {
-            setIsUploading(false);
-        }
-    };
+      newMediaRecorder.start();
+      setMediaRecorder(newMediaRecorder);
+      setRecording(true);
+    } catch (error) {
+      console.error('Error starting recording:', error);
+    }
+  };
 
-    return (
-        <div>
-            {error && <p>Error: {error}</p>}
-            <button onClick={startRecording} disabled={recording}>Start Recording</button>
-            <button onClick={stopRecording} disabled={!recording}>Stop Recording</button>
-            <button onClick={sendAudio} disabled={!audioBlob || isUploading}>Send Audio</button>
-            {isUploading && <p>Uploading and transcribing...</p>}
-            {transcription && <p>Transcription: {transcription}</p>}
-        </div>
-    );
-}
+  const stopRecording = () => {
+    if (!recording || !mediaRecorder) return;
+    mediaRecorder.stop();
+    setRecording(false);
+  };
+
+  return (
+    <div>
+      <button onClick={recording ? stopRecording : startRecording}>
+        {recording ? 'Stop Recording' : 'Start Recording'}
+      </button>
+    </div>
+  );
+};
 
 export default AudioRecorder;

@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 import { AstraDB } from "@datastax/astra-db-ts";
 import { v4 as uuidv4 } from "uuid";
+import { env } from 'node:process';
 
 // Initialize OpenAI and AstraDB with your configuration
 const openai = new OpenAI({
