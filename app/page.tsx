@@ -70,7 +70,6 @@ export default function Page() {
     formData.append("audio", audioBlob, "audio.wav"); // 'audio' is the field name expected by the server
 
     try {
-      // Replace '/api/transcribe' with your actual API route
       const response = await fetch('/api/transcribe', {
         method: 'POST',
         body: formData,
@@ -82,10 +81,16 @@ export default function Page() {
 
       const data = await response.json();
       console.log('Transcription:', data.transcription); // Log the transcription to the console
+
+      // Set the transcription text as the input value so the user can send it manually
+      handleInputChange({
+        target: { value: data.transcription },
+      } as React.ChangeEvent<HTMLInputElement>); // Simulating an input change event with the transcription text
     } catch (error) {
       console.error('Error uploading audio:', error);
     }
   };
+
 
   // Update the setShowSplash function to also handle prompts
   const handleEnter = (promptText?: string) => {

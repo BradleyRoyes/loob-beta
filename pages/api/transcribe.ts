@@ -10,6 +10,11 @@ export const config = {
   },
 };
 
+interface FormidableData {
+  fields: formidable.Fields;
+  files: formidable.Files;
+}
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -18,26 +23,29 @@ const openai = new OpenAI({
 const readFileAsync = promisify(fs.readFile);
 
 export default async function handler(req, res) {
+
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+
   // Parse the form data
-  // const fData = await new Promise((resolve, reject) => {
-  //   const form = new formidable.IncomingForm({
-  //     uploadDir: "/tmp",
-  //     keepExtensions: true,
-  //   });
-  //   form.parse(req, (err, fields, files) => {
-  //     if (err) return reject(err);
-  //     resolve({ fields, files });
-  //   });
-  // });
-  
-  const form = new formidable.IncomingForm();
-  form.uploadDir = "/tmp";
-  form.keepExtensions = true;
-  const parseForm = promisify(form.parse.bind(form));
-  const { fields, files } = await parseForm(req);
+  const fData = await new Promise<FormidableData>((resolve, reject) => {
+    const form = new formidable.IncomingForm({
+      uploadDir: "/tmp",
+      keepExtensions: true,
+    });
+    form.parse(req, (err, fields, files) => {
+      if (err) return reject(err);
+      resolve({ fields, files });
+    }); 
+  });
+
+  // console.log(fData.files);
+  const audiofile = fData.files.audio;
+  const audioFilePath = audiofile.path;
+  console.log(audioFilePath);
 
   try {
-    const audioFilePath = files.audio.filepath;
 
     // Since we are directly using the file path for streaming, no need to read the file into memory
     const fileStream = fs.createReadStream(audioFilePath);
@@ -45,7 +53,7 @@ export default async function handler(req, res) {
     // Call OpenAI API for speech-to-text
     const response = await openai.audio.transcriptions.create({
       file: fileStream,
-      model: "whisper-large", // Make sure to use the correct model name
+      model: "whisper-1", // Make sure to use the correct model name
     });
     
     // Delete the temporary audio file
