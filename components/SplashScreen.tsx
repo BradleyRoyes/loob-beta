@@ -102,3 +102,4 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
 };
 
 export default SplashScreen;
+
