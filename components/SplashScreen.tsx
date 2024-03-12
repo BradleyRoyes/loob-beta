@@ -43,7 +43,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "introduction" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText" style={{ fontSize: 'normal' }}>
-            Hi, I&apos;m Loob, an AI in training being built to one day make events like this one a little more interesting. <br/> Tonight is my very first gig! You can chat with me to learn more about MOOS, EDS, harm reduction, and to share an experience. <br/> I would love it if you would share with me an experience you have had at MOOS. Anything is fine. Everything you share is anonymous. 
+            Hi, I&apos;m Loob, an AI in training being built to one day make events like this one a little more interesting. <br/> You can chat with me to learn more about MOOS, EDS, harm reduction, and to share an experience. <br/> I would love it if you would share with me an experience you have had at MOOS. Anything is fine. Everything you share is anonymous. 
           </h1>
           <button onClick={() => proceed("learnMore")}>
             Continue
@@ -56,7 +56,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText">Would you like to</h1>
-          <button onClick={() => onEnter("I would like to share an experience with you.")}>
+          <button onClick={() => onEnter("I would like to share an experience I am having with you.")}>
             Share an Experience
           </button>
           <button onClick={() => onEnter("Tell me about MOOS.")}>
@@ -66,7 +66,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
             Learn about EDS
           </button>
          
-          <button onClick={() => onEnter("can you give me a bit of harm reduction support/knowledge")}>
+          <button onClick={() => onEnter("I am having a difficult time, can you give me harm reduction support")}>
             Harm Reduction
           </button>
         </motion.div>
