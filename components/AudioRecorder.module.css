@@ -1,0 +1,19 @@
+/* AudioRecorder.module.css */
+.audioButton {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #a2577f;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.audioButton:hover {
+  background-color: #985d6f;
+}
+
+.audioButton:active {
+  background-color: #674265;
+}
