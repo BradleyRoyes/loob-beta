@@ -52,25 +52,25 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       )}
 
 
-      {phase === "learnMore" && (
-      
-        <motion.div className="content" variants={variants}>
-          <h1 className="gradientText">Would you like to</h1>
-          <button onClick={() => onEnter("I would like to talk about my night with you.")}>
-            Share about your night
-          </button>
-        <h3 className="gradientText" style="font-size: smaller;"> <br/> or, learn about </h3>
-          <button onClick={() => onEnter("Tell me about MOOS.")}>
-            MOOS
-          </button>
-          <button onClick={() => onEnter("Tell me about EDS and seks/loob.")}>
-            EDS
-          </button>
-          <button onClick={() => onEnter("I am having a difficult time, can you give me harm reduction support")}>
-            Harm Reduction
-          </button>
-        </motion.div>
-      )}
+    {phase === "learnMore" && (
+  <motion.div className="content" variants={variants}>
+    <h1 className="gradientText">Would you like to</h1>
+    <button onClick={() => onEnter("I would like to talk about my night with you.")}>
+      Share about your night
+    </button>
+    <div className="buttonContainer">
+      <button className="smallButton" onClick={() => onEnter("Tell me about MOOS.")}>
+        MOOS
+      </button>
+      <button className="smallButton" onClick={() => onEnter("Tell me about EDS and seks/loob.")}>
+        EDS
+      </button>
+      <button className="smallButton" onClick={() => onEnter("I am having a difficult time, can you give me harm reduction support")}>
+        Harm Reduction
+      </button>
+    </div>
+  </motion.div>
+)}
 
       {phase === "feedback" && (
         <motion.div className="content" variants={variants}>
