@@ -176,14 +176,14 @@ const Dashboard = () => {
     let velocityRange;
     switch (mood) {
       case "positive":
-        velocityRange = { min: 1.5, max: 2.0 }; // Fast
+        velocityRange = { min: 0.5, max: 1.0 }; // Fast
         break;
       case "neutral":
       default: // Neutral serves as default
-        velocityRange = { min: 0.75, max: 1.25 }; // Medium
+        velocityRange = { min: 0.25, max: 0.5 }; // Medium
         break;
       case "negative":
-        velocityRange = { min: 0.25, max: 0.5 }; // Slow
+        velocityRange = { min: 0.15, max: 0.5 }; // Slow
         break;
     }
 
