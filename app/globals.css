@@ -131,6 +131,19 @@ body {
   font-family: 'Nunito';
 }
 
+.button-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px; /* Adjust the gap between buttons */
+  margin-bottom: 20px; /* Space before the chat input box */
+  position: relative;
+  flex-direction: row;
+}
+
+.button-row .inline-button {
+  position: relative; 
+  margin-top: 0;}
+
 .chatbot-section {
   background-color: var(--text-primary);
   box-shadow: var(--shadow-primary);
@@ -360,16 +373,18 @@ body {
 
 
 .button-dash {
-  padding: 4px 11px; /* Adjust as needed */
-  /* border-radius: 2px; /* Adjust as needed */
-  color: var(--text-primary); /* White text */
-  background-color: #000000; /* Primary background color */
+  padding: 3px 11px; /* Adjust as needed */
+  border: 2px solid var(--text-primary-inverse);
+  border-radius: 8px; /* Adjust as needed */
+  color: var(--text-primary-inverse); /* White text */
+  background-color: transparent; /* Primary background color */
+  border-color: #000000;
   transition: background-color 0.3s, color 0.3s; /* Smooth transition for color changes */
 }
 
 .dark .button-dash {
-  background-color: #ffffff; /* Dark mode background color */
-  color: var(--text-primary); /* Dark mode text color */
+  color: var(--text-primary-inverse); /* Dark mode text color */
+  border-color: #FFFFFF;
 }
 
 .word-cloud-container {
