@@ -153,23 +153,59 @@ const Dashboard = () => {
     return () => clearInterval(intervalId);
   }, [analysisData.Keywords]);
 
-  const updatePoints = (noiseGen) => {
-    points.current.forEach((point) => {
-      // Omit the noise-based velocity adjustment to maintain consistent speed
-      // Simply update the point position based on its current velocity
-      point.x += point.vx;
-      point.y += point.vy;
+  const applyMoodInfluences = () => {
+  const gravityStrength = 0.05; // Adjust as needed for attraction
+  const repulsionStrength = 0.05; // Adjust as needed for repulsion
 
-      // Boundary check to reverse the velocity if the point hits the canvas edge
-      if (point.x <= 0 || point.x >= canvasRef.current.width)
-        point.vx *= -1;
-      if (point.y <= 0 || point.y >= canvasRef.current.height)
-        point.vy *= -1;
-      // Manage the trail for visual effect
-      point.trail.push({ x: point.x, y: point.y });
-      if (point.trail.length > 10) point.trail.shift();
+  points.current.forEach((point, index) => {
+    let forceX = 0;
+    let forceY = 0;
+
+    points.current.forEach((otherPoint, otherIndex) => {
+      if (index === otherIndex) return; // Skip self
+
+      const dx = otherPoint.x - point.x;
+      const dy = otherPoint.y - point.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      // Avoid extreme forces at very short distances
+      if (distance < 1) return;
+
+      const forceMagnitude =
+        (point.mood === 'positive' && otherPoint.mood === 'positive')
+          ? gravityStrength / distance // Attraction force for positive mood
+          : (point.mood === 'negative' && otherPoint.mood === 'negative')
+          ? -repulsionStrength / distance // Repulsion force for negative mood
+          : 0; // No force if moods are mixed or neutral
+
+      forceX += (dx / distance) * forceMagnitude;
+      forceY += (dy / distance) * forceMagnitude;
     });
-  };
+
+    // Apply the resulting force to the point's velocity
+    point.vx += forceX;
+    point.vy += forceY;
+  });
+};
+
+
+const updatePoints = (noiseGen) => {
+  // First, apply mood influences for attraction and repulsion
+  applyMoodInfluences();
+
+  // Then, update points with the new velocities and check boundaries
+  points.current.forEach((point) => {
+    point.x += point.vx;
+    point.y += point.vy;
+
+    if (point.x <= 0 || point.x >= canvasRef.current.width) point.vx *= -1;
+    if (point.y <= 0 || point.y >= canvasRef.current.height) point.vy *= -1;
+
+    point.trail.push({ x: point.x, y: point.y });
+    if (point.trail.length > 10) point.trail.shift();
+  });
+};
+
 
   const addNewPoint = (mood) => {
     const canvas = canvasRef.current;
