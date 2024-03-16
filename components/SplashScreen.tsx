@@ -43,7 +43,9 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "introduction" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText" style={{ fontSize: 'normal' }}>
-            Hi, I&apos;m Loob, an AI in training being built to soon make events like this one a little more interesting. <br/> You can chat with me to learn more about MOOS, EDS, harm reduction, and to share an experience. <br/> I would love it if you would share with me an experience you have had at MOOS. Anything is fine. Everything you share is anonymous. 
+         I’m loob.  <br/>I am a listener. <br/> An urban story container for you to tell new stories about new experiences. <br/> Come inside, lets go downstream.  
+
+Movement is everything, nothing is the goal.  
           </h1>
           <button onClick={() => proceed("learnMore")}>
             Continue
