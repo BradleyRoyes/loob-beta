@@ -2,38 +2,41 @@ import React, { useState } from 'react';
 
 const AudioRecorder = ({ onRecordingComplete }) => {
   const [recording, setRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+
+  const getSupportedMimeType = () => {
+    const types = [
+      "audio/webm",
+      "audio/webm; codecs=opus",
+      "audio/ogg; codecs=opus",
+      "audio/wav",
+    ];
+    return types.find((type) => MediaRecorder.isTypeSupported(type)) || null;
+  };
 
   const startRecording = async () => {
-    if (recording) return;
+    if (recording || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      console.error("Recording in progress or MediaDevices API not supported.");
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const newMediaRecorder = new MediaRecorder(stream);
-      // Explicitly type audioChunks as an array of Blob objects
-      let audioChunks: Blob[] = [];
+      const mimeType = getSupportedMimeType();
+      if (!mimeType) {
+        console.error("No supported audio MIME type found.");
+        return;
+      }
+      const options = mimeType ? { mimeType } : {};
+      const newMediaRecorder = new MediaRecorder(stream, options);
 
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-  console.error("MediaDevices API or getUserMedia is not supported in this browser.");
-  return;
-}
-
-      const getSupportedMimeType = () => {
-  const types = [
-    "audio/webm",
-    "audio/webm; codecs=opus",
-    "audio/ogg; codecs=opus",
-    "audio/wav",
-  ];
-
-  return types.find((type) => MediaRecorder.isTypeSupported(type)) || null;
-};
-
+      let audioChunks = [];
       newMediaRecorder.ondataavailable = event => {
         audioChunks.push(event.data);
       };
 
       newMediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const audioBlob = new Blob(audioChunks, { type: mimeType });
         onRecordingComplete(audioBlob);
         audioChunks = [];
       };
@@ -42,7 +45,7 @@ const AudioRecorder = ({ onRecordingComplete }) => {
       setMediaRecorder(newMediaRecorder);
       setRecording(true);
     } catch (error) {
-      console.error('Error starting recording:', error);
+      console.error("Error starting recording:", error);
     }
   };
 
@@ -53,7 +56,7 @@ const AudioRecorder = ({ onRecordingComplete }) => {
   };
 
   const buttonStyle = {
-    backgroundColor: 'transparent', // Pastel blue when recording
+    backgroundColor: recording ? '#ff8e88' : 'transparent', // Color changes when recording
     border: '2px solid var(--text-primary-inverse)',
     borderRadius: '50%',
     cursor: 'pointer',
@@ -64,13 +67,12 @@ const AudioRecorder = ({ onRecordingComplete }) => {
     transition: 'all 0.3s',
   };
 
-  
   const MicIcon = () => (
     <svg
       viewBox="0 0 24 24"
       width="24"
       height="24"
-      stroke={recording ? '#ff8e88' : "var(--text-primary-inverse)"} // Pastel blue stroke when recording
+      stroke={recording ? '#ff8e88' : "var(--text-primary-inverse)"}
       strokeWidth="2"
       fill="none"
       strokeLinecap="round"
