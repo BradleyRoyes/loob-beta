@@ -60,12 +60,14 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
         Share an Experience
       </button>
     </div>
+    
     <div className="rowButtons">
+      <h1 className="gradientText">or, talk about</h1>
       <button onClick={() => onEnter("Tell me about MOOS.")}>
-        Learn about MOOS
+        MOOS
       </button>
       <button onClick={() => onEnter("Tell me about EDS and seks/loob.")}>
-        Learn about EDS
+        EDS
       </button>
       <button onClick={() => onEnter("I am having a difficult time, can you give me harm reduction support")}>
         Harm Reduction
