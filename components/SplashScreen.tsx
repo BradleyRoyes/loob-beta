@@ -58,6 +58,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
     <button onClick={() => onEnter("I would like to talk about my night with you.")}>
       Share about your night
     </button>
+    <h3 className="gradientText" style="font-size: smaller;">or learn more about</h3>
     <div className="buttonContainer">
       <button className="smallButton" onClick={() => onEnter("Tell me about MOOS.")}>
         MOOS
