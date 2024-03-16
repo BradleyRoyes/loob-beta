@@ -43,7 +43,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "introduction" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText" style={{ fontSize: 'normal' }}>
-         I’m loob, a listener. <br/> An urban story container to help us tell new stories about new experiences. <br/> <br/> Movement is everything, nothing is the goal.  
+         I’m loob, a listener. <br/>  <br/>An urban story container to help us tell new stories about new experiences. <br/> <br/> Movement is everything, nothing is the goal.  
           </h1>
           <button onClick={() => proceed("learnMore")}>
             Continue
@@ -55,11 +55,11 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "learnMore" && (
       
         <motion.div className="content" variants={variants}>
-          <h1 className="gradientText">Would you like to</h1>
+          <h1 className="gradientText">I would like to</h1>
           <button onClick={() => onEnter("I would like to talk about my night with you.")}>
-            Talk about your night
+            Talk about my night
           </button>
-            <h3 className="gradientText">or learn about</h3>
+        <h3 className="gradientText" style="font-size: smaller;"> <br/> or learn about </h3>
           <button onClick={() => onEnter("Tell me about MOOS.")}>
             MOOS
           </button>
