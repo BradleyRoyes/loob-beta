@@ -5,35 +5,6 @@ interface ModalOverlayProps {
 }
 
 const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
-  const [opacity, setOpacity] = useState(0);
-
-  // Fade-in effect for the modal overlay
-  useEffect(() => {
-    const timer = setTimeout(() => setOpacity(1), 25);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Creates floating pixels for a dynamic background effect
-  useEffect(() => {
-    const createFloatingPixels = () => {
-      const pixel = document.createElement('div');
-      pixel.className = 'floating-pixel';
-      Object.assign(pixel.style, {
-        width: '2px',
-        height: '2px',
-        background: '#FFFFFF',
-        position: 'fixed',
-        top: `${Math.random() * window.innerHeight}px`,
-        left: `${Math.random() * window.innerWidth}px`,
-      });
-      document.body.appendChild(pixel);
-      setTimeout(() => document.body.removeChild(pixel), 3000);
-    };
-
-    const interval = setInterval(createFloatingPixels, 100);
-    return () => clearInterval(interval);
-  }, []);
-
   // Styles
   const modalOverlayStyle: CSSProperties = {
     position: 'fixed',
@@ -48,8 +19,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
     zIndex: 10,
     background: 'rgba(0,0,0,1)',
     backdropFilter: 'blur(5px)',
-    opacity,
-    transition: 'opacity 1s ease-in-out',
+    opacity: 1,
   };
 
   const modalContentStyle: CSSProperties = {
@@ -64,7 +34,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({ onClose }) => {
 
   const quoteStyle: CSSProperties = {
     fontStyle: 'italic',
-    fontSize: '14px', // Smaller font size for the quote
+    fontSize: '16px', // Smaller font size for the quote
     color: '#FFFFFF', // White text color
     backgroundColor: '#000', // Black background color
     padding: '10px',
