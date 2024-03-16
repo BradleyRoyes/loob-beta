@@ -49,3 +49,21 @@
   background-color: black; /* Light background on hover for contrast */
   color: #6b6f73; /* This won't have effect due to gradient text but left for consistency */
 }
+
+.priorityButton button {
+  font-size: 1.25em; /* Larger font size */
+  padding: 15px 30px; /* Larger padding for more emphasis */
+  margin-bottom: 20px; /* Extra space below the button */
+  width: 100%; /* Makes the button stretch to the container width */
+}
+
+.rowButtons {
+  display: flex;
+  justify-content: space-around; /* Evenly space the buttons in a row */
+}
+
+.rowButtons button {
+  flex-grow: 1; /* Allows buttons to grow and fill the row */
+  margin: 0 10px; /* Adds some space between the buttons */
+}
+
