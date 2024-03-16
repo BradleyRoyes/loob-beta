@@ -12,6 +12,22 @@ const AudioRecorder = ({ onRecordingComplete }) => {
       // Explicitly type audioChunks as an array of Blob objects
       let audioChunks: Blob[] = [];
 
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+  console.error("MediaDevices API or getUserMedia is not supported in this browser.");
+  return;
+}
+
+      const getSupportedMimeType = () => {
+  const types = [
+    "audio/webm",
+    "audio/webm; codecs=opus",
+    "audio/ogg; codecs=opus",
+    "audio/wav",
+  ];
+
+  return types.find((type) => MediaRecorder.isTypeSupported(type)) || null;
+};
+
       newMediaRecorder.ondataavailable = event => {
         audioChunks.push(event.data);
       };
