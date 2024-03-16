@@ -146,7 +146,7 @@ const Dashboard = () => {
     // Interval to calculate the most common keyword every minute
     const intervalId = setInterval(
       calculateMostCommonKeyword,
-      30000
+      60000
     ); // Adjust to 60000 for 1 minute
 
     // Cleanup interval on component unmount
@@ -222,7 +222,7 @@ const Dashboard = () => {
         const p = point.trail[i];
         ctx.lineTo(p.x, p.y);
       }
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.07)"; // Adjust the opacity of the trail
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.06)"; // Adjust the opacity of the trail
       ctx.stroke();
     });
   };
