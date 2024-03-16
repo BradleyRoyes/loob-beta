@@ -56,8 +56,8 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText">Would you like to</h1>
-          <button onClick={() => onEnter("I would like to share an experience I am having with you.")}>
-            Share an Experience
+          <button onClick={() => onEnter("I would like to talk about my night with you.")}>
+            Talk about your night
           </button>
             <h3 className="gradientText">or learn about</h3>
           <button onClick={() => onEnter("Tell me about MOOS.")}>
