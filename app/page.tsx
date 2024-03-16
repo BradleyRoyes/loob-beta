@@ -197,9 +197,9 @@ export default function Page() {
                   >
                     Back Stage
                   </button>
-                  <div className="relative">
+                  {/* <div className="relative">
                     <AnalyseButton onClick={handleAnalyseButtonClick} />
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
@@ -222,9 +222,12 @@ export default function Page() {
             (messages.length === 0 && (
               <PromptSuggestionRow onPromptClick={handlePrompt} />
             ))}
+          <div className="button-row ">
+            <AudioRecorder onRecordingComplete={onRecordingComplete} />
+    <AnalyseButton onClick={handleAnalyseButtonClick} className="inline-button" />
+          </div>
           <div className="flex items-center justify-between gap-2">
             <form className="flex flex-1 gap-2" onSubmit={handleSend}>
-            <AudioRecorder onRecordingComplete={onRecordingComplete} />
               <input
                 onChange={(e) => handleInputChange(e)}
                 value={input}
