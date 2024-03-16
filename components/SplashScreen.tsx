@@ -43,7 +43,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "introduction" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText" style={{ fontSize: 'normal' }}>
-         I am loob, a listener. <br/> An urban story container for you to tell new stories about new experiences. <br/>  
+         I am loob, a listener. <br/> An urban story container for you to tell new stories about new experiences. <br/> Come inside, lets go downstream.  
 <br/>Movement is everything,<br/> nothing is the goal.  
           </h1>
           <button onClick={() => proceed("learnMore")}>
@@ -51,6 +51,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
           </button>
         </motion.div>
       )}
+
 {phase === "learnMore" && (
   <motion.div className="content" variants={variants}>
     <h1 className="gradientText">Would you like to</h1>
@@ -59,26 +60,19 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
         Share an Experience
       </button>
     </div>
-    
     <div className="rowButtons">
-      <div className="rowButtonsHeader">
-        <h1 className="gradientText">or, talk about</h1>
-      </div>
-      <div className="rowButtonsContainer">
-        <button onClick={() => onEnter("Tell me about MOOS.")}>
-          MOOS
-        </button>
-        <button onClick={() => onEnter("Tell me about EDS and seks/loob.")}>
-          EDS
-        </button>
-        <button onClick={() => onEnter("I am having a difficult time, can you give me harm reduction support")}>
-          Harm Reduction
-        </button>
-      </div>
+      <button onClick={() => onEnter("Tell me about MOOS.")}>
+        Learn about MOOS
+      </button>
+      <button onClick={() => onEnter("Tell me about EDS and seks/loob.")}>
+        Learn about EDS
+      </button>
+      <button onClick={() => onEnter("I am having a difficult time, can you give me harm reduction support")}>
+        Harm Reduction
+      </button>
     </div>
   </motion.div>
 )}
-
 
       {phase === "feedback" && (
         <motion.div className="content" variants={variants}>
@@ -110,4 +104,3 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
 };
 
 export default SplashScreen;
-
