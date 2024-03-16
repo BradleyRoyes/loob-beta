@@ -203,9 +203,9 @@ export default function Page() {
                 </div>
               </div>
             </div>
-            <p className="chatbot-text-secondary-inverse text-lg md:text-xl mt-1 md:mt-2 font-medium">
+           { /* <p className="chatbot-text-secondary-inverse text-lg md:text-xl mt-1 md:mt-2 font-medium">
               collective memory for transformative experiences
-            </p>
+            </p> */}
           </div>
           <div className="flex-1 relative overflow-y-auto my-4 md:my-6">
             <div className="absolute w-full overflow-x-hidden">
