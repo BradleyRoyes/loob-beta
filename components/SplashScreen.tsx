@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import "./SplashScreen.css";
+import AudioRecorder from '../components/AudioRecorder';
 
 const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
   onEnter,
@@ -22,6 +23,31 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       // Removed the automatic transition to "learnMore" phase
     }
   }, [phase]);
+  
+  const onRecordingComplete = async (audioBlob) => {
+    const formData = new FormData();
+    formData.append("audio", audioBlob, "audio.wav"); // 'audio' is the field name expected by the server
+
+    try {
+      const response = await fetch('/api/transcribe', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server responded with ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Transcription:', data.transcription); // Log the transcription to the console
+
+      // Proceed to chat page with the transcription text
+      onEnter(data.transcription);
+    } catch (error) {
+      console.error('Error uploading audio:', error);
+      // Handle the error state appropriately, maybe show a message to the user
+    }
+  };
 
   return (
     <motion.div
@@ -45,12 +71,25 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
           <h1 className="gradientText" style={{ fontSize: 'normal' }}>
          I’m loob, a listener. <br/> An urban story container to help us tell new stories about new experiences. <br/> <br/> Movement is everything, nothing is the goal.  
           </h1>
-          <button onClick={() => proceed("learnMore")}>
+          <button onClick={() => proceed("karneval")}>
             Continue
           </button>
         </motion.div>
       )}
 
+      {phase === "karneval" && (
+            
+            <motion.div className="content" variants={variants}>
+              <h1 className="gradientText">Today</h1>
+              <h1 className="gradientText">we are reimagining</h1>
+              <h1 className="gradientText">the future of Karneval</h1>
+              <h1 className="gradientText">so tell me</h1>
+              <h1 className="gradientText">What's preventing you from celebrating?</h1>
+              <AudioRecorder onRecordingComplete={onRecordingComplete} />
+              {/* Button to skip recording and go directly to chat */}
+              <button onClick={() => onEnter()}>Chat</button>
+            </motion.div>
+          )}
 
       {phase === "learnMore" && (
       
