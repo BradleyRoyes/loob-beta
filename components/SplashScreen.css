@@ -66,3 +66,15 @@
   flex-grow: 1; /* Allows buttons to grow and fill the row */
   margin: 0 10px; /* Adds some space between the buttons */
 }
+
+.buttonContainer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 10px; /* Adjust as needed */
+}
+
+.smallButton {
+  font-size: smaller;
+  margin: 5px; /* Adjust spacing between buttons */
+}
