@@ -85,9 +85,11 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
               <h1 className="gradientText">the future of Karneval</h1>
               <h1 className="gradientText">so tell me</h1>
               <h1 className="gradientText">What's preventing you from celebrating?</h1>
-              <AudioRecorder onRecordingComplete={onRecordingComplete} />
-              {/* Button to skip recording and go directly to chat */}
-              <button onClick={() => onEnter()}>Chat</button>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
+                <AudioRecorder onRecordingComplete={onRecordingComplete} />
+                {/* Button to skip recording and go directly to chat */}
+                <button onClick={() => onEnter()} style={{ alignSelf: 'center' }}>Chat</button>
+              </div>
             </motion.div>
           )}
 
