@@ -80,10 +80,10 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
       {phase === "karneval" && (
             
             <motion.div className="content" variants={variants}>
-              <h1 className="gradientText">Today</h1>
-              <h1 className="gradientText">we are reimagining weaving</h1>
-              <h1 className="gradientText">futures together at the Karneval.</h1>
-              <h1 className="gradientText">so tell me</h1>
+              <h1 className="gradientText">Today,</h1>
+              <h1 className="gradientText">we are reimagining</h1>
+              <h1 className="gradientText">weaving futures together at the Karneval.</h1>
+              <h1 className="gradientText">So tell me,</h1>
               <h1 className="gradientText">What is holding you back from participating?</h1>
               <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
                 <AudioRecorder onRecordingComplete={onRecordingComplete} />
