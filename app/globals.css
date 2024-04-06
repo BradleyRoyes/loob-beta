@@ -424,3 +424,18 @@ body {
   animation: swirlEffect 2s linear;
 }
 
+.button-container {
+  display: flex;
+  justify-content: center; /* Center the items */
+  position: relative; /* Allows absolute positioning inside */
+}
+
+.record-button {
+  /* Ensure the button is centered */
+}
+
+.end-chat-button {
+  position: absolute;
+  right: 0; /* Aligns the button to the right */
+}
+
