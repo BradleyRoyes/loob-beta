@@ -77,22 +77,19 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
         </motion.div>
       )}
 
-      {phase === "karneval" && (
-            
-            <motion.div className="content" variants={variants}>
-              <h1 className="gradientText">Tonight,</h1>
-              <h1 className="gradientText">we are celebrating the partial legalisation</h1>
-              <h1 className="gradientText">of Cannabis</h1>
-              <h1 className="gradientText">Tell me, how do you feel legalisation will change</h1>
-              <h1 className="gradientText">your relationship with the plant?</h1>
+    {phase === "karneval" && (
+  <motion.div className="content" variants={variants}>
+    <h1 className="gradientText">Today, we are celebrating the partial legalisation of Cannabis</h1>
+    <h2 className="gradientText">Tell me, how do you feel legalisation will change your relationship with Cannabis?</h2>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+      <AudioRecorder onRecordingComplete={onRecordingComplete} />
+      {/* This is the added tooltip text */}
+      <div className="tooltip">When finished speaking, push the record button again to submit.</div>
+      <button onClick={() => onEnter()} style={{ alignSelf: 'center' }}>Chat</button>
+    </div>
+  </motion.div>
+)}
 
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
-                <AudioRecorder onRecordingComplete={onRecordingComplete} />
-                {/* Button to skip recording and go directly to chat */}
-                <button onClick={() => onEnter()} style={{ alignSelf: 'center' }}>Chat</button>
-              </div>
-            </motion.div>
-          )}
 
     {phase === "learnMore" && (
   <motion.div className="content" variants={variants}>
