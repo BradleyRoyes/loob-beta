@@ -88,8 +88,8 @@
 
 /* Adjust the MicIcon size if necessary */
 .splashScreen .recordButton svg {
-  width: 2em; /* Double the size of the icon */
-  height: 2em; /* Double the size of the icon */
-  transition: width 0.3s ease, height 0.3s ease; /* Smoothens the icon transformation */
+  width: 1.5em; /* Double the size of the icon */
+  height: 1.5em; /* Double the size of the icon */
+  transition: width 0.9s ease, height 0.9s ease; /* Smoothens the icon transformation */
 }
 
