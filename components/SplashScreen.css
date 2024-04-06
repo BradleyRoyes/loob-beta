@@ -78,3 +78,18 @@
   font-size: smaller;
   margin: 5px; /* Adjust spacing between buttons */
 }
+
+/* Additional CSS to make the record button twice as big */
+.splashScreen .recordButton {
+  transform: scale(2); /* Scales the button to twice its original size */
+  margin: 20px; /* Adds margin to avoid layout shift */
+  transition: transform 0.3s ease; /* Smoothens the transformation */
+}
+
+/* Adjust the MicIcon size if necessary */
+.splashScreen .recordButton svg {
+  width: 2em; /* Double the size of the icon */
+  height: 2em; /* Double the size of the icon */
+  transition: width 0.3s ease, height 0.3s ease; /* Smoothens the icon transformation */
+}
+
