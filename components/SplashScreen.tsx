@@ -83,9 +83,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
     <h2 className="gradientText">Tell me, how do you feel legalisation will change your relationship with Cannabis?</h2>
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
       <AudioRecorder onRecordingComplete={onRecordingComplete} />
-      {/* This is the added tooltip text */}
-      <div className="tooltip">When finished speaking, push the record button again to submit.</div>
-      <button onClick={() => onEnter()} style={{ alignSelf: 'center' }}>Chat</button>
+{/*       <button onClick={() => onEnter()} style={{ alignSelf: 'center' }}>Chat</button> */}
     </div>
   </motion.div>
 )}
