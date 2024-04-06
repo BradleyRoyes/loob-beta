@@ -77,7 +77,7 @@ const AudioRecorder = ({ onRecordingComplete }) => {
 
   return (
     <div>
-      <button
+      <button className="recordButton"
         onClick={recording ? stopRecording : startRecording}
         style={buttonStyle}
       >
