@@ -81,11 +81,10 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
             
             <motion.div className="content" variants={variants}>
               <h1 className="gradientText">Tonight,</h1>
-              <h1 className="gradientText">we are celebrating</h1>
-              <h1 className="gradientText">the partial legalisation</h1>
+              <h1 className="gradientText">we are celebrating the partial legalisation</h1>
               <h1 className="gradientText">of Cannabis</h1>
               <h1 className="gradientText">Tell me, how do you feel legalisation will change</h1>
-              <h1 className="gradientText">your relationship with Cannabis?</h1>
+              <h1 className="gradientText">your relationship with the plant?</h1>
 
               <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
                 <AudioRecorder onRecordingComplete={onRecordingComplete} />
