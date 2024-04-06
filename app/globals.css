@@ -404,3 +404,23 @@ body {
 .modal-background {
   background-color: #000000; /* Black background */
 }
+
+@keyframes swirlEffect {
+  0% {
+    transform: rotate(0deg);
+    border-color: #ff0000;
+  }
+  50% {
+    transform: rotate(180deg);
+    border-color: #00ff00;
+  }
+  100% {
+    transform: rotate(360deg);
+    border-color: #0000ff;
+  }
+}
+
+.animateSwirl {
+  animation: swirlEffect 2s linear;
+}
+
