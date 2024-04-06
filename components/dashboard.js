@@ -28,6 +28,30 @@ const Dashboard = () => {
       return true; // Prevents the firing of the default event handler
     };
 
+    const addRandomPoint = () => {
+  const canvas = canvasRef.current;
+  const moodOptions = ['positive', 'neutral', 'negative']; // Example moods
+  const randomMood = moodOptions[Math.floor(Math.random() * moodOptions.length)];
+  
+  const point = {
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    vx: (Math.random() - 0.5) * 2, // Velocity between -1 and 1
+    vy: (Math.random() - 0.5) * 2, // Velocity between -1 and 1
+    mood: randomMood, // Random mood
+    radius: Math.random() * 2 + 1, // Radius between 1 and 3
+    trail: [],
+  };
+
+  points.current.push(point);
+};
+
+    useEffect(() => {
+  const interval = setInterval(addRandomPoint, 300000); // 300000 ms = 5 minutes
+  
+  return () => clearInterval(interval); // Cleanup on component unmount
+}, []);
+
     // Set the global error handler
     window.onerror = globalErrorHandler;
 
