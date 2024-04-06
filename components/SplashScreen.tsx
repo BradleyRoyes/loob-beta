@@ -79,10 +79,8 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
 
     {phase === "karneval" && (
   <motion.div className="content" variants={variants}>
-    <h1 className="gradientText">Today,</h1>
-    <h1 className="gradientText">we are celebrating the partial legalisation of Cannabis</h1>
-    <h2 className="gradientText">Tell me,</h2>
-    <h2 className="gradientText">how do you feel legalisation might change your relationship with the plant?</h2>
+    <h1 className="gradientText">Today, we are celebrating the partial legalisation of Cannabis</h1>
+    <h2 className="gradientText">How do you feel legalisation might change your relationship with the plant?</h2>
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
       <AudioRecorder onRecordingComplete={onRecordingComplete} />
 {/*       <button onClick={() => onEnter()} style={{ alignSelf: 'center' }}>Chat</button> */}
