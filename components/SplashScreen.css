@@ -81,9 +81,9 @@
 
 /* Additional CSS to make the record button twice as big */
 .splashScreen .recordButton {
-  transform: scale(2); /* Scales the button to twice its original size */
+  transform: scale(1.5); /* Scales the button to twice its original size */
   margin: 20px; /* Adds margin to avoid layout shift */
-  transition: transform 0.3s ease; /* Smoothens the transformation */
+  transition: transform 0.9s ease; /* Smoothens the transformation */
 }
 
 /* Adjust the MicIcon size if necessary */
