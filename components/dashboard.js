@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import Pusher from "pusher-js";
-import { Noise } from "noisejs"; // Import the Noise object from noisejs
 
 const Dashboard = () => {
   const canvasRef = useRef(null);
@@ -11,55 +10,45 @@ const Dashboard = () => {
   const [mostCommonKeyword, setMostCommonKeyword] = useState("");
   const [showModal, setShowModal] = useState(false);
 
+  // Set the global error handler once on component mount
   useEffect(() => {
-    // Define the global error handler
     const globalErrorHandler = (message, source, lineno, colno, error) => {
-      console.log(
-        "Caught an error:",
-        message,
-        "from",
-        source,
-        "line",
-        lineno,
-        "column",
-        colno
-      );
+      console.log("Caught an error:", message, "from", source, "line", lineno, "column", colno);
       console.error(error);
       return true; // Prevents the firing of the default event handler
     };
 
-    const addRandomPoint = () => {
-  const canvas = canvasRef.current;
-  const moodOptions = ['positive', 'neutral', 'negative']; // Example moods
-  const randomMood = moodOptions[Math.floor(Math.random() * moodOptions.length)];
-  
-  const point = {
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    vx: (Math.random() - 0.5) * 2, // Velocity between -1 and 1
-    vy: (Math.random() - 0.5) * 2, // Velocity between -1 and 1
-    mood: randomMood, // Random mood
-    radius: Math.random() * 2 + 1, // Radius between 1 and 3
-    trail: [],
-  };
-
-  points.current.push(point);
-};
-
-    useEffect(() => {
-  const interval = setInterval(addRandomPoint, 300000); // 300000 ms = 5 minutes
-  
-  return () => clearInterval(interval); // Cleanup on component unmount
-}, []);
-
-    // Set the global error handler
     window.onerror = globalErrorHandler;
 
-    // Cleanup function to remove the global error handler when the component unmounts
     return () => {
-      window.onerror = null;
+      window.onerror = null; // Cleanup global error handler on component unmount
     };
-  }, []); // Empty dependency array ensures this effect runs only once on mount
+  }, []);
+
+  // Handle interval for adding random points
+  useEffect(() => {
+    const addRandomPoint = () => {
+      const canvas = canvasRef.current;
+      const moodOptions = ['positive', 'neutral', 'negative']; // Example moods
+      const randomMood = moodOptions[Math.floor(Math.random() * moodOptions.length)];
+      
+      const point = {
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 2, // Velocity between -1 and 1
+        vy: (Math.random() - 0.5) * 2, // Velocity between -1 and 1
+        mood: randomMood, // Random mood
+        radius: Math.random() * 2 + 1, // Radius between 1 and 3
+        trail: [],
+      };
+
+      points.current.push(point);
+    };
+
+    const interval = setInterval(addRandomPoint, 300000); // 300000 ms = 5 minutes
+    
+    return () => clearInterval(interval); // Cleanup on component unmount
+  }, []);
 
   useEffect(() => {
     if (mostCommonKeyword) {
@@ -109,9 +98,7 @@ const Dashboard = () => {
 
     // Handle subscription error
     channel.bind("pusher:subscription_error", function (statusCode) {
-      console.error(
-        `Failed to subscribe to 'my-channel'. Status code: ${statusCode}`
-      );
+      console.error(`Failed to subscribe to 'my-channel'. Status code: ${statusCode}`);
       console.log("subscription failed");
     });
 
