@@ -117,16 +117,17 @@ const Dashboard = () => {
 
     // Initialize Perlin noise generator
     const noiseGen = new Noise(Math.random());
+  const draw = () => {
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    updatePoints(); // Modified to remove noiseGen if not used
+    drawPoints(ctx);
+    drawConnections(ctx);
+    requestAnimationFrame(draw);
+  };
 
-const draw = () => {
-  ctx.fillStyle = "white"; // Set background color to white
-  ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the canvas with white color
-  updatePoints(noiseGen); // Pass the noise generator to the update function
-  drawPoints(ctx);
-  drawConnections(ctx);
-  requestAnimationFrame(draw);
-};
-
+  draw();
+}, []);
 
     draw();
   }, []);
