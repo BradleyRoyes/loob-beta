@@ -116,12 +116,12 @@ const Dashboard = () => {
     canvas.height = window.innerHeight;
 
     // Initialize Perlin noise generator
-    const noiseGen = new Noise(Math.random());
+    // const noiseGen = new Noise(Math.random());
 
     const draw = () => {
-      ctx.fillStyle = "black"; // Set background color to black
+      ctx.fillStyle = "white"; // Set background color to black
       ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the canvas with black color
-      updatePoints(noiseGen); // Pass the noise generator to the update function
+      updatePoints(); // Pass the noise generator to the update function
       drawPoints(ctx);
       drawConnections(ctx);
       requestAnimationFrame(draw);
@@ -157,7 +157,7 @@ const Dashboard = () => {
     // Interval to calculate the most common keyword every minute
     const intervalId = setInterval(
       calculateMostCommonKeyword,
-      60000
+      1200000
     ); // Adjust to 60000 for 1 minute
 
     // Cleanup interval on component unmount
@@ -259,18 +259,20 @@ const updatePoints = (noiseGen) => {
     points.current.forEach((point) => {
       ctx.beginPath();
       ctx.arc(point.x, point.y, point.radius, 0, Math.PI * 2);
-      ctx.fillStyle = "white"; // Set point color to white
+      ctx.fillStyle = "black"; // Set point color to black
       ctx.fill();
 
       // Draw subtle trail
-      ctx.beginPath();
-      ctx.moveTo(point.trail[0].x, point.trail[0].y);
-      for (let i = 1; i < point.trail.length; i++) {
-        const p = point.trail[i];
-        ctx.lineTo(p.x, p.y);
-      }
+      if (point.trail.length > 0) {  // Check if the trail array has at least one point
+        ctx.beginPath();
+        ctx.moveTo(point.trail[0].x, point.trail[0].y);
+        for (let i = 1; i < point.trail.length; i++) {
+          const p = point.trail[i];
+          ctx.lineTo(p.x, p.y);
+        }
       ctx.strokeStyle = "rgba(255, 255, 255, 0.06)"; // Adjust the opacity of the trail
       ctx.stroke();
+      }
     });
   };
 
@@ -292,7 +294,7 @@ const updatePoints = (noiseGen) => {
           if (isRed) {
             ctx.strokeStyle = `rgba(255, 105, 110, ${opacity})`;
           } else {
-            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+            ctx.strokeStyle = `rgba(0, 0, 0, ${opacity})`;
           }
           ctx.stroke();
         }
@@ -306,12 +308,12 @@ const updatePoints = (noiseGen) => {
         ref={canvasRef}
         style={{
           display: "block",
-          background: "black", // Set canvas background color to black
+          background: "white", // Set canvas background color to black
           position: "absolute",
-          top: "5%", // Add top padding as 5% of the viewport height
-          left: "5%", // Add left padding as 5% of the viewport width
-          right: "5%", // Add right padding as 5% of the viewport width
-          bottom: "5%", // Add bottom padding as 5% of the viewport height
+          // top: "5%", // Add top padding as 5% of the viewport height
+          // left: "5%", // Add left padding as 5% of the viewport width
+          // right: "5%", // Add right padding as 5% of the viewport width
+          // bottom: "5%", // Add bottom padding as 5% of the viewport height
           zIndex: -1,
         }}
       ></canvas>
@@ -321,8 +323,8 @@ const updatePoints = (noiseGen) => {
           top: "10px",
           left: "10px",
           zIndex: 1,
-          color: "white", // Set text color to white
-          background: "rgba(0, 0, 0, 0.9)", // Set background color to black with opacity
+          color: "black", // Set text color to white
+          background: "rgba(255, 255, 255, 0.9)", // Set background color to black with opacity
           padding: "10px",
           borderRadius: "8px",
         }}
