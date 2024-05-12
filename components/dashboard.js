@@ -117,17 +117,15 @@ const Dashboard = () => {
 
     // Initialize Perlin noise generator
     const noiseGen = new Noise(Math.random());
-  const draw = () => {
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    updatePoints(); // Modified to remove noiseGen if not used
-    drawPoints(ctx);
-    drawConnections(ctx);
-    requestAnimationFrame(draw);
-  };
 
-  draw();
-}, []);
+    const draw = () => {
+      ctx.fillStyle = "black"; // Set background color to black
+      ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the canvas with black color
+      updatePoints(noiseGen); // Pass the noise generator to the update function
+      drawPoints(ctx);
+      drawConnections(ctx);
+      requestAnimationFrame(draw);
+    };
 
     draw();
   }, []);
@@ -256,51 +254,51 @@ const updatePoints = (noiseGen) => {
     });
   };
 
-const drawPoints = (ctx) => {
-  points.current.forEach((point) => {
-    ctx.beginPath();
-    ctx.arc(point.x, point.y, point.radius, 0, Math.PI * 2);
-    ctx.fillStyle = "black"; // Set point color to black
-    ctx.fill();
+  // Draw points
+  const drawPoints = (ctx) => {
+    points.current.forEach((point) => {
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, point.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "white"; // Set point color to white
+      ctx.fill();
 
-    // Draw subtle trail in a darker color
-    ctx.beginPath();
-    ctx.moveTo(point.trail[0].x, point.trail[0].y);
-    for (let i = 1; i < point.trail.length; i++) {
-      const p = point.trail[i];
-      ctx.lineTo(p.x, p.y);
-    }
-    ctx.strokeStyle = "rgba(0, 0, 0, 0.2)"; // Darker trail color
-    ctx.stroke();
-  });
-};
-
-
-const drawConnections = (ctx) => {
-  points.current.forEach((point, index) => {
-    for (let i = index + 1; i < points.current.length; i++) {
-      const other = points.current[i];
-      const distance = Math.hypot(point.x - other.x, point.y - other.y);
-      if (distance < connectionDistance) {
-        const isRed = Math.random() < 0.05;
-        const opacity = 1 - distance / connectionDistance;
-        ctx.beginPath();
-        ctx.moveTo(point.x, point.y);
-        ctx.lineTo(other.x, other.y);
-
-        ctx.lineWidth = 2; // Keep connection lines thicker
-
-        if (isRed) {
-          ctx.strokeStyle = `rgba(139, 0, 0, ${opacity})`; // Dark red for variation
-        } else {
-          ctx.strokeStyle = `rgba(0, 0, 0, ${opacity})`; // Black lines
-        }
-        ctx.stroke();
+      // Draw subtle trail
+      ctx.beginPath();
+      ctx.moveTo(point.trail[0].x, point.trail[0].y);
+      for (let i = 1; i < point.trail.length; i++) {
+        const p = point.trail[i];
+        ctx.lineTo(p.x, p.y);
       }
-    }
-  });
-};
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.06)"; // Adjust the opacity of the trail
+      ctx.stroke();
+    });
+  };
 
+  // Draw connections between close points
+  const drawConnections = (ctx) => {
+    points.current.forEach((point, index) => {
+      for (let i = index + 1; i < points.current.length; i++) {
+        const other = points.current[i];
+        const distance = Math.hypot(point.x - other.x, point.y - other.y);
+        if (distance < connectionDistance) {
+          const isRed = Math.random() < 0.05;
+          const opacity = 1 - distance / connectionDistance;
+          ctx.beginPath();
+          ctx.moveTo(point.x, point.y);
+          ctx.lineTo(other.x, other.y);
+
+          ctx.lineWidth = 2; // Make connection lines thicker
+
+          if (isRed) {
+            ctx.strokeStyle = `rgba(255, 105, 110, ${opacity})`;
+          } else {
+            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+          }
+          ctx.stroke();
+        }
+      }
+    });
+  };
 
   return (
     <div>
