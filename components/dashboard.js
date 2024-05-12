@@ -308,7 +308,7 @@ const updatePoints = (noiseGen) => {
         ref={canvasRef}
         style={{
           display: "block",
-          background: "white", // Set canvas background color to black
+          background: "#FFE4C4", // Set canvas background color to black
           position: "absolute",
           // top: "5%", // Add top padding as 5% of the viewport height
           // left: "5%", // Add left padding as 5% of the viewport width
