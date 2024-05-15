@@ -10,10 +10,10 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
   const [randomPrompt, setRandomPrompt] = useState<string>(""); // Typing the state as string
 
   const prompts = [
-    'When was the last time you felt speechless?<br/>  Tell us about it.',
-    'When was the last time you felt completely enchanted by something? √ Tell us about it.',
-    'Have you had an unexpected encounter with a stranger at Karneval that left you with a feeling of curiosity? <br/> Tell us about it.',
-    'Consider a time at Karneval when you felt a deep connection to something greater than yourself. <br/> Tell us about it.'
+    'When was the last time you felt speechless? Tell us about it.',
+    'When was the last time you felt completely enchanted by something? Tell us about it.',
+    'Have you had an unexpected encounter with a stranger at Karneval that left you with a feeling of curiosity? Tell us about it.',
+    'Consider a time at Karneval when you felt a deep connection to something greater than yourself. Tell us about it.'
   ];
 
   const getRandomPrompt = (): string => {  // Ensure function return type is string
