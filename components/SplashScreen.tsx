@@ -12,7 +12,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
   const prompts = [
     'When was the last time you felt speechless? Tell us about it.',
     'When was the last time you felt completely enchanted by something? Tell us about it.',
-    'Have you had an unexpected encounter with a stranger at this event that left you with a feeling of curiosity? Tell us about it.',
+    'Have you had an unexpected encounter with a stranger at Karneval that left you with a feeling of curiosity? Tell us about it.',
     'Consider a time at Karneval when you felt a deep connection to something greater than yourself. Tell us about it.'
   ];
 
