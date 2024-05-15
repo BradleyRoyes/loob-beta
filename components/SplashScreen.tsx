@@ -6,10 +6,25 @@ import AudioRecorder from '../components/AudioRecorder';
 const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
   onEnter,
 }) => {
-  const [phase, setPhase] = useState("welcome");
+  const [phase, setPhase] = useState<string>("welcome");
+  const [randomPrompt, setRandomPrompt] = useState<string>(""); // Typing the state as string
 
-  const proceed = (nextPhase: string) => {
+  const prompts = [
+    'When was the last time you felt speechless? Tell us about it.',
+    'When was the last time you felt completely enchanted by something? Tell us about it.',
+    'Have you had an unexpected encounter with a stranger at this event that left you with a feeling of curiosity? Tell us about it.',
+    'Consider a time at the Carnival when you felt a deep connection to something greater than yourself. Tell us about it.'
+  ];
+
+  const getRandomPrompt = (): string => {  // Ensure function return type is string
+    return prompts[Math.floor(Math.random() * prompts.length)];
+  };
+
+  const proceed = (nextPhase: string): void => { // Ensure proper typing for parameters
     setPhase(nextPhase);
+    if (nextPhase === "karneval") {
+      setRandomPrompt(getRandomPrompt()); // Update the prompt when entering 'karneval'
+    }
   };
 
   const variants = {
@@ -17,6 +32,8 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
     animate: { opacity: 1, transition: { duration: 1.5, ease: "easeInOut" } },
     exit: { opacity: 0, transition: { duration: 1.5, ease: "easeInOut" } },
   };
+
+
 
   useEffect(() => {
     if (phase === "welcome") {
