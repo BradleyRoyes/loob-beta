@@ -13,7 +13,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
     'When was the last time you felt speechless? Tell us about it.',
     'When was the last time you felt completely enchanted by something? Tell us about it.',
     'Have you had an unexpected encounter with a stranger at this event that left you with a feeling of curiosity? Tell us about it.',
-    'Consider a time at the Carnival when you felt a deep connection to something greater than yourself. Tell us about it.'
+    'Consider a time at Karneval when you felt a deep connection to something greater than yourself. Tell us about it.'
   ];
 
   const getRandomPrompt = (): string => {  // Ensure function return type is string
@@ -96,7 +96,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
 
 {phase === "karneval" && (
   <motion.div className="content" variants={variants}>
-    <h1 className="gradientText">Today's theme: sit, sip, speak.</h1>
+    <h1 className="gradientText">Today&apos;s theme: sit, sip, speak.</h1>
     <h2 className="gradientText">{randomPrompt}</h2> {/* This will now display the random prompt */}
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
       <AudioRecorder onRecordingComplete={onRecordingComplete} />
