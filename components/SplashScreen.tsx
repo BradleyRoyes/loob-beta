@@ -96,7 +96,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
 
 {phase === "karneval" && (
   <motion.div className="content" variants={variants}>
-    <h1 className="gradientText">Today&apos;s theme: sit, sip, speak.</h1>
+    <h1 className="gradientText">Today we are imagining collective futures by looking within.</h1>
     <h2 className="gradientText">{randomPrompt}</h2> {/* This will now display the random prompt */}
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
       <AudioRecorder onRecordingComplete={onRecordingComplete} />
