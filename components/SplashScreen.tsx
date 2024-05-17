@@ -12,12 +12,14 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
 
   const prompts = [
     'When was the last time you felt speechless? Tell me about it.',
+    'Karneval has celebrated diversity for many years. What message do you want to send to the Karneval-goers 200 years from now?',
     'When was the last time you felt completely enchanted by something? Tell me about it.',
+    'Imagine me, Loob, as a time capsule. What key piece of today’s culture do you think should be preserved for future generations?',
     'Tell me about an experience where you felt a deep sense of gratitude and appreciation for the simple things in life.',
     'Share a time when you were moved to tears by an act of kindness, generosity, or compassion.',
-    'Have you ever encountered a new idea or concept that challenged your existing beliefs and prompted you to reevaluate your worldview? Tell me about it.',
+    'Have you ever encountered a new idea or concept that challenged your existing beliefs and prompted you to reevaluate your worldview?',
     'Share a time when you were awestruck by the power of nature.',
-    'Describe a time when you felt a deep sense of connection with a place, culture, or tradition that was new to you, and how it expanded your perspective.',
+    'Describe a time when you felt a deep sense of connection with a place, culture, or tradition that was new to you.',
     'Have you had an unexpected encounter with a stranger at Karneval that left you with a feeling of curiosity? Tell me about it.',
     'Has there been a moment at Karneval when you felt a deep connection to something greater than yourself? Tell me about it.'
   ];
