@@ -6,10 +6,10 @@ import Footer from "../components/Footer";
 import Configure from "../components/Configure";
 import ThemeButton from "../components/ThemeButton";
 import useConfiguration from "./hooks/useConfiguration";
-import Dashboard from "../components/dashboard"; // Changed NeuronVisual to Dashboard
-import MessageCollector from "../components/MessageCollector"; // Adjust the import path as necessary
+import Dashboard from "../components/dashboard";
+import MessageCollector from "../components/MessageCollector";
 import { v4 as uuidv4 } from "uuid";
-import SplashScreen from "../components/SplashScreen"; // Adjust the import path as necessary
+import SplashScreen from "../components/SplashScreen";
 import AnalyseButton from "../components/AnalyseButton";
 import PromptSuggestionRow from "../components/PromptSuggestions/PromptSuggestionsRow";
 import ModalOverlay from "../components/ModalOverlay";
@@ -90,7 +90,6 @@ export default function Page() {
     }
   };
 
-
   // Update the setShowSplash function to also handle prompts
   const handleEnter = (promptText?: string) => {
     setShowSplash(false); // Hide splash screen
@@ -135,7 +134,6 @@ export default function Page() {
     }, 5000); // 5000 milliseconds = 5 seconds
   };
 
-
   if (showNeuronVisual) {
     return (
       <>
@@ -173,12 +171,11 @@ export default function Page() {
             <div className="flex justify-between items-center">
               <h1 className="chatbot-text-primary text-6xl md:text-7xl font-extrabold tracking-wide">
                 <span className="text-5xl md:text-7xl">loob</span>
-                <span className="text-lg md:text-xl font-normal"> at MOOS</span>
+                <span className="text-lg md:text-xl font-normal"> at Karneval</span>
               </h1>
               <div className="flex gap-1">
                 <ThemeButton />
                 <button onClick={() => setConfigureOpen(true)}>
-                  {/* Configuration Button SVG replaced here */}
                   <svg
                     width="24"
                     height="25"
@@ -197,15 +194,9 @@ export default function Page() {
                   >
                     Back Stage
                   </button>
-                  {/* <div className="relative">
-                    <AnalyseButton onClick={handleAnalyseButtonClick} />
-                  </div> */}
                 </div>
               </div>
             </div>
-           { /* <p className="chatbot-text-secondary-inverse text-lg md:text-xl mt-1 md:mt-2 font-medium">
-              collective memory for transformative experiences
-            </p> */}
           </div>
           <div className="flex-1 relative overflow-y-auto my-4 md:my-6">
             <div className="absolute w-full overflow-x-hidden">
@@ -218,13 +209,12 @@ export default function Page() {
               ))}
             </div>
           </div>
-          {!messages ||
-            (messages.length === 0 && (
+          {!messages || (messages.length === 0 && (
               <PromptSuggestionRow onPromptClick={handlePrompt} />
             ))}
           <div className="button-row ">
-            <AudioRecorder onRecordingComplete={onRecordingComplete} />
-    <AnalyseButton onClick={handleAnalyseButtonClick} className="inline-button" />
+            <AudioRecorder onRecordingComplete={onRecordingComplete} startRecording={() => {}} />
+            <AnalyseButton onClick={handleAnalyseButtonClick} className="inline-button" />
           </div>
           <div className="flex items-center justify-between gap-2">
             <form className="flex flex-1 gap-2" onSubmit={handleSend}>
@@ -257,7 +247,6 @@ export default function Page() {
             </form>
           </div>
           <Footer />
-      
         </section>
         {configureOpen && (
           <Configure
