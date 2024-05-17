@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import "./SplashScreen.css";
-import AudioRecorder from '../components/AudioRecorder';
+import AudioRecorder from './AudioRecorder';
 
 const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
   onEnter,
@@ -45,7 +45,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
     }
   }, [phase]);
 
-  const onRecordingComplete = async (audioBlob) => {
+  const onRecordingComplete = async (audioBlob: Blob) => {
     setIsRecording(false); // Stop animation when recording is complete
     const formData = new FormData();
     formData.append("audio", audioBlob, "audio.wav");
