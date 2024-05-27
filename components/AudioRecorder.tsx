@@ -83,6 +83,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
     <div>
       <button className="recordButton"
         onClick={recording ? stopAudioRecording : startAudioRecording}
+        onTouchStart={recording ? stopAudioRecording : startAudioRecording} // Add touch event listener
         style={buttonStyle}
       >
         <MicIcon />
