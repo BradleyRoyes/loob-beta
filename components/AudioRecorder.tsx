@@ -13,7 +13,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
     if (recording) return;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const newMediaRecorder = new MediaRecorder(stream);
+      const newMediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
       let audioChunks: Blob[] = [];
 
       newMediaRecorder.ondataavailable = event => {
@@ -21,7 +21,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
       };
 
       newMediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
         onRecordingComplete(audioBlob);
         audioChunks = [];
       };

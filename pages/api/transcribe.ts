@@ -58,16 +58,16 @@ export default async function handler(req, res) {
   // console.log(fData.files);
   const audiofile = fData.files.audio;
   const audioFilePath = audiofile.path;
-  const mp3FilePath = `${audioFilePath}.mp3`;
+  const wavFilePath = `${audioFilePath}.wav`;
   console.log(audioFilePath);
 
   try {
 
     // Transcode the audio file to MP3
-    await transcodeToMp3(audioFilePath, mp3FilePath);
+    await transcodeToMp3(audioFilePath, wavFilePath);
 
     // Since we are directly using the file path for streaming, no need to read the file into memory
-    const fileStream = fs.createReadStream(mp3FilePath);
+    const fileStream = fs.createReadStream(wavFilePath);
     
     // Call OpenAI API for speech-to-text
     const response = await openai.audio.transcriptions.create({
@@ -77,7 +77,7 @@ export default async function handler(req, res) {
     
     // Delete the temporary audio file
     fs.unlinkSync(audioFilePath);
-    fs.unlinkSync(mp3FilePath);
+    fs.unlinkSync(wavFilePath);
 
     // Sending the transcription text back to the client
     res.status(200).json({ transcription: response.text });
