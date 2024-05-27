@@ -30,7 +30,7 @@ const readFileAsync = promisify(fs.readFile);
 const transcodeToMp3 = (inputPath: string, outputPath: string) => {
   return new Promise((resolve, reject) => {
     ffmpeg(inputPath)
-      .toFormat('mp3')
+      .toFormat('wav')
       .on('end', () => resolve(outputPath))
       .on('error', reject)
       .save(outputPath);
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
   // Parse the form data
   const fData = await new Promise<FormidableData>((resolve, reject) => {
     const form = new formidable.IncomingForm({
-      uploadDir: "/tmp",
+      uploadDir: "./",
       keepExtensions: true,
     });
     form.parse(req, (err, fields, files) => {
