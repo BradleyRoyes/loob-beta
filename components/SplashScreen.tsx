@@ -3,9 +3,7 @@ import { motion } from "framer-motion";
 import "./SplashScreen.css";
 import AudioRecorder from './AudioRecorder';
 
-const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
-  onEnter,
-}) => {
+const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnter }) => {
   const [phase, setPhase] = useState<string>("welcome");
   const [randomPrompt, setRandomPrompt] = useState<string>("");
   const [isRecording, setIsRecording] = useState<boolean>(false); // State to track if recording is active
@@ -49,26 +47,32 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({
 
   const onRecordingComplete = async (audioBlob: Blob) => {
     setIsRecording(false); // Stop animation when recording is complete
-    const formData = new FormData();
-    formData.append("audio", audioBlob, "audio.wav");
 
-    try {
-      const response = await fetch('/api/transcribe', {
-        method: 'POST',
-        body: formData,
-      });
+    const reader = new FileReader();
+    reader.readAsDataURL(audioBlob);
+    reader.onloadend = async () => {
+      const base64data = reader.result as string; // Ensure reader.result is treated as a string
+      const formData = new FormData();
+      formData.append("audio", base64data);
 
-      if (!response.ok) {
-        throw new Error(`Server responded with ${response.status}`);
+      try {
+        const response = await fetch('/api/transcribe', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server responded with ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Transcription:', data.transcription);
+
+        onEnter(data.transcription);
+      } catch (error) {
+        console.error('Error uploading audio:', error);
       }
-
-      const data = await response.json();
-      console.log('Transcription:', data.transcription);
-
-      onEnter(data.transcription);
-    } catch (error) {
-      console.error('Error uploading audio:', error);
-    }
+    };
   };
 
   const startRecording = () => {

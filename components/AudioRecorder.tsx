@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 interface AudioRecorderProps {
-  onRecordingComplete: (audioBlob: Blob) => void;
+  onRecordingComplete: (audioData: Blob) => void;
   startRecording: () => void;
 }
 
@@ -17,7 +17,9 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
       let audioChunks: Blob[] = [];
 
       newMediaRecorder.ondataavailable = event => {
-        audioChunks.push(event.data);
+        if (event.data.size > 0) {
+          audioChunks.push(event.data);
+        }
       };
 
       newMediaRecorder.onstop = () => {
@@ -26,7 +28,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
         audioChunks = [];
       };
 
-      newMediaRecorder.start();
+      newMediaRecorder.start(1000); // Use a time slice
       setMediaRecorder(newMediaRecorder);
       setRecording(true);
       startRecording(); // Trigger the start recording animation
