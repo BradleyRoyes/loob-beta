@@ -431,6 +431,7 @@ body {
 }
 
 .record-button {
+  touch-action: manipulation;
   /* Ensure the button is centered */
 }
 
