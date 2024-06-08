@@ -64,23 +64,26 @@ export default function Page() {
     append(msg, { options: { body: { useRag, llm, similarityMetric } } });
   };
 
+  const startRecording = () => {
+    console.log('Recording started'); // Optional: Add any additional start recording logic here
+  };
   const onRecordingComplete = async (audioBlob) => {
     const formData = new FormData();
-    formData.append("audio", audioBlob, "audio.wav"); // 'audio' is the field name expected by the server
-
+    formData.append("audio", audioBlob, "audio.webm"); // 'audio' is the field name expected by the server
+  
     try {
       const response = await fetch('/api/transcribe', {
         method: 'POST',
         body: formData,
       });
-
+  
       if (!response.ok) {
         throw new Error(`Server responded with ${response.status}`);
       }
-
+  
       const data = await response.json();
       console.log('Transcription:', data.transcription); // Log the transcription to the console
-
+  
       // Set the transcription text as the input value so the user can send it manually
       handleInputChange({
         target: { value: data.transcription },
@@ -89,7 +92,6 @@ export default function Page() {
       console.error('Error uploading audio:', error);
     }
   };
-
   // Update the setShowSplash function to also handle prompts
   const handleEnter = (promptText?: string) => {
     setShowSplash(false); // Hide splash screen
@@ -213,7 +215,7 @@ export default function Page() {
               <PromptSuggestionRow onPromptClick={handlePrompt} />
             ))}
           <div className="button-row ">
-            <AudioRecorder onRecordingComplete={onRecordingComplete} startRecording={() => {}} />
+            <AudioRecorder onRecordingComplete={onRecordingComplete} startRecording={startRecording}/>
             <AnalyseButton onClick={handleAnalyseButtonClick} className="inline-button" />
           </div>
           <div className="flex items-center justify-between gap-2">

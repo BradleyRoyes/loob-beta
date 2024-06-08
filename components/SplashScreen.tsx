@@ -47,32 +47,27 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
 
   const onRecordingComplete = async (audioBlob: Blob) => {
     setIsRecording(false); // Stop animation when recording is complete
-
-    const reader = new FileReader();
-    reader.readAsDataURL(audioBlob);
-    reader.onloadend = async () => {
-      const base64data = reader.result as string; // Ensure reader.result is treated as a string
-      const formData = new FormData();
-      formData.append("audio", base64data);
-
-      try {
-        const response = await fetch('/api/transcribe', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!response.ok) {
-          throw new Error(`Server responded with ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log('Transcription:', data.transcription);
-
-        onEnter(data.transcription);
-      } catch (error) {
-        console.error('Error uploading audio:', error);
+  
+    const formData = new FormData();
+    formData.append("audio", audioBlob, "audio.webm"); // Use the Blob directly
+  
+    try {
+      const response = await fetch('/api/transcribe', {
+        method: 'POST',
+        body: formData,
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Server responded with ${response.status}`);
       }
-    };
+  
+      const data = await response.json();
+      console.log('Transcription:', data.transcription);
+  
+      onEnter(data.transcription);
+    } catch (error) {
+      console.error('Error uploading audio:', error);
+    }
   };
 
   const startRecording = () => {
@@ -116,13 +111,18 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
 
       {phase === "zuberlin" && (
         <motion.div className="content" variants={variants}>
-          <h1 className="gradientText">Today, we are imagining collective futures by looking within ourselves.</h1>
-          <h2 className="gradientText">Draw a card and talk to me.</h2>
+          <h1 className="gradientText">Today, we are imagining collective futures by looking within ourselves</h1>
+          <h2 className="gradientText">Draw a card and talk to me</h2>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-          <AudioRecorder
-            onRecordingComplete={onRecordingComplete}
-            startRecording={startRecording}
-          />
+            <div className="buttonContainer">  
+              <AudioRecorder
+                onRecordingComplete={onRecordingComplete}
+                startRecording={startRecording}
+              />
+              <button onClick={() => onEnter()}>
+                  <b>Chat</b>
+                </button>
+            </div>
           </div>
         </motion.div>
       )}

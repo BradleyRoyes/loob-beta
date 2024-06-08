@@ -28,7 +28,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
         audioChunks = [];
       };
 
-      newMediaRecorder.start(1000); // Use a time slice
+      newMediaRecorder.start(); // Start recording immediately
       setMediaRecorder(newMediaRecorder);
       setRecording(true);
       startRecording(); // Trigger the start recording animation
