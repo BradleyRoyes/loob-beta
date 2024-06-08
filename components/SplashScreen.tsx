@@ -108,9 +108,22 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
           <h1 className="gradientText" style={{ fontSize: 'normal' }}>
          I’m loob, a listener. An urban story container to help us tell new stories about new experiences. <br/> <br/> Movement is everything, nothing is the goal.  
           </h1>
-          <button onClick={() => proceed("karneval")}>
+          <button onClick={() => proceed("zuberlin")}>
             Continue
           </button>
+        </motion.div>
+      )}
+
+      {phase === "zuberlin" && (
+        <motion.div className="content" variants={variants}>
+          <h1 className="gradientText">Today, we are imagining collective futures by looking within ourselves.</h1>
+          <h2 className="gradientText">Draw a card and talk to me.</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+          <AudioRecorder
+            onRecordingComplete={onRecordingComplete}
+            startRecording={startRecording}
+          />
+          </div>
         </motion.div>
       )}
 
