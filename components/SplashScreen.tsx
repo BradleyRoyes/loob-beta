@@ -111,8 +111,8 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
 
       {phase === "zuberlin" && (
         <motion.div className="content" variants={variants}>
-          <h1 className="gradientText">Today, we are imagining collective futures by looking within ourselves</h1>
-          <h2 className="gradientText">Draw a card and talk to me</h2>
+          <h1 className="gradientText">This is a moment for you. A moment of reflection. This reflection will be a part of a collective canvas.</h1>
+          <h2 className="gradientText">Share your zuberlin experience with me.</h2>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
             <div className="buttonContainer">  
               <AudioRecorder
