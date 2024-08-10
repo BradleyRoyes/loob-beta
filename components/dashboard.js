@@ -105,7 +105,6 @@ const Dashboard = () => {
     return () => {
       channel.unbind_all();
       channel.unsubscribe();
-      // pusher.disconnect();
     };
   }, []);
 
@@ -115,20 +114,17 @@ const Dashboard = () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    // Initialize Perlin noise generator
-    // const noiseGen = new Noise(Math.random());
-
     const draw = () => {
-      ctx.fillStyle = "white"; // Set background color to black
-      ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the canvas with black color
-      updatePoints(); // Pass the noise generator to the update function
+      ctx.fillStyle = "white"; // Set background color to white
+      ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the canvas
+      updatePoints(); // Update points with new velocities and check boundaries
       drawPoints(ctx);
       drawConnections(ctx);
       requestAnimationFrame(draw);
     };
 
     draw();
-  }, []);
+  }, []); // Ensure this effect runs only once on mount
 
   useEffect(() => {
     // Function to calculate the most common keyword
@@ -154,69 +150,64 @@ const Dashboard = () => {
       setMostCommonKeyword(mostCommon[0]); // Update state with the most common keyword
     };
 
-    // Interval to calculate the most common keyword every minute
-    const intervalId = setInterval(
-      calculateMostCommonKeyword,
-      1200000
-    ); // Adjust to 60000 for 1 minute
+    // Interval to calculate the most common keyword every 20 minutes
+    const intervalId = setInterval(calculateMostCommonKeyword, 1200000); // Adjust to 60000 for 1 minute
 
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
   }, [analysisData.Keywords]);
 
   const applyMoodInfluences = () => {
-  const gravityStrength = 0.05; // Adjust as needed for attraction
-  const repulsionStrength = 0.05; // Adjust as needed for repulsion
+    const gravityStrength = 0.05; // Adjust as needed for attraction
+    const repulsionStrength = 0.05; // Adjust as needed for repulsion
 
-  points.current.forEach((point, index) => {
-    let forceX = 0;
-    let forceY = 0;
+    points.current.forEach((point, index) => {
+      let forceX = 0;
+      let forceY = 0;
 
-    points.current.forEach((otherPoint, otherIndex) => {
-      if (index === otherIndex) return; // Skip self
+      points.current.forEach((otherPoint, otherIndex) => {
+        if (index === otherIndex) return; // Skip self
 
-      const dx = otherPoint.x - point.x;
-      const dy = otherPoint.y - point.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
+        const dx = otherPoint.x - point.x;
+        const dy = otherPoint.y - point.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
 
-      // Avoid extreme forces at very short distances
-      if (distance < 1) return;
+        // Avoid extreme forces at very short distances
+        if (distance < 1) return;
 
-      const forceMagnitude =
-        (point.mood === 'positive' && otherPoint.mood === 'positive')
-          ? gravityStrength / distance // Attraction force for positive mood
-          : (point.mood === 'negative' && otherPoint.mood === 'negative')
-          ? -repulsionStrength / distance // Repulsion force for negative mood
-          : 0; // No force if moods are mixed or neutral
+        const forceMagnitude =
+          (point.mood === 'positive' && otherPoint.mood === 'positive')
+            ? gravityStrength / distance // Attraction force for positive mood
+            : (point.mood === 'negative' && otherPoint.mood === 'negative')
+            ? -repulsionStrength / distance // Repulsion force for negative mood
+            : 0; // No force if moods are mixed or neutral
 
-      forceX += (dx / distance) * forceMagnitude;
-      forceY += (dy / distance) * forceMagnitude;
+        forceX += (dx / distance) * forceMagnitude;
+        forceY += (dy / distance) * forceMagnitude;
+      });
+
+      // Apply the resulting force to the point's velocity
+      point.vx += forceX;
+      point.vy += forceY;
     });
+  };
 
-    // Apply the resulting force to the point's velocity
-    point.vx += forceX;
-    point.vy += forceY;
-  });
-};
+  const updatePoints = () => {
+    // First, apply mood influences for attraction and repulsion
+    applyMoodInfluences();
 
+    // Then, update points with the new velocities and check boundaries
+    points.current.forEach((point) => {
+      point.x += point.vx;
+      point.y += point.vy;
 
-const updatePoints = (noiseGen) => {
-  // First, apply mood influences for attraction and repulsion
-  applyMoodInfluences();
+      if (point.x <= 0 || point.x >= canvasRef.current.width) point.vx *= -1;
+      if (point.y <= 0 || point.y >= canvasRef.current.height) point.vy *= -1;
 
-  // Then, update points with the new velocities and check boundaries
-  points.current.forEach((point) => {
-    point.x += point.vx;
-    point.y += point.vy;
-
-    if (point.x <= 0 || point.x >= canvasRef.current.width) point.vx *= -1;
-    if (point.y <= 0 || point.y >= canvasRef.current.height) point.vy *= -1;
-
-    point.trail.push({ x: point.x, y: point.y });
-    if (point.trail.length > 10) point.trail.shift();
-  });
-};
-
+      point.trail.push({ x: point.x, y: point.y });
+      if (point.trail.length > 10) point.trail.shift();
+    });
+  };
 
   const addNewPoint = (mood) => {
     const canvas = canvasRef.current;
@@ -310,10 +301,6 @@ const updatePoints = (noiseGen) => {
           display: "block",
           background: "#FFE4C4", // Set canvas background color to black
           position: "absolute",
-          // top: "5%", // Add top padding as 5% of the viewport height
-          // left: "5%", // Add left padding as 5% of the viewport width
-          // right: "5%", // Add right padding as 5% of the viewport width
-          // bottom: "5%", // Add bottom padding as 5% of the viewport height
           zIndex: -1,
         }}
       ></canvas>
