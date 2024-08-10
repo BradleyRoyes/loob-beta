@@ -173,7 +173,7 @@ export default function Page() {
             <div className="flex justify-between items-center">
               <h1 className="chatbot-text-primary text-6xl md:text-7xl font-extrabold tracking-wide">
                 <span className="text-5xl md:text-7xl">loob</span>
-                <span className="text-lg md:text-xl font-normal"> at EDS </span>
+                <span className="text-lg md:text-xl font-normal">at EDS</span>
               </h1>
               <div className="flex gap-1">
                 <ThemeButton />
