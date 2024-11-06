@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 interface AudioRecorderProps {
   onRecordingComplete: (audioData: Blob) => void;
@@ -10,10 +10,16 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [timer, setTimer] = useState<number>(0);
 
+  // Stop recording function wrapped in useCallback
+  const stopAudioRecording = useCallback(() => {
+    if (!recording || !mediaRecorder) return;
+    mediaRecorder.stop();
+    setRecording(false);
+  }, [recording, mediaRecorder]);
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (recording) {
-      // Start timer when recording starts
       interval = setInterval(() => {
         setTimer(prev => {
           if (prev >= 60) {
@@ -24,11 +30,10 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
         });
       }, 1000);
     } else {
-      // Reset timer when recording stops
       setTimer(0);
     }
     return () => clearInterval(interval);
-  }, [recording]);
+  }, [recording, stopAudioRecording]);
 
   const startAudioRecording = async () => {
     if (recording) return;
@@ -58,12 +63,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
     }
   };
 
-  const stopAudioRecording = () => {
-    if (!recording || !mediaRecorder) return;
-    mediaRecorder.stop();
-    setRecording(false);
-  };
-
   const buttonStyle = {
     backgroundColor: 'transparent',
     border: '2px solid var(--text-primary-inverse)',
@@ -74,7 +73,17 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
     justifyContent: 'center',
     padding: '10px',
     transition: 'all 0.3s',
+    animation: recording ? 'pulse 1s infinite' : 'none', // Added animation for recording indicator
   };
+
+  // Keyframes for the pulse animation
+  const pulseAnimation = `
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+  `;
 
   const MicIcon = () => (
     <svg
@@ -102,6 +111,8 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
 
   return (
     <div>
+      {/* Inject pulse animation */}
+      <style>{pulseAnimation}</style>
       <button
         className="recordButton"
         onClick={recording ? stopAudioRecording : startAudioRecording}
@@ -110,7 +121,11 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
       >
         <MicIcon />
       </button>
-      {recording && <p>Recording... {timer}s</p>}
+      {recording && (
+        <div className="recordingIndicator">
+          <p>Recording... {timer}s</p>
+        </div>
+      )}
     </div>
   );
 };
