@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import "./SplashScreen.css";
 import AudioRecorder from './AudioRecorder';
 
@@ -26,11 +26,16 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
     }
   };
 
-  const variants = {
+  // Define separate variants for standard animation and fade-out effect
+  const mainVariants: Variants = {
     initial: { opacity: 0 },
     animate: { opacity: 1, transition: { duration: 1.5, ease: "easeInOut" } },
     exit: { opacity: 0, transition: { duration: 1.5, ease: "easeInOut" } },
-    fadeOut: { opacity: 0, filter: "blur(4px)", transition: { duration: 1.2 } } // New fade-out effect
+  };
+
+  const fadeOutVariant: Variants = {
+    animate: { opacity: 1 },
+    fadeOut: { opacity: 0, filter: "blur(4px)", transition: { duration: 1.2 } } 
   };
 
   useEffect(() => {
@@ -77,7 +82,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
       initial="initial"
       animate="animate"
       exit="exit"
-      variants={variants}
+      variants={mainVariants}
     >
       {isRecording && (
         <div className="recordingBackground">
@@ -87,7 +92,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
         </div>
       )}
       {phase === "welcome" && (
-        <motion.div className="content" variants={variants}>
+        <motion.div className="content" variants={mainVariants}>
           <h1 className="gradientText">Welcome to Loob</h1>
           <button onClick={() => proceed("introduction")}>
             Enter
@@ -98,7 +103,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
       {/* Other phases go here */}
 
       {phase === "karneval" && (
-        <motion.div className={`content ${showFade ? "fade" : ""}`} variants={showFade ? variants.fadeOut : variants}>
+        <motion.div className="content" variants={showFade ? fadeOutVariant : mainVariants}>
           <h2 className="gradientText">{randomPrompt}</h2>
           <div className="buttonContainer">
             <AudioRecorder
