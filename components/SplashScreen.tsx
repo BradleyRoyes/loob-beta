@@ -91,7 +91,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
       )}
       {phase === "welcome" && (
         <motion.div className="content" variants={variants}>
-          <h1 className="gradientText">Welcome to Loob</h1>
+          <h1 className="gradientText">Welcome to The Cyberdelic Showcase at Gamesground</h1>
           <button onClick={() => proceed("introduction")}>
             Enter
           </button>
