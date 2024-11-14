@@ -91,7 +91,8 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
       )}
       {phase === "welcome" && (
         <motion.div className="content" variants={variants}>
-          <h1 className="gradientText">Welcome to The Cyberdelic Showcase</h1>
+          <h1 className="gradientText">Welcome to </h1>
+          <h1 className="gradientText">the Cyberdelic Showcase</h1>
           <button onClick={() => proceed("introduction")}>
             Enter
           </button>
@@ -101,7 +102,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
       {phase === "introduction" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText" style={{ fontSize: 'normal' }}>
-         I’m loob, a listener. An urban story container to help us tell new stories about new experiences. <br/> <br/> Movement is everything, nothing is the goal.  
+         I’m loob, your guide. I help us tell new stories about new experiences. <br/> <br/> Movement is everything, nothing is the goal.  
           </h1>
           <button onClick={() => proceed("opendecks")}>
             Continue
