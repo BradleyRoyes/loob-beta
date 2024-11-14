@@ -7,6 +7,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
   const [phase, setPhase] = useState<string>("welcomePhase");
   const [randomPrompt, setRandomPrompt] = useState<string>("");
   const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [fadeToBlack, setFadeToBlack] = useState<boolean>(false); // New state for fade-to-black effect
 
   // Mystical prompts for the promptPhase
   const prompts = [
@@ -42,12 +43,13 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
 
   useEffect(() => {
     if (phase === "welcomePhase") {
-      // Removed the automatic transition to another phase
+      // No automatic transition
     }
   }, [phase]);
 
   const onRecordingComplete = async (audioBlob: Blob) => {
     setIsRecording(false);
+    setFadeToBlack(true); // Trigger fade-to-black effect
 
     const formData = new FormData();
     formData.append("audio", audioBlob, "audio.webm");
@@ -71,6 +73,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
 
   const startRecording = () => {
     setIsRecording(true);
+    setFadeToBlack(false); // Ensure fade effect is reset when starting a new recording
   };
 
   return (
@@ -128,71 +131,10 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
         </motion.div>
       )}
 
-      {/* Commented out phases for future use */}
-      {/*
-      {phase === "experienceSelectorPhase" && (
-        <motion.div className="content" variants={variants}>
-          <h1 className="gradientText">I am here to help you choose your experience</h1>
-          <h2 className="gradientText">Would you prefer something more passive and relaxing, or intense and engaging?</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-            <div className="buttonContainer">  
-              <AudioRecorder
-                onRecordingComplete={onRecordingComplete}
-                startRecording={startRecording}
-              />
-              <button onClick={() => onEnter()}>
-                <b>Chat</b>
-              </button>
-            </div>
-          </div>
-        </motion.div>
+      {/* Fade-to-Black Overlay */}
+      {fadeToBlack && (
+        <div className="fadeOverlay"></div>
       )}
-
-      {phase === "learnMorePhase" && (
-        <motion.div className="content" variants={variants}>
-          <h1 className="gradientText">Would you like to</h1>
-          <button onClick={() => onEnter("I would like to talk about my night with you.")}>
-            Share about your night
-          </button>
-          <h3 className="gradientText" style={{ fontSize: 'normal' }}><br />or learn more about</h3>
-          <div className="buttonContainer">
-            <button className="smallButton" onClick={() => onEnter("Tell me about MOOS.")}>
-              MOOS
-            </button>
-            <button className="smallButton" onClick={() => onEnter("Tell me about EDS and seks/loob.")}>
-              EDS
-            </button>
-            <button className="smallButton" onClick={() => onEnter("I am having a difficult time, can you give me harm reduction support")}>
-              Harm Reduction
-            </button>
-          </div>
-        </motion.div>
-      )}
-
-      {phase === "feedbackPhase" && (
-        <motion.div className="content" variants={variants}>
-          <h1 className="gradientText">I&apos;d like to share feedback on</h1>
-          <button onClick={() => onEnter("I'd like to share some feedback on MOOS")}>
-            MOOS as a community
-          </button>
-          <button onClick={() => onEnter("I'd like to share feedback on the TwistTea bar")}>
-            TwistTea bar
-          </button>
-          <button onClick={() => onEnter("I'd like to share feedback on AromaAlchemy space")}>
-            AromaAlchemy
-          </button>
-          <button onClick={() => onEnter("I'd like to share feedback on the SoundSauna")}>
-            SoundSauna
-          </button>
-          <button onClick={() => onEnter("I'd like to share feedback on you, Loob AI")}>
-            you, Loob AI
-          </button>
-          <button onClick={() => onEnter("I'd like to talk about something else")}>
-            something else
-          </button>
-        </motion.div>
-      )}
-      */}
     </motion.div>
   );
 };
