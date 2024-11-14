@@ -130,7 +130,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
 
 
       {phase === "zuberlin" && (
-        <motion.div className="content" variants={variants}>
+        <motion.div className="content" variants={variants}> 
           <h1 className="gradientText">Let me get to know you a bit...</h1>
           <h2 className="gradientText">What brought you down here to me in the dungeon today?</h2>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
