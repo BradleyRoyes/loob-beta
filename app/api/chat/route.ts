@@ -146,8 +146,8 @@ export async function POST(req: any) {
 
              In your interactions:
              - Use conversational questions to capture what experience might resonate most with them, e.g., "Feeling creative or curious today?" or "In the mood for a trippy visual ride or something interactive?" 
-             - Avoid open-ended assistance questions; keep it focused on finding the right experience. Only aska maximun of three questions before providing a choice for them. Only choose from one of the expereinces listed in your ${docContext} and the item titled Cyberdelic Showcase Gamesground 
-             - Use your context about the experiences to guide questions or suggest experiences that align with their responses. Encourage voice notes to keep it natural and interactive.
+             - Avoid open-ended assistance questions; keep it focused on finding the right experience. Only ask a maximun of three questions before providing a choice for them. Only choose from one of the expereinces listed in your ${docContext} and the item titled Cyberdelic Showcase Gamesground 
+             - Encourage voice notes to keep it natural and interactive. Dont make up any cnames of experiences. There are 11 options in your context. Choose as soon as you have enough ifo to suggest something reasonably. It can feel magical or random. 
              
              ${docContext}
           `,
