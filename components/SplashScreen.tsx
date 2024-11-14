@@ -4,22 +4,23 @@ import "./SplashScreen.css";
 import AudioRecorder from './AudioRecorder';
 
 const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnter }) => {
-  const [phase, setPhase] = useState<string>("welcome");
+  const [phase, setPhase] = useState<string>("welcomePhase");
   const [randomPrompt, setRandomPrompt] = useState<string>("");
-  const [isRecording, setIsRecording] = useState<boolean>(false); // State to track if recording is active
+  const [isRecording, setIsRecording] = useState<boolean>(false);
 
+  // Updated list of prompts
   const prompts = [
-    'When was the last time you felt speechless? Tell me about it.',
-    'Karneval has celebrated diversity for many years. What message do you want to send to the Karneval-goers 200 years from now?',
-    'When was the last time you felt completely enchanted by something? Tell me about it.',
-    'Imagine me, Loob, as a time capsule. What key piece of today’s culture do you think should be preserved for future generations?',
-    'Tell me about an experience where you felt a deep sense of gratitude and appreciation for the simple things in life.',
-    'Share a time when you were moved to tears by an act of kindness, generosity, or compassion.',
-    'Have you ever encountered a new idea or concept that challenged your existing beliefs and prompted you to reevaluate your worldview?',
-    'Share a time when you were awestruck by the power of nature.',
-    'Describe a time when you felt a deep sense of connection with a place, culture, or tradition that was new to you.',
-    'Have you had an unexpected encounter with a stranger at Karneval that left you with a feeling of curiosity? Tell me about it.',
-    'Has there been a moment at Karneval when you felt a deep connection to something greater than yourself? Tell me about it.'
+    'What truth do you find in silence?',
+    'Where does wonder take you?',
+    'What sound calls you home?',
+    'What would you see if you closed your eyes?',
+    'How does the unknown feel?',
+    'What part of you waits to be discovered?',
+    'What awakens your awe?',
+    'What memory feels like magic?',
+    'What colors live in your dreams?',
+    'When did time last stand still?',
+    'What pulls you toward mystery?'
   ];
 
   const getRandomPrompt = (): string => {
@@ -28,7 +29,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
 
   const proceed = (nextPhase: string): void => {
     setPhase(nextPhase);
-    if (nextPhase === "karneval") {
+    if (nextPhase === "promptPhase") {
       setRandomPrompt(getRandomPrompt());
     }
   };
@@ -40,30 +41,28 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
   };
 
   useEffect(() => {
-    if (phase === "welcome") {
-      // Removed the automatic transition to "learnMore" phase
+    if (phase === "welcomePhase") {
+      // Removed the automatic transition to "infoPhase"
     }
   }, [phase]);
 
   const onRecordingComplete = async (audioBlob: Blob) => {
-    setIsRecording(false); // Stop animation when recording is complete
-  
+    setIsRecording(false);
+
     const formData = new FormData();
-    formData.append("audio", audioBlob, "audio.webm"); // Use the Blob directly
-  
+    formData.append("audio", audioBlob, "audio.webm");
+
     try {
       const response = await fetch('/api/transcribe', {
         method: 'POST',
         body: formData,
       });
-  
+
       if (!response.ok) {
         throw new Error(`Server responded with ${response.status}`);
       }
-  
+
       const data = await response.json();
-      console.log('Transcription:', data.transcription);
-  
       onEnter(data.transcription);
     } catch (error) {
       console.error('Error uploading audio:', error);
@@ -71,7 +70,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
   };
 
   const startRecording = () => {
-    setIsRecording(true); // Start animation when recording starts
+    setIsRecording(true);
   };
 
   return (
@@ -89,31 +88,35 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
           <div className="waveLine"></div>
         </div>
       )}
-      {phase === "welcome" && (
+      
+      {/* Welcome Phase */}
+      {phase === "welcomePhase" && (
         <motion.div className="content" variants={variants}>
-          <h1 className="gradientText">Welcome to </h1>
+          <h1 className="gradientText">Welcome to</h1>
           <h1 className="gradientText">the Cyberdelic Showcase</h1>
-          <button onClick={() => proceed("introduction")}>
+          <button onClick={() => proceed("introPhase")}>
             Enter
           </button>
         </motion.div>
       )}
 
-      {phase === "introduction" && (
+      {/* Introduction Phase */}
+      {phase === "introPhase" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText" style={{ fontSize: 'normal' }}>
-         I’m loob, your guide. I help us tell new stories about new experiences. <br/> <br/> Movement is everything, nothing is the goal.  
+            I’m Loob, your guide. I help us tell new stories about new experiences. <br /><br /> Movement is everything, nothing is the goal.
           </h1>
-          <button onClick={() => proceed("opendecks")}>
+          <button onClick={() => proceed("experienceSelectorPhase")}>
             Continue
           </button>
         </motion.div>
       )}
 
-       {phase === "opendecks" && (
+      {/* Experience Selector Phase */}
+      {phase === "experienceSelectorPhase" && (
         <motion.div className="content" variants={variants}>
-          <h1 className="gradientText">I am here to help you chose you experience</h1>
-          <h2 className="gradientText">to start, would you rather something more passive and relaxing, or intense and engaging?</h2>
+          <h1 className="gradientText">I am here to help you choose your experience</h1>
+          <h2 className="gradientText">Would you prefer something more passive and relaxing, or intense and engaging?</h2>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
             <div className="buttonContainer">  
               <AudioRecorder
@@ -121,18 +124,18 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
                 startRecording={startRecording}
               />
               <button onClick={() => onEnter()}>
-                  <b>Chat</b>
-                </button>
+                <b>Chat</b>
+              </button>
             </div>
           </div>
         </motion.div>
       )}
 
-
-      {phase === "zuberlin" && (
-        <motion.div className="content" variants={variants}> 
-          <h1 className="gradientText">Let me get to know you a bit...</h1>
-          <h2 className="gradientText">What brought you down here to me in the dungeon today?</h2>
+      {/* Information Gathering Phase */}
+      {phase === "infoGatheringPhase" && (
+        <motion.div className="content" variants={variants}>
+          <h1 className="gradientText">Welcome to Cyberdelic Showcase at Gamesground 2024. To help me choose an experience for you, please first tell me...</h1>
+          <h2 className="gradientText">Are you looking for something more passive and relaxing, or something quite engaged and intense?</h2>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
             <div className="buttonContainer">  
               <AudioRecorder
@@ -140,14 +143,15 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
                 startRecording={startRecording}
               />
               <button onClick={() => onEnter()}>
-                  <b>Chat</b>
-                </button>
+                <b>Chat</b>
+              </button>
             </div>
           </div>
         </motion.div>
       )}
 
-      {phase === "karneval" && (
+      {/* Prompt Phase */}
+      {phase === "promptPhase" && (
         <motion.div className="content" variants={variants}>
           <h2 className="gradientText">{randomPrompt}</h2>
           <div className="buttonContainer">
@@ -162,13 +166,14 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
         </motion.div>
       )}
 
-      {phase === "learnMore" && (
+      {/* Learn More Phase */}
+      {phase === "learnMorePhase" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText">Would you like to</h1>
           <button onClick={() => onEnter("I would like to talk about my night with you.")}>
             Share about your night
           </button>
-          <h3 className="gradientText" style={{ fontSize: 'normal' }}><br/>or learn more about</h3>
+          <h3 className="gradientText" style={{ fontSize: 'normal' }}><br />or learn more about</h3>
           <div className="buttonContainer">
             <button className="smallButton" onClick={() => onEnter("Tell me about MOOS.")}>
               MOOS
@@ -183,11 +188,12 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
         </motion.div>
       )}
 
-      {phase === "feedback" && (
+      {/* Feedback Phase */}
+      {phase === "feedbackPhase" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText">I&apos;d like to share feedback on</h1>
           <button onClick={() => onEnter("I'd like to share some feedback on MOOS")}>
-           MOOS as a community
+            MOOS as a community
           </button>
           <button onClick={() => onEnter("I'd like to share feedback on the TwistTea bar")}>
             TwistTea bar
@@ -198,7 +204,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
           <button onClick={() => onEnter("I'd like to share feedback on the SoundSauna")}>
             SoundSauna
           </button>
-          <button onClick={() => onEnter("I'd like to share feedback on you. Loob AI")}>
+          <button onClick={() => onEnter("I'd like to share feedback on you, Loob AI")}>
             you, Loob AI
           </button>
           <button onClick={() => onEnter("I'd like to talk about something else")}>
