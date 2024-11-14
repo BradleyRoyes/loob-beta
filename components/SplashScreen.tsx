@@ -8,7 +8,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
   const [randomPrompt, setRandomPrompt] = useState<string>("");
   const [isRecording, setIsRecording] = useState<boolean>(false);
 
-  // Updated list of prompts
+  // Mystical prompts for the promptPhase
   const prompts = [
     'What truth do you find in silence?',
     'Where does wonder take you?',
@@ -42,7 +42,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
 
   useEffect(() => {
     if (phase === "welcomePhase") {
-      // Removed the automatic transition to "infoPhase"
+      // Removed the automatic transition to another phase
     }
   }, [phase]);
 
@@ -93,7 +93,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
       {phase === "welcomePhase" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText">Welcome to</h1>
-          <h2 className="gradientText">the Cyberdelic Showcase</h2>
+          <h1 className="gradientText">the Cyberdelic Showcase</h1>
           <button onClick={() => proceed("introPhase")}>
             Enter
           </button>
@@ -106,47 +106,9 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
           <h1 className="gradientText" style={{ fontSize: 'normal' }}>
             I’m Loob, your guide. I help us tell new stories about new experiences. <br /><br /> Movement is everything, nothing is the goal.
           </h1>
-          <button onClick={() => proceed("experienceSelectorPhase")}>
+          <button onClick={() => proceed("promptPhase")}>
             Continue
           </button>
-        </motion.div>
-      )}
-
-      {/* Experience Selector Phase */}
-      {phase === "experienceSelectorPhase" && (
-        <motion.div className="content" variants={variants}>
-          <h1 className="gradientText">I am here to help you choose your experience</h1>
-          <h2 className="gradientText">Would you prefer something more passive and relaxing, or intense and engaging?</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-            <div className="buttonContainer">  
-              <AudioRecorder
-                onRecordingComplete={onRecordingComplete}
-                startRecording={startRecording}
-              />
-              <button onClick={() => onEnter()}>
-                <b>Chat</b>
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Information Gathering Phase */}
-      {phase === "infoGatheringPhase" && (
-        <motion.div className="content" variants={variants}>
-          <h1 className="gradientText">Welcome to Cyberdelic Showcase at Gamesground 2024. To help me choose an experience for you, please first tell me...</h1>
-          <h2 className="gradientText">Are you looking for something more passive and relaxing, or something quite engaged and intense?</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-            <div className="buttonContainer">  
-              <AudioRecorder
-                onRecordingComplete={onRecordingComplete}
-                startRecording={startRecording}
-              />
-              <button onClick={() => onEnter()}>
-                <b>Chat</b>
-              </button>
-            </div>
-          </div>
         </motion.div>
       )}
 
@@ -166,7 +128,26 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
         </motion.div>
       )}
 
-      {/* Learn More Phase */}
+      {/* Commented out phases for future use */}
+      {/*
+      {phase === "experienceSelectorPhase" && (
+        <motion.div className="content" variants={variants}>
+          <h1 className="gradientText">I am here to help you choose your experience</h1>
+          <h2 className="gradientText">Would you prefer something more passive and relaxing, or intense and engaging?</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+            <div className="buttonContainer">  
+              <AudioRecorder
+                onRecordingComplete={onRecordingComplete}
+                startRecording={startRecording}
+              />
+              <button onClick={() => onEnter()}>
+                <b>Chat</b>
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {phase === "learnMorePhase" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText">Would you like to</h1>
@@ -188,7 +169,6 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
         </motion.div>
       )}
 
-      {/* Feedback Phase */}
       {phase === "feedbackPhase" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText">I&apos;d like to share feedback on</h1>
@@ -212,6 +192,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
           </button>
         </motion.div>
       )}
+      */}
     </motion.div>
   );
 };
