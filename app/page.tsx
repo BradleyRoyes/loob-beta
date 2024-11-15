@@ -150,12 +150,27 @@ export default function Page() {
     <>
       <style>
         {`
+          /* Fade-in animation */
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+            }
+            to {
+              opacity: 1;
+            }
+          }
+
+          /* Apply animation to the main container */
+          .fade-in {
+            animation: fadeIn 1.5s ease-in-out; /* Adjust duration as needed */
+          }
+
           .h-screen-adjusted {
             height: calc(var(--vh, 1vh) * 100);
           }
         `}
       </style>
-      <main className="flex h-screen-adjusted flex-col items-center justify-center pt-0">
+      <main className="fade-in flex h-screen-adjusted flex-col items-center justify-center pt-0">
         {showModal && <ModalOverlay onClose={() => setShowModal(false)} />}
 
         <section
