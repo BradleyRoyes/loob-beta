@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import "./SplashScreen.css";
 import AudioRecorder from './AudioRecorder';
 
@@ -93,48 +93,47 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
         </div>
       )}
 
-      <AnimatePresence mode="wait">
-        {/* Welcome Phase */}
-        {phase === "welcomePhase" && (
-          <div className="content">
-            <h1 className="gradientText">Hi, let me help you</h1>
-            <h2 className="gradientText">choose your experience./</h2>
-            <button onClick={() => proceed("introPhase")}>
-              Enter
+      {/* Welcome Phase */}
+      {phase === "welcomePhase" && (
+        <div className="content">
+          <h1 className="gradientText">Hi, let me help you</h1>
+          <h2 className="gradientText">choose your experience.</h2>
+          <button onClick={() => proceed("introPhase")}>
+            Enter
+          </button>
+        </div>
+      )}
+
+      {/* Introduction Phase with Fade-In/Fade-Out */}
+      {phase === "introPhase" && (
+        <motion.div
+          className="content"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1, transition: { duration: 2 } }}
+          exit={{ opacity: 1, transition: { duration: 2 } }}
+        >
+          <h1 className="gradientText" style={{ fontSize: 'normal' }}>
+            I’m Loob, your guide. <br/><br /> I help tell stories that are hard to tell. <br/><br /> Movement is everything, nothing is the goal.
+          </h1>
+        </motion.div>
+      )}
+
+      {/* Prompt Phase */}
+      {phase === "promptPhase" && (
+        <div className="content">
+          <h3 className="gradientText">Tell me...</h3>
+          <h2 className="gradientText">{randomPrompt}</h2>
+          <div className="buttonContainer">
+            <AudioRecorder
+              onRecordingComplete={onRecordingComplete}
+              startRecording={startRecording}
+            />
+            <button className="newPromptButton" onClick={() => setRandomPrompt(getRandomPrompt())}>
+              New Prompt
             </button>
           </div>
-        )}
-
-        {/* Introduction Phase with Fade-In/Fade-Out */}
-        {phase === "introPhase" && (
-          <motion.div
-            className="content"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1, transition: { duration: 2 } }}
-            exit={{ opacity: 0, transition: { duration: 2 } }}
-          >
-            <h1 className="gradientText" style={{ fontSize: 'normal' }}>
-              I’m Loob, your guide. <br/><br /> I help tell stories that are hard to tell. <br/><br /> Movement is everything, nothing is the goal.
-            </h1>
-          </motion.div>
-        )}
-
-        {/* Prompt Phase */}
-        {phase === "promptPhase" && (
-          <div className="content">
-            <h2 className="gradientText">{randomPrompt}</h2>
-            <div className="buttonContainer">
-              <AudioRecorder
-                onRecordingComplete={onRecordingComplete}
-                startRecording={startRecording}
-              />
-              <button className="newPromptButton" onClick={() => setRandomPrompt(getRandomPrompt())}>
-                New Prompt
-              </button>
-            </div>
-          </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
 
       {/* Fade-to-Black Overlay */}
       {fadeToBlack && (
