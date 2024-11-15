@@ -172,3 +172,50 @@ export async function POST(req: any) {
     throw e;
   }
 }
+
+// Added functionality for extracting moods and keywords
+export async function GET(req: any) {
+  try {
+    const messagesCollection = await astraDb.collection("messages");
+    const messages = await messagesCollection.find({}).toArray();
+
+    const moodCounts: Record<string, number> = {};
+    const keywordCounts: Record<string, number> = {};
+
+    for (const message of messages) {
+      if (message.mood) {
+        moodCounts[message.mood] = (moodCounts[message.mood] || 0) + 1;
+      }
+
+      if (Array.isArray(message.keywords)) {
+        for (const keyword of message.keywords) {
+          keywordCounts[keyword] = (keywordCounts[keyword] || 0) + 1;
+        }
+      }
+    }
+
+    const moodData = Object.entries(moodCounts).map(([mood, count]) => ({
+      mood,
+      count,
+    }));
+
+    const keywordData = Object.entries(keywordCounts).map(([keyword, count]) => ({
+      keyword,
+      count,
+    }));
+
+    return new Response(
+      JSON.stringify({
+        moodData,
+        keywordData,
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  } catch (error) {
+    console.error("Error in GET function:", error);
+    return new Response("Failed to fetch data", { status: 500 });
+  }
+}
