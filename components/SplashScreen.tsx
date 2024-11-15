@@ -11,12 +11,12 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
 
   // All prompts and available prompts to avoid immediate repetition
   const allPrompts = [
-    'This might be a simulation. I call a reality check — what do you do?',
-    'What is your dream for dream technology?',
-    'You ordered coffee: quantity or quality?',
-    'Do you ever get anxious about AI?',
-    'Do you think you’ll wake up from the simulation?',
-    'Ok, you woke up (from the simulation, of course). What are your first words?'
+    'What does "cyberdelic" mean to you?',
+    'What brought you down to the dungeon today?',
+    'When you order coffee: quantity or quality?',
+    'What makes you the most anxious about AI?',
+    'Do you think you’ll ever wake up from the simulation?',
+    'You wake up to realise your whole life was a dream, what are your first words?'
   ];
 
   const [availablePrompts, setAvailablePrompts] = useState([...allPrompts]);
@@ -107,7 +107,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
       {phase === "welcomePhase" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText">Welcome to</h1>
-          <h1 className="gradientText">Cyberdelic Nexus Berlin</h1>
+          <h2 className="gradientText">Cyberdelic Nexus Berlin</h2>
           <button onClick={() => proceed("introPhase")}>
             Enter
           </button>
@@ -118,7 +118,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
       {phase === "introPhase" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText" style={{ fontSize: 'normal' }}>
-            I’m Loob, your guide. I help us tell new stories about new experiences. <br /><br /> Movement is everything, nothing is the goal.
+            I’m Loob, your guide. I help tell stories that are hard to tell. <br /><br /> Movement is everything, nothing is the goal.
           </h1>
           <button onClick={() => proceed("promptPhase")}>
             Continue
