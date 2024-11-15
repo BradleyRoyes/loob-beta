@@ -118,7 +118,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
                   startRecording={() => console.log('Recording started')}
                 />
                 <button className="newPromptButton" onClick={() => setRandomPrompt(getRandomPrompt())}>
-                  New Prompt
+                  New Question
                 </button>
               </div>
             </div>
