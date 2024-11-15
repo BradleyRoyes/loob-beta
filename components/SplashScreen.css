@@ -2,7 +2,7 @@
 .splashScreen {
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* Spread elements vertically */
+  justify-content: center; /* Center content vertically */
   align-items: center;
   position: fixed;
   top: 0;
@@ -12,7 +12,8 @@
   background-color: black;
   color: white;
   z-index: 1000; /* High z-index to overlay content */
-  padding: 20px; /* Padding for spacing */
+  padding: 40px; /* Ample padding for spacing */
+  box-sizing: border-box; /* Include padding in dimensions */
 }
 
 /* Content Layout */
@@ -20,11 +21,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 30px; /* Space between elements */
   text-align: center;
+  gap: 40px; /* Space between text elements */
   max-width: 600px;
-  z-index: 1;
-  transition: opacity 1s ease, transform 1s ease;
 }
 
 /* Gradient Text Styling */
@@ -32,9 +31,8 @@
   background: linear-gradient(45deg, pink, orange);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  font-size: 1.5rem;
+  font-size: 2rem; /* Larger font for emphasis */
   margin: 0;
-  text-align: center;
 }
 
 /* Record Section Layout */
@@ -42,8 +40,8 @@
   display: flex;
   flex-direction: column; /* Stack button and text vertically */
   align-items: center;
-  gap: 15px; /* Increased gap between buttons */
-  margin-bottom: 5%; /* Float buttons lower on the screen */
+  gap: 20px; /* Space between buttons */
+  margin-top: 50px; /* Push buttons slightly lower */
 }
 
 /* Record Button */
@@ -51,7 +49,7 @@
   background: linear-gradient(45deg, pink, orange);
   border: none; /* Remove border */
   border-radius: 50%;
-  padding: 45px; /* Larger padding for bigger button */
+  padding: 50px; /* Larger button for better focus */
   cursor: pointer;
   display: flex;
   justify-content: center;
@@ -61,24 +59,24 @@
 }
 
 .recordButton:hover {
-  transform: scale(1.2); /* Bigger hover scale */
+  transform: scale(1.1); /* Subtle hover effect */
   box-shadow: 0 0 40px rgba(255, 165, 0, 0.9); /* More intense glow on hover */
 }
 
 .recordButton svg {
-  width: 30px; /* Adjusted for larger button */
+  width: 30px;
   height: 30px;
 }
 
 /* Smaller New Question Button */
 .newPromptButton {
   background: linear-gradient(45deg, pink, orange);
-  color: black; /* Text color changed to black */
-  padding: 4px 8px; /* Smaller padding */
+  color: black;
+  padding: 10px 20px; /* Balanced size for buttons */
   border: none;
-  border-radius: 5px;
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 10px; /* Smaller font size */
+  font-size: 12px;
   transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
@@ -97,17 +95,17 @@
   height: 100%;
   background: radial-gradient(circle, rgba(255, 165, 0, 0.3) 0%, rgba(0, 0, 0, 0.6) 60%, transparent 100%);
   z-index: -1;
-  animation: intenseBreath 4s infinite ease-in-out; /* Faster breathing */
+  animation: intenseBreath 4s infinite ease-in-out; /* Breathing effect */
 }
 
-/* More Intense Breathing Animation */
+/* Breathing Animation */
 @keyframes intenseBreath {
   0%, 100% {
     transform: scale(1);
     opacity: 0.7;
   }
   50% {
-    transform: scale(1.2); /* More pronounced scaling */
+    transform: scale(1.2);
     opacity: 1;
   }
 }
@@ -142,15 +140,15 @@
   }
 
   .gradientText {
-    font-size: 1.2rem;
+    font-size: 1.5rem;
   }
 
   .recordButton {
-    padding: 35px; /* Slightly smaller padding for mobile */
+    padding: 40px;
   }
 
   .newPromptButton {
-    font-size: 9px; /* Smaller size for mobile */
-    padding: 3px 6px;
+    font-size: 10px;
+    padding: 8px 16px;
   }
 }
