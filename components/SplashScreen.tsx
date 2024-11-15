@@ -45,10 +45,12 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
   };
 
   useEffect(() => {
+    // Clear timeout if user manually proceeds to the next phase
+    let timer: NodeJS.Timeout;
     if (phase === "introPhase") {
-      const timer = setTimeout(() => proceed("promptPhase"), 4000);
-      return () => clearTimeout(timer);
+      timer = setTimeout(() => proceed("promptPhase"), 4000);
     }
+    return () => clearTimeout(timer);
   }, [phase]);
 
   const onRecordingComplete = async (audioBlob: Blob) => {
@@ -95,32 +97,44 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
 
       {/* Welcome Phase */}
       {phase === "welcomePhase" && (
-        <div className="content">
+        <motion.div
+          className="content"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1 }}
+        >
           <h1 className="gradientText">Hi.</h1>
           <h2 className="gradientText">Care for an adventure?</h2>
-          <button onClick={() => proceed("introPhase")}>
-            Enter
-          </button>
-        </div>
+          <button onClick={() => proceed("introPhase")}>Enter</button>
+        </motion.div>
       )}
 
-      {/* Introduction Phase with Fade-In/Fade-Out */}
+      {/* Introduction Phase */}
       {phase === "introPhase" && (
         <motion.div
           className="content"
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1, transition: { duration: 2 } }}
-          exit={{ opacity: 1, transition: { duration: 2 } }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1 }}
         >
-          <h1 className="gradientText" style={{ fontSize: 'normal' }}>
-            I’m Loob, your guide. <br/><br /> I help tell stories that are hard to tell. <br/><br /> Movement is everything, nothing is the goal.
+          <h1 className="gradientText">
+            I’m Loob, your guide. <br /><br /> I help tell stories that are hard to tell. <br /><br /> Movement is everything, nothing is the goal.
           </h1>
+          <button onClick={() => proceed("promptPhase")}>Continue</button>
         </motion.div>
       )}
 
       {/* Prompt Phase */}
       {phase === "promptPhase" && (
-        <div className="content">
+        <motion.div
+          className="content"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1 }}
+        >
           <h3 className="gradientText">Tell me...</h3>
           <h2 className="gradientText">{randomPrompt}</h2>
           <div className="buttonContainer">
@@ -132,7 +146,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
               New Prompt
             </button>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Fade-to-Black Overlay */}
