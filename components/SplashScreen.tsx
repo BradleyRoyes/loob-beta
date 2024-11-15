@@ -7,10 +7,10 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
   const [phase, setPhase] = useState<string>("welcomePhase");
   const [randomPrompt, setRandomPrompt] = useState<string>("");
   const [isRecording, setIsRecording] = useState<boolean>(false);
-  const [fadeToBlack, setFadeToBlack] = useState<boolean>(false); // New state for fade-to-black effect
+  const [fadeToBlack, setFadeToBlack] = useState<boolean>(false);
 
-  // Mystical prompts for the promptPhase
-  const prompts = [
+  // All prompts and available prompts to avoid immediate repetition
+  const allPrompts = [
     'What truth do you find in silence?',
     'Where does wonder take you?',
     'What sound calls you home?',
@@ -23,9 +23,26 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
     'When did time last stand still?',
     'What pulls you toward mystery?'
   ];
+  
+  const [availablePrompts, setAvailablePrompts] = useState([...allPrompts]);
+  const [usedPrompts, setUsedPrompts] = useState<string[]>([]);
 
   const getRandomPrompt = (): string => {
-    return prompts[Math.floor(Math.random() * prompts.length)];
+    if (availablePrompts.length === 0) {
+      // Reset the prompts if all have been used
+      setAvailablePrompts([...usedPrompts]);
+      setUsedPrompts([]);
+    }
+    
+    // Select a random prompt from available prompts
+    const randomIndex = Math.floor(Math.random() * availablePrompts.length);
+    const prompt = availablePrompts[randomIndex];
+    
+    // Update the arrays
+    setAvailablePrompts(availablePrompts.filter((_, index) => index !== randomIndex));
+    setUsedPrompts([...usedPrompts, prompt]);
+    
+    return prompt;
   };
 
   const proceed = (nextPhase: string): void => {
@@ -49,7 +66,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
 
   const onRecordingComplete = async (audioBlob: Blob) => {
     setIsRecording(false);
-    setFadeToBlack(true); // Trigger fade-to-black effect
+    setFadeToBlack(true);
 
     const formData = new FormData();
     formData.append("audio", audioBlob, "audio.webm");
@@ -73,7 +90,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
 
   const startRecording = () => {
     setIsRecording(true);
-    setFadeToBlack(false); // Ensure fade effect is reset when starting a new recording
+    setFadeToBlack(false);
   };
 
   return (
