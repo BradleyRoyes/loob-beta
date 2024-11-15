@@ -23,7 +23,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
   const [usedPrompts, setUsedPrompts] = useState<string[]>([]);
 
   const getRandomPrompt = (): string => {
-    if (availablePrompts.length === -1) {
+    if (availablePrompts.length === 0) {
       setAvailablePrompts([...usedPrompts]);
       setUsedPrompts([]);
     }
