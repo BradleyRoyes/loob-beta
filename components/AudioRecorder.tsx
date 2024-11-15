@@ -17,8 +17,8 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
     if (recording) return;
 
     try {
-      // Initialize AudioContext and Recorder.js
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      // Initialize AudioContext with TypeScript-compatible check
+      const audioContext = new ((window as any).AudioContext || (window as any).webkitAudioContext)();
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new Recorder(audioContext);
 
