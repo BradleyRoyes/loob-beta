@@ -12,7 +12,7 @@
   background-color: black;
   color: white;
   z-index: 1000; /* High z-index to overlay content */
-  padding: 20px; /* Padding for spacing */
+  padding: 30px; /* Increased padding for more spacing */
 }
 
 /* Content Layout */
@@ -20,7 +20,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 30px; /* Space between elements */
+  gap: 40px; /* Increased space between elements */
   text-align: center;
   max-width: 600px;
   z-index: 1;
@@ -42,8 +42,8 @@
   display: flex;
   flex-direction: column; /* Stack button and text vertically */
   align-items: center;
-  gap: 15px; /* Increased gap between buttons */
-  margin-bottom: 5%; /* Float buttons lower on the screen */
+  gap: 20px; /* Increased gap between buttons */
+  margin-bottom: 10%; /* Increased margin to float buttons lower */
 }
 
 /* Record Button */
@@ -137,7 +137,7 @@
 /* Mobile Layout Adjustments */
 @media (max-width: 768px) {
   .content {
-    gap: 20px;
+    gap: 25px; /* Slightly increased gap for mobile */
     padding: 20px;
   }
 
