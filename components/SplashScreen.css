@@ -160,12 +160,12 @@
 /* Mobile Layout Adjustments */
 @media (max-width: 768px) {
   .content {
-    gap: 20px;
-    padding: 20px;
+    gap: 10px;
+    padding: 10px;
   }
 
   .gradientText {
-    font-size: 1.2rem;
+    font-size: 1.5rem;
   }
 
   .recordButton {
