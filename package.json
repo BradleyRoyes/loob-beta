@@ -47,7 +47,11 @@
     "typescript": "5.2.2",
     "uuid": "^9.0.1",
     "whisper-nodejs": "^1.0.0",
-    "recorder-js": "^1.0.0"
+    "recorder-js": "^1.0.0",
+    "chart.js": "^4.0.1",
+    "pusher-js": "^7.2.0",
+    "react-chartjs-2": "^5.0.1",
+    "react-wordcloud": "^1.2.7"
   },
   "devDependencies": {
     "@types/react": "^18.2.37",
