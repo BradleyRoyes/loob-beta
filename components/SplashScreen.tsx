@@ -10,7 +10,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
 
   const allPrompts = [
     'What, if anything, does "cyberdelic" mean to you?',
-    'What brought you down to the dungeon today?',
+    'what do you think is the best thing about being a child?',
     'When you order coffee: quantity or quality?',
     'What is the best part about going on vacation?',
     'What would you like to have happen after you die?',
