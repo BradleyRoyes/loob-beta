@@ -10,18 +10,15 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
   const [fadeToBlack, setFadeToBlack] = useState<boolean>(false);
 
   // All prompts and available prompts to avoid immediate repetition
- const allPrompts = [
-  'This might be a simulation. I call a reality check — what do you do? 🌀🌀',
-  'What is your dream for dream technology?',
-  'You ordered coffee: quantity or quality?',
-  'Do you remember the time you used an AI chatbot for the first time?',
-  'Do you ever get anxious about AI?',
-  'What do you think about the AI-third eye?',
-  'Do you think you’ll wake up from the simulation?',
-  'Ok, you woke up (from the simulation, of course). What are your first words?'
-];
+  const allPrompts = [
+    'This might be a simulation. I call a reality check — what do you do? 🌀🌀',
+    'What is your dream for dream technology?',
+    'You ordered coffee: quantity or quality?',
+    'Do you ever get anxious about AI?',
+    'Do you think you’ll wake up from the simulation?',
+    'Ok, you woke up (from the simulation, of course). What are your first words?'
+  ];
 
-  
   const [availablePrompts, setAvailablePrompts] = useState([...allPrompts]);
   const [usedPrompts, setUsedPrompts] = useState<string[]>([]);
 
@@ -33,8 +30,8 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
     
     const randomIndex = Math.floor(Math.random() * availablePrompts.length);
     const prompt = availablePrompts[randomIndex];
-    setAvailablePrompts(availablePrompts.filter((_, index) => index !== randomIndex));
-    setUsedPrompts([...usedPrompts, prompt]);
+    setAvailablePrompts(prevPrompts => prevPrompts.filter((_, index) => index !== randomIndex));
+    setUsedPrompts(prevUsedPrompts => [...prevUsedPrompts, prompt]);
     
     return prompt;
   };
@@ -47,9 +44,9 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
   };
 
   const variants = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0, transition: { duration: 1.2, ease: "easeOut" } },
-    exit: { opacity: 0, y: -20, transition: { duration: 1.2, ease: "easeInOut" } },
+    initial: { opacity: 0, y: 10 },
+    animate: { opacity: 1, y: 0, transition: { duration: 1, ease: "easeOut" } },
+    exit: { opacity: 0, y: -10, transition: { duration: 1, ease: "easeInOut" } },
   };
 
   useEffect(() => {
@@ -129,30 +126,8 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
         </motion.div>
       )}
 
-<<<<<<< HEAD
-      {phase === "zuberlin" && (
-        <motion.div className="content" variants={variants}>
-          <h1 className="gradientText">Today, we are imagining collective futures by looking within ourselves.</h1>
-          <h2 className="gradientText">Draw a card and talk to me.</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-            <div className="buttonContainer">  
-              <AudioRecorder
-                onRecordingComplete={onRecordingComplete}
-                startRecording={startRecording}
-              />
-              <button onClick={() => onEnter()}>
-                  <b>Chat</b>
-                </button>
-              </div>
-          </div>
-        </motion.div>
-      )}
-
-      {phase === "karneval" && (
-=======
       {/* Prompt Phase */}
       {phase === "promptPhase" && (
->>>>>>> f3f99fd469e918e198b9119bd6a43e1b493bf575
         <motion.div className="content" variants={variants}>
           <h2 className="gradientText">{randomPrompt}</h2>
           <div className="buttonContainer">
