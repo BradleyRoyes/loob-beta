@@ -29,16 +29,12 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
 
   const getRandomPrompt = (): string => {
     if (availablePrompts.length === 0) {
-      // Reset the prompts if all have been used
       setAvailablePrompts([...usedPrompts]);
       setUsedPrompts([]);
     }
     
-    // Select a random prompt from available prompts
     const randomIndex = Math.floor(Math.random() * availablePrompts.length);
     const prompt = availablePrompts[randomIndex];
-    
-    // Update the arrays
     setAvailablePrompts(availablePrompts.filter((_, index) => index !== randomIndex));
     setUsedPrompts([...usedPrompts, prompt]);
     
@@ -53,9 +49,9 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
   };
 
   const variants = {
-    initial: { opacity: 0 },
-    animate: { opacity: 1, transition: { duration: 1.5, ease: "easeInOut" } },
-    exit: { opacity: 0, transition: { duration: 1.5, ease: "easeInOut" } },
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0, transition: { duration: 1.2, ease: "easeOut" } },
+    exit: { opacity: 0, y: -20, transition: { duration: 1.2, ease: "easeInOut" } },
   };
 
   useEffect(() => {
@@ -101,6 +97,9 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
       exit="exit"
       variants={variants}
     >
+      {/* 3D Grid Background */}
+      <div className="gridBackground"></div>
+
       {isRecording && (
         <div className="recordingBackground">
           <div className="waveLine"></div>
