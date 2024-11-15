@@ -46,7 +46,7 @@
     "ts-node": "^10.9.1",
     "typescript": "5.2.2",
     "uuid": "^9.0.1",
-    "whisper-nodejs": "^1.0.0"
+    "whisper-nodejs": "^1.0.0",
     "recorder-js": "^1.0.0"
   },
   "devDependencies": {
