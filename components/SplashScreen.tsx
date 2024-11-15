@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import "./SplashScreen.css";
 import AudioRecorder from './AudioRecorder';
 
@@ -13,10 +13,10 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
   const allPrompts = [
     'What, if anything, does "cyberdelic" mean to you?',
     'What brought you down to the dungeon today?',
-    'When you order coffee: quantity or quality?',
+    'When you order coffee: quantity or quality? why?',
     'What is the best part about going on vacation?',
     'What would you like to have happen after you die?',
-    'You wake up to realise your whole life was a dream, what are your first words?',
+    'You wake up to realize your whole life was a dream, what are your first words?',
     'Where in your body would you say you "live" (i.e. shoulders, hands, belly,)?',
   ];
 
@@ -45,14 +45,15 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
   };
 
   const variants = {
-    initial: { opacity: 0 },
-    animate: { opacity: 1, transition: { duration: 1, ease: "easeOut" } },
-    exit: { opacity: 0, transition: { duration: 1, ease: "easeInOut" } },
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0, transition: { duration: 1, ease: "easeOut" } },
+    exit: { opacity: 0, y: -20, transition: { duration: 1, ease: "easeInOut" } },
   };
 
   useEffect(() => {
-    if (phase === "welcomePhase") {
-      // No automatic transition
+    if (phase === "introPhase") {
+      const timer = setTimeout(() => proceed("promptPhase"), 5000);
+      return () => clearTimeout(timer);
     }
   }, [phase]);
 
@@ -104,44 +105,43 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
         </div>
       )}
 
-      {/* Welcome Phase */}
-      {phase === "welcomePhase" && (
-        <motion.div className="content" variants={variants}>
-          <h1 className="gradientText">Welcome to</h1>
-          <h2 className="gradientText">Cyberdelic Nexus Berlin</h2>
-          <button onClick={() => proceed("introPhase")}>
-            Enter
-          </button>
-        </motion.div>
-      )}
-
-      {/* Introduction Phase */}
-      {phase === "introPhase" && (
-        <motion.div className="content" variants={variants}>
-          <h1 className="gradientText" style={{ fontSize: 'normal' }}>
-            I’m Loob, your guide. <br/><br /> I help tell stories that are hard to tell. <br/><br /> Movement is everything, nothing is the goal.
-          </h1>
-          <button onClick={() => proceed("promptPhase")}>
-            Continue
-          </button>
-        </motion.div>
-      )}
-
-      {/* Prompt Phase */}
-      {phase === "promptPhase" && (
-        <motion.div className="content" variants={variants}>
-          <h2 className="gradientText">{randomPrompt}</h2>
-          <div className="buttonContainer">
-            <AudioRecorder
-              onRecordingComplete={onRecordingComplete}
-              startRecording={startRecording}
-            />
-            <button className="newPromptButton" onClick={() => setRandomPrompt(getRandomPrompt())}>
-              New Prompt
+      <AnimatePresence mode="wait">
+        {/* Welcome Phase */}
+        {phase === "welcomePhase" && (
+          <motion.div className="content" key="welcome" variants={variants}>
+            <h1 className="gradientText">Welcome to</h1>
+            <h2 className="gradientText">Cyberdelic Nexus Berlin</h2>
+            <button onClick={() => proceed("introPhase")}>
+              Enter
             </button>
-          </div>
-        </motion.div>
-      )}
+          </motion.div>
+        )}
+
+        {/* Introduction Phase */}
+        {phase === "introPhase" && (
+          <motion.div className="content" key="intro" variants={variants}>
+            <h1 className="gradientText" style={{ fontSize: 'normal' }}>
+              I’m Loob, your guide. <br/><br /> I help tell stories that are hard to tell. <br/><br /> Movement is everything, nothing is the goal.
+            </h1>
+          </motion.div>
+        )}
+
+        {/* Prompt Phase */}
+        {phase === "promptPhase" && (
+          <motion.div className="content" key="prompt" variants={variants}>
+            <h2 className="gradientText">{randomPrompt}</h2>
+            <div className="buttonContainer">
+              <AudioRecorder
+                onRecordingComplete={onRecordingComplete}
+                startRecording={startRecording}
+              />
+              <button className="newPromptButton" onClick={() => setRandomPrompt(getRandomPrompt())}>
+                New Prompt
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Fade-to-Black Overlay */}
       {fadeToBlack && (
