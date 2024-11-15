@@ -11,19 +11,20 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
 
   // All prompts and available prompts to avoid immediate repetition
   const allPrompts = [
-    'What does "cyberdelic" mean to you?',
+    'What, if anything, does "cyberdelic" mean to you?',
     'What brought you down to the dungeon today?',
     'When you order coffee: quantity or quality?',
-    'What makes you the most anxious about AI?',
-    'Do you think you’ll ever wake up from the simulation?',
-    'You wake up to realise your whole life was a dream, what are your first words?'
+    'What is the best part about going on vacation?',
+    'What would you like to have happen after you die?',
+    'You wake up to realise your whole life was a dream, what are your first words?',
+    'Where in your body would you say you "live" (i.e. shoulders, hands, belly,)?',
   ];
 
   const [availablePrompts, setAvailablePrompts] = useState([...allPrompts]);
   const [usedPrompts, setUsedPrompts] = useState<string[]>([]);
 
   const getRandomPrompt = (): string => {
-    if (availablePrompts.length === 0) {
+    if (availablePrompts.length === 1) {
       setAvailablePrompts([...usedPrompts]);
       setUsedPrompts([]);
     }
