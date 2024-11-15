@@ -1,8 +1,7 @@
 /* Splash Screen General Styling */
 .splashScreen {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between; /* Spread elements vertically */
+  justify-content: center;
   align-items: center;
   position: fixed;
   top: 0;
@@ -11,8 +10,8 @@
   height: 100%;
   background-color: black;
   color: white;
+  flex-direction: column;
   z-index: 1000; /* High z-index to overlay content */
-  padding: 30px; /* Increased padding for more spacing */
 }
 
 /* Content Layout */
@@ -20,9 +19,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 40px; /* Increased space between elements */
-  text-align: center;
+  gap: 30px; /* Space between elements */
+  padding: 20px;
   max-width: 600px;
+  text-align: center;
   z-index: 1;
   transition: opacity 1s ease, transform 1s ease;
 }
@@ -37,19 +37,42 @@
   text-align: center;
 }
 
+/* Action Buttons (Enter, Continue) */
+.splashScreen button {
+  padding: 8px 16px;
+  margin-top: 20px;
+  color: black;
+  border: 2px solid transparent;
+  background: linear-gradient(45deg, pink, orange);
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  text-transform: none;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+
+.splashScreen button:hover {
+  background-color: black;
+  color: white;
+  transform: scale(1.05);
+}
+
 /* Record Section Layout */
 .recordWrapper {
   display: flex;
   flex-direction: column; /* Stack button and text vertically */
   align-items: center;
-  gap: 20px; /* Increased gap between buttons */
-  margin-bottom: 10%; /* Increased margin to float buttons lower */
+  justify-content: center;
+  gap: 15px; /* Increased gap between buttons */
+  position: relative;
+  height: 200px; /* Fixed height ensures no displacement */
 }
 
 /* Record Button */
 .recordButton {
   background: linear-gradient(45deg, pink, orange);
-  border: none; /* Remove border */
+  border: none;
   border-radius: 50%;
   padding: 45px; /* Larger padding for bigger button */
   cursor: pointer;
@@ -137,7 +160,7 @@
 /* Mobile Layout Adjustments */
 @media (max-width: 768px) {
   .content {
-    gap: 25px; /* Slightly increased gap for mobile */
+    gap: 20px;
     padding: 20px;
   }
 
