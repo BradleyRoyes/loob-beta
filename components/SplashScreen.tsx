@@ -23,7 +23,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
   const [usedPrompts, setUsedPrompts] = useState<string[]>([]);
 
   const getRandomPrompt = (): string => {
-    if (availablePrompts.length === 0) {
+    if (availablePrompts.length === 1) {
       setAvailablePrompts([...usedPrompts]);
       setUsedPrompts([]);
     }
@@ -107,7 +107,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
       {phase === "welcomePhase" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText">Welcome to</h1>
-          <h1 className="gradientText">the Cyberdelic Showcase</h1>
+          <h1 className="gradientText">Cyberdelic Nexus Berlin</h1>
           <button onClick={() => proceed("introPhase")}>
             Enter
           </button>
