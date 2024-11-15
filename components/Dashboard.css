@@ -14,26 +14,28 @@
   z-index: 1000;
 }
 
-/* 3D Grid Background */
+/* Circular Breathing Tunnel Effect */
 .gridBackground {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: 
-    linear-gradient(45deg, rgba(255, 165, 0, 0.2) 25%, transparent 25%) -50px 0,
-    linear-gradient(135deg, rgba(255, 165, 0, 0.2) 25%, transparent 25%) -50px 0,
-    linear-gradient(45deg, transparent 75%, rgba(255, 165, 0, 0.2) 75%) -50px 0,
-    linear-gradient(135deg, transparent 75%, rgba(255, 165, 0, 0.2) 75%) -50px 0;
-  background-size: 100px 100px;
+  background: radial-gradient(circle, rgba(255, 165, 0, 0.2), transparent 70%);
   z-index: -1;
-  animation: gridAnimation 10s linear infinite;
+  animation: tunnelBreath 6s infinite ease-in-out;
 }
 
-@keyframes gridAnimation {
-  0% { background-position: 0 0, 0 0, 0 0, 0 0; }
-  100% { background-position: 100px 100px, 100px 100px, -100px -100px, -100px -100px; }
+/* Breathing Animation for Tunnel Effect */
+@keyframes tunnelBreath {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
 }
 
 /* Content Layout */
@@ -43,12 +45,12 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 40px;
-  margin-top: 40px;
+  gap: 30px; /* Adjust spacing between elements */
+  margin-top: 20px;
   z-index: 1;
 }
 
-/* Text Styling */
+/* Gradient Text Styling */
 .gradientText {
   background: linear-gradient(45deg, pink, orange);
   -webkit-background-clip: text;
@@ -62,23 +64,24 @@
   font-size: 2rem;
 }
 
-/* Buttons */
+/* Buttons with Gradient */
 .actionButton,
 .newPromptButton {
   padding: 12px 24px;
   margin-top: 20px;
-  border: none;
+  border: 2px solid transparent;
   border-radius: 8px;
-  background-color: #ff8c00;
+  background: linear-gradient(45deg, pink, orange);
   color: white;
   font-size: 16px;
+  font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 .actionButton:hover,
 .newPromptButton:hover {
-  background-color: #ff7000;
+  opacity: 0.9;
   transform: scale(1.05);
 }
 
@@ -88,27 +91,31 @@
   align-items: center;
   gap: 20px; /* Space between record button and "New Prompt" button */
   justify-content: center;
+  margin-top: 20px;
 }
 
 .recordButton {
-  background-color: white;
-  border: 3px solid white;
+  background: linear-gradient(45deg, pink, orange);
+  border: none;
   border-radius: 50%;
-  padding: 20px;
+  padding: 25px;
   cursor: pointer;
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: transform 0.3s ease;
+  box-shadow: 0 0 15px rgba(255, 165, 0, 0.5);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .recordButton:hover {
-  transform: scale(1.25);
+  transform: scale(1.15);
+  box-shadow: 0 0 25px rgba(255, 165, 0, 0.8);
 }
 
 .recordButton svg {
-  width: 50px;
-  height: 50px;
+  width: 24px;
+  height: 24px;
+  fill: white;
 }
 
 /* Fade-to-Black Overlay */
@@ -132,12 +139,16 @@
 /* Improved Mobile Layout */
 @media (max-width: 768px) {
   .content {
-    gap: 30px;
+    gap: 20px;
     padding: 20px;
   }
 
   .gradientText {
     font-size: 1.2rem;
+  }
+
+  .biggerText {
+    font-size: 1.5rem;
   }
 
   .actionButton,
@@ -147,6 +158,6 @@
   }
 
   .recordButton {
-    padding: 15px;
+    padding: 20px;
   }
 }
