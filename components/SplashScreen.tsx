@@ -10,19 +10,17 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
   const [fadeToBlack, setFadeToBlack] = useState<boolean>(false);
 
   // All prompts and available prompts to avoid immediate repetition
-  const allPrompts = [
-    'What truth do you find in silence?',
-    'Where does wonder take you?',
-    'What sound calls you home?',
-    'What would you see if you closed your eyes?',
-    'How does the unknown feel?',
-    'What part of you waits to be discovered?',
-    'What awakens your awe?',
-    'What memory feels like magic?',
-    'What colors live in your dreams?',
-    'When did time last stand still?',
-    'What pulls you toward mystery?'
-  ];
+ const allPrompts = [
+  'This might be a simulation. I call a reality check — what do you do? 🌀🌀',
+  'What is your dream for dream technology?',
+  'You ordered coffee: quantity or quality?',
+  'Do you remember the time you used an AI chatbot for the first time?',
+  'Do you ever get anxious about AI?',
+  'What do you think about the AI-third eye?',
+  'Do you think you’ll wake up from the simulation?',
+  'Ok, you woke up (from the simulation, of course). What are your first words?'
+];
+
   
   const [availablePrompts, setAvailablePrompts] = useState([...allPrompts]);
   const [usedPrompts, setUsedPrompts] = useState<string[]>([]);
