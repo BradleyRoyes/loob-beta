@@ -16,10 +16,8 @@ import ModalOverlay from "../components/ModalOverlay";
 import AudioRecorder from '../components/AudioRecorder';
 
 export default function Page() {
-  const { append, messages, input, handleInputChange, handleSubmit } =
-    useChat();
-  const { useRag, llm, similarityMetric, setConfiguration } =
-    useConfiguration();
+  const { append, messages, input, handleInputChange, handleSubmit } = useChat();
+  const { useRag, llm, similarityMetric, setConfiguration } = useConfiguration();
   const [sessionId] = useState(uuidv4());
   const messagesEndRef = useRef<HTMLElement | null>(null);
   const [configureOpen, setConfigureOpen] = useState(false);
@@ -65,8 +63,9 @@ export default function Page() {
   };
 
   const startRecording = () => {
-    console.log('Recording started'); // Optional: Add any additional start recording logic here
+    console.log('Recording started');
   };
+
   const onRecordingComplete = async (audioBlob) => {
     const formData = new FormData();
     formData.append("audio", audioBlob, "audio.webm"); // 'audio' is the field name expected by the server
@@ -82,33 +81,29 @@ export default function Page() {
       }
   
       const data = await response.json();
-      console.log('Transcription:', data.transcription); // Log the transcription to the console
+      console.log('Transcription:', data.transcription);
   
-      // Set the transcription text as the input value so the user can send it manually
       handleInputChange({
         target: { value: data.transcription },
-      } as React.ChangeEvent<HTMLInputElement>); // Simulating an input change event with the transcription text
+      } as React.ChangeEvent<HTMLInputElement>);
     } catch (error) {
       console.error('Error uploading audio:', error);
     }
   };
-  // Update the setShowSplash function to also handle prompts
+
   const handleEnter = (promptText?: string) => {
-    setShowSplash(false); // Hide splash screen
+    setShowSplash(false);
     if (promptText) {
-      handlePrompt(promptText); // Handle the prompt if provided
+      handlePrompt(promptText);
     }
   };
 
   const [showAnalyseButton, setShowAnalyseButton] = useState(false);
 
   useEffect(() => {
-    // After 45 seconds, set showAnalyseButton to true
     const timer = setTimeout(() => {
       setShowAnalyseButton(true);
     }, 45000);
-
-    // Clean up the timer
     return () => clearTimeout(timer);
   }, []);
 
@@ -118,22 +113,20 @@ export default function Page() {
       document.documentElement.style.setProperty("--vh", `${vh}px`);
     }
 
-    adjustAppHeight(); // Adjust height on mount
-    window.addEventListener("resize", adjustAppHeight); // Add resize listener
-
-    return () => window.removeEventListener("resize", adjustAppHeight); // Cleanup
+    adjustAppHeight();
+    window.addEventListener("resize", adjustAppHeight);
+    return () => window.removeEventListener("resize", adjustAppHeight);
   }, []);
 
   const handleAnalyseButtonClick = () => {
     const analyseMessage = "analyse my messages";
     append({ content: analyseMessage, role: "user" });
-    setShowModal(true); // Show the modal immediately upon clicking
+    setShowModal(true);
 
-    // Wait for 5 seconds before appending the "End Chat" message
     setTimeout(() => {
       const endChatMessage = "End Chat";
       append({ content: endChatMessage, role: "user" });
-    }, 5000); // 5000 milliseconds = 5 seconds
+    }, 5000);
   };
 
   if (showNeuronVisual) {
@@ -188,13 +181,20 @@ export default function Page() {
                     <path d="M19.14 13.4006C19.18 13.1006 19.2 12.7906 19.2 12.4606C19.2 12.1406 19.18 11.8206 19.13 11.5206L21.16 9.94057C21.34 9.80057 21.39 9.53057 21.28 9.33057L19.36 6.01057C19.24 5.79057 18.99 5.72057 18.77 5.79057L16.38 6.75057C15.88 6.37057 15.35 6.05057 14.76 5.81057L14.4 3.27057C14.36 3.03057 14.16 2.86057 13.92 2.86057H10.08C9.83999 2.86057 9.64999 3.03057 9.60999 3.27057L9.24999 5.81057C8.65999 6.05057 8.11999 6.38057 7.62999 6.75057L5.23999 5.79057C5.01999 5.71057 4.76999 5.79057 4.64999 6.01057L2.73999 9.33057C2.61999 9.54057 2.65999 9.80057 2.85999 9.94057L4.88999 11.5206C4.83999 11.8206 4.79999 12.1506 4.79999 12.4606C4.79999 12.7706 4.81999 13.1006 4.86999 13.4006L2.83999 14.9806C2.65999 15.1206 2.60999 15.3906 2.71999 15.5906L4.63999 18.9106C4.75999 19.1306 5.00999 19.2006 5.22999 19.1306L7.61999 18.1706C8.11999 18.5506 8.64999 18.8706 9.23999 19.1106L9.59999 21.6506C9.64999 21.8906 9.83999 22.0606 10.08 22.0606H13.92C14.16 22.0606 14.36 21.8906 14.39 21.6506L14.75 19.1106C15.34 18.8706 15.88 18.5506 16.37 18.1706L18.76 19.1306C18.98 19.2106 19.23 19.1306 19.35 18.9106L21.27 15.5906C21.39 15.3706 21.34 15.1206 21.15 14.9806L19.14 13.4006ZM12 16.0606C10.02 16.0606 8.39999 14.4406 8.39999 12.4606C8.39999 10.4806 10.02 8.86057 12 8.86057C13.98 8.86057 15.6 10.4806 15.6 12.4606C15.6 14.4406 13.98 16.0606 12 16.0606Z" />
                   </svg>
                 </button>
-                <div className="flex flex-col">
+                <div className="flex gap-2">
                   <button
                     onClick={() => setShowNeuronVisual(true)}
                     className="button-dash rounded-md items-center justify-center px-2.5 py-2"
                     style={{ fontWeight: "500" }}
                   >
                     Back Stage
+                  </button>
+                  <button
+                    onClick={handleCloseModal}
+                    className="button-dash rounded-md items-center justify-center px-2.5 py-2"
+                    style={{ fontWeight: "500" }}
+                  >
+                    End Chat
                   </button>
                 </div>
               </div>
@@ -212,10 +212,10 @@ export default function Page() {
             </div>
           </div>
           {!messages || (messages.length === 0 && (
-              <PromptSuggestionRow onPromptClick={handlePrompt} />
-            ))}
-          <div className="button-row ">
-            <AudioRecorder onRecordingComplete={onRecordingComplete} startRecording={startRecording}/>
+            <PromptSuggestionRow onPromptClick={handlePrompt} />
+          ))}
+          <div className="button-row">
+            <AudioRecorder onRecordingComplete={onRecordingComplete} startRecording={startRecording} />
             <AnalyseButton onClick={handleAnalyseButtonClick} className="inline-button" />
           </div>
           <div className="flex items-center justify-between gap-2">
