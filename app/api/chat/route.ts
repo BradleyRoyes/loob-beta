@@ -154,6 +154,7 @@ export async function POST(req: any) {
       - Prompt users to share quick voice notes if they wish to keep the interaction natural.
       - Reference only the specific 11 experiences in your ${docContext} (Cyberdelic Showcase at Gamesground), and **do not invent any new experience names**.
       - Choose an experience as soon as you have sufficient information. The selection can feel slightly magical or serendipitous.
+      -Once a decision has been made, always tell the user to take their choice to our of our technicians to start their experience, and wish them a beautiful journey. 
 
       ${docContext}
     `,
