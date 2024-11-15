@@ -6,7 +6,6 @@ import AudioRecorder from './AudioRecorder';
 const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnter }) => {
   const [phase, setPhase] = useState<string>("welcomePhase");
   const [randomPrompt, setRandomPrompt] = useState<string>("");
-  const [isRecording, setIsRecording] = useState<boolean>(false);
   const [fadeToBlack, setFadeToBlack] = useState<boolean>(false);
 
   // All prompts and available prompts to avoid immediate repetition
@@ -45,20 +44,17 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
   };
 
   useEffect(() => {
-    // Clear timeout if user manually proceeds to the next phase
-    let timer: NodeJS.Timeout;
     if (phase === "introPhase") {
-      timer = setTimeout(() => proceed("promptPhase"), 4000);
+      const timer = setTimeout(() => proceed("promptPhase"), 4000);
+      return () => clearTimeout(timer);
     }
-    return () => clearTimeout(timer);
   }, [phase]);
 
-  const onRecordingComplete = async (audioBlob: Blob) => {
-    setIsRecording(false);
+  const handleRecordingComplete = async (audioBlob: Blob) => {
     setFadeToBlack(true);
 
     const formData = new FormData();
-    formData.append("audio", audioBlob, "audio.webm");
+    formData.append("audio", audioBlob, "audio/webm");
 
     try {
       const response = await fetch('/api/transcribe', {
@@ -77,82 +73,60 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
     }
   };
 
-  const startRecording = () => {
-    setIsRecording(true);
-    setFadeToBlack(false);
-  };
-
   return (
     <div className="splashScreen">
       {/* 3D Grid Background */}
       <div className="gridBackground"></div>
 
-      {isRecording && (
-        <div className="recordingBackground">
-          <div className="waveLine"></div>
-          <div className="waveLine"></div>
-          <div className="waveLine"></div>
-        </div>
-      )}
+      <div className="content">
+        {phase === "welcomePhase" && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h1 className="gradientText">Hi.</h1>
+            <h2 className="gradientText">Care for an adventure?</h2>
+            <button onClick={() => proceed("introPhase")}>Enter</button>
+          </motion.div>
+        )}
 
-      {/* Welcome Phase */}
-      {phase === "welcomePhase" && (
-        <motion.div
-          className="content"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1 }}
-        >
-          <h1 className="gradientText">Hi.</h1>
-          <h2 className="gradientText">Care for an adventure?</h2>
-          <button onClick={() => proceed("introPhase")}>Enter</button>
-        </motion.div>
-      )}
+        {phase === "introPhase" && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h1 className="gradientText">
+              I’m Loob, your guide. <br /><br /> I help tell stories that are hard to tell. <br /><br /> Movement is everything, nothing is the goal.
+            </h1>
+            <button onClick={() => proceed("promptPhase")}>Continue</button>
+          </motion.div>
+        )}
 
-      {/* Introduction Phase */}
-      {phase === "introPhase" && (
-        <motion.div
-          className="content"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1 }}
-        >
-          <h1 className="gradientText">
-            I’m Loob, your guide. <br /><br /> I help tell stories that are hard to tell. <br /><br /> Movement is everything, nothing is the goal.
-          </h1>
-          <button onClick={() => proceed("promptPhase")}>Continue</button>
-        </motion.div>
-      )}
-
-      {/* Prompt Phase */}
-      {phase === "promptPhase" && (
-        <motion.div
-          className="content"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1 }}
-        >
-          <h3 className="gradientText">Tell me...</h3>
-          <h2 className="gradientText">{randomPrompt}</h2>
-          <div className="buttonContainer">
-            <AudioRecorder
-              onRecordingComplete={onRecordingComplete}
-              startRecording={startRecording}
-            />
-            <button className="newPromptButton" onClick={() => setRandomPrompt(getRandomPrompt())}>
-              New Prompt
-            </button>
-          </div>
-        </motion.div>
-      )}
+        {phase === "promptPhase" && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h3 className="gradientText">Tell me...</h3>
+            <h2 className="gradientText">{randomPrompt}</h2>
+            <div className="buttonContainer">
+              <AudioRecorder
+                onRecordingComplete={handleRecordingComplete}
+                startRecording={() => console.log('Recording started')}
+              />
+              <button className="newPromptButton" onClick={() => setRandomPrompt(getRandomPrompt())}>
+                New Prompt
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </div>
 
       {/* Fade-to-Black Overlay */}
-      {fadeToBlack && (
-        <div className="fadeOverlay"></div>
-      )}
+      {fadeToBlack && <div className="fadeOverlay"></div>}
     </div>
   );
 };
