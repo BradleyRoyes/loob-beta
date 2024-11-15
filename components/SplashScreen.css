@@ -1,4 +1,4 @@
-/* SplashScreen.css */
+/* Splash Screen General Styling */
 .splashScreen {
   display: flex;
   justify-content: center;
@@ -14,179 +14,123 @@
   z-index: 1000; /* High z-index to overlay content */
 }
 
+/* Content Layout */
 .content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px; /* Space between elements */
-  padding: 20px; /* Add padding around the content */
-  max-width: 600px; /* Set a maximum width for the content */
-  text-align: center; /* Center-align the content */
+  gap: 30px; /* Increased space between text and buttons */
+  padding: 20px;
+  max-width: 600px;
+  text-align: center;
+  z-index: 1;
+  transition: opacity 1s ease, transform 1s ease;
 }
 
+/* Gradient Text Styling */
 .gradientText {
   background: linear-gradient(45deg, pink, orange);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  font-size: 1.5rem; /* Adjust as needed */
-  text-align: center;
+  font-size: 1.5rem;
   margin: 0;
+  text-align: center;
 }
 
+/* Button Styles */
 .splashScreen button {
   padding: 10px 20px;
   margin-top: 20px;
   color: black;
-  border: 2px solid transparent; /* Make border transparent to focus on gradient text */
+  border: 2px solid transparent;
   background: linear-gradient(45deg, pink, orange);
-  cursor: pointer;
-  transition: color 0.3s ease, background-color 0.3s ease;
-  /* Ensure the background extends to the padding area */
   border-radius: 24px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
 }
 
 .splashScreen button:hover {
-  background-color: black; /* Light background on hover for contrast */
-  color: #6b6f73; /* This won't have effect due to gradient text but left for consistency */
-}
-
-.priorityButton button {
-  font-size: 1.25em; /* Larger font size */
-  padding: 15px 30px; /* Larger padding for more emphasis */
-  margin-bottom: 20px; /* Extra space below the button */
-  width: 100%; /* Makes the button stretch to the container width */
-}
-
-.rowButtons {
-  display: flex;
-  justify-content: space-around; /* Evenly space the buttons in a row */
-}
-
-.rowButtons button {
-  flex-grow: 1; /* Allows buttons to grow and fill the row */
-  margin: 0 10px; /* Adds some space between the buttons */
-}
-
-.buttonContainer {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin-top: 10px; /* Adjust as needed */
-}
-
-.smallButton {
-  font-size: smaller;
-  margin: 5px; /* Adjust spacing between buttons */
-}
-
-/* Additional CSS to make the record button twice as big */
-.splashScreen .recordButton {
-  transform: scale(1.5); /* Scales the button to twice its original size */
-  margin: 20px; /* Adds margin to avoid layout shift */
-  transition: transform 0.9s ease; /* Smoothens the transformation */
-}
-
-/* Adjust the MicIcon size if necessary */
-.splashScreen .recordButton svg {
-  width: 1.5em; /* Double the size of the icon */
-  height: 1.5em; /* Double the size of the icon */
-  transition: width 0.9s ease, height 0.9s ease; /* Smoothens the icon transformation */
-}
-
-.newPromptButton {
-  background-color: #ff8c00; /* Example background color */
+  background-color: black;
   color: white;
-  padding: 8px 16px; /* Slightly smaller padding */
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  font-size: 14px; /* Smaller font size */
+  transform: scale(1.05);
 }
 
-.newPromptButton:hover {
-  background-color: #ff7000; /* Example hover color */
-}
-
-@keyframes wave {
-  0% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-  100% {
-    transform: translateY(0);
-  }
-}
-
-.recordingBackground {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
+/* Record Button */
+.recordWrapper {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.waveLine {
-  width: 100%;
-  height: 2px;
-  background: orange;
-  opacity: 0.6;
-  animation: wave 3s infinite ease-in-out;
-}
-
-.waveLine:nth-child(2) {
-  animation-delay: 1s;
-}
-.waveLine:nth-child(3) {
-  animation-delay: 2s;
-}
-
-.buttonContainer {
-  display: flex;
-  justify-content: center;
+  flex-direction: column; /* Stack buttons vertically */
   align-items: center;
-  gap: 20px;
+  gap: 30px; /* Larger gap between buttons */
+  justify-content: center;
   margin-top: 20px;
 }
 
-.newPromptButton {
-  background-color: #ff8c00; /* Example background color */
-  color: white;
-  padding: 8px 16px; /* Slightly smaller padding */
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  font-size: 14px; /* Smaller font size */
-}
-
-.newPromptButton:hover {
-  background-color: #ff7000; /* Example hover color */
-}
-
 .recordButton {
-  background-color: transparent;
-  border: 2px solid var(--text-primary-inverse);
+  background: linear-gradient(45deg, pink, orange);
+  border: none;
   border-radius: 50%;
+  padding: 25px;
   cursor: pointer;
   display: flex;
-  align-items: center;
   justify-content: center;
-  padding: 10px;
-  transition: all 0.3s;
+  align-items: center;
+  box-shadow: 0 0 15px rgba(255, 165, 0, 0.5);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.recordButton:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 25px rgba(255, 165, 0, 0.8);
 }
 
 .recordButton svg {
   width: 24px;
   height: 24px;
 }
+
+/* Smaller New Question Button */
+.newPromptButton {
+  background: linear-gradient(45deg, pink, orange);
+  color: white;
+  padding: 6px 12px; /* Reduced size */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px; /* Smaller font size */
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.newPromptButton:hover {
+  background-color: black;
+  color: white;
+}
+
+/* Circular 3D-Like Radial Gradient Background */
+.gridBackground {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.6) 0%, rgba(255, 165, 0, 0.1) 60%, transparent 100%);
+  z-index: -1;
+  animation: subtleBreath 6s infinite ease-in-out;
+}
+
+/* Subtle Breathing Animation */
+@keyframes subtleBreath {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+/* Fade-to-Black Overlay */
 .fadeOverlay {
   position: fixed;
   top: 0;
@@ -194,9 +138,9 @@
   width: 100%;
   height: 100%;
   background-color: black;
-  opacity: 0;
-  animation: fadeIn 1s forwards;
   z-index: 1000;
+  opacity: 0;
+  animation: fadeIn 1.5s forwards;
 }
 
 @keyframes fadeIn {
@@ -208,53 +152,28 @@
   }
 }
 
-/* 3D Grid Background */
-.gridBackground {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: 
-    linear-gradient(45deg, rgba(255, 165, 0, 0.2) 25%, transparent 25%) -50px 0,
-    linear-gradient(135deg, rgba(255, 165, 0, 0.2) 25%, transparent 25%) -50px 0,
-    linear-gradient(45deg, transparent 75%, rgba(255, 165, 0, 0.2) 75%) -50px 0,
-    linear-gradient(135deg, transparent 75%, rgba(255, 165, 0, 0.2) 75%) -50px 0;
-  background-size: 100px 100px;
-  z-index: -1;
-  animation: gridMove 20s linear infinite;
-}
+/* Mobile Layout Adjustments */
+@media (max-width: 768px) {
+  .content {
+    gap: 20px;
+    padding: 20px;
+  }
 
-@keyframes gridMove {
-  0% { background-position: 0 0, 0 0, 0 0, 0 0; }
-  100% { background-position: 100px 100px, 100px 100px, -100px -100px, -100px -100px; }
-}
+  .gradientText {
+    font-size: 1.2rem;
+  }
 
-/* Fade Overlay */
-.fadeOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: black;
-  opacity: 0;
-  animation: fadeIn 1.5s forwards;
-  z-index: 1000;
-}
+  .splashScreen button {
+    font-size: 14px;
+    padding: 10px 20px;
+  }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+  .recordButton {
+    padding: 20px;
+  }
 
-/* Smooth Transition for Content */
-.content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  text-align: center;
-  transition: opacity 1s ease, transform 1s ease;
+  .newPromptButton {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
 }
