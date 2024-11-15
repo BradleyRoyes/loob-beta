@@ -97,7 +97,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
             transition={{ duration: 0.5 }}
           >
             <h1 className="gradientText">
-              I’m Loob, your guide. <br /><br /> I help tell stories that are hard to tell. <br /><br /> Movement is everything, nothing is the goal.
+              I’m Loob, your guide. <br /><br /> I help tell stories that are hard to tell.
             </h1>
             <button className="actionButton" onClick={() => proceed("promptPhase")}>Continue</button>
           </motion.div>
