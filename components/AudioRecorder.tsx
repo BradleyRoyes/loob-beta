@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useRef } from 'react';
+import Recorder from 'recorder-js';
 
 interface AudioRecorderProps {
   onRecordingComplete: (audioData: Blob) => void;
@@ -7,21 +8,31 @@ interface AudioRecorderProps {
 
 const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, startRecording }) => {
   const [recording, setRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [timer, setTimer] = useState<number>(0);
+  const recorderRef = useRef<Recorder | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Stop recording function wrapped in useCallback
-  const stopAudioRecording = useCallback(() => {
-    if (!recording || !mediaRecorder) return;
-    mediaRecorder.stop();
-    setRecording(false);
-  }, [recording, mediaRecorder]);
+  const startAudioRecording = async () => {
+    if (recording) return;
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (recording) {
-      interval = setInterval(() => {
-        setTimer(prev => {
+    try {
+      // Initialize AudioContext and Recorder.js
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new Recorder(audioContext);
+
+      await recorder.init(stream);
+      recorder.start();
+
+      recorderRef.current = recorder;
+      audioContextRef.current = audioContext;
+      setRecording(true);
+      startRecording();
+
+      // Start timer
+      timerIntervalRef.current = setInterval(() => {
+        setTimer((prev) => {
           if (prev >= 60) {
             stopAudioRecording(); // Stop recording after 1 minute
             return 60;
@@ -29,37 +40,41 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
           return prev + 1;
         });
       }, 1000);
-    } else {
-      setTimer(0);
-    }
-    return () => clearInterval(interval);
-  }, [recording, stopAudioRecording]);
 
-  const startAudioRecording = async () => {
-    if (recording) return;
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const newMediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-      let audioChunks: Blob[] = [];
+      console.log("Recording started");
 
-      newMediaRecorder.ondataavailable = event => {
-        if (event.data.size > 0) {
-          audioChunks.push(event.data);
-        }
-      };
-
-      newMediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        onRecordingComplete(audioBlob);
-        audioChunks = [];
-      };
-
-      newMediaRecorder.start();
-      setMediaRecorder(newMediaRecorder);
-      setRecording(true);
-      startRecording();
     } catch (error) {
       console.error('Error starting recording:', error);
+    }
+  };
+
+  const stopAudioRecording = async () => {
+    if (!recording || !recorderRef.current) return;
+
+    try {
+      const recorder = recorderRef.current;
+
+      // Stop recording and get audio data as WAV
+      const { blob } = await recorder.stop();
+      setRecording(false);
+      setTimer(0);
+
+      // Clean up
+      recorderRef.current = null;
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+
+      console.log("Recording stopped, WAV blob created:", blob);
+      onRecordingComplete(blob);
+
+    } catch (error) {
+      console.error("Error stopping recording:", error);
     }
   };
 
@@ -73,10 +88,10 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
     justifyContent: 'center',
     padding: '10px',
     transition: 'all 0.3s',
-    animation: recording ? 'pulse 1s infinite' : 'none', // Added animation for recording indicator
+    animation: recording ? 'pulse 1s infinite' : 'none',
   };
 
-  // Keyframes for the pulse animation
+  // Keyframes for pulse animation
   const pulseAnimation = `
     @keyframes pulse {
       0% { transform: scale(1); }
