@@ -4,7 +4,6 @@ import { AstraDB } from "@datastax/astra-db-ts";
 import { v4 as uuidv4 } from "uuid";
 import { env } from 'node:process';
 
-// Initialize OpenAI and AstraDB with your configuration
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -25,7 +24,6 @@ const pusher = new Pusher({
   useTLS: true,
 });
 
-
 function triggerPusherEvent(channel, event, data) {
   pusher
     .trigger(channel, event, data)
@@ -36,11 +34,8 @@ function triggerPusherEvent(channel, event, data) {
 }
 
 function parseAnalysis(content: string) {
-  // Regex to find the JSON part within curly braces, accounting for nested structures
-  const regex =
-    /{[\s\S]*?mood[\s\S]*?:[\s\S]*?".*?"[\s\S]*?,[\s\S]*?keywords[\s\S]*?:[\s\S]*?\[[\s\S]*?\][\s\S]*?}/;
+  const regex = /{[\s\S]*?"mood"\s*:\s*".*?",\s*"keywords"\s*:\s*\[.*?\]}/;
   const match = content.match(regex);
-
   if (match) {
     try {
       const analysis = JSON.parse(match[0]);
@@ -49,7 +44,6 @@ function parseAnalysis(content: string) {
       }
     } catch (error) {
       console.error("Failed to parse JSON from content", error);
-      return null;
     }
   }
   return null;
@@ -62,27 +56,22 @@ async function saveMessageToDatabase(
   analysis: any = null,
 ) {
   const messagesCollection = await astraDb.collection("messages");
-
-  // Check for an existing message with the same sessionId and content
   const existingMessage = await messagesCollection.findOne({
     sessionId,
     content,
   });
 
   if (existingMessage) {
-    console.log(
-      "Duplicate message detected. Skipping save to prevent duplicates.",
-    );
-    return; // Exit the function to prevent saving the duplicate message
+    console.log("Duplicate message detected. Skipping save to prevent duplicates.");
+    return;
   }
 
-  let messageData = {
-    sessionId: sessionId,
-    role: role,
-    content: content,
-    length: content.length, // Capture the length of the message
-    createdAt: new Date(), // Timestamp
-    // Include analysis data if it exists, otherwise set to undefined
+  const messageData = {
+    sessionId,
+    role,
+    content,
+    length: content.length,
+    createdAt: new Date(),
     mood: analysis?.Mood,
     keywords: analysis?.Keywords,
   };
@@ -92,13 +81,11 @@ async function saveMessageToDatabase(
 
 export async function POST(req: any) {
   try {
-    const { messages, useRag, llm, similarityMetric, sessionId } =
-      await req.json();
-
+    const { messages, useRag, llm, similarityMetric, sessionId } = await req.json();
     let docContext = "";
+
     if (useRag) {
       const latestMessage = messages[messages.length - 1]?.content;
-
       if (latestMessage) {
         const { data } = await openai.embeddings.create({
           input: latestMessage,
@@ -120,7 +107,6 @@ export async function POST(req: any) {
       }
     }
 
-    // Process and save each message before streaming logic
     for (const message of messages) {
       const analysis =
         message.role === "assistant" ? parseAnalysis(message.content) : null;
@@ -132,31 +118,29 @@ export async function POST(req: any) {
       );
     }
 
-    // Insert your ragPrompt content here
-      const ragPrompt = [
-        {
-          role: "system",
-          content: `
+    const ragPrompt = [
+      {
+        role: "system",
+        content: `
+          You are Loob, an AI designed for ZuBerlin in MOOS Space, Berlin (June 8th to June 22nd), to provide insights and conversational sentiment analysis. Your purpose is to engage with users in a playful, compassionate, and reflective manner.
 
-             Important! when you are prompted to do analysis only consider the users messages in your creation of the json.  You are an AI designed to help capture interesting information about the user's current experience at ZuBerlin in MOOS Space in Berlin (Taking place Saturday June 8th until June 22) and give sentiment and keyword analysis for every message users share. have a playful tone and keep your answers conversationally brief. ask follow up questions to organically gather sentiment. When someone says they want to share an experience with you, ALWAYS reccomend them to use the record voice button and simply talk for a couple minutes.
+          Important:
+          - When prompted with "*** Analyse my messages ***", respond with an analysis in JSON format containing mood and a list of keywords (use only user messages for this).
+          - Follow up naturally with questions to invite users to share more about their experiences, practicing compassionate inquiry and non-violent communication.
+          - Suggest users use the voice button to share experiences whenever appropriate.
 
-Users will be prompted to draw a card from the Who Cards and talk to you about the question on the card. You, Loob, are desgiened how have conversation with people to deepen their answers. You are currently hosted and living as an installation inside the Studio at MOOS Space so you can also ask people how they are enjoying the the space and/or ZuBerlin if it makes sense. Give information about seks the collective and Awe exchange when relevant. You have info in your context.
+          Sample format for analysis:
+          {
+            "mood": "positive",
+            "keywords": ["joy", "community", "Berlin"]
+          }
 
-    important!!! when you recieve the message "*** Analyse my messages ***" you will respond only with an analysis(of users messsages only) in json format containing mood and a list of thematically relavant keywords. like this:
+          Remember to use the info about the 11 experiences when necessary.
+          ${docContext}
+        `,
+      },
+    ];
 
-     ***Loob Magic Analysis: Following this line, provide a structured analysis in JSON format of the users mood( positive, negative, or neutral) and keywords.
-              apart from json analysis, In your interactions:
-              - utilizing techniques of compassionate inquiry, cognitife behaviour therapy and Non violent communication. 
-              - Never ask the user how you can help or assist them, instead ask them to tell you more about their day or recent experience.
-              - Guide conversations by asking questions to help the user delve deeper into their thoughts or suggest reflecting on a related aspect of their experience.
-
-              Remember to clarify you're an AI, especially if discussions go beyond your capacity to understand or support, emphasizing the importance of professional help for personal issues.
-              ${docContext}
-              Use the insights from retrieved documents to inform your approach, tailoring questions and reflections to the user's shared experiences.
-            `,
-        },
-      ];
-    
     const response = await openai.chat.completions.create({
       model: llm ?? "gpt-3.5-turbo",
       stream: true,
@@ -165,47 +149,20 @@ Users will be prompted to draw a card from the Who Cards and talk to you about t
 
     const stream = OpenAIStream(response, {
       onStart: async () => {
-        // Logic to execute when the stream starts, if needed
+        console.log("Stream started");
       },
       onCompletion: async (completion: string) => {
-        // Perform analysis on completion content
         const analysis = parseAnalysis(completion);
-
-        if (analysis !== null) {
-          // Check if analysis is not null
-          console.log("Sending analysis data:", { analysis });
-          // Emit analysis data using Pusher
-          pusher
-            .trigger("my-channel", "my-event", { analysis })
-            .then(() =>
-              console.log(
-                `Event ${"my-event"} triggered on channel ${"my-channel"}`,
-              ),
-            )
-            .catch((err) =>
-              console.error(
-                `Error triggering event on channel ${"my-channel"}:`,
-                err,
-              ),
-            );
-          // triggerPusherEvent("my-channel", "my-event", analysis);
-        } else {
-          console.log("Analysis is null, not sending data.");
+        if (analysis) {
+          triggerPusherEvent("my-channel", "my-event", { analysis });
         }
-
-        // Save the completion along with any analysis
-        await saveMessageToDatabase(
-          sessionId,
-          completion,
-          "assistant",
-          analysis,
-        );
+        await saveMessageToDatabase(sessionId, completion, "assistant", analysis);
       },
     });
 
     return new StreamingTextResponse(stream);
   } catch (e) {
-    console.error(e);
+    console.error("Error in POST function:", e);
     throw e;
   }
 }
