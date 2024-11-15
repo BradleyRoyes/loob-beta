@@ -11,12 +11,10 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
 
   // All prompts and available prompts to avoid immediate repetition
   const allPrompts = [
-    'This might be a simulation. I call a reality check — what do you do? 🌀🌀',
+    'This might be a simulation. I call a reality check — what do you do?',
     'What is your dream for dream technology?',
     'You ordered coffee: quantity or quality?',
-    'Do you remember the time you used an AI chatbot for the first time?',
     'Do you ever get anxious about AI?',
-    'What do you think about the AI-third eye?',
     'Do you think you’ll wake up from the simulation?',
     'Ok, you woke up (from the simulation, of course). What are your first words?'
   ];
