@@ -19,7 +19,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 30px; /* Increased space between text and buttons */
+  gap: 30px; /* Space between elements */
   padding: 20px;
   max-width: 600px;
   text-align: center;
@@ -37,95 +37,79 @@
   text-align: center;
 }
 
-/* Button Styles */
-.splashScreen button {
-  padding: 10px 20px;
-  margin-top: 20px;
-  color: black;
-  border: 2px solid transparent;
-  background: linear-gradient(45deg, pink, orange);
-  border-radius: 24px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
-}
-
-.splashScreen button:hover {
-  background-color: black;
-  color: white;
-  transform: scale(1.05);
+/* Record Section Layout */
+.recordWrapper {
+  display: flex;
+  flex-direction: column; /* Stack button and text vertically */
+  align-items: center;
+  justify-content: center;
+  gap: 15px; /* Increased gap between buttons */
+  position: relative;
+  height: 200px; /* Fixed height ensures no displacement */
 }
 
 /* Record Button */
-.recordWrapper {
-  display: flex;
-  flex-direction: column; /* Stack buttons vertically */
-  align-items: center;
-  gap: 30px; /* Larger gap between buttons */
-  justify-content: center;
-  margin-top: 20px;
-}
-
 .recordButton {
   background: linear-gradient(45deg, pink, orange);
   border: none;
   border-radius: 50%;
-  padding: 25px;
+  padding: 35px; /* Larger padding for bigger button */
   cursor: pointer;
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 0 15px rgba(255, 165, 0, 0.5);
+  box-shadow: 0 0 25px rgba(255, 165, 0, 0.6); /* Stronger glow */
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .recordButton:hover {
-  transform: scale(1.15);
-  box-shadow: 0 0 25px rgba(255, 165, 0, 0.8);
+  transform: scale(1.2); /* Bigger hover scale */
+  box-shadow: 0 0 40px rgba(255, 165, 0, 0.9); /* More intense glow on hover */
 }
 
 .recordButton svg {
-  width: 24px;
-  height: 24px;
+  width: 30px; /* Adjusted for larger button */
+  height: 30px;
 }
 
 /* Smaller New Question Button */
 .newPromptButton {
   background: linear-gradient(45deg, pink, orange);
   color: white;
-  padding: 6px 12px; /* Reduced size */
+  padding: 4px 8px; /* Smaller padding */
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 12px; /* Smaller font size */
+  font-size: 10px; /* Smaller font size */
   transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .newPromptButton:hover {
   background-color: black;
   color: white;
+  transform: scale(1.05);
 }
 
-/* Circular 3D-Like Radial Gradient Background */
+/* Circular Radial Gradient Background */
 .gridBackground {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, rgba(0, 0, 0, 0.6) 0%, rgba(255, 165, 0, 0.1) 60%, transparent 100%);
+  background: radial-gradient(circle, rgba(255, 165, 0, 0.3) 0%, rgba(0, 0, 0, 0.6) 60%, transparent 100%);
   z-index: -1;
-  animation: subtleBreath 6s infinite ease-in-out;
+  animation: intenseBreath 4s infinite ease-in-out; /* Faster breathing */
 }
 
-/* Subtle Breathing Animation */
-@keyframes subtleBreath {
+/* More Intense Breathing Animation */
+@keyframes intenseBreath {
   0%, 100% {
     transform: scale(1);
-    opacity: 0.8;
+    opacity: 0.7;
   }
   50% {
-    transform: scale(1.05);
+    transform: scale(1.2); /* More pronounced scaling */
     opacity: 1;
   }
 }
@@ -163,17 +147,12 @@
     font-size: 1.2rem;
   }
 
-  .splashScreen button {
-    font-size: 14px;
-    padding: 10px 20px;
-  }
-
   .recordButton {
-    padding: 20px;
+    padding: 30px; /* Slightly smaller padding for mobile */
   }
 
   .newPromptButton {
-    font-size: 10px;
-    padding: 4px 8px;
+    font-size: 9px; /* Smaller size for mobile */
+    padding: 3px 6px;
   }
 }
