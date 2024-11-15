@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Recorder from 'recorder-js';
 
 interface AudioRecorderProps {
@@ -12,12 +12,13 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
   const recorderRef = useRef<Recorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const startAudioRecording = async () => {
     if (recording) return;
 
     try {
-      // Initialize AudioContext with TypeScript-compatible check
+      // Initialize AudioContext
       const audioContext = new ((window as any).AudioContext || (window as any).webkitAudioContext)();
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new Recorder(audioContext);
@@ -30,22 +31,60 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
       setRecording(true);
       startRecording();
 
-      // Start timer
+      // Start the timer
       timerIntervalRef.current = setInterval(() => {
         setTimer((prev) => {
           if (prev >= 60) {
-            stopAudioRecording(); // Stop recording after 1 minute
+            stopAudioRecording(); // Auto-stop after 1 minute
             return 60;
           }
           return prev + 1;
         });
       }, 1000);
 
-      console.log("Recording started");
+      // Start silence detection
+      detectSilence(audioContext, stream);
 
+      console.log("Recording started");
     } catch (error) {
       console.error('Error starting recording:', error);
     }
+  };
+
+  const detectSilence = (audioContext: AudioContext, stream: MediaStream) => {
+    const analyser = audioContext.createAnalyser();
+    const microphone = audioContext.createMediaStreamSource(stream);
+    const scriptProcessor = audioContext.createScriptProcessor(2048, 1, 1);
+
+    analyser.smoothingTimeConstant = 0.8;
+    analyser.fftSize = 1024;
+
+    microphone.connect(analyser);
+    analyser.connect(scriptProcessor);
+    scriptProcessor.connect(audioContext.destination);
+
+    scriptProcessor.onaudioprocess = () => {
+      const array = new Uint8Array(analyser.frequencyBinCount);
+      analyser.getByteFrequencyData(array);
+
+      const volume = array.reduce((a, b) => a + b, 0) / array.length;
+
+      if (volume < 10) {
+        // Silence detected
+        if (!silenceTimerRef.current) {
+          silenceTimerRef.current = setTimeout(() => {
+            console.log('Silence detected, stopping recording.');
+            stopAudioRecording();
+            stream.getTracks().forEach((track) => track.stop());
+            scriptProcessor.disconnect();
+            analyser.disconnect();
+          }, 2000); // 2 seconds of silence threshold
+        }
+      } else if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
+    };
   };
 
   const stopAudioRecording = async () => {
@@ -59,7 +98,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
       setRecording(false);
       setTimer(0);
 
-      // Clean up
+      // Cleanup resources
       recorderRef.current = null;
       if (audioContextRef.current) {
         audioContextRef.current.close();
@@ -69,14 +108,27 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
         clearInterval(timerIntervalRef.current);
         timerIntervalRef.current = null;
       }
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
 
       console.log("Recording stopped, WAV blob created:", blob);
       onRecordingComplete(blob);
-
     } catch (error) {
       console.error("Error stopping recording:", error);
     }
   };
+
+  useEffect(() => {
+    // Cleanup on component unmount
+    return () => {
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      if (recorderRef.current) recorderRef.current.stop();
+      if (audioContextRef.current) audioContextRef.current.close();
+    };
+  }, []);
 
   const buttonStyle = {
     backgroundColor: 'transparent',
@@ -91,7 +143,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
     animation: recording ? 'pulse 1s infinite' : 'none',
   };
 
-  // Keyframes for pulse animation
   const pulseAnimation = `
     @keyframes pulse {
       0% { transform: scale(1); }
@@ -131,7 +182,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
       <button
         className="recordButton"
         onClick={recording ? stopAudioRecording : startAudioRecording}
-        onTouchStart={recording ? stopAudioRecording : startAudioRecording}
         style={buttonStyle}
       >
         <MicIcon />
