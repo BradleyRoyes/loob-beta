@@ -132,7 +132,7 @@ export async function POST(req: any) {
       );
     }
 
-   const ragPrompt = [
+ const ragPrompt = [
   {
     role: "system",
     content: `
@@ -144,12 +144,7 @@ export async function POST(req: any) {
       When prompted with "*** Analyse my messages ***," provide only an analysis in JSON format with the user's mood and a list of relevant keywords, formatted like this:
 
       ***Loob Magic Analysis:*** 
-      ```json
-      {
-        "mood": "positive",
-        "keywords": ["calm", "exploration", "interactive"]
-      }
-      ```
+      { "mood": "positive", "keywords": ["calm", "exploration", "interactive"] }
 
       **Interaction Guidelines**:
       - Use tarot-like, focused questions to subtly reveal the user’s preferences for intensity, interactivity, and duration.
@@ -163,6 +158,7 @@ export async function POST(req: any) {
     `,
   },
 ];
+
     
     const response = await openai.chat.completions.create({
       model: llm ?? "gpt-3.5-turbo",
