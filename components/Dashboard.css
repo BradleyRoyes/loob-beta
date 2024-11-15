@@ -1,131 +1,114 @@
-/* General Styling */
-.splashScreen {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: black;
-  color: white;
-  flex-direction: column;
-  z-index: 1000;
+:root {
+  /* Light theme colors */
+  --background-color-light: #f0f2f5;
+  --text-color-light: #333;
+  --header-background-light: #ffffff;
+  --nav-background-light: #e7e7e7;
+
+  /* Dark theme colors */
+  --background-color-dark: #181818;
+  --text-color-dark: #ccc;
+  --header-background-dark: #202020;
+  --nav-background-dark: #333;
+
+  /* Gradient colors */
+  --gradient-start: pink;
+  --gradient-end: orange;
 }
 
-/* Background Animation */
-.gridBackground {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: 
-    linear-gradient(45deg, rgba(255, 165, 0, 0.2) 25%, transparent 25%) -50px 0,
-    linear-gradient(135deg, rgba(255, 165, 0, 0.2) 25%, transparent 25%) -50px 0,
-    linear-gradient(45deg, transparent 75%, rgba(255, 165, 0, 0.2) 75%) -50px 0,
-    linear-gradient(135deg, transparent 75%, rgba(255, 165, 0, 0.2) 75%) -50px 0;
-  background-size: 100px 100px;
-  z-index: -1;
-  animation: gridMove 20s linear infinite;
+body.light-mode {
+  --background-color: var(--background-color-light);
+  --text-color: var(--text-color-light);
+  --header-background: var(--header-background-light);
+  --nav-background: var(--nav-background-light);
 }
 
-@keyframes gridMove {
-  0% { background-position: 0 0, 0 0, 0 0, 0 0; }
-  100% { background-position: 100px 100px, 100px 100px, -100px -100px, -100px -100px; }
+body.dark-mode {
+  --background-color: var(--background-color-dark);
+  --text-color: var(--text-color-dark);
+  --header-background: var(--header-background-dark);
+  --nav-background: var(--nav-background-dark);
 }
 
-/* Content Layout */
-.content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: 20px; /* Consistent spacing between elements */
-  margin-top: 20px;
-  z-index: 1;
+.dashboard {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  min-height: 100vh;
 }
 
-/* Text Styling */
-.gradientText {
-  background: linear-gradient(45deg, pink, orange);
+.dashboard-header {
+  background-color: var(--header-background);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.dashboard-nav {
+  background-color: var(--nav-background);
+}
+
+/* Gradient styles for text and buttons */
+.gradient-text, .dashboard-nav a, .button {
+  background: linear-gradient(45deg, var(--gradient-start), var(--gradient-end));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  font-size: 1.5rem;
-  text-align: center;
-  margin: 0;
 }
 
-.biggerText {
-  font-size: 1.8rem; /* Larger text for emphasis */
+.button {
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  cursor: pointer;
 }
 
-/* Buttons */
-.actionButton,
-.newPromptButton {
-  padding: 12px 24px; /* Standard button size */
-  margin-top: 20px;
+.button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.fractal-canvas {
+  width: 100%;
+  height: auto;
+  background-color: #f5f5f5; /* Light background color */
+}
+
+/* Visualization containers */
+.visualization-container {
+  /* This class can be used to style the containers of your charts or word clouds */
+}
+
+/* Additional styles for visualization SVGs might need to be applied inline or through JS if using libraries like D3 */
+
+/* Add to Dashboard.css */
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: linear-gradient(45deg, pink, orange); /* Gradient background */
+  box-shadow: 0 -2px 4px rgba(0,0,0,0.1); /* Subtle shadow for elevation effect */
+  padding: 10px 0;
+}
+
+.bottom-nav button {
+  background: transparent;
   border: none;
-  border-radius: 8px;
-  background-color: #ff8c00;
-  color: white;
+  color: white; /* For better contrast against the gradient */
+  padding: 10px 15px;
   font-size: 16px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: opacity 0.3s ease;
+
+  /* Optional: Add :hover effect */
+  &:hover {
+    opacity: 0.8;
+  }
 }
 
-.actionButton:hover,
-.newPromptButton:hover {
-  background-color: #ff7000;
-}
-
-/* Record Wrapper */
-.recordWrapper {
-  display: flex;
-  align-items: center;
-  gap: 20px; /* Space between record button and "New Prompt" button */
-  justify-content: center;
-  margin-top: 20px;
-}
-
-/* Record Button */
-.recordButton {
-  background-color: white;
-  border: 2px solid white; /* Simple border styling */
-  border-radius: 50%;
-  padding: 15px; /* Standard size for record button */
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: transform 0.3s ease;
-}
-
-.recordButton:hover {
-  transform: scale(1.1); /* Subtle hover effect */
-}
-
-.recordButton svg {
-  width: 24px; /* Icon size */
-  height: 24px;
-}
-
-/* Fade-to-Black Overlay */
-.fadeOverlay {
-  position: fixed;
+canvas {
+  display: block;
+  background: black; // Set canvas background color to black
+  position: fixed; // Change from absolute to fixed to cover the full screen
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: black;
-  z-index: 1000;
-  opacity: 0;
-  animation: fadeIn 1.5s forwards; /* Smooth fade-in effect */
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  z-index: -1;
 }
