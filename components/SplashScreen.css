@@ -173,3 +173,68 @@
 .content {
   transition: opacity 1s ease;
 }
+
+/* General Content Spacing */
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 20px; /* Spacing between text and buttons */
+  margin-top: 20px;
+}
+
+/* Buttons */
+.actionButton,
+.newPromptButton {
+  padding: 12px 24px;
+  margin-top: 20px; /* Add space below text */
+  border: none;
+  border-radius: 8px;
+  background-color: #ff8c00;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.actionButton:hover,
+.newPromptButton:hover {
+  background-color: #ff7000;
+}
+
+/* Button Container */
+.buttonContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-top: 30px;
+}
+
+/* Record Wrapper */
+.recordWrapper {
+  display: flex;
+  align-items: center;
+  gap: 20px; /* Space between record and new prompt button */
+}
+
+/* Record Button */
+.recordButton {
+  background-color: transparent;
+  border: 2px solid white;
+  border-radius: 50%;
+  padding: 15px; /* Adjust for 20% bigger size */
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+
+.recordButton:hover {
+  transform: scale(1.1);
+}
+
