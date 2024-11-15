@@ -14,7 +14,9 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
     'This might be a simulation. I call a reality check — what do you do? 🌀🌀',
     'What is your dream for dream technology?',
     'You ordered coffee: quantity or quality?',
+    'Do you remember the time you used an AI chatbot for the first time?',
     'Do you ever get anxious about AI?',
+    'What do you think about the AI-third eye?',
     'Do you think you’ll wake up from the simulation?',
     'Ok, you woke up (from the simulation, of course). What are your first words?'
   ];
@@ -27,12 +29,12 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
       setAvailablePrompts([...usedPrompts]);
       setUsedPrompts([]);
     }
-    
+
     const randomIndex = Math.floor(Math.random() * availablePrompts.length);
     const prompt = availablePrompts[randomIndex];
     setAvailablePrompts(prevPrompts => prevPrompts.filter((_, index) => index !== randomIndex));
     setUsedPrompts(prevUsedPrompts => [...prevUsedPrompts, prompt]);
-    
+
     return prompt;
   };
 
@@ -44,9 +46,9 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
   };
 
   const variants = {
-    initial: { opacity: 0, y: 10 },
-    animate: { opacity: 1, y: 0, transition: { duration: 1, ease: "easeOut" } },
-    exit: { opacity: 0, y: -10, transition: { duration: 1, ease: "easeInOut" } },
+    initial: { opacity: 0 },
+    animate: { opacity: 1, transition: { duration: 1, ease: "easeOut" } },
+    exit: { opacity: 0, transition: { duration: 1, ease: "easeInOut" } },
   };
 
   useEffect(() => {
@@ -102,7 +104,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
           <div className="waveLine"></div>
         </div>
       )}
-      
+
       {/* Welcome Phase */}
       {phase === "welcomePhase" && (
         <motion.div className="content" variants={variants}>
