@@ -46,7 +46,8 @@
     "uuid": "^9.0.1",
     "whisper-nodejs": "^1.0.0",
     "recorder-js": "^1.0.0",
-    "react-wordcloud": "^1.2.7"
+    "react-wordcloud": "^1.2.7",
+    "d3-cloud": "^1.2.5"
   },
   "devDependencies": {
     "@types/node": "^20.8.10",
