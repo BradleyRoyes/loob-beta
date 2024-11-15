@@ -8,7 +8,6 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
   const [randomPrompt, setRandomPrompt] = useState<string>("");
   const [fadeToBlack, setFadeToBlack] = useState<boolean>(false);
 
-  // All prompts and available prompts to avoid immediate repetition
   const allPrompts = [
     'What, if anything, does "cyberdelic" mean to you?',
     'What brought you down to the dungeon today?',
@@ -87,7 +86,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
           >
             <h1 className="gradientText">Hi.</h1>
             <h2 className="gradientText">Care for an adventure?</h2>
-            <button onClick={() => proceed("introPhase")}>Enter</button>
+            <button className="actionButton" onClick={() => proceed("introPhase")}>Enter</button>
           </motion.div>
         )}
 
@@ -100,7 +99,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
             <h1 className="gradientText">
               I’m Loob, your guide. <br /><br /> I help tell stories that are hard to tell. <br /><br /> Movement is everything, nothing is the goal.
             </h1>
-            <button onClick={() => proceed("promptPhase")}>Continue</button>
+            <button className="actionButton" onClick={() => proceed("promptPhase")}>Continue</button>
           </motion.div>
         )}
 
@@ -113,13 +112,15 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
             <h3 className="gradientText">Tell me...</h3>
             <h2 className="gradientText">{randomPrompt}</h2>
             <div className="buttonContainer">
-              <AudioRecorder
-                onRecordingComplete={handleRecordingComplete}
-                startRecording={() => console.log('Recording started')}
-              />
-              <button className="newPromptButton" onClick={() => setRandomPrompt(getRandomPrompt())}>
-                New Prompt
-              </button>
+              <div className="recordWrapper">
+                <AudioRecorder
+                  onRecordingComplete={handleRecordingComplete}
+                  startRecording={() => console.log('Recording started')}
+                />
+                <button className="newPromptButton" onClick={() => setRandomPrompt(getRandomPrompt())}>
+                  New Prompt
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
