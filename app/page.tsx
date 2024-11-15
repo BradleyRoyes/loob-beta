@@ -189,13 +189,6 @@ export default function Page() {
                   >
                     Back Stage
                   </button>
-                  <button
-                    onClick={handleCloseModal}
-                    className="button-dash rounded-md items-center justify-center px-2.5 py-2"
-                    style={{ fontWeight: "500" }}
-                  >
-                    End Chat
-                  </button>
                 </div>
               </div>
             </div>
@@ -216,7 +209,6 @@ export default function Page() {
           ))}
           <div className="button-row">
             <AudioRecorder onRecordingComplete={onRecordingComplete} startRecording={startRecording} />
-            <AnalyseButton onClick={handleAnalyseButtonClick} className="inline-button" />
           </div>
           <div className="flex items-center justify-between gap-2">
             <form className="flex flex-1 gap-2" onSubmit={handleSend}>
@@ -247,6 +239,13 @@ export default function Page() {
                 </span>
               </button>
             </form>
+            <button
+              onClick={handleCloseModal}
+              className="button-dash rounded-md items-center justify-center px-2.5 py-2"
+              style={{ fontWeight: "500" }}
+            >
+              End Chat
+            </button>
           </div>
           <Footer />
         </section>
