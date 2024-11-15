@@ -13,7 +13,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
   const allPrompts = [
     'What, if anything, does "cyberdelic" mean to you?',
     'What brought you down to the dungeon today?',
-    'When you order coffee: quantity or quality? why?',
+    'When you order coffee: quantity or quality?',
     'What is the best part about going on vacation?',
     'What would you like to have happen after you die?',
     'You wake up to realize your whole life was a dream, what are your first words?',
@@ -42,12 +42,6 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
     if (nextPhase === "promptPhase") {
       setRandomPrompt(getRandomPrompt());
     }
-  };
-
-  const variants = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0, transition: { duration: 1, ease: "easeOut" } },
-    exit: { opacity: 0, y: -20, transition: { duration: 1, ease: "easeInOut" } },
   };
 
   useEffect(() => {
@@ -87,13 +81,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
   };
 
   return (
-    <motion.div
-      className="splashScreen"
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      variants={variants}
-    >
+    <div className="splashScreen">
       {/* 3D Grid Background */}
       <div className="gridBackground"></div>
 
@@ -108,18 +96,23 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
       <AnimatePresence mode="wait">
         {/* Welcome Phase */}
         {phase === "welcomePhase" && (
-          <motion.div className="content" key="welcome" variants={variants}>
+          <div className="content">
             <h1 className="gradientText">Welcome to</h1>
             <h2 className="gradientText">Cyberdelic Nexus Berlin</h2>
             <button onClick={() => proceed("introPhase")}>
               Enter
             </button>
-          </motion.div>
+          </div>
         )}
 
-        {/* Introduction Phase */}
+        {/* Introduction Phase with Fade-In/Fade-Out */}
         {phase === "introPhase" && (
-          <motion.div className="content" key="intro" variants={variants}>
+          <motion.div
+            className="content"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 2 } }}
+            exit={{ opacity: 0, transition: { duration: 2 } }}
+          >
             <h1 className="gradientText" style={{ fontSize: 'normal' }}>
               I’m Loob, your guide. <br/><br /> I help tell stories that are hard to tell. <br/><br /> Movement is everything, nothing is the goal.
             </h1>
@@ -128,7 +121,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
 
         {/* Prompt Phase */}
         {phase === "promptPhase" && (
-          <motion.div className="content" key="prompt" variants={variants}>
+          <div className="content">
             <h2 className="gradientText">{randomPrompt}</h2>
             <div className="buttonContainer">
               <AudioRecorder
@@ -139,7 +132,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
                 New Prompt
               </button>
             </div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
@@ -147,7 +140,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
       {fadeToBlack && (
         <div className="fadeOverlay"></div>
       )}
-    </motion.div>
+    </div>
   );
 };
 
