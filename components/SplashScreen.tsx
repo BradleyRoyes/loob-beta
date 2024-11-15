@@ -127,7 +127,14 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
       </div>
 
       {/* Fade-to-Black Overlay */}
-      {fadeToBlack && <div className="fadeOverlay"></div>}
+      {fadeToBlack && (
+        <motion.div
+          className="fadeOverlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.5 }} // Slow smooth fade
+        ></motion.div>
+      )}
     </div>
   );
 };
