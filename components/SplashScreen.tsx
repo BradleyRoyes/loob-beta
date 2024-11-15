@@ -96,8 +96,8 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
       {/* Welcome Phase */}
       {phase === "welcomePhase" && (
         <div className="content">
-          <h1 className="gradientText">Hi, let me help you</h1>
-          <h2 className="gradientText">choose your experience.</h2>
+          <h1 className="gradientText">Hi.</h1>
+          <h2 className="gradientText">Care for an adventure?</h2>
           <button onClick={() => proceed("introPhase")}>
             Enter
           </button>
