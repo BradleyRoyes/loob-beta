@@ -1,8 +1,7 @@
 /* Splash Screen General Styling */
 .splashScreen {
   display: flex;
-  flex-direction: column;
-  justify-content: center; /* Center content vertically */
+  justify-content: center;
   align-items: center;
   position: fixed;
   top: 0;
@@ -11,9 +10,8 @@
   height: 100%;
   background-color: black;
   color: white;
+  flex-direction: column;
   z-index: 1000; /* High z-index to overlay content */
-  padding: 40px; /* Ample padding for spacing */
-  box-sizing: border-box; /* Include padding in dimensions */
 }
 
 /* Content Layout */
@@ -21,9 +19,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
-  gap: 40px; /* Space between text elements */
+  gap: 30px; /* Space between elements */
+  padding: 20px;
   max-width: 600px;
+  text-align: center;
+  z-index: 1;
+  transition: opacity 1s ease, transform 1s ease;
 }
 
 /* Gradient Text Styling */
@@ -31,8 +32,30 @@
   background: linear-gradient(45deg, pink, orange);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  font-size: 2rem; /* Larger font for emphasis */
+  font-size: 1.5rem;
   margin: 0;
+  text-align: center;
+}
+
+/* Action Buttons (Enter, Continue) */
+.splashScreen button {
+  padding: 8px 16px;
+  margin-top: 20px;
+  color: black;
+  border: 2px solid transparent;
+  background: linear-gradient(45deg, pink, orange);
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  text-transform: none;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+
+.splashScreen button:hover {
+  background-color: black;
+  color: white;
+  transform: scale(1.05);
 }
 
 /* Record Section Layout */
@@ -40,16 +63,18 @@
   display: flex;
   flex-direction: column; /* Stack button and text vertically */
   align-items: center;
-  gap: 20px; /* Space between buttons */
-  margin-top: 50px; /* Push buttons slightly lower */
+  justify-content: center;
+  gap: 15px; /* Increased gap between buttons */
+  position: relative;
+  height: 200px; /* Fixed height ensures no displacement */
 }
 
 /* Record Button */
 .recordButton {
   background: linear-gradient(45deg, pink, orange);
-  border: none; /* Remove border */
+  border: none;
   border-radius: 50%;
-  padding: 50px; /* Larger button for better focus */
+  padding: 45px; /* Larger padding for bigger button */
   cursor: pointer;
   display: flex;
   justify-content: center;
@@ -59,24 +84,24 @@
 }
 
 .recordButton:hover {
-  transform: scale(1.1); /* Subtle hover effect */
+  transform: scale(1.2); /* Bigger hover scale */
   box-shadow: 0 0 40px rgba(255, 165, 0, 0.9); /* More intense glow on hover */
 }
 
 .recordButton svg {
-  width: 30px;
+  width: 30px; /* Adjusted for larger button */
   height: 30px;
 }
 
 /* Smaller New Question Button */
 .newPromptButton {
   background: linear-gradient(45deg, pink, orange);
-  color: black;
-  padding: 10px 20px; /* Balanced size for buttons */
+  color: black; /* Text color changed to black */
+  padding: 4px 8px; /* Smaller padding */
   border: none;
-  border-radius: 10px;
+  border-radius: 5px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 10px; /* Smaller font size */
   transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
@@ -95,17 +120,17 @@
   height: 100%;
   background: radial-gradient(circle, rgba(255, 165, 0, 0.3) 0%, rgba(0, 0, 0, 0.6) 60%, transparent 100%);
   z-index: -1;
-  animation: intenseBreath 4s infinite ease-in-out; /* Breathing effect */
+  animation: intenseBreath 4s infinite ease-in-out; /* Faster breathing */
 }
 
-/* Breathing Animation */
+/* More Intense Breathing Animation */
 @keyframes intenseBreath {
   0%, 100% {
     transform: scale(1);
     opacity: 0.7;
   }
   50% {
-    transform: scale(1.2);
+    transform: scale(1.2); /* More pronounced scaling */
     opacity: 1;
   }
 }
@@ -140,15 +165,15 @@
   }
 
   .gradientText {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
   }
 
   .recordButton {
-    padding: 40px;
+    padding: 35px; /* Slightly smaller padding for mobile */
   }
 
   .newPromptButton {
-    font-size: 10px;
-    padding: 8px 16px;
+    font-size: 9px; /* Smaller size for mobile */
+    padding: 3px 6px;
   }
 }
