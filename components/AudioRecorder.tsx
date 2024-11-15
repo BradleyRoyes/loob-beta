@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 interface AudioRecorderProps {
   onRecordingComplete: (audioData: Blob) => void;
@@ -8,6 +8,32 @@ interface AudioRecorderProps {
 const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, startRecording }) => {
   const [recording, setRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [timer, setTimer] = useState<number>(0);
+
+  // Stop recording function wrapped in useCallback
+  const stopAudioRecording = useCallback(() => {
+    if (!recording || !mediaRecorder) return;
+    mediaRecorder.stop();
+    setRecording(false);
+  }, [recording, mediaRecorder]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (recording) {
+      interval = setInterval(() => {
+        setTimer(prev => {
+          if (prev >= 60) {
+            stopAudioRecording(); // Stop recording after 1 minute
+            return 60;
+          }
+          return prev + 1;
+        });
+      }, 1000);
+    } else {
+      setTimer(0);
+    }
+    return () => clearInterval(interval);
+  }, [recording, stopAudioRecording]);
 
   const startAudioRecording = async () => {
     if (recording) return;
@@ -28,19 +54,13 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
         audioChunks = [];
       };
 
-      newMediaRecorder.start(); // Start recording immediately
+      newMediaRecorder.start();
       setMediaRecorder(newMediaRecorder);
       setRecording(true);
-      startRecording(); // Trigger the start recording animation
+      startRecording();
     } catch (error) {
       console.error('Error starting recording:', error);
     }
-  };
-
-  const stopAudioRecording = () => {
-    if (!recording || !mediaRecorder) return;
-    mediaRecorder.stop();
-    setRecording(false);
   };
 
   const buttonStyle = {
@@ -53,7 +73,17 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
     justifyContent: 'center',
     padding: '10px',
     transition: 'all 0.3s',
+    animation: recording ? 'pulse 1s infinite' : 'none', // Added animation for recording indicator
   };
+
+  // Keyframes for the pulse animation
+  const pulseAnimation = `
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+  `;
 
   const MicIcon = () => (
     <svg
@@ -81,13 +111,21 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
 
   return (
     <div>
-      <button className="recordButton"
+      {/* Inject pulse animation */}
+      <style>{pulseAnimation}</style>
+      <button
+        className="recordButton"
         onClick={recording ? stopAudioRecording : startAudioRecording}
-        onTouchStart={recording ? stopAudioRecording : startAudioRecording} // Add touch event listener
+        onTouchStart={recording ? stopAudioRecording : startAudioRecording}
         style={buttonStyle}
       >
         <MicIcon />
       </button>
+      {recording && (
+        <div className="recordingIndicator">
+          <p>Recording... {timer}s</p>
+        </div>
+      )}
     </div>
   );
 };
