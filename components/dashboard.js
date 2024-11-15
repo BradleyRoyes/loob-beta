@@ -1,28 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
 import Pusher from "pusher-js";
-import WordCloud from "react-wordcloud";
-import { Pie } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
-} from "chart.js";
-
-ChartJS.register(ArcElement, Tooltip, Legend);
+import * as d3 from "d3";
+import cloud from "d3-cloud";
 
 const Dashboard = () => {
   const canvasRef = useRef(null);
   const points = useRef([]);
   const connectionDistance = 100;
-  const maxNodes = 10;
-  const [analysisData, setAnalysisData] = useState({ Mood: "", Keywords: [] });
-  const [mostCommonKeyword, setMostCommonKeyword] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [moodData, setMoodData] = useState([]); // For pie chart
   const [keywordData, setKeywordData] = useState([]); // For word cloud
+  const [moodData, setMoodData] = useState([]); // For mood distribution
+  const [analysisData, setAnalysisData] = useState({ Mood: "", Keywords: [] });
 
-  // Fetch data from the server (moods and keywords)
+  // Fetch data for moods and keywords from the server
   useEffect(() => {
     async function fetchData() {
       try {
@@ -57,22 +46,6 @@ const Dashboard = () => {
       channel.unsubscribe();
     };
   }, []);
-
-  const wordCloudWords = keywordData.map(({ keyword, count }) => ({
-    text: keyword,
-    value: count,
-  }));
-
-  const moodChartData = {
-    labels: moodData.map((m) => m.mood),
-    datasets: [
-      {
-        data: moodData.map((m) => m.count),
-        backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56"], // Example colors
-        hoverBackgroundColor: ["#FF6384", "#36A2EB", "#FFCE56"],
-      },
-    ],
-  };
 
   const addNewPoint = (mood) => {
     const canvas = canvasRef.current;
@@ -139,6 +112,54 @@ const Dashboard = () => {
     drawCanvas();
   }, []);
 
+  const WordCloudComponent = ({ keywords }) => {
+    const svgRef = useRef();
+
+    useEffect(() => {
+      const layout = cloud()
+        .size([400, 300]) // Adjust the size
+        .words(
+          keywords.map((d) => ({
+            text: d.keyword,
+            size: d.count * 10, // Scale font size by count
+          }))
+        )
+        .padding(5)
+        .rotate(() => ~~(Math.random() * 2) * 90) // Randomly rotate words
+        .font("sans-serif")
+        .fontSize((d) => d.size)
+        .on("end", draw);
+
+      layout.start();
+
+      function draw(words) {
+        const svg = d3
+          .select(svgRef.current)
+          .attr("width", layout.size()[0])
+          .attr("height", layout.size()[1]);
+
+        svg
+          .append("g")
+          .attr(
+            "transform",
+            `translate(${layout.size()[0] / 2},${layout.size()[1] / 2})`
+          )
+          .selectAll("text")
+          .data(words)
+          .enter()
+          .append("text")
+          .style("font-size", (d) => `${d.size}px`)
+          .style("font-family", "sans-serif")
+          .style("fill", () => `hsl(${Math.random() * 360},100%,50%)`)
+          .attr("text-anchor", "middle")
+          .attr("transform", (d) => `translate(${d.x},${d.y})rotate(${d.rotate})`)
+          .text((d) => d.text);
+      }
+    }, [keywords]);
+
+    return <svg ref={svgRef} />;
+  };
+
   return (
     <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "20px" }}>
       {/* Canvas Panel */}
@@ -164,30 +185,10 @@ const Dashboard = () => {
         }}
       >
         <h2>Keyword Word Cloud</h2>
-        {wordCloudWords.length > 0 ? (
-          <WordCloud
-            words={wordCloudWords}
-            options={{ fontSizes: [15, 50], rotations: 2, rotationAngles: [0, 90] }}
-          />
+        {keywordData.length > 0 ? (
+          <WordCloudComponent keywords={keywordData} />
         ) : (
           <p>Loading word cloud...</p>
-        )}
-      </div>
-
-      {/* Mood Chart Panel */}
-      <div
-        style={{
-          border: "2px solid black",
-          borderRadius: "8px",
-          padding: "20px",
-          background: "#f7f7f7",
-        }}
-      >
-        <h2>Mood Distribution</h2>
-        {moodData.length > 0 ? (
-          <Pie data={moodChartData} />
-        ) : (
-          <p>Loading mood distribution...</p>
         )}
       </div>
 
