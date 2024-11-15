@@ -47,6 +47,7 @@
     "typescript": "5.2.2",
     "uuid": "^9.0.1",
     "whisper-nodejs": "^1.0.0"
+    "recorder-js": "^1.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.37",
