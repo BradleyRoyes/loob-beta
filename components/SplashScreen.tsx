@@ -118,7 +118,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
       {phase === "introPhase" && (
         <motion.div className="content" variants={variants}>
           <h1 className="gradientText" style={{ fontSize: 'normal' }}>
-            I’m Loob, your guide. I help tell stories that are hard to tell. <br /><br /> Movement is everything, nothing is the goal.
+            I’m Loob, your guide. <br/><br /> I help tell stories that are hard to tell. <br/><br /> Movement is everything, nothing is the goal.
           </h1>
           <button onClick={() => proceed("promptPhase")}>
             Continue
