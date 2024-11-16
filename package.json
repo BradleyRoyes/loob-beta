@@ -1,5 +1,5 @@
 {
-  "name": "loob-beta",
+  "name": "ragbot-starter",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -33,6 +33,7 @@
     "noisejs": "^2.1.0",
     "openai": "^4.28.4",
     "p5": "^1.9.0",
+    "pusher": "^5.0.3",
     "pusher-js": "^7.2.0",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.0.1",
