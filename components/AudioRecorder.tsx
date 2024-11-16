@@ -257,8 +257,8 @@ const AudioRecorder: React.FC = () => {
           ref={torusRef}
           style={{
             margin: "20px auto",
-            width: "200px",
-            height: "200px",
+            width: "150px",
+            height: "150px",
           }}
         />
       )}
