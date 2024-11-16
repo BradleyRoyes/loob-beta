@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import Recorder from "recorder-js";
-import * as THREE from "three";
 
 interface AudioRecorderProps {
   onRecordingComplete: (audioData: Blob) => void;
@@ -14,7 +13,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
   const recorderRef = useRef<Recorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const torusRef = useRef<HTMLDivElement | null>(null);
 
   const startAudioRecording = async () => {
     if (recording || processing) return;
@@ -59,7 +57,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
       const volume = array.reduce((a, b) => a + b, 0) / array.length;
 
       if (volume < 10) {
-        // Silence detected
         if (!silenceTimerRef.current) {
           silenceTimerRef.current = setTimeout(() => {
             console.log("Silence detected, stopping recording.");
@@ -67,7 +64,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
             stream.getTracks().forEach((track) => track.stop());
             scriptProcessor.disconnect();
             analyser.disconnect();
-          }, 2000); // 2 seconds of silence threshold
+          }, 2000);
         }
       } else if (silenceTimerRef.current) {
         clearTimeout(silenceTimerRef.current);
@@ -82,13 +79,11 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
     try {
       const recorder = recorderRef.current;
 
-      // Stop recording and get audio data as WAV
       const { blob } = await recorder.stop();
       setRecording(false);
       setProcessing(true);
       setStatusMessage("Processing...");
 
-      // Cleanup resources
       recorderRef.current = null;
       if (audioContextRef.current) {
         audioContextRef.current.close();
@@ -101,7 +96,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
 
       console.log("Recording stopped, WAV blob created:", blob);
 
-      // Simulate processing time
       setTimeout(() => {
         onRecordingComplete(blob);
         setProcessing(false);
@@ -113,59 +107,21 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
   };
 
   useEffect(() => {
-    if (!processing || !torusRef.current) return;
-
-    // Initialize Three.js for the torus animation
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-
-    renderer.setSize(150, 150);
-    torusRef.current.appendChild(renderer.domElement);
-
-    const geometry = new THREE.TorusKnotGeometry(5, 1.2, 128, 16, 3, 2);
-    const material = new THREE.MeshStandardMaterial({
-      transparent: true,
-      opacity: 0.8,
-      color: new THREE.Color("#ff0080"),
-      emissive: new THREE.Color("#ff8c00"),
-      emissiveIntensity: 1,
-    });
-    const torus = new THREE.Mesh(geometry, material);
-    scene.add(torus);
-
-    const light = new THREE.PointLight(0xffffff, 1, 100);
-    light.position.set(10, 10, 10);
-    scene.add(light);
-
-    camera.position.z = 20;
-
-    const animate = () => {
-      if (!processing) return; // Stop animation if no longer processing
-      requestAnimationFrame(animate);
-      torus.rotation.x += 0.01;
-      torus.rotation.y += 0.01;
-      renderer.render(scene, camera);
-    };
-
-    animate();
-
     return () => {
-      renderer.dispose();
-      while (torusRef.current?.firstChild) {
-        torusRef.current.removeChild(torusRef.current.firstChild);
-      }
+      if (recorderRef.current) recorderRef.current.stop();
+      if (audioContextRef.current) audioContextRef.current.close();
     };
-  }, [processing]);
+  }, []);
 
   const buttonStyle: React.CSSProperties = {
     backgroundColor: "transparent",
-    border: recording ? "4px solid #ff8e88" : "2px solid var(--text-primary-inverse)",
+    border: "2px solid var(--text-primary-inverse)",
     borderRadius: "50%",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    padding: "20px",
     width: "80px",
     height: "80px",
     transition: "all 0.3s",
@@ -175,12 +131,10 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
   return (
     <div
       style={{
-        position: "relative",
-        textAlign: "center",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: "10px",
+        gap: "15px",
       }}
     >
       <style>
@@ -190,14 +144,12 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
             50% { transform: scale(1.1); }
             100% { transform: scale(1); }
           }
-          .dim-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
-            z-index: 10;
+
+          .cyber-text {
+            font-size: 16px;
+            font-family: 'Courier New', Courier, monospace;
+            color: #ff0080;
+            text-shadow: 0 0 8px #ff8e88, 0 0 12px #ff0080;
           }
         `}
       </style>
@@ -212,14 +164,14 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
             viewBox="0 0 24 24"
             width="30"
             height="30"
-            stroke={recording ? "none" : "var(--text-primary-inverse)"}
+            stroke="var(--text-primary-inverse)"
             strokeWidth="2"
-            fill={recording ? "#ff8e88" : "none"}
+            fill="none"
             strokeLinecap="round"
             strokeLinejoin="round"
           >
             {recording ? (
-              <rect x="5" y="5" width="14" height="14" fill="#d32f2f" rx="3" />
+              <rect x="5" y="5" width="14" height="14" fill="#ff8e88" rx="3" />
             ) : (
               <>
                 <path d="M12 1a3 3 0 0 1 3 3v6a3 3 0 1 1-6 0V4a3 3 0 1 1 3-3z" />
@@ -232,20 +184,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
         </button>
       )}
 
-      {processing && (
-        <div
-          ref={torusRef}
-          style={{
-            margin: "auto",
-            width: "150px",
-            height: "150px",
-          }}
-        />
-      )}
-
-      <div style={{ fontSize: "14px", color: recording ? "#ff8e88" : "#ffffff" }}>{statusMessage}</div>
-
-      {processing && <div className="dim-overlay"></div>}
+      <div className="cyber-text">{statusMessage}</div>
     </div>
   );
 };
