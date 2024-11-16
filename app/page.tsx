@@ -42,7 +42,7 @@ export default function Page() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = (e: React.FormEvent) => {
+  const handleSend = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     handleSubmit(e, {
       options: { body: { useRag, llm, similarityMetric, sessionId } },
