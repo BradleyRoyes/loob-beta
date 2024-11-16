@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import Recorder from "recorder-js";
+import * as THREE from "three";
 
 interface AudioRecorderProps {
   onRecordingComplete: (audioData: Blob) => void;
@@ -10,13 +11,15 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
   const [recording, setRecording] = useState(false);
   const [timer, setTimer] = useState<number>(0);
   const [statusMessage, setStatusMessage] = useState<string>("Click to Start Recording");
+  const [processing, setProcessing] = useState(false);
   const recorderRef = useRef<Recorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const torusRef = useRef<HTMLDivElement | null>(null);
 
   const startAudioRecording = async () => {
-    if (recording) return;
+    if (recording || processing) return;
 
     try {
       const audioContext = new ((window as any).AudioContext || (window as any).webkitAudioContext)();
@@ -29,7 +32,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
       recorderRef.current = recorder;
       audioContextRef.current = audioContext;
       setRecording(true);
-      setStatusMessage("Recording... Speak Clearly");
+      setStatusMessage("Recording... Click again to end");
 
       startRecording();
 
@@ -44,7 +47,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
         });
       }, 1000);
 
-      // Start silence detection
       detectSilence(audioContext, stream);
 
       console.log("Recording started");
@@ -98,8 +100,9 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
       // Stop recording and get audio data as WAV
       const { blob } = await recorder.stop();
       setRecording(false);
+      setProcessing(true);
       setTimer(0);
-      setStatusMessage("Processing Recording...");
+      setStatusMessage("Processing...");
 
       // Cleanup resources
       recorderRef.current = null;
@@ -117,9 +120,13 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
       }
 
       console.log("Recording stopped, WAV blob created:", blob);
-      onRecordingComplete(blob);
-      setStatusMessage("Recording Sent!");
-      setTimeout(() => setStatusMessage("Click to Start Recording"), 2000); // Reset message
+
+      // Simulate processing time
+      setTimeout(() => {
+        onRecordingComplete(blob);
+        setProcessing(false);
+        setStatusMessage("Click to Start Recording");
+      }, 3000);
     } catch (error) {
       console.error("Error stopping recording:", error);
     }
@@ -134,7 +141,50 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
     };
   }, []);
 
-  // Type the button styles explicitly
+  useEffect(() => {
+    if (!processing || !torusRef.current) return;
+
+    // Initialize Three.js for the torus animation
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+
+    renderer.setSize(200, 200);
+    torusRef.current.appendChild(renderer.domElement);
+
+    const geometry = new THREE.TorusGeometry(5, 1.5, 16, 100);
+    const material = new THREE.MeshStandardMaterial({
+      emissive: new THREE.Color("#ff8c00"),
+      emissiveIntensity: 0.5,
+      color: new THREE.Color("#ff0080"),
+    });
+    const torus = new THREE.Mesh(geometry, material);
+    scene.add(torus);
+
+    const light = new THREE.PointLight(0xffffff, 1, 100);
+    light.position.set(10, 10, 10);
+    scene.add(light);
+
+    camera.position.z = 15;
+
+    const animate = () => {
+      if (!processing) return; // Stop animation if no longer processing
+      requestAnimationFrame(animate);
+      torus.rotation.x += 0.01;
+      torus.rotation.y += 0.01;
+      renderer.render(scene, camera);
+    };
+
+    animate();
+
+    return () => {
+      renderer.dispose();
+      while (torusRef.current?.firstChild) {
+        torusRef.current.removeChild(torusRef.current.firstChild);
+      }
+    };
+  }, [processing]);
+
   const buttonStyle: React.CSSProperties = {
     backgroundColor: "transparent",
     border: recording ? "4px solid #ff8e88" : "2px solid var(--text-primary-inverse)",
@@ -146,7 +196,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
     padding: "10px",
     transition: "all 0.3s",
     animation: recording ? "pulse 1s infinite" : "none",
-    position: "relative",
   };
 
   const MicIcon = () => (
@@ -193,14 +242,25 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
         <MicIcon />
       </button>
 
-      <p style={{ marginTop: "10px", fontSize: "16px", color: recording ? "#ff8e88" : "#ffffff" }}>
+      <div style={{ marginTop: "10px", fontSize: "16px", color: recording ? "#ff8e88" : "#ffffff" }}>
         {statusMessage}
-      </p>
+      </div>
 
       {recording && (
         <p style={{ marginTop: "5px", fontSize: "14px", color: "#ffffff" }}>
           Timer: {timer}s
         </p>
+      )}
+
+      {processing && (
+        <div
+          ref={torusRef}
+          style={{
+            margin: "20px auto",
+            width: "200px",
+            height: "200px",
+          }}
+        />
       )}
     </div>
   );
