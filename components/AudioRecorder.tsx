@@ -134,7 +134,8 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
     };
   }, []);
 
-  const buttonStyle = {
+  // Type the button styles explicitly
+  const buttonStyle: React.CSSProperties = {
     backgroundColor: "transparent",
     border: recording ? "4px solid #ff8e88" : "2px solid var(--text-primary-inverse)",
     borderRadius: "50%",
