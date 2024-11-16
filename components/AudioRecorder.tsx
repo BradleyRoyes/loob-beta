@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import Recorder from "recorder-js";
+import * as THREE from "three";
 
 const AudioRecorder: React.FC = () => {
   const [recording, setRecording] = useState(false);
@@ -8,6 +9,7 @@ const AudioRecorder: React.FC = () => {
   const recorderRef = useRef<Recorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const torusRef = useRef<HTMLDivElement | null>(null);
 
   const startAudioRecording = async () => {
     if (recording || processing) return;
@@ -23,11 +25,12 @@ const AudioRecorder: React.FC = () => {
       recorderRef.current = recorder;
       audioContextRef.current = audioContext;
       setRecording(true);
-      setStatusMessage("Recording... Click again to end");
+      setStatusMessage("Recording... Click again to stop");
 
       detectSilence(audioContext, stream);
     } catch (error) {
       console.error("Error starting recording:", error);
+      setStatusMessage("Error: Unable to start recording.");
     }
   };
 
@@ -87,12 +90,12 @@ const AudioRecorder: React.FC = () => {
         silenceTimerRef.current = null;
       }
 
-      // Simulate Whisper API processing
+      // Process transcription
       try {
-        const transcription = await processTranscription(blob); // Process transcription
+        const transcription = await processTranscription(blob);
+        console.log("Transcription:", transcription);
         setProcessing(false);
         setStatusMessage("Click to Start Recording");
-        console.log("Transcription:", transcription);
       } catch (error) {
         console.error("Error processing transcription:", error);
         setProcessing(false);
@@ -100,17 +103,65 @@ const AudioRecorder: React.FC = () => {
       }
     } catch (error) {
       console.error("Error stopping recording:", error);
+      setProcessing(false);
+      setStatusMessage("Error: Unable to stop recording.");
     }
   };
 
   const processTranscription = async (audioBlob: Blob): Promise<string> => {
     console.log("Sending audio blob to Whisper API...");
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       setTimeout(() => {
         resolve("Simulated transcription result.");
-      }, 3000); // Simulated delay for Whisper API
+      }, 3000); // Simulated delay
     });
   };
+
+  useEffect(() => {
+    if (!processing || !torusRef.current) return;
+
+    // Initialize Three.js for the torus animation
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+
+    renderer.setSize(150, 150);
+    torusRef.current.appendChild(renderer.domElement);
+
+    const geometry = new THREE.TorusKnotGeometry(5, 1.5, 128, 16, 3, 2);
+    const material = new THREE.MeshStandardMaterial({
+      transparent: true,
+      opacity: 0.8,
+      color: new THREE.Color("#FF4500"),
+      emissive: new THREE.Color("#FFA500"),
+      emissiveIntensity: 1,
+    });
+    const torus = new THREE.Mesh(geometry, material);
+    scene.add(torus);
+
+    const light = new THREE.PointLight(0xffffff, 1, 100);
+    light.position.set(10, 10, 10);
+    scene.add(light);
+
+    camera.position.z = 20;
+
+    const animate = () => {
+      if (!processing) return;
+      requestAnimationFrame(animate);
+      torus.rotation.x += 0.01;
+      torus.rotation.y += 0.01;
+      renderer.render(scene, camera);
+    };
+
+    animate();
+
+    return () => {
+      renderer.dispose();
+      while (torusRef.current?.firstChild) {
+        torusRef.current.removeChild(torusRef.current.firstChild);
+      }
+    };
+  }, [processing]);
 
   useEffect(() => {
     return () => {
@@ -121,7 +172,7 @@ const AudioRecorder: React.FC = () => {
 
   const buttonStyle: React.CSSProperties = {
     backgroundColor: "transparent",
-    border: "2px solid var(--text-primary-inverse)",
+    border: "2px solid #FFA500",
     borderRadius: "50%",
     cursor: "pointer",
     display: "flex",
@@ -150,57 +201,53 @@ const AudioRecorder: React.FC = () => {
             color: #FFA500;
             text-shadow: 0 0 8px #FFA500, 0 0 12px #FF4500;
           }
-
-          .spinner {
-            margin-top: 10px;
-            width: 24px;
-            height: 24px;
-            border: 3px solid rgba(255, 165, 0, 0.3);
-            border-top: 3px solid #FFA500;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-          }
-
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
         `}
       </style>
 
-      <button
-        className="recordButton"
-        onClick={recording ? stopAudioRecording : startAudioRecording}
-        style={buttonStyle}
-        disabled={processing}
-      >
-        <svg
-          viewBox="0 0 24 24"
-          width="30"
-          height="30"
-          stroke="var(--text-primary-inverse)"
-          strokeWidth="2"
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+      {!processing && (
+        <button
+          className="recordButton"
+          onClick={recording ? stopAudioRecording : startAudioRecording}
+          style={buttonStyle}
         >
-          {recording ? (
-            <rect x="5" y="5" width="14" height="14" fill="#FFA500" rx="3" />
-          ) : (
-            <>
-              <path d="M12 1a3 3 0 0 1 3 3v6a3 3 0 1 1-6 0V4a3 3 0 1 1 3-3z" />
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-              <line x1="12" y1="19" x2="12" y2="23" />
-              <line x1="8" y1="23" x2="16" y2="23" />
-            </>
-          )}
-        </svg>
-      </button>
+          <svg
+            viewBox="0 0 24 24"
+            width="30"
+            height="30"
+            stroke="#FFA500"
+            strokeWidth="2"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            {recording ? (
+              <rect x="5" y="5" width="14" height="14" fill="#FFA500" rx="3" />
+            ) : (
+              <>
+                <path d="M12 1a3 3 0 0 1 3 3v6a3 3 0 1 1-6 0V4a3 3 0 1 1 3-3z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" y1="19" x2="12" y2="23" />
+                <line x1="8" y1="23" x2="16" y2="23" />
+              </>
+            )}
+          </svg>
+        </button>
+      )}
 
       <div className="cyber-text" style={{ marginTop: "15px" }}>
         {statusMessage}
-        {processing && <div className="spinner" />}
       </div>
+
+      {processing && (
+        <div
+          ref={torusRef}
+          style={{
+            margin: "20px auto",
+            width: "150px",
+            height: "150px",
+          }}
+        />
+      )}
     </div>
   );
 };
