@@ -2,7 +2,19 @@ import React, { useState, useRef, useEffect } from "react";
 import Recorder from "recorder-js";
 import * as THREE from "three";
 
-const AudioRecorder: React.FC = () => {
+interface AudioRecorderProps {
+  onRecordingComplete?: (audioBlob: Blob, transcription: string) => void;
+  startRecording?: () => void;
+}
+
+const AudioRecorder: React.FC<AudioRecorderProps> = ({
+  onRecordingComplete = (audioBlob, transcription) => {
+    console.log("Default transcription:", transcription);
+  },
+  startRecording = () => {
+    console.log("Default start recording");
+  },
+}) => {
   const [recording, setRecording] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string>("Click to Start Recording");
@@ -26,6 +38,7 @@ const AudioRecorder: React.FC = () => {
       audioContextRef.current = audioContext;
       setRecording(true);
       setStatusMessage("Recording... Click again to stop");
+      startRecording();
 
       detectSilence(audioContext, stream);
     } catch (error) {
@@ -93,7 +106,7 @@ const AudioRecorder: React.FC = () => {
       // Process transcription
       try {
         const transcription = await processTranscription(blob);
-        console.log("Transcription:", transcription);
+        onRecordingComplete(blob, transcription);
         setProcessing(false);
         setStatusMessage("Click to Start Recording");
       } catch (error) {
