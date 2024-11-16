@@ -4,13 +4,11 @@ import Recorder from "recorder-js";
 interface AudioRecorderProps {
   onRecordingComplete: (audioBlob: Blob, transcription: string) => void;
   startRecording: () => void;
-  processTranscription: (audioBlob: Blob) => Promise<string>; // Function for Whisper API
 }
 
 const AudioRecorder: React.FC<AudioRecorderProps> = ({
   onRecordingComplete,
   startRecording,
-  processTranscription,
 }) => {
   const [recording, setRecording] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -63,9 +61,9 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
         silenceTimerRef.current = null;
       }
 
-      // Process transcription with Whisper API
+      // Process transcription
       try {
-        const transcription = await processTranscription(blob); // Wait for transcription to complete
+        const transcription = await processTranscription(blob); // Use built-in transcription function
         setProcessing(false);
         setStatusMessage("Click to Start Recording");
         onRecordingComplete(blob, transcription); // Send audio and transcription back
@@ -76,6 +74,30 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       }
     } catch (error) {
       console.error("Error stopping recording:", error);
+    }
+  };
+
+  const processTranscription = async (audioBlob: Blob): Promise<string> => {
+    console.log("Sending audio blob to Whisper API...");
+    try {
+      const formData = new FormData();
+      formData.append("file", audioBlob, "audio.webm");
+
+      const response = await fetch("/api/whisper", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log("Transcription received:", data.transcription);
+      return data.transcription;
+    } catch (error) {
+      console.error("Error processing transcription:", error);
+      throw new Error("Failed to process transcription.");
     }
   };
 
