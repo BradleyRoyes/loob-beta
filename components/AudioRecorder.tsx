@@ -2,22 +2,11 @@ import React, { useState, useRef, useEffect } from "react";
 import Recorder from "recorder-js";
 import * as THREE from "three";
 
-interface AudioRecorderProps {
-  onRecordingComplete?: (audioBlob: Blob, transcription: string) => void;
-  startRecording?: () => void;
-}
-
-const AudioRecorder: React.FC<AudioRecorderProps> = ({
-  onRecordingComplete = (audioBlob, transcription) => {
-    console.log("Default transcription:", transcription);
-  },
-  startRecording = () => {
-    console.log("Default start recording");
-  },
-}) => {
+const AudioRecorder: React.FC = () => {
   const [recording, setRecording] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string>("Click to Start Recording");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const recorderRef = useRef<Recorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -25,6 +14,8 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
 
   const startAudioRecording = async () => {
     if (recording || processing) return;
+
+    setErrorMessage(null);
 
     try {
       const audioContext = new ((window as any).AudioContext || (window as any).webkitAudioContext)();
@@ -38,12 +29,11 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       audioContextRef.current = audioContext;
       setRecording(true);
       setStatusMessage("Recording... Click again to stop");
-      startRecording();
 
       detectSilence(audioContext, stream);
     } catch (error) {
       console.error("Error starting recording:", error);
-      setStatusMessage("Error: Unable to start recording.");
+      setErrorMessage("Unable to start recording. Please check your microphone settings.");
     }
   };
 
@@ -91,7 +81,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       const { blob } = await recorder.stop();
       setRecording(false);
       setProcessing(true);
-      setStatusMessage("Processing...");
+      setStatusMessage("Processing audio...");
 
       recorderRef.current = null;
       if (audioContextRef.current) {
@@ -106,18 +96,18 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       // Process transcription
       try {
         const transcription = await processTranscription(blob);
-        onRecordingComplete(blob, transcription);
+        console.log("Transcription:", transcription);
         setProcessing(false);
         setStatusMessage("Click to Start Recording");
       } catch (error) {
         console.error("Error processing transcription:", error);
         setProcessing(false);
-        setStatusMessage("Error processing. Try again.");
+        setErrorMessage("Error processing audio. Please try again.");
       }
     } catch (error) {
       console.error("Error stopping recording:", error);
       setProcessing(false);
-      setStatusMessage("Error: Unable to stop recording.");
+      setErrorMessage("Error stopping recording. Please try again.");
     }
   };
 
@@ -264,6 +254,12 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       <div className="cyber-text" style={{ marginTop: "15px" }}>
         {statusMessage}
       </div>
+
+      {errorMessage && (
+        <div style={{ color: "red", marginTop: "10px", fontWeight: "bold" }}>
+          {errorMessage}
+        </div>
+      )}
 
       {processing && (
         <div
