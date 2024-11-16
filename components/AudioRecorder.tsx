@@ -9,12 +9,10 @@ interface AudioRecorderProps {
 
 const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, startRecording }) => {
   const [recording, setRecording] = useState(false);
-  const [timer, setTimer] = useState<number>(0);
-  const [statusMessage, setStatusMessage] = useState<string>("Click to Start Recording");
   const [processing, setProcessing] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string>("Click to Start Recording");
   const recorderRef = useRef<Recorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const torusRef = useRef<HTMLDivElement | null>(null);
 
@@ -36,20 +34,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
 
       startRecording();
 
-      // Start the timer
-      timerIntervalRef.current = setInterval(() => {
-        setTimer((prev) => {
-          if (prev >= 60) {
-            stopAudioRecording(); // Auto-stop after 1 minute
-            return 60;
-          }
-          return prev + 1;
-        });
-      }, 1000);
-
       detectSilence(audioContext, stream);
-
-      console.log("Recording started");
     } catch (error) {
       console.error("Error starting recording:", error);
     }
@@ -101,7 +86,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
       const { blob } = await recorder.stop();
       setRecording(false);
       setProcessing(true);
-      setTimer(0);
       setStatusMessage("Processing...");
 
       // Cleanup resources
@@ -109,10 +93,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
       if (audioContextRef.current) {
         audioContextRef.current.close();
         audioContextRef.current = null;
-      }
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current);
-        timerIntervalRef.current = null;
       }
       if (silenceTimerRef.current) {
         clearTimeout(silenceTimerRef.current);
@@ -133,15 +113,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
   };
 
   useEffect(() => {
-    return () => {
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-      if (recorderRef.current) recorderRef.current.stop();
-      if (audioContextRef.current) audioContextRef.current.close();
-    };
-  }, []);
-
-  useEffect(() => {
     if (!processing || !torusRef.current) return;
 
     // Initialize Three.js for the torus animation
@@ -149,14 +120,16 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
     const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 
-    renderer.setSize(200, 200);
+    renderer.setSize(150, 150);
     torusRef.current.appendChild(renderer.domElement);
 
-    const geometry = new THREE.TorusGeometry(5, 1.5, 16, 100);
+    const geometry = new THREE.TorusKnotGeometry(5, 1.2, 128, 16, 3, 2);
     const material = new THREE.MeshStandardMaterial({
-      emissive: new THREE.Color("#ff8c00"),
-      emissiveIntensity: 0.5,
+      transparent: true,
+      opacity: 0.8,
       color: new THREE.Color("#ff0080"),
+      emissive: new THREE.Color("#ff8c00"),
+      emissiveIntensity: 1,
     });
     const torus = new THREE.Mesh(geometry, material);
     scene.add(torus);
@@ -165,7 +138,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
     light.position.set(10, 10, 10);
     scene.add(light);
 
-    camera.position.z = 15;
+    camera.position.z = 20;
 
     const animate = () => {
       if (!processing) return; // Stop animation if no longer processing
@@ -193,37 +166,23 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: "10px",
+    width: "80px",
+    height: "80px",
     transition: "all 0.3s",
     animation: recording ? "pulse 1s infinite" : "none",
   };
 
-  const MicIcon = () => (
-    <svg
-      viewBox="0 0 24 24"
-      width="30"
-      height="30"
-      stroke={recording ? "none" : "var(--text-primary-inverse)"}
-      strokeWidth="2"
-      fill={recording ? "#ff8e88" : "none"}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      {recording ? (
-        <rect x="5" y="5" width="14" height="14" fill="#d32f2f" rx="3" />
-      ) : (
-        <>
-          <path d="M12 1a3 3 0 0 1 3 3v6a3 3 0 1 1-6 0V4a3 3 0 1 1 3-3z" />
-          <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-          <line x1="12" y1="19" x2="12" y2="23" />
-          <line x1="8" y1="23" x2="16" y2="23" />
-        </>
-      )}
-    </svg>
-  );
-
   return (
-    <div style={{ position: "relative", textAlign: "center" }}>
+    <div
+      style={{
+        position: "relative",
+        textAlign: "center",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "10px",
+      }}
+    >
       <style>
         {`
           @keyframes pulse {
@@ -231,37 +190,62 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
             50% { transform: scale(1.1); }
             100% { transform: scale(1); }
           }
+          .dim-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 10;
+          }
         `}
       </style>
 
-      <button
-        className="recordButton"
-        onClick={recording ? stopAudioRecording : startAudioRecording}
-        style={buttonStyle}
-      >
-        <MicIcon />
-      </button>
-
-      <div style={{ marginTop: "10px", fontSize: "16px", color: recording ? "#ff8e88" : "#ffffff" }}>
-        {statusMessage}
-      </div>
-
-      {recording && (
-        <p style={{ marginTop: "5px", fontSize: "14px", color: "#ffffff" }}>
-          Timer: {timer}s
-        </p>
+      {!processing && (
+        <button
+          className="recordButton"
+          onClick={recording ? stopAudioRecording : startAudioRecording}
+          style={buttonStyle}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="30"
+            height="30"
+            stroke={recording ? "none" : "var(--text-primary-inverse)"}
+            strokeWidth="2"
+            fill={recording ? "#ff8e88" : "none"}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            {recording ? (
+              <rect x="5" y="5" width="14" height="14" fill="#d32f2f" rx="3" />
+            ) : (
+              <>
+                <path d="M12 1a3 3 0 0 1 3 3v6a3 3 0 1 1-6 0V4a3 3 0 1 1 3-3z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" y1="19" x2="12" y2="23" />
+                <line x1="8" y1="23" x2="16" y2="23" />
+              </>
+            )}
+          </svg>
+        </button>
       )}
 
       {processing && (
         <div
           ref={torusRef}
           style={{
-            margin: "20px auto",
-            width: "200px",
-            height: "200px",
+            margin: "auto",
+            width: "150px",
+            height: "150px",
           }}
         />
       )}
+
+      <div style={{ fontSize: "14px", color: recording ? "#ff8e88" : "#ffffff" }}>{statusMessage}</div>
+
+      {processing && <div className="dim-overlay"></div>}
     </div>
   );
 };
