@@ -1,15 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Recorder from "recorder-js";
 
-interface AudioRecorderProps {
-  onRecordingComplete: (audioBlob: Blob, transcription: string) => void;
-  startRecording: () => void;
-}
-
-const AudioRecorder: React.FC<AudioRecorderProps> = ({
-  onRecordingComplete,
-  startRecording,
-}) => {
+const AudioRecorder: React.FC = () => {
   const [recording, setRecording] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string>("Click to Start Recording");
@@ -33,10 +25,45 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       setRecording(true);
       setStatusMessage("Recording... Click again to end");
 
-      startRecording();
+      detectSilence(audioContext, stream);
     } catch (error) {
       console.error("Error starting recording:", error);
     }
+  };
+
+  const detectSilence = (audioContext: AudioContext, stream: MediaStream) => {
+    const analyser = audioContext.createAnalyser();
+    const microphone = audioContext.createMediaStreamSource(stream);
+    const scriptProcessor = audioContext.createScriptProcessor(2048, 1, 1);
+
+    analyser.smoothingTimeConstant = 0.8;
+    analyser.fftSize = 1024;
+
+    microphone.connect(analyser);
+    analyser.connect(scriptProcessor);
+    scriptProcessor.connect(audioContext.destination);
+
+    scriptProcessor.onaudioprocess = () => {
+      const array = new Uint8Array(analyser.frequencyBinCount);
+      analyser.getByteFrequencyData(array);
+
+      const volume = array.reduce((a, b) => a + b, 0) / array.length;
+
+      if (volume < 10) {
+        if (!silenceTimerRef.current) {
+          silenceTimerRef.current = setTimeout(() => {
+            console.log("Silence detected, stopping recording.");
+            stopAudioRecording();
+            stream.getTracks().forEach((track) => track.stop());
+            scriptProcessor.disconnect();
+            analyser.disconnect();
+          }, 2000); // 2 seconds of silence threshold
+        }
+      } else if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
+    };
   };
 
   const stopAudioRecording = async () => {
@@ -45,7 +72,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
     try {
       const recorder = recorderRef.current;
 
-      // Stop recording and get audio data as WAV
       const { blob } = await recorder.stop();
       setRecording(false);
       setProcessing(true);
@@ -61,14 +87,14 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
         silenceTimerRef.current = null;
       }
 
-      // Process transcription
+      // Simulate Whisper API processing
       try {
-        const transcription = await processTranscription(blob); // Use built-in transcription function
+        const transcription = await processTranscription(blob); // Process transcription
         setProcessing(false);
         setStatusMessage("Click to Start Recording");
-        onRecordingComplete(blob, transcription); // Send audio and transcription back
-      } catch (apiError) {
-        console.error("Error processing transcription:", apiError);
+        console.log("Transcription:", transcription);
+      } catch (error) {
+        console.error("Error processing transcription:", error);
         setProcessing(false);
         setStatusMessage("Error processing. Try again.");
       }
@@ -79,26 +105,11 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
 
   const processTranscription = async (audioBlob: Blob): Promise<string> => {
     console.log("Sending audio blob to Whisper API...");
-    try {
-      const formData = new FormData();
-      formData.append("file", audioBlob, "audio.webm");
-
-      const response = await fetch("/api/whisper", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log("Transcription received:", data.transcription);
-      return data.transcription;
-    } catch (error) {
-      console.error("Error processing transcription:", error);
-      throw new Error("Failed to process transcription.");
-    }
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve("Simulated transcription result.");
+      }, 3000); // Simulated delay for Whisper API
+    });
   };
 
   useEffect(() => {
