@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import Recorder from 'recorder-js';
+import React, { useState, useRef, useEffect } from "react";
+import Recorder from "recorder-js";
 
 interface AudioRecorderProps {
   onRecordingComplete: (audioData: Blob) => void;
@@ -9,6 +9,7 @@ interface AudioRecorderProps {
 const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, startRecording }) => {
   const [recording, setRecording] = useState(false);
   const [timer, setTimer] = useState<number>(0);
+  const [statusMessage, setStatusMessage] = useState<string>("Click to Start Recording");
   const recorderRef = useRef<Recorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -18,7 +19,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
     if (recording) return;
 
     try {
-      // Initialize AudioContext
       const audioContext = new ((window as any).AudioContext || (window as any).webkitAudioContext)();
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new Recorder(audioContext);
@@ -29,6 +29,8 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
       recorderRef.current = recorder;
       audioContextRef.current = audioContext;
       setRecording(true);
+      setStatusMessage("Recording... Speak Clearly");
+
       startRecording();
 
       // Start the timer
@@ -47,7 +49,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
 
       console.log("Recording started");
     } catch (error) {
-      console.error('Error starting recording:', error);
+      console.error("Error starting recording:", error);
     }
   };
 
@@ -73,7 +75,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
         // Silence detected
         if (!silenceTimerRef.current) {
           silenceTimerRef.current = setTimeout(() => {
-            console.log('Silence detected, stopping recording.');
+            console.log("Silence detected, stopping recording.");
             stopAudioRecording();
             stream.getTracks().forEach((track) => track.stop());
             scriptProcessor.disconnect();
@@ -97,6 +99,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
       const { blob } = await recorder.stop();
       setRecording(false);
       setTimer(0);
+      setStatusMessage("Processing Recording...");
 
       // Cleanup resources
       recorderRef.current = null;
@@ -115,13 +118,14 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
 
       console.log("Recording stopped, WAV blob created:", blob);
       onRecordingComplete(blob);
+      setStatusMessage("Recording Sent!");
+      setTimeout(() => setStatusMessage("Click to Start Recording"), 2000); // Reset message
     } catch (error) {
       console.error("Error stopping recording:", error);
     }
   };
 
   useEffect(() => {
-    // Cleanup on component unmount
     return () => {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
@@ -131,34 +135,27 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
   }, []);
 
   const buttonStyle = {
-    backgroundColor: 'transparent',
-    border: '2px solid var(--text-primary-inverse)',
-    borderRadius: '50%',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '10px',
-    transition: 'all 0.3s',
-    animation: recording ? 'pulse 1s infinite' : 'none',
+    backgroundColor: "transparent",
+    border: recording ? "4px solid #ff8e88" : "2px solid var(--text-primary-inverse)",
+    borderRadius: "50%",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "10px",
+    transition: "all 0.3s",
+    animation: recording ? "pulse 1s infinite" : "none",
+    position: "relative",
   };
-
-  const pulseAnimation = `
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.1); }
-      100% { transform: scale(1); }
-    }
-  `;
 
   const MicIcon = () => (
     <svg
       viewBox="0 0 24 24"
-      width="24"
-      height="24"
-      stroke={recording ? 'none' : "var(--text-primary-inverse)"}
+      width="30"
+      height="30"
+      stroke={recording ? "none" : "var(--text-primary-inverse)"}
       strokeWidth="2"
-      fill={recording ? '#ff8e88' : "none"}
+      fill={recording ? "#ff8e88" : "none"}
       strokeLinecap="round"
       strokeLinejoin="round"
     >
@@ -166,7 +163,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
         <rect x="5" y="5" width="14" height="14" fill="#d32f2f" rx="3" />
       ) : (
         <>
-          <path d="M12 1a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V4a3 3 0 1 1 3-3z" />
+          <path d="M12 1a3 3 0 0 1 3 3v6a3 3 0 1 1-6 0V4a3 3 0 1 1 3-3z" />
           <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
           <line x1="12" y1="19" x2="12" y2="23" />
           <line x1="8" y1="23" x2="16" y2="23" />
@@ -176,9 +173,17 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
   );
 
   return (
-    <div>
-      {/* Inject pulse animation */}
-      <style>{pulseAnimation}</style>
+    <div style={{ position: "relative", textAlign: "center" }}>
+      <style>
+        {`
+          @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+          }
+        `}
+      </style>
+
       <button
         className="recordButton"
         onClick={recording ? stopAudioRecording : startAudioRecording}
@@ -186,13 +191,16 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
       >
         <MicIcon />
       </button>
-      {/* 
+
+      <p style={{ marginTop: "10px", fontSize: "16px", color: recording ? "#ff8e88" : "#ffffff" }}>
+        {statusMessage}
+      </p>
+
       {recording && (
-        <div className="recordingIndicator">
-          <p>Recording... {timer}s</p>
-        </div>
+        <p style={{ marginTop: "5px", fontSize: "14px", color: "#ffffff" }}>
+          Timer: {timer}s
+        </p>
       )}
-      */}
     </div>
   );
 };
