@@ -110,11 +110,25 @@ const AudioRecorder: React.FC = () => {
 
   const processTranscription = async (audioBlob: Blob): Promise<string> => {
     console.log("Sending audio blob to Whisper API...");
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve("Simulated transcription result.");
-      }, 3000); // Simulated delay
-    });
+    try {
+      const formData = new FormData();
+      formData.append("file", audioBlob, "audio.webm");
+
+      const response = await fetch("/api/whisper", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.transcription;
+    } catch (error) {
+      console.error("Error with transcription API:", error);
+      throw new Error("Failed to process transcription.");
+    }
   };
 
   useEffect(() => {
@@ -125,7 +139,7 @@ const AudioRecorder: React.FC = () => {
     const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 
-    renderer.setSize(150, 150);
+    renderer.setSize(200, 200);
     torusRef.current.appendChild(renderer.domElement);
 
     const geometry = new THREE.TorusKnotGeometry(5, 1.5, 128, 16, 3, 2);
@@ -243,8 +257,8 @@ const AudioRecorder: React.FC = () => {
           ref={torusRef}
           style={{
             margin: "20px auto",
-            width: "150px",
-            height: "150px",
+            width: "200px",
+            height: "200px",
           }}
         />
       )}
