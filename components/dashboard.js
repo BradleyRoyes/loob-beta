@@ -6,18 +6,19 @@ import cloud from "d3-cloud";
 const Dashboard = () => {
   const canvasRef = useRef(null);
   const [keywordData, setKeywordData] = useState([]); // For word cloud
-  const [sentimentData, setSentimentData] = useState([]); // For mood trends
+  const [sentimentData, setSentimentData] = useState([]); // For sentiment trends
   const [engagementMetrics, setEngagementMetrics] = useState({ attendees: 0, interactions: 0 });
 
-  // Fetch initial data
+  // Fetch initial data from the route
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch("/api/dashboard-data"); // Replace with your endpoint
+        const response = await fetch("/api/dashboard"); // Matches the `GET` route in route.ts
         const data = await response.json();
-        setSentimentData(data.sentimentTrends);
-        setKeywordData(data.keywordData);
-        setEngagementMetrics(data.engagementMetrics);
+
+        setSentimentData(data.moodData); // moodData from the route
+        setKeywordData(data.keywordData); // keywordData from the route
+        setEngagementMetrics(data.engagementMetrics || { attendees: 0, interactions: 0 });
       } catch (error) {
         console.error("Failed to fetch data:", error);
       }
@@ -35,7 +36,7 @@ const Dashboard = () => {
     const channel = pusher.subscribe("dashboard-updates");
     channel.bind("data-update", (data) => {
       console.log("Real-time update received:", data);
-      if (data.sentimentTrends) setSentimentData(data.sentimentTrends);
+      if (data.moodData) setSentimentData(data.moodData);
       if (data.keywordData) setKeywordData(data.keywordData);
       if (data.engagementMetrics) setEngagementMetrics(data.engagementMetrics);
     });
@@ -87,6 +88,7 @@ const Dashboard = () => {
     }
   };
 
+  // Redraw word cloud when keyword data changes
   useEffect(() => {
     drawWordCloud();
   }, [keywordData]);
@@ -105,6 +107,11 @@ const Dashboard = () => {
       >
         <h2>Sentiment Trends</h2>
         <svg id="sentiment-chart" width="100%" height="300px"></svg>
+        {sentimentData.map((data, idx) => (
+          <div key={idx}>
+            <strong>{data.mood}</strong>: {data.count}
+          </div>
+        ))}
       </div>
 
       {/* Engagement Metrics */}
