@@ -2,7 +2,6 @@ import OpenAI from "openai";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 import { AstraDB } from "@datastax/astra-db-ts";
 import { v4 as uuidv4 } from "uuid";
-import { env } from 'node:process';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -11,7 +10,7 @@ const openai = new OpenAI({
 const astraDb = new AstraDB(
   process.env.ASTRA_DB_APPLICATION_TOKEN,
   process.env.ASTRA_DB_ENDPOINT,
-  process.env.ASTRA_DB_NAMESPACE,
+  process.env.ASTRA_DB_NAMESPACE
 );
 
 const Pusher = require("pusher");
@@ -24,12 +23,12 @@ const pusher = new Pusher({
   useTLS: true,
 });
 
-function triggerPusherEvent(channel, event, data) {
+function triggerPusherEvent(channel: string, event: string, data: any) {
   pusher
     .trigger(channel, event, data)
     .then(() => console.log(`Event ${event} triggered on channel ${channel}`))
     .catch((err) =>
-      console.error(`Error triggering event on channel ${channel}:`, err),
+      console.error(`Error triggering event on channel ${channel}:`, err)
     );
 }
 
@@ -53,7 +52,7 @@ async function saveMessageToDatabase(
   sessionId: string,
   content: string,
   role: string,
-  analysis: any = null,
+  analysis: any = null
 ) {
   const messagesCollection = await astraDb.collection("messages");
   const existingMessage = await messagesCollection.findOne({
@@ -62,7 +61,9 @@ async function saveMessageToDatabase(
   });
 
   if (existingMessage) {
-    console.log("Duplicate message detected. Skipping save to prevent duplicates.");
+    console.log(
+      "Duplicate message detected. Skipping save to prevent duplicates."
+    );
     return;
   }
 
@@ -72,16 +73,18 @@ async function saveMessageToDatabase(
     content,
     length: content.length,
     createdAt: new Date(),
-    mood: analysis?.Mood,
-    keywords: analysis?.Keywords,
+    mood: analysis?.Mood || null,
+    keywords: analysis?.Keywords || null,
   };
 
   await messagesCollection.insertOne(messageData);
+  console.log("Message saved to database:", messageData);
 }
 
 export async function POST(req: any) {
   try {
-    const { messages, useRag, llm, similarityMetric, sessionId } = await req.json();
+    const { messages, useRag, llm, similarityMetric, sessionId } =
+      await req.json();
     let docContext = "";
 
     if (useRag) {
@@ -100,7 +103,7 @@ export async function POST(req: any) {
               $vector: data[0]?.embedding,
             },
             limit: 5,
-          },
+          }
         );
         const documents = await cursor.toArray();
         docContext = documents.map((doc) => doc.content).join("\n");
@@ -114,7 +117,7 @@ export async function POST(req: any) {
         sessionId,
         message.content,
         message.role,
-        analysis,
+        analysis
       );
     }
 
@@ -123,26 +126,20 @@ export async function POST(req: any) {
         role: "system",
         content: `
           Important! You are an AI guide named Loob whose primary purpose is to help users quickly choose one of 11 unique cyberdelic experiences at the Cyberdelic Showcase at Gamesground 2024. Only recommend one of the following 11 experiences: RealmsOfFlow, VistaReality, MesmerPrism, TeraExperience, StarStuff, Visitations, Squingle, PatchWorld, CosmicSugar, BrainCandy, Synedelica.
-          The user will recieve a question and the answer it to you to start the conversation.
-          Your tone is short, witty, and playful, Use concise, conversational questions to quickly understand each user's mood, preferences, and desired experience intensity level. Your objective is to match them with an experience that aligns with these elements as smoothly and swiftly as possible.
-          
-          Follow these guidlines:
+
+          Your tone is short, witty, and playful. Use concise, conversational questions to quickly understand each user's mood, preferences, and desired experience intensity level. Your objective is to match them with an experience that aligns with these elements as smoothly and swiftly as possible.
+
           **Interaction Guidelines**:
-          Only recommend one of the following 11 experiences: RealmsOfFlow, VistaReality, MesmerPrism, TeraExperience, StarStuff, Visitations, Squingle, PatchWorld, CosmicSugar, BrainCandy, Synedelica.
           - Use tarot-like, indirect leading questions to subtly reveal the user’s preferences for intensity, interactivity, and duration. 
-          - Avoid open-ended assistance questions. Keep each response pointed and relevant, and ask only up to three targeted questions before recommending a choice. Add a bit of random selection magic to your choice and explain why you chose it always.
+          - Avoid open-ended assistance questions. Keep each response pointed and relevant, and ask only up to three targeted questions before recommending a choice.
+          - Add a bit of randomness and magic to your recommendations, and always explain your choice.
           - Prompt users to share quick voice notes to keep the interaction natural.
-          - Only ask one question at a time. Avoid asking direct questions about intesity or other things. learn implicitly. 
-          - Reference only the specific 11 experiences in your ${docContext} (Cyberdelic Showcase at Gamesground).
-          - Choose an experience as soon as you have sufficient information. The selection can feel slightly magical or serendipitous. Always bold the title of the experience you pick.
-          - Once a decision has been made, always tell the user to take their choice to our of our technicians to start their experience, and wish them a beautiful journey. 
-          - Only if you recieve the message: "*** Analyse my messages ***," provide only an analysis in JSON format with the user's mood and a list of relevant keywords, formatted like this:
-          ***Loob Magic Analysis:*** 
+          - Once a decision is made, tell the user to visit a technician to start their experience and wish them a beautiful journey.
+          - If the user sends "*** Analyse my messages ***," provide only JSON formatted mood and keyword analysis like this:
           { "mood": "positive", "keywords": ["calm", "exploration", "interactive"] }
 
-          Remember to use the info about the 11 experiences when necessary.
+          Document context:
           ${docContext}
-
         `,
       },
     ];
@@ -173,7 +170,6 @@ export async function POST(req: any) {
   }
 }
 
-// Added functionality for extracting moods and keywords
 export async function GET(req: any) {
   try {
     const messagesCollection = await astraDb.collection("messages");
@@ -211,7 +207,9 @@ export async function GET(req: any) {
       }),
       {
         status: 200,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
       }
     );
   } catch (error) {
@@ -219,4 +217,3 @@ export async function GET(req: any) {
     return new Response("Failed to fetch data", { status: 500 });
   }
 }
-
