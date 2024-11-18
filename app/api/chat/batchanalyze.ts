@@ -1,45 +1,71 @@
-// app/chat/api/analyze.ts
+import { NextResponse } from "next/server";
 import { AstraDB } from "@datastax/astra-db-ts";
-import OpenAI from 'openai';
-import { v4 as uuidv4 } from 'uuid';
 
-// Initialize AstraDB and OpenAI clients
+// Initialize Astra DB client
 const astraDb = new AstraDB(
-  process.env.ASTRA_DB_APPLICATION_TOKEN,
-  process.env.ASTRA_DB_ENDPOINT,
-  process.env.ASTRA_DB_NAMESPACE
+  process.env.ASTRA_DB_APPLICATION_TOKEN as string,
+  process.env.ASTRA_DB_ENDPOINT as string,
+  process.env.ASTRA_DB_NAMESPACE as string
 );
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Helper function to calculate average mood scores
+const moodScores = {
+  happy: 3,
+  neutral: 2,
+  sad: 1,
+};
+const calculateAverageMood = (moods: string[]) => {
+  const totalScore = moods.reduce(
+    (acc, mood) => acc + (moodScores[mood] || 0),
+    0
+  );
+  return totalScore / moods.length;
+};
 
-export async function analyzeBatch(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).send({ message: 'Only POST requests allowed' });
+// Group data by day
+const groupByDay = (messages: any[]) => {
+  const grouped: Record<string, { moods: string[]; keywords: string[] }> = {};
+
+  for (const message of messages) {
+    const day = new Date(message.createdAt["$date"]).toISOString().split("T")[0];
+
+    if (!grouped[day]) {
+      grouped[day] = { moods: [], keywords: [] };
+    }
+
+    if (message.mood) {
+      grouped[day].moods.push(message.mood);
+    }
+
+    if (Array.isArray(message.keywords)) {
+      grouped[day].keywords.push(...message.keywords);
+    }
   }
 
+  return grouped;
+};
+
+export async function GET() {
   try {
-    // Extract sessionId and other necessary data from request
-    const { sessionId } = req.body;
-    // Retrieve session-specific texts from AstraDB
-    const texts = await retrieveTextsForSession(sessionId);
-    // Send texts to OpenAI for analysis
-    const analysisResults = await sendTextsForAnalysis(texts);
-    // Process and respond with analysis results
-    res.status(200).json({ analysisResults });
+    const messagesCollection = await astraDb.collection("messages");
+    const messages = await messagesCollection.find({}).toArray();
+
+    // Group messages by day
+    const groupedData = groupByDay(messages);
+
+    // Prepare data for dashboard
+    const dailyData = Object.entries(groupedData).map(([day, data]) => ({
+      day,
+      averageMood: calculateAverageMood(data.moods),
+      keywords: data.keywords,
+    }));
+
+    return NextResponse.json({ dailyData });
   } catch (error) {
-    console.error('Error processing batch analysis:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error fetching data from Astra DB:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch data from the database." },
+      { status: 500 }
+    );
   }
-}
-
-async function retrieveTextsForSession(sessionId) {
-  // Implement retrieval logic based on sessionId
-  return [];
-}
-
-async function sendTextsForAnalysis(texts) {
-  // Implement batch sending and analysis logic using OpenAI SDK
-  return texts.map(text => ({ text, analysis: 'Sample analysis' })); // Placeholder for actual OpenAI analysis
 }
