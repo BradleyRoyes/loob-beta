@@ -1,20 +1,23 @@
+import { NextRequest, NextResponse } from "next/server";
+import { AstraDB } from "@datastax/astra-db-ts";
 import OpenAI from "openai";
 import { OpenAIStream, StreamingTextResponse } from "ai";
-import { AstraDB } from "@datastax/astra-db-ts";
-import { v4 as uuidv4 } from "uuid";
+import { env } from "node:process";
+import Pusher from "pusher";
 
+// Initialize OpenAI
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY!,
 });
 
+// Initialize AstraDB
 const astraDb = new AstraDB(
-  process.env.ASTRA_DB_APPLICATION_TOKEN,
-  process.env.ASTRA_DB_ENDPOINT,
-  process.env.ASTRA_DB_NAMESPACE
+  process.env.ASTRA_DB_APPLICATION_TOKEN!,
+  process.env.ASTRA_DB_ENDPOINT!,
+  process.env.ASTRA_DB_NAMESPACE!
 );
 
-const Pusher = require("pusher");
-
+// Initialize Pusher
 const pusher = new Pusher({
   appId: "1761208",
   key: "facc28e7df1eec1d7667",
@@ -24,14 +27,12 @@ const pusher = new Pusher({
 });
 
 function triggerPusherEvent(channel: string, event: string, data: any) {
-  pusher
-    .trigger(channel, event, data)
-    .then(() => console.log(`Event ${event} triggered on channel ${channel}`))
-    .catch((err) =>
-      console.error(`Error triggering event on channel ${channel}:`, err)
-    );
+  pusher.trigger(channel, event, data).catch((err) =>
+    console.error(`Error triggering event on channel ${channel}:`, err)
+  );
 }
 
+// Helper Function to Parse Analysis
 function parseAnalysis(content: string) {
   const regex = /{[\s\S]*?"mood"\s*:\s*".*?",\s*"keywords"\s*:\s*\[.*?\]}/;
   const match = content.match(regex);
@@ -39,7 +40,7 @@ function parseAnalysis(content: string) {
     try {
       const analysis = JSON.parse(match[0]);
       if (analysis.mood && Array.isArray(analysis.keywords)) {
-        return { Mood: analysis.mood, Keywords: analysis.keywords };
+        return { mood: analysis.mood, keywords: analysis.keywords };
       }
     } catch (error) {
       console.error("Failed to parse JSON from content", error);
@@ -48,6 +49,7 @@ function parseAnalysis(content: string) {
   return null;
 }
 
+// Save Message to Database
 async function saveMessageToDatabase(
   sessionId: string,
   content: string,
@@ -61,9 +63,7 @@ async function saveMessageToDatabase(
   });
 
   if (existingMessage) {
-    console.log(
-      "Duplicate message detected. Skipping save to prevent duplicates."
-    );
+    console.log("Duplicate message detected. Skipping save.");
     return;
   }
 
@@ -73,18 +73,66 @@ async function saveMessageToDatabase(
     content,
     length: content.length,
     createdAt: new Date(),
-    mood: analysis?.Mood || null,
-    keywords: analysis?.Keywords || null,
+    mood: analysis?.mood,
+    keywords: analysis?.keywords,
   };
 
   await messagesCollection.insertOne(messageData);
-  console.log("Message saved to database:", messageData);
 }
 
-export async function POST(req: any) {
+// Fetch Dashboard Data
+async function fetchDashboardData() {
+  const messagesCollection = await astraDb.collection("messages");
+  const messages = await messagesCollection.find({}).toArray();
+
+  const moodCounts: Record<string, number> = {};
+  const keywordCounts: Record<string, number> = {};
+
+  for (const message of messages) {
+    if (message.mood) {
+      moodCounts[message.mood] = (moodCounts[message.mood] || 0) + 1;
+    }
+
+    if (Array.isArray(message.keywords)) {
+      for (const keyword of message.keywords) {
+        keywordCounts[keyword] = (keywordCounts[keyword] || 0) + 1;
+      }
+    }
+  }
+
+  const moodData = Object.entries(moodCounts).map(([mood, count]) => ({
+    mood,
+    count,
+  }));
+
+  const keywordData = Object.entries(keywordCounts).map(([keyword, count]) => ({
+    keyword,
+    count,
+  }));
+
+  const engagementMetrics = {
+    attendees: messages.length,
+    interactions: messages.filter((msg) => msg.role === "user").length,
+  };
+
+  return { moodData, keywordData, engagementMetrics };
+}
+
+// API Routes
+
+export async function GET(req: NextRequest) {
   try {
-    const { messages, useRag, llm, similarityMetric, sessionId } =
-      await req.json();
+    const dashboardData = await fetchDashboardData();
+    return NextResponse.json(dashboardData, { status: 200 });
+  } catch (error) {
+    console.error("Error fetching dashboard data:", error);
+    return NextResponse.json({ error: "Failed to fetch dashboard data" }, { status: 500 });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const { messages, sessionId, useRag, llm, similarityMetric } = await req.json();
     let docContext = "";
 
     if (useRag) {
@@ -98,12 +146,7 @@ export async function POST(req: any) {
         const collection = await astraDb.collection(`chat_${similarityMetric}`);
         const cursor = collection.find(
           {},
-          {
-            sort: {
-              $vector: data[0]?.embedding,
-            },
-            limit: 5,
-          }
+          { sort: { $vector: data[0]?.embedding }, limit: 5 }
         );
         const documents = await cursor.toArray();
         docContext = documents.map((doc) => doc.content).join("\n");
@@ -124,96 +167,29 @@ export async function POST(req: any) {
     const ragPrompt = [
       {
         role: "system",
-        content: `
-          Important! You are an AI guide named Loob whose primary purpose is to help users quickly choose one of 11 unique cyberdelic experiences at the Cyberdelic Showcase at Gamesground 2024. Only recommend one of the following 11 experiences: RealmsOfFlow, VistaReality, MesmerPrism, TeraExperience, StarStuff, Visitations, Squingle, PatchWorld, CosmicSugar, BrainCandy, Synedelica.
-
-          Your tone is short, witty, and playful. Use concise, conversational questions to quickly understand each user's mood, preferences, and desired experience intensity level. Your objective is to match them with an experience that aligns with these elements as smoothly and swiftly as possible.
-
-          **Interaction Guidelines**:
-          - Use tarot-like, indirect leading questions to subtly reveal the user’s preferences for intensity, interactivity, and duration. 
-          - Avoid open-ended assistance questions. Keep each response pointed and relevant, and ask only up to three targeted questions before recommending a choice.
-          - Add a bit of randomness and magic to your recommendations, and always explain your choice.
-          - Prompt users to share quick voice notes to keep the interaction natural.
-          - Once a decision is made, tell the user to visit a technician to start their experience and wish them a beautiful journey.
-          - If the user sends "*** Analyse my messages ***," provide only JSON formatted mood and keyword analysis like this:
-          { "mood": "positive", "keywords": ["calm", "exploration", "interactive"] }
-
-          Document context:
-          ${docContext}
-        `,
+        content: `You are an AI assistant. Use the context to respond effectively: ${docContext}`,
       },
     ];
 
     const response = await openai.chat.completions.create({
-      model: llm ?? "gpt-3.5-turbo",
+      model: llm || "gpt-3.5-turbo",
       stream: true,
       messages: [...ragPrompt, ...messages],
     });
 
     const stream = OpenAIStream(response, {
-      onStart: async () => {
-        console.log("Stream started");
-      },
-      onCompletion: async (completion: string) => {
+      onCompletion: async (completion) => {
         const analysis = parseAnalysis(completion);
         if (analysis) {
-          triggerPusherEvent("my-channel", "my-event", { analysis });
+          triggerPusherEvent("dashboard-updates", "data-update", analysis);
         }
         await saveMessageToDatabase(sessionId, completion, "assistant", analysis);
       },
     });
 
     return new StreamingTextResponse(stream);
-  } catch (e) {
-    console.error("Error in POST function:", e);
-    throw e;
-  }
-}
-
-export async function GET(req: any) {
-  try {
-    const messagesCollection = await astraDb.collection("messages");
-    const messages = await messagesCollection.find({}).toArray();
-
-    const moodCounts: Record<string, number> = {};
-    const keywordCounts: Record<string, number> = {};
-
-    for (const message of messages) {
-      if (message.mood) {
-        moodCounts[message.mood] = (moodCounts[message.mood] || 0) + 1;
-      }
-
-      if (Array.isArray(message.keywords)) {
-        for (const keyword of message.keywords) {
-          keywordCounts[keyword] = (keywordCounts[keyword] || 0) + 1;
-        }
-      }
-    }
-
-    const moodData = Object.entries(moodCounts).map(([mood, count]) => ({
-      mood,
-      count,
-    }));
-
-    const keywordData = Object.entries(keywordCounts).map(([keyword, count]) => ({
-      keyword,
-      count,
-    }));
-
-    return new Response(
-      JSON.stringify({
-        moodData,
-        keywordData,
-      }),
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
   } catch (error) {
-    console.error("Error in GET function:", error);
-    return new Response("Failed to fetch data", { status: 500 });
+    console.error("Error in POST function:", error);
+    return NextResponse.json({ error: "Failed to process request" }, { status: 500 });
   }
 }
