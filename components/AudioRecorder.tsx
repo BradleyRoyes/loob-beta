@@ -1,26 +1,21 @@
 import React, { useState, useRef, useEffect } from "react";
 import Recorder from "recorder-js";
-import * as THREE from "three";
 
 interface AudioRecorderProps {
-  onRecordingComplete?: (audioBlob: Blob, transcription: string) => void;
-  startRecording?: () => void;
+  onRecordingComplete: (audioBlob: Blob, transcription: string) => void;
+  startRecording: () => void;
 }
 
 const AudioRecorder: React.FC<AudioRecorderProps> = ({
-  onRecordingComplete = (audioBlob, transcription) => {
-    console.log("Default Transcription:", transcription);
-  },
-  startRecording = () => {
-    console.log("Default Start Recording");
-  },
+  onRecordingComplete,
+  startRecording,
 }) => {
   const [recording, setRecording] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string>("Click to Start Recording");
   const recorderRef = useRef<Recorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const torusRef = useRef<HTMLDivElement | null>(null);
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const startAudioRecording = async () => {
     if (recording || processing) return;
@@ -36,12 +31,11 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       recorderRef.current = recorder;
       audioContextRef.current = audioContext;
       setRecording(true);
-      setStatusMessage("Recording... Click again to stop");
+      setStatusMessage("Recording... Click again to end");
 
-      startRecording(); // Call optional prop
+      startRecording();
     } catch (error) {
       console.error("Error starting recording:", error);
-      setStatusMessage("Error: Unable to start recording.");
     }
   };
 
@@ -51,6 +45,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
     try {
       const recorder = recorderRef.current;
 
+      // Stop recording and get audio data as WAV
       const { blob } = await recorder.stop();
       setRecording(false);
       setProcessing(true);
@@ -61,22 +56,24 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
         audioContextRef.current.close();
         audioContextRef.current = null;
       }
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
 
       // Process transcription
       try {
-        const transcription = await processTranscription(blob);
-        onRecordingComplete(blob, transcription); // Call optional prop
+        const transcription = await processTranscription(blob); // Use built-in transcription function
         setProcessing(false);
         setStatusMessage("Click to Start Recording");
-      } catch (error) {
-        console.error("Error processing transcription:", error);
+        onRecordingComplete(blob, transcription); // Send audio and transcription back
+      } catch (apiError) {
+        console.error("Error processing transcription:", apiError);
         setProcessing(false);
         setStatusMessage("Error processing. Try again.");
       }
     } catch (error) {
       console.error("Error stopping recording:", error);
-      setProcessing(false);
-      setStatusMessage("Error: Unable to stop recording.");
     }
   };
 
@@ -96,58 +93,13 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       }
 
       const data = await response.json();
+      console.log("Transcription received:", data.transcription);
       return data.transcription;
     } catch (error) {
-      console.error("Error with transcription API:", error);
+      console.error("Error processing transcription:", error);
       throw new Error("Failed to process transcription.");
     }
   };
-
-  useEffect(() => {
-    if (!processing || !torusRef.current) return;
-
-    // Initialize Three.js for the torus animation
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-
-    renderer.setSize(200, 200);
-    torusRef.current.appendChild(renderer.domElement);
-
-    const geometry = new THREE.TorusKnotGeometry(5, 1.5, 128, 16, 3, 2);
-    const material = new THREE.MeshStandardMaterial({
-      transparent: true,
-      opacity: 0.8,
-      color: new THREE.Color("#FF4500"),
-      emissive: new THREE.Color("#FFA500"),
-      emissiveIntensity: 1,
-    });
-    const torus = new THREE.Mesh(geometry, material);
-    scene.add(torus);
-
-    const light = new THREE.PointLight(0xffffff, 1, 100);
-    light.position.set(10, 10, 10);
-    scene.add(light);
-
-    camera.position.z = 20;
-
-    const animate = () => {
-      if (!processing) return;
-      requestAnimationFrame(animate);
-      torus.rotation.x += 0.01;
-      torus.rotation.y += 0.01;
-      renderer.render(scene, camera);
-    };
-
-    animate();
-
-    return () => {
-      renderer.dispose();
-      while (torusRef.current?.firstChild) {
-        torusRef.current.removeChild(torusRef.current.firstChild);
-      }
-    };
-  }, [processing]);
 
   useEffect(() => {
     return () => {
@@ -158,7 +110,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
 
   const buttonStyle: React.CSSProperties = {
     backgroundColor: "transparent",
-    border: "2px solid #FFA500",
+    border: "2px solid var(--text-primary-inverse)",
     borderRadius: "50%",
     cursor: "pointer",
     display: "flex",
@@ -187,53 +139,57 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
             color: #FFA500;
             text-shadow: 0 0 8px #FFA500, 0 0 12px #FF4500;
           }
+
+          .spinner {
+            margin-top: 10px;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 165, 0, 0.3);
+            border-top: 3px solid #FFA500;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+          }
+
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
         `}
       </style>
 
-      {!processing && (
-        <button
-          className="recordButton"
-          onClick={recording ? stopAudioRecording : startAudioRecording}
-          style={buttonStyle}
+      <button
+        className="recordButton"
+        onClick={recording ? stopAudioRecording : startAudioRecording}
+        style={buttonStyle}
+        disabled={processing}
+      >
+        <svg
+          viewBox="0 0 24 24"
+          width="30"
+          height="30"
+          stroke="var(--text-primary-inverse)"
+          strokeWidth="2"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          <svg
-            viewBox="0 0 24 24"
-            width="30"
-            height="30"
-            stroke="#FFA500"
-            strokeWidth="2"
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            {recording ? (
-              <rect x="5" y="5" width="14" height="14" fill="#FFA500" rx="3" />
-            ) : (
-              <>
-                <path d="M12 1a3 3 0 0 1 3 3v6a3 3 0 1 1-6 0V4a3 3 0 1 1 3-3z" />
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                <line x1="12" y1="19" x2="12" y2="23" />
-                <line x1="8" y1="23" x2="16" y2="23" />
-              </>
-            )}
-          </svg>
-        </button>
-      )}
+          {recording ? (
+            <rect x="5" y="5" width="14" height="14" fill="#FFA500" rx="3" />
+          ) : (
+            <>
+              <path d="M12 1a3 3 0 0 1 3 3v6a3 3 0 1 1-6 0V4a3 3 0 1 1 3-3z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+              <line x1="12" y1="19" x2="12" y2="23" />
+              <line x1="8" y1="23" x2="16" y2="23" />
+            </>
+          )}
+        </svg>
+      </button>
 
       <div className="cyber-text" style={{ marginTop: "15px" }}>
         {statusMessage}
+        {processing && <div className="spinner" />}
       </div>
-
-      {processing && (
-        <div
-          ref={torusRef}
-          style={{
-            margin: "20px auto",
-            width: "150px",
-            height: "150px",
-          }}
-        />
-      )}
     </div>
   );
 };
