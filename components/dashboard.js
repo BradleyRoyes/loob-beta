@@ -8,6 +8,7 @@ const Dashboard = () => {
   const [keywordData, setKeywordData] = useState([]); // For word cloud
   const [sentimentData, setSentimentData] = useState([]); // For sentiment trends
   const [engagementMetrics, setEngagementMetrics] = useState({ attendees: 0, interactions: 0 });
+  const [isDataLoaded, setIsDataLoaded] = useState(false); // Track if data is being received
 
   // Fetch initial data from the route
   useEffect(() => {
@@ -16,11 +17,13 @@ const Dashboard = () => {
         const response = await fetch("/api/dashboard"); // Matches the `GET` route in route.ts
         const data = await response.json();
 
-        setSentimentData(data.moodData); // moodData from the route
-        setKeywordData(data.keywordData); // keywordData from the route
+        setSentimentData(data.moodData);
+        setKeywordData(data.keywordData);
         setEngagementMetrics(data.engagementMetrics || { attendees: 0, interactions: 0 });
+        setIsDataLoaded(true); // Data loaded successfully
       } catch (error) {
         console.error("Failed to fetch data:", error);
+        setIsDataLoaded(false); // Indicate data load failure
       }
     }
     fetchData();
@@ -39,6 +42,7 @@ const Dashboard = () => {
       if (data.moodData) setSentimentData(data.moodData);
       if (data.keywordData) setKeywordData(data.keywordData);
       if (data.engagementMetrics) setEngagementMetrics(data.engagementMetrics);
+      setIsDataLoaded(true); // Indicate successful update
     });
 
     return () => {
@@ -94,11 +98,35 @@ const Dashboard = () => {
   }, [keywordData]);
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px", padding: "20px" }}>
+    <div
+      style={{
+        padding: "20px",
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+        gap: "20px",
+      }}
+    >
+      {/* Data Status Indicator */}
+      <div
+        style={{
+          gridColumn: "1 / -1",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "50px",
+          borderRadius: "8px",
+          background: isDataLoaded ? "#D4EDDA" : "#F8D7DA",
+          color: isDataLoaded ? "#155724" : "#721C24",
+          textAlign: "center",
+          fontWeight: "bold",
+        }}
+      >
+        {isDataLoaded ? "Data Loaded Successfully 🎉" : "Loading Data... 🔄"}
+      </div>
+
       {/* Sentiment Chart Panel */}
       <div
         style={{
-          gridColumn: "1 / 3",
           border: "2px solid black",
           borderRadius: "8px",
           padding: "20px",
