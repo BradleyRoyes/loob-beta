@@ -14,7 +14,7 @@ const Dashboard = () => {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch("/api/dashboard"); // Matches the `GET` route in route.ts
+        const response = await fetch("/api/chat"); // Matches the `GET` route in route.ts
         const data = await response.json();
 
         setSentimentData(data.moodData);
