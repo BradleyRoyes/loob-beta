@@ -62,7 +62,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
             transition={{ duration: 0.5 }}
             className="text-center"
           >
-            <h2 className="gradientText biggerText">Hi.<br />I'm Loob.</h2>
+            <h2 className="gradientText biggerText">Hi.<br />I am Loob.</h2>
             <div className="mt-4">
               <button className="actionButton" onClick={() => proceed("introPhase")}>Enter</button>
             </div>
