@@ -1,53 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import "./SplashScreen.css";
-import AudioRecorder from './AudioRecorder';
+import AudioRecorder from "./AudioRecorder";
 
 const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnter }) => {
-  const [phase, setPhase] = useState<string>("welcomePhase");
+  const [phase, setPhase] = useState<"welcomePhase" | "introPhase" | "promptPhase">("welcomePhase");
   const [randomPrompt, setRandomPrompt] = useState<string>("");
   const [fadeToBlack, setFadeToBlack] = useState<boolean>(false);
 
-  const allPrompts = [
-    'What, if anything, does "cyberdelic" mean to you?',
-    'what do you think is the best thing about being a child?',
-    'When you order coffee: quantity or quality?',
-    'What is the best part about going on vacation?',
-    'What would you like to have happen after you die?',
-    'You wake up to realize your whole life was a dream, what are your first words?',
-    'Where in your body would you say you "live" (i.e. shoulders, hands, belly,)?',
-  ];
-
-  const [availablePrompts, setAvailablePrompts] = useState([...allPrompts]);
-  const [usedPrompts, setUsedPrompts] = useState<string[]>([]);
-
-  const getRandomPrompt = (): string => {
-    if (availablePrompts.length === 1) {
-      setAvailablePrompts([...usedPrompts]);
-      setUsedPrompts([]);
-    }
-
-    const randomIndex = Math.floor(Math.random() * availablePrompts.length);
-    const prompt = availablePrompts[randomIndex];
-    setAvailablePrompts(prevPrompts => prevPrompts.filter((_, index) => index !== randomIndex));
-    setUsedPrompts(prevUsedPrompts => [...prevUsedPrompts, prompt]);
-
-    return prompt;
-  };
-
-  const proceed = (nextPhase: string): void => {
-    setPhase(nextPhase);
-    if (nextPhase === "promptPhase") {
-      setRandomPrompt(getRandomPrompt());
-    }
-  };
+  const proceed = useCallback(
+    (nextPhase: "welcomePhase" | "introPhase" | "promptPhase") => {
+      setPhase(nextPhase);
+      if (nextPhase === "promptPhase") {
+        setRandomPrompt("a drink,\n or an experience?");
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     if (phase === "introPhase") {
       const timer = setTimeout(() => proceed("promptPhase"), 4000);
       return () => clearTimeout(timer);
     }
-  }, [phase]);
+  }, [phase, proceed]);
 
   const handleRecordingComplete = async (audioBlob: Blob) => {
     setFadeToBlack(true);
@@ -56,8 +32,8 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
     formData.append("audio", audioBlob, "audio/webm");
 
     try {
-      const response = await fetch('/api/transcribe', {
-        method: 'POST',
+      const response = await fetch("/api/transcribe", {
+        method: "POST",
         body: formData,
       });
 
@@ -68,25 +44,28 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
       const data = await response.json();
       onEnter(data.transcription);
     } catch (error) {
-      console.error('Error uploading audio:', error);
+      console.error("Error uploading audio:", error);
+      alert("There was an error processing your audio. Please try again.");
     }
   };
 
   return (
-    <div className="splashScreen">
+    <div className="splashScreen" style={{ padding: "3rem" }}>
       {/* 3D Grid Background */}
       <div className="gridBackground"></div>
 
-      <div className="content">
+      <div className="content" style={{ padding: "1.5rem" }}>
         {phase === "welcomePhase" && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
+            className="text-center"
           >
-            <h1 className="gradientText biggerText">Hi.</h1>
-            <h2 className="gradientText biggerText">Care for an adventure?</h2>
-            <button className="actionButton" onClick={() => proceed("introPhase")}>Enter</button>
+            <h2 className="gradientText biggerText">Hi.<br />I'm Loob.</h2>
+            <div className="mt-4">
+              <button className="actionButton" onClick={() => proceed("introPhase")}>Enter</button>
+            </div>
           </motion.div>
         )}
 
@@ -95,11 +74,15 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
+            className="text-center"
           >
             <h1 className="gradientText">
-              I’m Loob, your guide. <br /><br /> I help tell stories that are hard to tell.
+              Welcome to the Cyberdelic Showcase<br />
+            
             </h1>
-            <button className="actionButton" onClick={() => proceed("promptPhase")}>Continue</button>
+            <div className="mt-4">
+              <button className="actionButton" onClick={() => proceed("promptPhase")}>Continue</button>
+            </div>
           </motion.div>
         )}
 
@@ -108,18 +91,24 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
+            className="text-center"
           >
-            <h3 className="gradientText">Tell me...</h3>
-            <h2 className="gradientText">{randomPrompt}</h2>
-            <div className="buttonContainer">
-              <div className="recordWrapper">
+            <h3 className="gradientText" style={{ marginBottom: "2rem" }}>Whatcha in the mood for?</h3>
+            <h2 className="gradientText" style={{ whiteSpace: "pre-wrap", lineHeight: "1.8", marginBottom: "2rem" }}>{randomPrompt}</h2>
+            <div className="buttonContainer mt-6" style={{ marginTop: "2.5rem" }}>
+              <div className="recordWrapper" style={{ boxShadow: "none" }}>
                 <AudioRecorder
                   onRecordingComplete={handleRecordingComplete}
-                  startRecording={() => console.log('Recording started')}
+                  startRecording={() => console.log("Recording started")}
                 />
-                <button className="newPromptButton" onClick={() => setRandomPrompt(getRandomPrompt())}>
+                {/*
+                <button
+                  className="newPromptButton mt-4"
+                  onClick={() => setRandomPrompt(getRandomPrompt())}
+                >
                   New Question
                 </button>
+                */}
               </div>
             </div>
           </motion.div>
@@ -132,7 +121,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
           className="fadeOverlay"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 1.5 }} // Slow smooth fade
+          transition={{ duration: 1.5 }}
         ></motion.div>
       )}
     </div>

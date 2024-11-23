@@ -9,10 +9,10 @@ interface AudioRecorderProps {
 const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, startRecording }) => {
   const [recording, setRecording] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<string>("Click to Start Recording");
+  const [statusMessage, setStatusMessage] = useState<string>("Click me and speak");
   const recorderRef = useRef<Recorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [audioLevel, setAudioLevel] = useState<number>(0);
 
   const startAudioRecording = async () => {
     if (recording || processing) return;
@@ -28,17 +28,16 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
       recorderRef.current = recorder;
       audioContextRef.current = audioContext;
       setRecording(true);
-      setStatusMessage("Recording... Click again to end");
+      setStatusMessage("Recording... Click me again to stop");
 
       startRecording();
-
-      detectSilence(audioContext, stream);
+      analyzeAudio(audioContext, stream);
     } catch (error) {
       console.error("Error starting recording:", error);
     }
   };
 
-  const detectSilence = (audioContext: AudioContext, stream: MediaStream) => {
+  const analyzeAudio = (audioContext: AudioContext, stream: MediaStream) => {
     const analyser = audioContext.createAnalyser();
     const microphone = audioContext.createMediaStreamSource(stream);
     const scriptProcessor = audioContext.createScriptProcessor(2048, 1, 1);
@@ -55,21 +54,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
       analyser.getByteFrequencyData(array);
 
       const volume = array.reduce((a, b) => a + b, 0) / array.length;
-
-      if (volume < 10) {
-        if (!silenceTimerRef.current) {
-          silenceTimerRef.current = setTimeout(() => {
-            console.log("Silence detected, stopping recording.");
-            stopAudioRecording();
-            stream.getTracks().forEach((track) => track.stop());
-            scriptProcessor.disconnect();
-            analyser.disconnect();
-          }, 2000);
-        }
-      } else if (silenceTimerRef.current) {
-        clearTimeout(silenceTimerRef.current);
-        silenceTimerRef.current = null;
-      }
+      setAudioLevel(volume);
     };
   };
 
@@ -86,21 +71,18 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
 
       recorderRef.current = null;
       if (audioContextRef.current) {
-        audioContextRef.current.close();
+        await audioContextRef.current.close();
         audioContextRef.current = null;
       }
-      if (silenceTimerRef.current) {
-        clearTimeout(silenceTimerRef.current);
-        silenceTimerRef.current = null;
-      }
-
-      console.log("Recording stopped, WAV blob created:", blob);
 
       setTimeout(() => {
-        onRecordingComplete(blob);
-        setProcessing(false);
-        setStatusMessage("Click to Start Recording");
-      }, 3000);
+        setStatusMessage("Still processing...");
+        setTimeout(() => {
+          setStatusMessage("Click me and speak");
+          setProcessing(false);
+          onRecordingComplete(blob);
+        }, 6000); // Additional delay for the "still processing" phase
+      }, 2000); // Initial delay before showing "still processing"
     } catch (error) {
       console.error("Error stopping recording:", error);
     }
@@ -113,19 +95,20 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
     };
   }, []);
 
+  const handleClick = () => {
+    if (recording) {
+      stopAudioRecording();
+    } else {
+      startAudioRecording();
+    }
+  };
+
   const buttonStyle: React.CSSProperties = {
-    backgroundColor: "transparent",
-    border: "2px solid var(--text-primary-inverse)",
-    borderRadius: "50%",
+    border: "none",
+    background: "transparent",
     cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "20px",
-    width: "80px",
-    height: "80px",
-    transition: "all 0.3s",
-    animation: recording ? "pulse 1s infinite" : "none",
+    padding: 0,
+    margin: 0,
   };
 
   return (
@@ -134,55 +117,112 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: "15px",
+        flexDirection: "column",
+        gap: "20px",
       }}
     >
       <style>
         {`
-          @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+          /* Main Button Style */
+          .microphone-icon {
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle at center, rgba(255, 182, 193, 0.9), rgba(255, 218, 185, 0.6));
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 0 ${10 + audioLevel * 0.5}px rgba(255, 145, 135, 0.8);
+            transform: scale(${1 + audioLevel / 300});
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+          }
+
+          /* Outer Ripple Effect */
+          .ripple-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400%;
+            height: 400%;
+            pointer-events: none;
+          }
+
+          .ripple {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, rgba(255, 180, 120, 0.5), transparent);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(1);
+            animation: rippleEffect 2.5s ease-out infinite;
+          }
+
+          @keyframes rippleEffect {
+            0% {
+              opacity: 1;
+              transform: translate(-50%, -50%) scale(1);
+            }
+            100% {
+              opacity: 0;
+              transform: translate(-50%, -50%) scale(10);
+            }
+          }
+
+          /* Glow Ripple for Button */
+          .glow-ripple {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: ${150 + audioLevel * 1.5}px;
+            height: ${150 + audioLevel * 1.5}px;
+            background: radial-gradient(circle, rgba(255, 145, 135, 0.4), transparent);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: glowEffect 1.5s ease-out infinite;
+            opacity: ${Math.min(audioLevel / 50, 1)};
+          }
+
+          @keyframes glowEffect {
+            0%, 100% {
+              transform: translate(-50%, -50%) scale(1);
+            }
+            50% {
+              transform: translate(-50%, -50%) scale(1.2);
+            }
           }
 
           .cyber-text {
-            font-size: 16px;
+            font-size: 18px;
             font-family: 'Courier New', Courier, monospace;
-            color: #ff0080;
-            text-shadow: 0 0 8px #ff8e88, 0 0 12px #ff0080;
+            color: darkorange;
+            text-shadow: 0 0 10px #ff8e88, 0 0 15px darkorange;
           }
         `}
       </style>
 
-      {!processing && (
-        <button
-          className="recordButton"
-          onClick={recording ? stopAudioRecording : startAudioRecording}
-          style={buttonStyle}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            width="30"
-            height="30"
-            stroke="var(--text-primary-inverse)"
-            strokeWidth="2"
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            {recording ? (
-              <rect x="5" y="5" width="14" height="14" fill="#ff8e88" rx="3" />
-            ) : (
-              <>
-                <path d="M12 1a3 3 0 0 1 3 3v6a3 3 0 1 1-6 0V4a3 3 0 1 1 3-3z" />
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                <line x1="12" y1="19" x2="12" y2="23" />
-                <line x1="8" y1="23" x2="16" y2="23" />
-              </>
-            )}
-          </svg>
-        </button>
-      )}
+      <button
+        className="recordButton"
+        onClick={handleClick}
+        style={buttonStyle}
+        disabled={processing}
+      >
+        <div className="microphone-icon">
+          <div className="ripple-container">
+            {Array.from({ length: Math.min(8, Math.ceil(audioLevel / 20)) }).map((_, i) => (
+              <div
+                key={i}
+                className="ripple"
+                style={{
+                  animationDelay: `${i * (0.2 / Math.max(audioLevel / 50, 1))}s`,
+                  animationDuration: `${2.5 - Math.min(audioLevel / 50, 1.5)}s`,
+                }}
+              ></div>
+            ))}
+          </div>
+          <div className="glow-ripple"></div>
+        </div>
+      </button>
 
       <div className="cyber-text">{statusMessage}</div>
     </div>

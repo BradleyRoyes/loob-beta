@@ -440,3 +440,61 @@ body {
   right: 0; /* Aligns the button to the right */
 }
 
+.map-container {
+  position: relative;
+  height: 100vh;
+  padding: 20px;
+  background-color: #f3f3f3;
+}
+
+#mock-map {
+  position: relative;
+  width: 100%;
+  height: 80%;
+  background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Blank_map_of_Berlin.png/1024px-Blank_map_of_Berlin.png') no-repeat center center;
+  background-size: cover;
+}
+
+.map-marker {
+  position: absolute;
+  padding: 5px 10px;
+  background-color: #3498db;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+}
+
+/* Tailwind classes are combined with your global styles */
+
+/* Sidebar Button Active States */
+.button-dash {
+  transition: all 0.3s ease-in-out;
+}
+.button-dash:hover {
+  transform: scale(1.05);
+  background: linear-gradient(to right, #ff7e79, #ffb48f);
+}
+
+/* Main Panel */
+.main-panel {
+  box-shadow: var(--shadow-primary);
+  overflow: hidden;
+  animation: swirlEffect 10s infinite;
+}
+
+/* Add a glowing animation for cyberdelic styling */
+@keyframes swirlEffect {
+  0% {
+    background-color: #800080;
+    transform: rotate(0deg);
+  }
+  50% {
+    background-color: #ff007f;
+    transform: rotate(180deg);
+  }
+  100% {
+    background-color: #800080;
+    transform: rotate(360deg);
+  }
+}

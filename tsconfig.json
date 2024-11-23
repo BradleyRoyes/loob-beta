@@ -1,13 +1,9 @@
 {
   "compilerOptions": {
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": false,
+    "strict": false, // Set to true for stricter type checking
     "noEmit": true,
     "incremental": true,
     "esModuleInterop": true,
@@ -15,28 +11,30 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "strictNullChecks": true
+    "jsx": "preserve", // Use "react-jsx" if needed
+    "plugins": [{ "name": "next" }],
+    "strictNullChecks": true,
+    "target": "ESNext", // Updated from ES2017
+    "baseUrl": ".",
+    "paths": {
+      "@components/*": ["components/*"]
+    }
   },
   "include": [
     "next-env.d.ts",
     ".next/types/**/*.ts",
     "**/*.ts",
-    "**/*.tsx"
-  ],
+    "**/*.tsx",
+    "components/**/*.ts",
+    "components/**/*.tsx"
+, "components/Torusphere.jsx"  ],
   "ts-node": {
-    // these options are overrides used only by ts-node
-    // same as the --compilerOptions flag and the TS_NODE_COMPILER_OPTIONS environment variable
     "compilerOptions": {
       "module": "commonjs"
     }
   },
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }
+
+
+

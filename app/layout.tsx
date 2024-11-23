@@ -6,10 +6,10 @@ export const metadata = {
   description: "Loob - Powered by seks",
 };
 
-export default function RootLayout({ children }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={GeistSans.variable}>
-      <body>{children}</body>
+      <body className="min-h-screen">{children}</body>
     </html>
   );
 }

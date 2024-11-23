@@ -25,6 +25,7 @@
   text-align: center;
   z-index: 1;
   transition: opacity 1s ease, transform 1s ease;
+  font-size: 1.5rem; /* Increased font size */
 }
 
 /* Gradient Text Styling */
@@ -32,7 +33,7 @@
   background: linear-gradient(45deg, pink, orange);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  font-size: 1.5rem;
+  font-size: 2.25rem; /* 50% bigger */
   margin: 0;
   text-align: center;
 }
@@ -46,16 +47,10 @@
   background: linear-gradient(45deg, pink, orange);
   border-radius: 16px;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 1.5rem; /* 50% bigger */
   font-weight: bold;
   text-transform: none;
   transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
-}
-
-.splashScreen button:hover {
-  background-color: black;
-  color: white;
-  transform: scale(1.05);
 }
 
 /* Record Section Layout */
@@ -79,18 +74,16 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 0 25px rgba(255, 165, 0, 0.6); /* Stronger glow */
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease;
 }
 
 .recordButton:hover {
   transform: scale(1.2); /* Bigger hover scale */
-  box-shadow: 0 0 40px rgba(255, 165, 0, 0.9); /* More intense glow on hover */
 }
 
 .recordButton svg {
-  width: 30px; /* Adjusted for larger button */
-  height: 30px;
+  width: 45px; /* 50% bigger */
+  height: 45px; /* 50% bigger */
 }
 
 /* Smaller New Question Button */
@@ -101,14 +94,8 @@
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 10px; /* Smaller font size */
+  font-size: 15px; /* 50% bigger */
   transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.newPromptButton:hover {
-  background-color: black;
-  color: white;
-  transform: scale(1.05);
 }
 
 /* Circular Radial Gradient Background */
@@ -162,10 +149,11 @@
   .content {
     gap: 10px;
     padding: 10px;
+    font-size: 1.5rem; /* Increased font size */
   }
 
   .gradientText {
-    font-size: 1.5rem;
+    font-size: 2.25rem; /* 50% bigger */
   }
 
   .recordButton {
@@ -173,7 +161,7 @@
   }
 
   .newPromptButton {
-    font-size: 9px; /* Smaller size for mobile */
+    font-size: 13.5px; /* 50% bigger */
     padding: 3px 6px;
   }
 }
