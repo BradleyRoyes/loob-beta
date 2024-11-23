@@ -7,7 +7,8 @@
     "build": "next build && npm run seed",
     "start": "next start",
     "seed": "ts-node ./scripts/populateDb.ts",
-    "lint": "next lint"
+    "lint": "next lint",
+    "analyze": "cross-env ANALYZE=true next build"
   },
   "dependencies": {
     "@babylonjs/core": "^7.35.0",
@@ -69,6 +70,7 @@
     "@types/node": "^20.8.10",
     "@types/react": "^18.2.37",
     "autoprefixer": "^10",
+    "cross-env": "^7.0.3",
     "dotenv": "^16.4.5",
     "eslint": "^8.57.1",
     "eslint-config-next": "13.5.5",
