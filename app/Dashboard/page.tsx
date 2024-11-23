@@ -10,7 +10,11 @@ import ThemeButton from '../../components/ThemeButton';
 import Profile from './Profile';
 import Map from './Map'; // Import the Map component
 
-const DashboardPage = ({ onBackToChat }: { onBackToChat: () => void }) => {
+type DashboardPageProps = {
+  onBackToChat: () => void; // Define the type of props here
+};
+
+const DashboardPage: React.FC<DashboardPageProps> = ({ onBackToChat }) => {
   const [view, setView] = useState<string>('Dashboard'); // Manage active view
 
   return (
