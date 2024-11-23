@@ -1,32 +1,26 @@
 'use client';
 
 import React, { useState } from 'react';
-import TorusSphere from '../../components/Torusphere';
-import TorusSphereWeek from '../../components/TorusSphereWeek';
-import TorusSphereAll from '../../components/TorusSphereAll';
-import Footer from './Footer';
-import Header from './Header';
-import ThemeButton from '../../components/ThemeButton';
-import Profile from './Profile';
-import Map from './Map';
-import { useRouter } from 'next/navigation';
+import TorusSphere from '../../components/Torusphere'; // Importing from components directory
+import TorusSphereWeek from '../../components/TorusSphereWeek'; // Importing from components directory
+import TorusSphereAll from '../../components/TorusSphereAll'; // Importing from components directory
+import Footer from './Footer'; // Importing from the same folder as Dashboard page
+import Header from './Header'; // Importing from the same folder as Dashboard page
+import Profile from './Profile'; // Importing from the same folder as Dashboard page
+import Map from './Map'; // Importing from the same folder as Dashboard page
+import { useRouter } from 'next/navigation'; // Import Next.js router
 
-export default function Page() {
+export default function DashboardPage() {
   const [view, setView] = useState<string>('Dashboard');
-  const router = useRouter(); // Use Next.js router for navigation
-
-  // Functions to handle navigation
-  const handleBackToDashboard = () => setView('Dashboard');
-  const handleGoToProfile = () => setView('Profile');
-  const handleGoToChat = () => router.push('/'); // Navigate back to the main chat page
+  const router = useRouter(); // Router instance for navigating back to chat
 
   return (
     <div className="dashboard-container flex flex-col h-screen overflow-hidden bg-gradient-to-b from-pink-400 via-black to-black">
-      {/* Header with routing functions */}
+      {/* Header */}
       <Header
-        onBackClick={handleBackToDashboard}
-        onProfileClick={handleGoToProfile}
-        onChatClick={handleGoToChat}
+        onBackClick={() => setView('Dashboard')}
+        onProfileClick={() => setView('Profile')}
+        onChatClick={() => router.push('/')} // Use router to navigate back to chat
       />
 
       <div className="flex flex-grow overflow-hidden">
@@ -80,7 +74,6 @@ export default function Page() {
 
       {/* Theme Button */}
       <div className="absolute top-4 right-4 flex space-x-4">
-        <ThemeButton />
       </div>
 
       {/* Footer */}

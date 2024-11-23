@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import "./SplashScreen.css";
 import AudioRecorder from "./AudioRecorder";
@@ -62,9 +62,11 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
             transition={{ duration: 0.5 }}
             className="text-center"
           >
-            <h2 className="gradientText biggerText">Hi.<br />I am Loob.</h2>
+            <h2 className="gradientText biggerText">
+              Loob <span className="smallText">beta</span>
+            </h2>
             <div className="mt-4">
-              <button className="actionButton" onClick={() => proceed("introPhase")}>Enter</button>
+              <button className="actionButton" onClick={() => proceed("introPhase")}>Start</button>
             </div>
           </motion.div>
         )}
@@ -78,7 +80,6 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
           >
             <h1 className="gradientText">
               Welcome to the Cyberdelic Showcase<br />
-            
             </h1>
             <div className="mt-4">
               <button className="actionButton" onClick={() => proceed("promptPhase")}>Continue</button>
@@ -101,14 +102,6 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
                   onRecordingComplete={handleRecordingComplete}
                   startRecording={() => console.log("Recording started")}
                 />
-                {/*
-                <button
-                  className="newPromptButton mt-4"
-                  onClick={() => setRandomPrompt(getRandomPrompt())}
-                >
-                  New Question
-                </button>
-                */}
               </div>
             </div>
           </motion.div>
