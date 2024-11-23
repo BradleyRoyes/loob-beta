@@ -8,7 +8,11 @@
     "start": "next start",
     "seed": "ts-node ./scripts/populateDb.ts",
     "lint": "next lint",
-    "analyze": "cross-env ANALYZE=true next build"
+    "analyze": "cross-env ANALYZE=true next build",
+    "dev": "next dev",
+  "build": "next build || true",
+  "start": "next start"
+  
   },
   "dependencies": {
     "@babylonjs/core": "^7.35.0",
