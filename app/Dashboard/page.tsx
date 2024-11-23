@@ -1,29 +1,28 @@
-'use client';
+'use client'; // Mark the page as a client component
 
 import React, { useState } from 'react';
-import TorusSphere from '../../components/Torusphere';
-import TorusSphereWeek from '../../components/TorusSphereWeek';
-import TorusSphereAll from '../../components/TorusSphereAll';
+import dynamic from 'next/dynamic';
 import Footer from './Footer';
 import Header from './Header';
 import ThemeButton from '../../components/ThemeButton';
-import Profile from './Profile';
-import Map from './Map'; // Import the Map component
 
-type DashboardPageProps = {
-  onBackToChat: () => void; // Define the type of props here
-};
+// Dynamically import components to improve performance
+const TorusSphere = dynamic(() => import('../../components/Torusphere'), { ssr: false });
+const TorusSphereWeek = dynamic(() => import('../../components/TorusSphereWeek'));
+const TorusSphereAll = dynamic(() => import('../../components/TorusSphereAll'));
+const Profile = dynamic(() => import('./Profile'));
+const Map = dynamic(() => import('./Map'));
 
-const DashboardPage: React.FC<DashboardPageProps> = ({ onBackToChat }) => {
-  const [view, setView] = useState<string>('Dashboard'); // Manage active view
+export default function DashboardPage() {
+  const [view, setView] = useState('Dashboard');
 
   return (
     <div className="dashboard-container flex flex-col h-screen overflow-hidden bg-gradient-to-b from-pink-400 via-black to-black">
       {/* Header */}
       <Header
-        onBackClick={() => setView('Dashboard')} // Navigate back to Dashboard
-        onProfileClick={() => setView('Profile')} // Always go to Profile
-        onChatClick={onBackToChat} // Always return to Chat
+        onBackClick={() => setView('Dashboard')}
+        onProfileClick={() => setView('Profile')}
+        onChatClick={() => setView('Chat')}
       />
 
       <div className="flex flex-grow overflow-hidden">
@@ -39,7 +38,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onBackToChat }) => {
             ) : view === 'All Time' ? (
               <TorusSphereAll />
             ) : (
-              // Render TorusSphere component in the central panel for 'Today'
               <div className="w-full h-full">
                 <TorusSphere />
               </div>
@@ -84,6 +82,4 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onBackToChat }) => {
       <Footer className="p-4 md:p-8" />
     </div>
   );
-};
-
-export default DashboardPage;
+}
