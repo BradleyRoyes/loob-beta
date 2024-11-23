@@ -8,8 +8,9 @@
     ],
     "plugins": ["@typescript-eslint"],
     "rules": {
-        // Example: Customize specific rules if needed
+        "@typescript-eslint/no-unused-vars": "warn",
+        "@typescript-eslint/no-require-imports": "warn",
         "@typescript-eslint/no-explicit-any": "warn",
-        "@typescript-eslint/explicit-module-boundary-types": "off"
-    }
+        "prefer-const": "warn"
+      }
 }
