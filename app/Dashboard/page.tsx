@@ -1,4 +1,4 @@
-'use client'; // Mark the page as a client component
+'use client';
 
 import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
@@ -6,7 +6,7 @@ import Footer from './Footer';
 import Header from './Header';
 import ThemeButton from '../../components/ThemeButton';
 
-// Dynamically import components to improve performance
+// Dynamically import components for better performance
 const TorusSphere = dynamic(() => import('../../components/Torusphere'), { ssr: false });
 const TorusSphereWeek = dynamic(() => import('../../components/TorusSphereWeek'));
 const TorusSphereAll = dynamic(() => import('../../components/TorusSphereAll'));
@@ -14,21 +14,17 @@ const Profile = dynamic(() => import('./Profile'));
 const Map = dynamic(() => import('./Map'));
 
 export default function DashboardPage() {
-  const [view, setView] = useState('Dashboard');
+  const [view, setView] = useState<string>('Dashboard');
 
   return (
     <div className="dashboard-container flex flex-col h-screen overflow-hidden bg-gradient-to-b from-pink-400 via-black to-black">
       {/* Header */}
-      <Header
-        onBackClick={() => setView('Dashboard')}
-        onProfileClick={() => setView('Profile')}
-        onChatClick={() => setView('Chat')}
-      />
+      <Header />
 
       <div className="flex flex-grow overflow-hidden">
-        {/* Main Area */}
         <main className="flex-grow flex justify-center items-center">
           <div className="content-container w-full h-full p-4 flex justify-center items-center">
+            {/* Render Based on Current View */}
             {view === 'Profile' ? (
               <Profile />
             ) : view === 'Map' ? (
@@ -38,6 +34,7 @@ export default function DashboardPage() {
             ) : view === 'All Time' ? (
               <TorusSphereAll />
             ) : (
+              // Default View is TorusSphere (Today)
               <div className="w-full h-full">
                 <TorusSphere />
               </div>
@@ -46,7 +43,7 @@ export default function DashboardPage() {
         </main>
       </div>
 
-      {/* Bottom Navigation Bar (Always Visible) */}
+      {/* Bottom Navigation Bar */}
       <aside className="bottom-bar fixed bottom-16 w-full bg-black p-4 text-white flex justify-around items-center">
         <button
           onClick={() => setView('Map')}
