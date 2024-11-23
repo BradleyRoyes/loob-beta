@@ -1,29 +1,36 @@
 'use client';
 
 import React, { useState } from 'react';
-import dynamic from 'next/dynamic';
+import TorusSphere from '../../components/Torusphere';
+import TorusSphereWeek from '../../components/TorusSphereWeek';
+import TorusSphereAll from '../../components/TorusSphereAll';
 import Footer from './Footer';
 import Header from './Header';
 import ThemeButton from '../../components/ThemeButton';
+import Profile from './Profile';
+import Map from './Map';
 import { useRouter } from 'next/navigation';
 
-// Dynamically import components for better performance
-const TorusSphere = dynamic(() => import('../../components/Torusphere'), { ssr: false });
-const TorusSphereWeek = dynamic(() => import('../../components/TorusSphereWeek'));
-const TorusSphereAll = dynamic(() => import('../../components/TorusSphereAll'));
-const Profile = dynamic(() => import('./Profile'));
-const Map = dynamic(() => import('./Map'));
-
-export default function DashboardPage() {
+export default function Page() {
   const [view, setView] = useState<string>('Dashboard');
-  const router = useRouter(); // Create an instance of the router for navigation
+  const router = useRouter(); // Use Next.js router for navigation
+
+  // Functions to handle navigation
+  const handleBackToDashboard = () => setView('Dashboard');
+  const handleGoToProfile = () => setView('Profile');
+  const handleGoToChat = () => router.push('/'); // Navigate back to the main chat page
 
   return (
     <div className="dashboard-container flex flex-col h-screen overflow-hidden bg-gradient-to-b from-pink-400 via-black to-black">
-      {/* Header */}
-      <Header />
+      {/* Header with routing functions */}
+      <Header
+        onBackClick={handleBackToDashboard}
+        onProfileClick={handleGoToProfile}
+        onChatClick={handleGoToChat}
+      />
 
       <div className="flex flex-grow overflow-hidden">
+        {/* Main Area */}
         <main className="flex-grow flex justify-center items-center">
           <div className="content-container w-full h-full p-4 flex justify-center items-center">
             {view === 'Profile' ? (
@@ -35,7 +42,7 @@ export default function DashboardPage() {
             ) : view === 'All Time' ? (
               <TorusSphereAll />
             ) : (
-              // Default View is TorusSphere (Today)
+              // Render TorusSphere component in the central panel for 'Today'
               <div className="w-full h-full">
                 <TorusSphere />
               </div>
@@ -47,10 +54,13 @@ export default function DashboardPage() {
       {/* Bottom Navigation Bar */}
       <aside className="bottom-bar fixed bottom-16 w-full bg-black p-4 text-white flex justify-around items-center">
         <button
-          onClick={() => router.push('/')} // Navigate back to Chat (Home)
-          className="button-dash text-lg py-2 px-4 rounded-md transition-colors bg-blue-600 text-white hover:bg-blue-700"
+          onClick={() => setView('Map')}
+          className={`button-dash text-lg py-2 px-4 rounded-md transition-colors ${
+            view === 'Map' ? 'bg-blue-800 text-white animate-pulse' : 'bg-blue-600 text-white hover:bg-blue-700'
+          }`}
+          style={{ fontWeight: view === 'Map' ? 'bold' : 'normal' }}
         >
-          Back to Chat
+          LoobMap
         </button>
         {['Today', 'This Week', 'All Time'].map((label) => (
           <button

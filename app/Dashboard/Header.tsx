@@ -1,33 +1,49 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
 
-const Header: React.FC = () => {
+// Define the props interface with optional callbacks
+interface HeaderProps {
+  onBackClick?: () => void;  // Optional, as it may not always be needed
+  onProfileClick?: () => void; // Optional, as it may not always be needed
+  onChatClick?: () => void;  // Optional, as it may not always be needed
+}
+
+const Header: React.FC<HeaderProps> = ({
+  onBackClick,
+  onProfileClick,
+  onChatClick,
+}) => {
   return (
     <header className="flex justify-between items-center w-full px-6 py-4 bg-black text-white border-b border-gray-700">
-      {/* Logo - Link back to Dashboard */}
-      <Link href="/dashboard">
-        <div className="flex items-center space-x-4 cursor-pointer">
+      {/* Logo and Back Button */}
+      <div
+        className="flex items-center space-x-4 cursor-pointer"
+        onClick={onBackClick}
+      >
+        {onBackClick && (
           <h1 className="text-3xl font-bold sm:text-2xl">Loob (beta)</h1>
-        </div>
-      </Link>
+        )}
+      </div>
 
       {/* Right Side Buttons */}
       <div className="flex space-x-4">
-        {/* Link to Chat */}
-        <Link href="/">
-          <button className="button-header px-4 py-2 border border-white text-white rounded-md transition-all hover:bg-gradient-to-r hover:from-pink-300 hover:to-orange-300 hover:text-white">
+        {onChatClick && (
+          <button
+            onClick={onChatClick}
+            className="button-header px-4 py-2 border border-white text-white rounded-md transition-all hover:bg-gradient-to-r hover:from-pink-300 hover:to-orange-300 hover:text-white"
+          >
             Chat
           </button>
-        </Link>
-
-        {/* Link to Profile (assuming the Profile is part of the dashboard or another route) */}
-        <Link href="/dashboard#profile">
-          <button className="button-header px-4 py-2 border border-white text-white rounded-md transition-all hover:bg-gradient-to-r hover:from-pink-300 hover:to-orange-300 hover:text-white">
+        )}
+        {onProfileClick && (
+          <button
+            onClick={onProfileClick}
+            className="button-header px-4 py-2 border border-white text-white rounded-md transition-all hover:bg-gradient-to-r hover:from-pink-300 hover:to-orange-300 hover:text-white"
+          >
             Profile
           </button>
-        </Link>
+        )}
       </div>
     </header>
   );

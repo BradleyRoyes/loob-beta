@@ -19,35 +19,36 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 30px; /* Space between elements */
+  gap: 30px; /* Reduced space between elements */
   padding: 20px;
   max-width: 600px;
   text-align: center;
   z-index: 1;
   transition: opacity 1s ease, transform 1s ease;
-  font-size: 1.5rem; /* Increased font size */
+  font-size: 1.0rem; /* Smaller font size */
 }
 
 /* Gradient Text Styling */
 .gradientText {
   background: linear-gradient(45deg, pink, orange);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
-  font-size: 2.25rem; /* 50% bigger */
+  font-size: 1.75rem; /* Smaller font size */
   margin: 0;
   text-align: center;
 }
 
 /* Action Buttons (Enter, Continue) */
 .splashScreen button {
-  padding: 8px 16px;
-  margin-top: 20px;
+  padding: 6px 12px;
+  margin-top: 15px;
   color: black;
   border: 2px solid transparent;
   background: linear-gradient(45deg, pink, orange);
   border-radius: 16px;
   cursor: pointer;
-  font-size: 1.5rem; /* 50% bigger */
+  font-size: 1.2rem; /* Smaller font size */
   font-weight: bold;
   text-transform: none;
   transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
@@ -59,7 +60,7 @@
   flex-direction: column; /* Stack button and text vertically */
   align-items: center;
   justify-content: center;
-  gap: 15px; /* Increased gap between buttons */
+  gap: 20px; /* Increased gap between buttons */
   position: relative;
   height: 200px; /* Fixed height ensures no displacement */
 }
@@ -69,7 +70,7 @@
   background: linear-gradient(45deg, pink, orange);
   border: none;
   border-radius: 50%;
-  padding: 45px; /* Larger padding for bigger button */
+  padding: 35px; /* Smaller padding for a smaller button */
   cursor: pointer;
   display: flex;
   justify-content: center;
@@ -78,23 +79,23 @@
 }
 
 .recordButton:hover {
-  transform: scale(1.2); /* Bigger hover scale */
+  transform: scale(1.1); /* Smaller hover scale */
 }
 
 .recordButton svg {
-  width: 45px; /* 50% bigger */
-  height: 45px; /* 50% bigger */
+  width: 30px; /* Smaller icon size */
+  height: 30px;
 }
 
 /* Smaller New Question Button */
 .newPromptButton {
   background: linear-gradient(45deg, pink, orange);
   color: black; /* Text color changed to black */
-  padding: 4px 8px; /* Smaller padding */
+  padding: 3px 6px; /* Smaller padding */
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 15px; /* 50% bigger */
+  font-size: 13px; /* Smaller font size */
   transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
@@ -117,7 +118,7 @@
     opacity: 0.7;
   }
   50% {
-    transform: scale(1.2); /* More pronounced scaling */
+    transform: scale(1.15); /* Less pronounced scaling */
     opacity: 1;
   }
 }
@@ -149,19 +150,19 @@
   .content {
     gap: 10px;
     padding: 10px;
-    font-size: 1.5rem; /* Increased font size */
+    font-size: 1.2rem; /* Smaller font size for mobile */
   }
 
   .gradientText {
-    font-size: 2.25rem; /* 50% bigger */
+    font-size: 1.5rem; /* Smaller font size for mobile */
   }
 
   .recordButton {
-    padding: 35px; /* Slightly smaller padding for mobile */
+    padding: 30px; /* Slightly smaller padding for mobile */
   }
 
   .newPromptButton {
-    font-size: 13.5px; /* 50% bigger */
-    padding: 3px 6px;
+    font-size: 11px; /* Smaller font size for mobile */
+    padding: 2px 5px;
   }
 }
