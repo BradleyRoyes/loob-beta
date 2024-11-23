@@ -11,16 +11,16 @@ import AnalyseButton from '../components/AnalyseButton';
 import PromptSuggestionRow from '../components/PromptSuggestions/PromptSuggestionsRow';
 import ModalOverlay from '../components/ModalOverlay';
 import AudioRecorder from '../components/AudioRecorder';
-import DashboardPage from './Dashboard/page';
+import { useRouter } from 'next/navigation'; // Import Next.js router
 
 export default function Page() {
-  const [showDashboard, setShowDashboard] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
   const { append, messages, input, handleInputChange, handleSubmit } = useChat();
   const [sessionId] = useState(uuidv4());
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [configureOpen, setConfigureOpen] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const router = useRouter(); // Create router instance to navigate
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -40,40 +40,9 @@ export default function Page() {
     } as React.ChangeEvent<HTMLInputElement>);
   };
 
-  const handlePrompt = (promptText: string) => {
-    const msg: Message = {
-      id: crypto.randomUUID(),
-      content: promptText,
-      role: 'user',
-    };
-    append(msg);
-  };
-
-  const startRecording = () => {
-    console.log('Recording started');
-  };
-
-  const onRecordingComplete = async (audioBlob: Blob) => {
-    const formData = new FormData();
-    formData.append('audio', audioBlob, 'audio/webm');
-
-    try {
-      const response = await fetch('/api/transcribe', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Server responded with ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('Transcription:', data.transcription);
-
-      handlePrompt(data.transcription);
-    } catch (error) {
-      console.error('Error uploading audio:', error);
-    }
+  const handleDashboardClick = () => {
+    // Use router to navigate to the dashboard page
+    router.push('/dashboard');
   };
 
   const handleEnter = (promptText?: string) => {
@@ -81,6 +50,15 @@ export default function Page() {
     if (promptText) {
       handlePrompt(promptText);
     }
+  };
+
+  const handlePrompt = (promptText: string) => {
+    const msg: Message = {
+      id: crypto.randomUUID(),
+      content: promptText,
+      role: 'user',
+    };
+    append(msg);
   };
 
   const handleAnalyseButtonClick = () => {
@@ -94,18 +72,8 @@ export default function Page() {
     }, 5000);
   };
 
-  const handleDashboardClick = () => {
-    setShowDashboard(true);
-  };
-
-  const handleBackToChat = () => {
-    setShowDashboard(false);
-  };
-
   return showSplash ? (
     <SplashScreen onEnter={handleEnter} />
-  ) : showDashboard ? (
-    <DashboardPage onBackToChat={handleBackToChat} />
   ) : (
     <>
       <style>
@@ -135,13 +103,12 @@ export default function Page() {
           ref={messagesEndRef}
           className="chatbot-section flex flex-col origin:w-[800px] w-full origin:h-[735px] h-full rounded-md p-2 md:p-6"
         >
+          {/* Chat Interface */}
           <div className="chatbot-header pb-6">
             <div className="flex justify-between items-center">
               <h1 className="chatbot-text-primary text-6xl md:text-7xl font-extrabold tracking-wide">
                 <span className="text-5xl md:text-7xl">loob</span>
-                <span className="text-lg md:text-xl font-normal">
-                  beta
-                </span>
+                <span className="text-lg md:text-xl font-normal">beta</span>
               </h1>
               <div className="flex gap-1">
                 <ThemeButton />
@@ -160,6 +127,8 @@ export default function Page() {
               </div>
             </div>
           </div>
+
+          {/* Messages Container */}
           <div className="flex-1 relative overflow-y-auto my-4 md:my-6">
             <div className="absolute w-full overflow-x-hidden">
               {messages.map((message, index) => (
@@ -171,15 +140,42 @@ export default function Page() {
               ))}
             </div>
           </div>
+
+          {/* Prompt Suggestions Row */}
           {!messages.length && (
             <PromptSuggestionRow onPromptClick={handlePrompt} />
           )}
+
+          {/* Audio Recorder */}
           <div className="button-row">
             <AudioRecorder
-              onRecordingComplete={onRecordingComplete}
-              startRecording={startRecording}
+              onRecordingComplete={async (audioBlob) => {
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'audio/webm');
+
+                try {
+                  const response = await fetch('/api/transcribe', {
+                    method: 'POST',
+                    body: formData,
+                  });
+
+                  if (!response.ok) {
+                    throw new Error(`Server responded with ${response.status}`);
+                  }
+
+                  const data = await response.json();
+                  console.log('Transcription:', data.transcription);
+
+                  handlePrompt(data.transcription);
+                } catch (error) {
+                  console.error('Error uploading audio:', error);
+                }
+              }}
+              startRecording={() => console.log('Recording started')}
             />
           </div>
+
+          {/* Send Input */}
           <div className="flex items-center justify-between gap-2">
             <form className="flex flex-1 gap-2" onSubmit={handleSend}>
               <input
@@ -209,6 +205,8 @@ export default function Page() {
                 </span>
               </button>
             </form>
+
+            {/* Analyse Button */}
             <button
               onClick={handleAnalyseButtonClick}
               className="button-dash rounded-md items-center justify-center px-2.5 py-2"
@@ -217,6 +215,8 @@ export default function Page() {
             </button>
           </div>
         </section>
+
+        {/* Configure Modal */}
         {configureOpen && (
           <Configure
             isOpen={configureOpen}
