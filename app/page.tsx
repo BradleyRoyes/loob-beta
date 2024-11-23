@@ -2,24 +2,29 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Bubble from '../components/Bubble';
-import { useChat, Message } from 'ai/react';
 import Configure from '../components/Configure';
 import ThemeButton from '../components/ThemeButton';
-import { v4 as uuidv4 } from 'uuid';
 import SplashScreen from '../components/SplashScreen';
-import AnalyseButton from '../components/AnalyseButton';
-import PromptSuggestionRow from '../components/PromptSuggestions/PromptSuggestionsRow';
 import ModalOverlay from '../components/ModalOverlay';
 import AudioRecorder from '../components/AudioRecorder';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { v4 as uuidv4 } from 'uuid';
+
+// Define the Message type
+type MessageType = {
+  id: string;
+  content: string;
+  role: string;
+};
 
 export default function Page() {
   const [showSplash, setShowSplash] = useState(true);
-  const { append, messages, input, handleInputChange, handleSubmit } = useChat();
-  const [sessionId] = useState(uuidv4());
+  const [messages, setMessages] = useState<MessageType[]>([]); // Type messages as an array of MessageType
+  const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [configureOpen, setConfigureOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const router = useRouter();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -31,73 +36,44 @@ export default function Page() {
 
   const handleSend = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    handleSubmit(e, {
-      options: { body: { sessionId } },
-    });
-    handleInputChange({
-      target: { value: '' },
-    } as React.ChangeEvent<HTMLInputElement>);
+    if (input.trim()) {
+      const newMessage: MessageType = {
+        id: uuidv4(),
+        content: input,
+        role: 'user',
+      };
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+      setInput(''); // Clear input field
+    }
   };
 
   const handleEnter = (promptText?: string) => {
     setShowSplash(false);
     if (promptText) {
-      handlePrompt(promptText);
+      const newMessage: MessageType = {
+        id: uuidv4(),
+        content: promptText,
+        role: 'user',
+      };
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
     }
   };
 
-  const handlePrompt = (promptText: string) => {
-    const msg: Message = {
-      id: crypto.randomUUID(),
-      content: promptText,
-      role: 'user',
-    };
-    append(msg);
-  };
-
-  const handleAnalyseButtonClick = () => {
-    const analyseMessage = 'analyse my messages';
-    append({ content: analyseMessage, role: 'user' });
-    setShowModal(true);
-
-    setTimeout(() => {
-      const endChatMessage = 'End Chat';
-      append({ content: endChatMessage, role: 'user' });
-    }, 5000);
+  const handleDashboardClick = () => {
+    router.push('/dashboard');
   };
 
   return showSplash ? (
     <SplashScreen onEnter={handleEnter} />
   ) : (
     <>
-      <style>
-        {`
-          @keyframes fadeIn {
-            from {
-              opacity: 0;
-            }
-            to {
-              opacity: 1;
-            }
-          }
-
-          .fade-in {
-            animation: fadeIn 1.5s ease-in-out;
-          }
-
-          .h-screen-adjusted {
-            height: calc(var(--vh, 1vh) * 100);
-          }
-        `}
-      </style>
       <main className="fade-in flex h-screen-adjusted flex-col items-center justify-center pt-0">
         {showModal && <ModalOverlay onClose={() => setShowModal(false)} />}
 
         <section
           ref={messagesEndRef}
-          className="chatbot-section flex flex-col origin:w-[800px] w-full origin:h-[735px] h-full rounded-md p-2 md:p-6"
+          className="chatbot-section flex flex-col w-full h-full rounded-md p-2 md:p-6"
         >
-          {/* Chat Interface */}
           <div className="chatbot-header pb-6">
             <div className="flex justify-between items-center">
               <h1 className="chatbot-text-primary text-6xl md:text-7xl font-extrabold tracking-wide">
@@ -112,17 +88,42 @@ export default function Page() {
                 >
                   Configure
                 </button>
-                <Link href="/dashboard">
-                  <button className="button-dash px-4 py-2 rounded-md">
-                    Dashboard
-                  </button>
-                </Link>
+                <button
+                  onClick={handleDashboardClick}
+                  className="button-dash px-4 py-2 rounded-md"
+                >
+                  Dashboard
+                </button>
               </div>
             </div>
           </div>
-
-          {/* Remaining Chat Interface Code */}
-          {/* Messages, AudioRecorder, Send Input, etc. */}
+          <div className="flex-1 relative overflow-y-auto my-4 md:my-6">
+            <div className="absolute w-full overflow-x-hidden">
+              {messages.map((message, index) => (
+                <Bubble
+                  ref={messagesEndRef}
+                  key={`message-${index}`}
+                  content={message}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <form className="flex flex-1 gap-2" onSubmit={handleSend}>
+              <input
+                onChange={(e) => setInput(e.target.value)}
+                value={input}
+                className="chatbot-input flex-1 text-sm md:text-base outline-none bg-transparent rounded-md p-2"
+                placeholder="Send a message..."
+              />
+              <button
+                type="submit"
+                className="chatbot-send-button flex rounded-md items-center justify-center px-2.5"
+              >
+                Send
+              </button>
+            </form>
+          </div>
         </section>
 
         {configureOpen && (

@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import Footer from './Footer';
 import Header from './Header';
 import ThemeButton from '../../components/ThemeButton';
+import { useRouter } from 'next/navigation';
 
 // Dynamically import components for better performance
 const TorusSphere = dynamic(() => import('../../components/Torusphere'), { ssr: false });
@@ -15,6 +16,7 @@ const Map = dynamic(() => import('./Map'));
 
 export default function DashboardPage() {
   const [view, setView] = useState<string>('Dashboard');
+  const router = useRouter(); // Create an instance of the router for navigation
 
   return (
     <div className="dashboard-container flex flex-col h-screen overflow-hidden bg-gradient-to-b from-pink-400 via-black to-black">
@@ -24,7 +26,6 @@ export default function DashboardPage() {
       <div className="flex flex-grow overflow-hidden">
         <main className="flex-grow flex justify-center items-center">
           <div className="content-container w-full h-full p-4 flex justify-center items-center">
-            {/* Render Based on Current View */}
             {view === 'Profile' ? (
               <Profile />
             ) : view === 'Map' ? (
@@ -46,13 +47,10 @@ export default function DashboardPage() {
       {/* Bottom Navigation Bar */}
       <aside className="bottom-bar fixed bottom-16 w-full bg-black p-4 text-white flex justify-around items-center">
         <button
-          onClick={() => setView('Map')}
-          className={`button-dash text-lg py-2 px-4 rounded-md transition-colors ${
-            view === 'Map' ? 'bg-blue-800 text-white animate-pulse' : 'bg-blue-600 text-white hover:bg-blue-700'
-          }`}
-          style={{ fontWeight: view === 'Map' ? 'bold' : 'normal' }}
+          onClick={() => router.push('/')} // Navigate back to Chat (Home)
+          className="button-dash text-lg py-2 px-4 rounded-md transition-colors bg-blue-600 text-white hover:bg-blue-700"
         >
-          LoobMap
+          Back to Chat
         </button>
         {['Today', 'This Week', 'All Time'].map((label) => (
           <button
