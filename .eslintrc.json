@@ -1,3 +1,15 @@
 {
-    "extends": ["next", "prettier"]
+    "parser": "@typescript-eslint/parser",
+    "extends": [
+        "next",
+        "next/core-web-vitals",
+        "plugin:@typescript-eslint/recommended",
+        "prettier"
+    ],
+    "plugins": ["@typescript-eslint"],
+    "rules": {
+        // Example: Customize specific rules if needed
+        "@typescript-eslint/no-explicit-any": "warn",
+        "@typescript-eslint/explicit-module-boundary-types": "off"
+    }
 }
