@@ -1,0 +1,6 @@
+[submodule "hume-api-example"]
+	path = hume-api-example
+	url = https://github.com/HumeAI/hume-api-examples.git
+[submodule "test_hume"]
+	path = test_hume
+	url = https://github.com/BradleyRoyes/test_hume.git
