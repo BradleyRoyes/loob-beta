@@ -4,24 +4,22 @@ import "./SplashScreen.css";
 import AudioRecorder from "./AudioRecorder";
 
 const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnter }) => {
-  const [phase, setPhase] = useState<"welcomePhase" | "introPhase" | "promptPhase">("welcomePhase");
+  const [phase, setPhase] = useState<
+    "welcomePhase" | "introPhase" | "modalityPhase" | "promptPhase"
+  >("welcomePhase");
   const [randomPrompt, setRandomPrompt] = useState<string>("");
   const [fadeToBlack, setFadeToBlack] = useState<boolean>(false);
 
   const proceed = useCallback(
-    (nextPhase: "welcomePhase" | "introPhase" | "promptPhase") => {
+    (nextPhase: "welcomePhase" | "introPhase" | "modalityPhase" | "promptPhase") => {
       setPhase(nextPhase);
-      if (nextPhase === "promptPhase") {
-        setRandomPrompt("a drink,\n or an experience?");
-      }
     },
     []
   );
 
   useEffect(() => {
     if (phase === "introPhase") {
-      const timer = setTimeout(() => proceed("promptPhase"), 4000);
-      return () => clearTimeout(timer);
+      proceed("modalityPhase"); // Removed delay
     }
   }, [phase, proceed]);
 
@@ -71,7 +69,8 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
           </motion.div>
         )}
 
-        {phase === "introPhase" && (
+        {/* Commenting out the Cyberdelic Showcase screen */}
+        {/* {phase === "introPhase" && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -82,7 +81,44 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
               Welcome to the Cyberdelic Showcase<br />
             </h1>
             <div className="mt-4">
-              <button className="actionButton" onClick={() => proceed("promptPhase")}>Continue</button>
+              <button className="actionButton" onClick={() => proceed("modalityPhase")}>Continue</button>
+            </div>
+          </motion.div>
+        )} */}
+
+        {phase === "modalityPhase" && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="text-center"
+          >
+            <h3 className="gradientText" style={{ marginBottom: "2rem" }}>Choose your modality</h3>
+            <div className="modalityContainer" style={{ display: "flex", justifyContent: "center", gap: "1rem" }}>
+              <button
+                className="modalityButton voice globalButton"
+                onClick={() => proceed("promptPhase")}
+              >
+                🎙️ Voice
+              </button>
+              <button
+                className="modalityButton image globalButton"
+                onClick={() => alert("Coming soon")}
+              >
+                🖼️ Image
+              </button>
+              <button
+                className="modalityButton text globalButton"
+                onClick={() => onEnter("Text Chat")}
+              >
+                ✍️ Chat
+              </button>
+              <button
+                className="modalityButton wearable globalButton"
+                onClick={() => alert("Coming soon")}
+              >
+                ⌚ Link Wearable
+              </button>
             </div>
           </motion.div>
         )}
@@ -94,8 +130,7 @@ const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnte
             transition={{ duration: 0.5 }}
             className="text-center"
           >
-            <h3 className="gradientText" style={{ marginBottom: "2rem" }}>Whatcha in the mood for?</h3>
-            <h2 className="gradientText" style={{ whiteSpace: "pre-wrap", lineHeight: "1.8", marginBottom: "2rem" }}>{randomPrompt}</h2>
+            <h3 className="gradientText" style={{ marginBottom: "2rem" }}>Talk to me.</h3>
             <div className="buttonContainer mt-6" style={{ marginTop: "2.5rem" }}>
               <div className="recordWrapper" style={{ boxShadow: "none" }}>
                 <AudioRecorder

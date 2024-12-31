@@ -3,10 +3,10 @@
 import React from 'react';
 
 interface HeaderProps {
-  onBackClick: () => void; // Navigate back to Chat
-  toggleView: (view: string) => void; // Toggle views in Dashboard
-  preserveState: () => void; // Preserve Chat state
-  onProfileClick: () => void; // Navigate to Profile
+  onBackClick: () => void; // Callback to toggle back to Chat
+  toggleView: (view: string) => void; // Callback to toggle main view
+  preserveState: () => void; // Callback to preserve chat state
+  onProfileClick: () => void; // Callback to switch to Profile view
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -20,7 +20,7 @@ const Header: React.FC<HeaderProps> = ({
       {/* Logo navigates back to Chat */}
       <div
         className="flex items-center space-x-4 cursor-pointer"
-        onClick={onBackClick}
+        onClick={onBackClick} // Navigate to Chat
       >
         <h1 className="text-3xl font-bold sm:text-2xl">Loob (beta)</h1>
       </div>
@@ -31,7 +31,7 @@ const Header: React.FC<HeaderProps> = ({
         <button
           onClick={() => {
             preserveState();
-            onBackClick(); // Return to Chat
+            onBackClick(); // Navigate to Chat
           }}
           className="button-header px-4 py-2 border border-white text-white rounded-md transition-all hover:bg-gradient-to-r hover:from-pink-300 hover:to-orange-300 hover:text-white"
         >

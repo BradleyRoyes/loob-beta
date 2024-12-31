@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import TorusSphere from './Torusphere';
+import TorusSphere from './TorusSphere';
 import TorusSphereWeek from './TorusSphereWeek';
 import TorusSphereAll from './TorusSphereAll';
 
