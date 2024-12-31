@@ -1,6 +1,6 @@
 'use client'; // Mark the parent component as a client component
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Bubble from '../components/Bubble';
 import { useChat, Message } from 'ai/react';
 import Configure from '../components/Configure';
@@ -11,10 +11,10 @@ import AnalyseButton from '../components/AnalyseButton';
 import PromptSuggestionRow from '../components/PromptSuggestions/PromptSuggestionsRow';
 import ModalOverlay from '../components/ModalOverlay';
 import AudioRecorder from '../components/AudioRecorder';
-import DashboardPage from './dashboard/page';
+import Dashboard from '../components/Dashboard';
 
 export default function Page() {
-  const [showDashboard, setShowDashboard] = useState(false);
+  const [view, setView] = useState<'Chat' | 'Dashboard'>('Chat'); // Manage views
   const { append, messages, input, handleInputChange, handleSubmit } = useChat();
   const [sessionId] = useState(uuidv4());
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -94,18 +94,10 @@ export default function Page() {
     }, 5000);
   };
 
-  const handleDashboardClick = () => {
-    setShowDashboard(true);
-  };
-
-  const handleBackToChat = () => {
-    setShowDashboard(false);
-  };
-
   return showSplash ? (
     <SplashScreen onEnter={handleEnter} />
-  ) : showDashboard ? (
-    <DashboardPage onBackToChat={handleBackToChat} />
+  ) : view === 'Dashboard' ? (
+    <Dashboard />
   ) : (
     <>
       <style>
@@ -152,7 +144,7 @@ export default function Page() {
                   Configure
                 </button>
                 <button
-                  onClick={handleDashboardClick}
+                  onClick={() => setView('Dashboard')}
                   className="button-dash px-4 py-2 rounded-md"
                 >
                   Dashboard
