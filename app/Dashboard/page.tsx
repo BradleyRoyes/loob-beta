@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useState } from 'react';
 import TorusSphere from '../../components/Torusphere';
 import TorusSphereWeek from '../../components/TorusSphereWeek';
@@ -9,11 +10,7 @@ import ThemeButton from '../../components/ThemeButton';
 import Profile from '../../components/Profile';
 import Map from '../../components/Map';
 
-interface DashboardPageProps {
-  onBackToChat: () => void; // Function to navigate back to the Chat
-}
-
-const DashboardPage: React.FC<DashboardPageProps> = ({ onBackToChat }) => {
+const DashboardPage = () => {
   const [view, setView] = useState<string>('Dashboard');
 
   return (
@@ -22,7 +19,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onBackToChat }) => {
       <Header
         onBackClick={() => setView('Dashboard')}
         onProfileClick={() => setView('Profile')}
-        onChatClick={onBackToChat} // Navigate back to Chat using the prop
+        onChatClick={() => setView('Chat')} // Simplify or replace as needed
       />
 
       <div className="flex flex-grow overflow-hidden">
@@ -38,7 +35,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onBackToChat }) => {
             ) : view === 'All Time' ? (
               <TorusSphereAll />
             ) : (
-              // Render TorusSphere component in the central panel for 'Today'
               <div className="w-full h-full">
                 <TorusSphere />
               </div>
