@@ -69,8 +69,8 @@
   "devDependencies": {
     "@types/node": "^20.8.10",
     "@types/react": "^18.2.37",
-    "@typescript-eslint/eslint-plugin": "^8.15.0",
-    "@typescript-eslint/parser": "^8.15.0",
+    "@typescript-eslint/eslint-plugin": "^8.18.2",
+    "@typescript-eslint/parser": "^8.18.2",
     "autoprefixer": "^10",
     "cross-env": "^7.0.3",
     "dotenv": "^16.4.5",

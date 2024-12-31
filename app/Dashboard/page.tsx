@@ -1,22 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 'use client';
-
 import React, { useState } from 'react';
 import TorusSphere from '../../components/Torusphere';
 import TorusSphereWeek from '../../components/TorusSphereWeek';
 import TorusSphereAll from '../../components/TorusSphereAll';
-import Footer from './Footer';
-import Header from './Header'; // Import the updated Header component
+import Footer from '../../components/Footer';
+import Header from '../../components/Header';
 import ThemeButton from '../../components/ThemeButton';
-import Profile from './Profile';
-import Map from './Map';
+import Profile from '../../components/Profile';
+import Map from '../../components/Map';
 
 interface DashboardPageProps {
   onBackToChat: () => void; // Function to navigate back to the Chat
 }
 
-function DashboardPage({ onBackToChat }: DashboardPageProps) {
+const DashboardPage: React.FC<DashboardPageProps> = ({ onBackToChat }) => {
   const [view, setView] = useState<string>('Dashboard');
 
   return (
@@ -33,7 +32,7 @@ function DashboardPage({ onBackToChat }: DashboardPageProps) {
         <main className="flex-grow flex justify-center items-center">
           <div className="content-container w-full h-full p-4 flex justify-center items-center">
             {view === 'Profile' ? (
-              <Profile />
+              <Profile onClose={() => setView('Dashboard')} />
             ) : view === 'Map' ? (
               <Map />
             ) : view === 'This Week' ? (
@@ -86,6 +85,6 @@ function DashboardPage({ onBackToChat }: DashboardPageProps) {
       <Footer className="p-4 md:p-8" />
     </div>
   );
-}
+};
 
 export default DashboardPage;
