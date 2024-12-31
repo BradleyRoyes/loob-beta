@@ -97,7 +97,7 @@ export default function Page() {
   return showSplash ? (
     <SplashScreen onEnter={handleEnter} />
   ) : view === 'Dashboard' ? (
-    <Dashboard />
+    <Dashboard onShowChat={() => setView('Chat')} />
   ) : (
     <>
       <style>
