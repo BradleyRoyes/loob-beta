@@ -11,7 +11,7 @@ import AnalyseButton from '../components/AnalyseButton';
 import PromptSuggestionRow from '../components/PromptSuggestions/PromptSuggestionsRow';
 import ModalOverlay from '../components/ModalOverlay';
 import AudioRecorder from '../components/AudioRecorder';
-import DashboardPage from './Dashboard/page';
+import DashboardPage from './dashboard/page';
 
 export default function Page() {
   const [showDashboard, setShowDashboard] = useState(false);

@@ -1,7 +1,5 @@
+// next.config.js
 module.exports = {
-    reactStrictMode: true,
-    experimental: {
-      appDir: true,
-    },
+    reactStrictMode: true, // Keep this for stricter React debugging
   };
   
