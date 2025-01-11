@@ -1,16 +1,27 @@
-/* Header Styling */
-header {
+/* Root Variables */
+:root {
+    --background-primary: #121212;
+    --background-secondary: #232323;
+    --background-soft: #1e1e1e;
+    --text-primary: #ffffff;
+    --text-secondary: #a6aaae;
+    --border-primary: #3a3a3a;
+  }
+  
+  /* Header Styling */
+  header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: var(--background-secondary);
+    background-color: var(--background-secondary, #232323); /* Fallback */
     padding: 1rem;
-    border-bottom: 1px solid var(--border-primary);
+    border-bottom: 1px solid var(--border-primary, #3a3a3a); /* Fallback */
     gap: 1rem; /* Consistent spacing between elements */
     flex-wrap: nowrap; /* Prevent wrapping */
     position: sticky; /* Make header sticky */
     top: 0; /* Stick to the top of the viewport */
-    z-index: 10; /* Ensure it stays above other content */
+    z-index: 100; /* Ensure it stays above other content */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
   }
   
   /* Header Icons */
@@ -24,11 +35,11 @@ header {
   
   header .icon-button.active {
     color: white; /* White color for active icons */
-    background-color: var(--background-soft); /* Subtle background for active icon */
+    background-color: var(--background-soft, #1e1e1e); /* Fallback for subtle background */
   }
   
   header .icon-button:hover {
-    background-color: var(--background-soft); /* Soft hover background for all icons */
+    background-color: var(--background-soft, rgba(255, 255, 255, 0.1)); /* Soft hover background */
   }
   
   /* Slider Container */
@@ -56,61 +67,45 @@ header {
     border-radius: 9999px; /* Match the container's rounded edges */
     z-index: 0; /* Ensure it's behind the buttons */
     transition: all 0.3s ease; /* Smooth sliding animation */
+    background-color: #fba779; /* Fallback for browsers that don’t support gradients */
   }
   
   /* Slider Buttons */
   .slider-container button {
-    all: unset; /* Remove default button styles */
-    position: relative; /* Layer above the sliding pill */
-    z-index: 1; /* Ensure buttons are above the sliding background */
-    color: black; /* Default black text */
-    font-size: 1rem; /* Adjust font size for better readability */
-    font-weight: 700; /* Ensure text is bold */
-    padding: 0.5rem 1.5rem; /* Increased padding to fit longer text */
-    text-align: center;
+    background: none;
+    border: none;
+    padding: 0.5rem 1.5rem;
+    font-size: 1rem;
+    font-weight: bold;
+    color: black;
+    border-radius: 9999px;
     cursor: pointer;
     transition: color 0.3s ease;
-    white-space: nowrap; /* Prevent text wrapping */
-    line-height: 1.5rem; /* Add spacing for better centering */
+    position: relative; /* Ensure above the sliding pill */
+    z-index: 1; /* Ensure above the sliding pill */
   }
   
-  /* Active Button Styles */
   .slider-container button.active {
-    color: white; /* Active button text is white */
-    font-weight: 700; /* Ensure boldness */
+    color: white; /* Active button text */
   }
   
-  /* Remove Glowing Rectangle */
-  .slider-container button:focus {
-    outline: none; /* Remove focus outline */
-    box-shadow: none; /* Remove any box shadow */
-  }
-  
-  /* Sliding Pill Positions */
-  .slider-container .slider-pill.active-chat {
-    left: 0; /* Align with "Chat w/ Loob" */
-    width: calc(50% + 1rem); /* Dynamically resize to fit text with extra space */
-  }
-  
-  .slider-container .slider-pill.active-discover {
-    left: 50%; /* Align with "Discover" */
-    width: calc(50% + 1rem); /* Dynamically resize */
-  }
-  
-  /* Adjust Text Position */
-  .slider-container button span {
-    display: block;
-    position: relative;
-    left: 0.2rem; /* Adjust text position slightly for centering */
-  }
-  
-  /* Hover Effect */
   .slider-container button:hover {
-    color: var(--text-secondary); /* Subtle hover effect */
+    color: var(--text-secondary, #a6aaae); /* Subtle hover effect */
+  }
+  
+  /* Focus States */
+  .slider-container button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5); /* Accessible focus ring */
   }
   
   /* Responsive Design for Smaller Screens */
   @media (max-width: 1024px) {
+    header {
+      padding: 0.8rem; /* Slightly reduce header padding */
+      gap: 0.8rem; /* Adjust gap for smaller screens */
+    }
+  
     .slider-container {
       max-width: 300px; /* Adjust slider size for tablet */
       padding: 0.3rem; /* Reduce padding */
@@ -125,36 +120,32 @@ header {
   
   @media (max-width: 768px) {
     header {
-      padding: 0.8rem; /* Slightly reduce header padding */
-      gap: 0.8rem; /* Adjust gap for smaller screens */
+      padding: 0.6rem; /* Compact header padding for very small screens */
+      gap: 0.6rem; /* Reduce gap further */
     }
   
     .slider-container {
-      max-width: 250px; /* Reduce slider width for smaller screens */
-      padding: 0.3rem; /* Compact padding */
-      gap: 0.6rem; /* Compact spacing */
+      max-width: 250px; /* Compact slider width for very small screens */
+      padding: 0.3rem; /* Tighten padding */
+      gap: 0.6rem; /* Tighten spacing between buttons */
     }
   
     .slider-container button {
-      font-size: 0.8rem; /* Smaller text for compact screens */
+      font-size: 0.8rem; /* Smaller text */
       padding: 0.3rem 0.8rem; /* Compact padding */
-    }
-  
-    .icon-button {
-      padding: 0.3rem; /* Compact icons */
     }
   }
   
   @media (max-width: 480px) {
     header {
-      padding: 0.6rem; /* Compact header padding for very small screens */
-      gap: 0.5rem; /* Reduce gap further */
+      padding: 0.4rem; /* Compact header padding for very small screens */
+      gap: 0.4rem; /* Tighten gap */
     }
   
     .slider-container {
-      max-width: 200px; /* Compact slider width for very small screens */
+      max-width: 200px; /* Very compact slider width */
       padding: 0.2rem; /* Tighten padding */
-      gap: 0.4rem; /* Tighten spacing between buttons */
+      gap: 0.4rem; /* Tighten spacing */
     }
   
     .slider-container button {
