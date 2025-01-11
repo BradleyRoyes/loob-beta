@@ -3,6 +3,7 @@
     --background-primary: #121212;
     --background-secondary: #232323;
     --background-soft: #1e1e1e;
+    --slider-gradient: linear-gradient(to right, #ff7eb3, #fba779);
     --text-primary: #ffffff;
     --text-secondary: #a6aaae;
     --border-primary: #3a3a3a;
@@ -26,7 +27,8 @@
   
   /* Header Icons */
   header .icon-button {
-    color: black; /* Default black color for inactive icons */
+    color: black; /* Default text color */
+    background-color: transparent; /* Default background */
     cursor: pointer;
     padding: 0.5rem;
     border-radius: 50%;
@@ -34,11 +36,12 @@
   }
   
   header .icon-button.active {
-    color: white; /* White color for active icons */
-    background-color: var(--background-soft, #1e1e1e); /* Fallback for subtle background */
+    color: white; /* White text color for active state */
+    background-color: var(--background-soft, #1e1e1e); /* Subtle background for active state */
   }
   
   header .icon-button:hover {
+    color: white; /* White text on hover */
     background-color: var(--background-soft, rgba(255, 255, 255, 0.1)); /* Soft hover background */
   }
   
@@ -48,13 +51,13 @@
     align-items: center;
     justify-content: center;
     position: relative;
-    background-color: #e5e5e5; /* Light gray background for slider container */
+    background-color: var(--background-soft, #1e1e1e); /* Background for slider container */
     border-radius: 9999px; /* Fully rounded slider shape */
-    padding: 0.4rem; /* Padding for better spacing */
+    padding: 0.4rem;
     width: fit-content;
     max-width: 400px; /* Limit slider size on larger screens */
-    gap: 1rem; /* Spacing between buttons */
-    flex-grow: 1; /* Allow slider to take up available space */
+    gap: 1rem;
+    flex-grow: 1;
   }
   
   /* Sliding Pill */
@@ -63,11 +66,11 @@
     top: 0;
     left: 0;
     height: 100%;
-    background: linear-gradient(to right, #ff7eb3, #fba779); /* Gradient for the active tab */
+    width: 50%; /* Default width for the pill */
+    background: var(--slider-gradient, #ff7eb3); /* Gradient for the active tab */
     border-radius: 9999px; /* Match the container's rounded edges */
     z-index: 0; /* Ensure it's behind the buttons */
     transition: all 0.3s ease; /* Smooth sliding animation */
-    background-color: #fba779; /* Fallback for browsers that don’t support gradients */
   }
   
   /* Slider Buttons */
@@ -86,7 +89,7 @@
   }
   
   .slider-container button.active {
-    color: white; /* Active button text */
+    color: white; /* Active button text color */
   }
   
   .slider-container button:hover {
@@ -99,62 +102,77 @@
     box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5); /* Accessible focus ring */
   }
   
-  /* Responsive Design for Smaller Screens */
+  /* Sliding Pill Positions */
+  .slider-container .slider-pill.active-chat {
+    left: 0; /* Align with the "Chat" button */
+    width: 50%; /* Adjust to fit the button */
+  }
+  
+  .slider-container .slider-pill.active-discover {
+    left: 50%; /* Align with the "Discover" button */
+    width: 50%; /* Adjust to fit the button */
+  }
+  
+  /* Responsive Design */
   @media (max-width: 1024px) {
     header {
-      padding: 0.8rem; /* Slightly reduce header padding */
+      padding: 0.8rem; /* Adjust padding for tablets */
       gap: 0.8rem; /* Adjust gap for smaller screens */
     }
   
     .slider-container {
-      max-width: 300px; /* Adjust slider size for tablet */
-      padding: 0.3rem; /* Reduce padding */
-      gap: 0.8rem; /* Reduce spacing between buttons */
+      max-width: 300px; /* Adjust slider size for tablets */
+      padding: 0.3rem;
+      gap: 0.8rem;
     }
   
     .slider-container button {
-      font-size: 0.9rem; /* Adjust text size for smaller screens */
-      padding: 0.4rem 1rem; /* Reduce padding */
+      font-size: 0.9rem;
+      padding: 0.4rem 1rem;
     }
   }
   
   @media (max-width: 768px) {
     header {
-      padding: 0.6rem; /* Compact header padding for very small screens */
-      gap: 0.6rem; /* Reduce gap further */
+      padding: 0.6rem;
+      gap: 0.6rem;
     }
   
     .slider-container {
-      max-width: 250px; /* Compact slider width for very small screens */
-      padding: 0.3rem; /* Tighten padding */
-      gap: 0.6rem; /* Tighten spacing between buttons */
+      max-width: 250px;
+      padding: 0.3rem;
+      gap: 0.6rem;
     }
   
     .slider-container button {
-      font-size: 0.8rem; /* Smaller text */
-      padding: 0.3rem 0.8rem; /* Compact padding */
+      font-size: 0.8rem;
+      padding: 0.3rem 0.8rem;
+    }
+  
+    .icon-button {
+      padding: 0.3rem;
     }
   }
   
   @media (max-width: 480px) {
     header {
-      padding: 0.4rem; /* Compact header padding for very small screens */
-      gap: 0.4rem; /* Tighten gap */
+      padding: 0.4rem;
+      gap: 0.4rem;
     }
   
     .slider-container {
-      max-width: 200px; /* Very compact slider width */
-      padding: 0.2rem; /* Tighten padding */
-      gap: 0.4rem; /* Tighten spacing */
+      max-width: 200px;
+      padding: 0.2rem;
+      gap: 0.4rem;
     }
   
     .slider-container button {
-      font-size: 0.7rem; /* Smaller text */
-      padding: 0.3rem 0.6rem; /* Compact padding */
+      font-size: 0.7rem;
+      padding: 0.3rem 0.6rem;
     }
   
     .icon-button {
-      padding: 0.2rem; /* Tighten icon spacing */
+      padding: 0.2rem;
     }
   }
   
