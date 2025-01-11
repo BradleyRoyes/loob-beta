@@ -6,79 +6,82 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Root Variables with Fallbacks */
 :root {
   --text-primary: #ffffff;
   --text-secondary: #a6aaae;
   --text-tertiary: #6b6f73;
   --background-primary: #121212;
   --background-secondary: #232323;
-  --background-bubble-primary-gradient: linear-gradient(to left, #d66d75, #e29587); /* Gradient for primary bubbles */
-  --background-bubble-user-gradient: linear-gradient(to right, pink, #fba779); /* Gradient for user bubbles */
+  --background-bubble-primary-gradient: linear-gradient(to left, #d66d75, #e29587);
+  --background-bubble-user-gradient: linear-gradient(to right, pink, #fba779);
   --background-soft: #1e1e1e;
   --border-primary: #3a3a3a;
   --shadow-primary: 0px 6px 16px 0px #00000050, 0px 4px 14px 0px #00000040, 0px 8px 10px 0px #00000030;
   --font-family-primary: 'Nunito';
 }
 
+/* Global Styles */
 body {
-  background-color: var(--background-primary);
-  font-family: var(--font-family-primary);
-  color: var(--text-primary);
+  background-color: var(--background-primary, #121212); /* Fallback */
+  font-family: var(--font-family-primary, sans-serif); /* Fallback */
+  color: var(--text-primary, #ffffff); /* Fallback */
   margin: 0;
   padding: 0;
 }
 
 .chatbot-section {
-  background-color: var(--background-secondary);
+  background-color: var(--background-secondary, #232323); /* Fallback */
   box-shadow: var(--shadow-primary);
-  border: 1px solid var(--border-primary);
+  border: 1px solid var(--border-primary, #3a3a3a); /* Fallback */
   flex: 1;
   overflow: hidden;
 }
 
 .chatbot-header {
   padding-top: 0;
-  border-bottom: 1px solid var(--border-primary);
+  border-bottom: 1px solid var(--border-primary, #3a3a3a); /* Fallback */
 }
 
 .chatbot-header h1 {
-  color: var(--text-primary);
+  color: var(--text-primary, #ffffff); /* Fallback */
 }
 
 .chatbot-input {
-  color: var(--text-primary);
-  border: 1px solid var(--border-primary);
-  background-color: var(--background-soft);
+  color: var(--text-primary, #ffffff); /* Fallback */
+  border: 1px solid var(--border-primary, #3a3a3a); /* Fallback */
+  background-color: var(--background-soft, #1e1e1e); /* Fallback */
   font-size: 16px;
 }
 
 .chatbot-input::placeholder {
-  color: var(--text-secondary);
+  color: var(--text-secondary, #a6aaae); /* Fallback */
 }
 
 .chatbot-send-button {
-  background-color: var(--background-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-primary);
+  background-color: var(--background-secondary, #232323); /* Fallback */
+  color: var(--text-primary, #ffffff); /* Fallback */
+  border: 1px solid var(--border-primary, #3a3a3a); /* Fallback */
 }
 
 .chatbot-button-primary {
-  background-color: var(--background-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-primary);
+  background-color: var(--background-secondary, #232323); /* Fallback */
+  color: var(--text-primary, #ffffff); /* Fallback */
+  border: 1px solid var(--border-primary, #3a3a3a); /* Fallback */
 }
 
 .chatbot-button-secondary {
-  border: 1px solid var(--border-primary);
-  color: var(--text-secondary);
+  border: 1px solid var(--border-primary, #3a3a3a); /* Fallback */
+  color: var(--text-secondary, #a6aaae); /* Fallback */
 }
 
+/* Bubble Styles */
 .talk-bubble {
   text-align: left;
   display: inline-block;
   position: relative;
-  color: var(--text-primary);
-  background: var(--background-bubble-primary-gradient);
+  color: var(--text-primary, #ffffff); /* Fallback */
+  background: var(--background-bubble-primary-gradient, #d66d75); /* Fallback */
   border-radius: 10px;
   border-bottom-left-radius: 0px;
   padding: 10px;
@@ -86,53 +89,54 @@ body {
 
 .talk-bubble.user {
   text-align: right;
-  color: var(--text-primary);
-  background: var(--background-bubble-user-gradient);
+  color: var(--text-primary, #ffffff); /* Fallback */
+  background: var(--background-bubble-user-gradient, pink); /* Fallback */
   border-radius: 10px;
   border-bottom-right-radius: 0px;
   padding: 10px;
 }
 
+/* Dot-Flashing Animation */
 .dot-flashing {
   position: relative;
   width: 4px;
   height: 4px;
   border-radius: 100%;
-  background-color: var(--text-tertiary);
+  background-color: var(--text-tertiary, #6b6f73); /* Fallback */
   animation: dot-flashing 1s infinite linear alternate;
 }
 
 @keyframes dot-flashing {
   0% {
-    background-color: var(--text-tertiary);
+    background-color: var(--text-tertiary, #6b6f73); /* Fallback */
   }
-  50%,
-  100% {
+  50%, 100% {
     background-color: rgba(255, 255, 255, 0.2);
   }
 }
 
+/* Button Hover Effects */
 .prompt-button {
-  background-color: var(--background-soft);
-  color: var(--text-primary);
+  background-color: var(--background-soft, #1e1e1e); /* Fallback */
+  color: var(--text-primary, #ffffff); /* Fallback */
 }
 
 .button-dash {
   padding: 3px 11px;
-  border: 2px solid var(--text-primary);
+  border: 2px solid var(--text-primary, #ffffff); /* Fallback */
   border-radius: 8px;
-  color: var(--text-primary);
+  color: var(--text-primary, #ffffff); /* Fallback */
   background-color: transparent;
   transition: background-color 0.3s, color 0.3s;
 }
 
 .button-dash:hover {
-  background-color: var(--background-bubble-primary-gradient);
+  background-color: var(--background-bubble-primary-gradient, #d66d75); /* Fallback */
 }
 
 .button {
   padding: 0.9rem 1.8rem;
-  color: var(--text-primary);
+  color: var(--text-primary, #ffffff); /* Fallback */
   font-size: 1rem;
   font-weight: bold;
   border: 2px solid transparent;
@@ -147,6 +151,7 @@ body {
   box-shadow: 0px 5px 15px rgba(255, 255, 255, 0.3);
 }
 
+/* Word Cloud Container */
 .word-cloud-container {
   width: 100%;
   height: 400px;
@@ -156,6 +161,7 @@ body {
   margin: 0 auto;
 }
 
+/* Responsive Adjustments */
 @media (max-width: 768px) {
   .chatbot-section {
     padding: 1rem;
@@ -168,20 +174,22 @@ body {
   }
 }
 
+/* Layout & Map */
 html,
 body,
 .main-layout {
-  height: 100%; /* Allow full height layout for the app */
+  height: 100%;
   margin: 0;
 }
 
 .map-container {
-  flex: 1; /* Ensure the map grows to fill available space */
+  flex: 1;
   display: flex;
   flex-direction: column;
   position: relative;
 }
 
+/* Glow Effect */
 .glow-effect {
   background: linear-gradient(to right, #ff7eb3, brown);
   color: white;
@@ -189,7 +197,6 @@ body,
   box-shadow: 0 0 10px 2px rgba(255, 117, 140, 0.7);
 }
 
-/* Add this if `animate-pulse` is unavailable */
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
@@ -205,24 +212,24 @@ body,
   animation: pulse 1.5s infinite;
 }
 
+/* Footer */
 .footer-container {
-  position: fixed; /* Fixes the footer to the bottom of the viewport */
+  position: fixed;
   bottom: 0;
   width: 100%;
-  z-index: 10; /* Ensures it's above other elements */
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1); /* Adds a subtle shadow for separation */
+  z-index: 10;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Reset global button styling for slider buttons */
+/* Slider Styles */
 .slider-container button {
-  all: unset; /* Remove any inherited button styles */
-  display: inline-block;
-  text-align: center;
-  cursor: pointer;
-  padding: 0.5rem 1rem; /* Padding for better button size */
-  border-radius: 9999px; /* Fully rounded */
+  background: none;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
   font-size: 0.875rem;
-  font-weight: 600; /* Bold text for emphasis */
+  font-weight: 600;
+  cursor: pointer;
   transition: color 0.3s ease;
 }
 
@@ -230,14 +237,8 @@ body,
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #e5e7eb; /* Light gray background */
-  border-radius: 9999px; /* Fully rounded slider container */
-  padding: 0.25rem; /* Add padding for a more polished look */
-  width: fit-content; /* Dynamically resize based on content */
+  background: var(--background-soft, #1e1e1e); /* Fallback */
+  border-radius: 9999px;
+  padding: 0.25rem;
+  width: fit-content;
 }
-
-.slider-container div {
-  position: absolute;
-}
-
-
