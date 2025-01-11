@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
-import './Map.css';
-import mockMapData, { Node } from './MockMapData';
-import TorusSphere from './TorusSphere';
-import TorusSphereWeek from './TorusSphereWeek';
-import TorusSphereAll from './TorusSphereAll';
-import VenueProfile from './VenueProfile';
-import MapSidebar from './MapSidebar';
-import AddVenueModal from './AddVenueModal';
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+import "./Map.css";
+import mockMapData, { Node } from "./MockMapData";
+import TorusSphere from "./TorusSphere";
+import TorusSphereWeek from "./TorusSphereWeek";
+import TorusSphereAll from "./TorusSphereAll";
+import VenueProfile from "./VenueProfile";
+import MapSidebar from "./MapSidebar";
+import AddVenueModal from "./AddVenueModal";
 
 const Map: React.FC = () => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -30,8 +30,8 @@ const Map: React.FC = () => {
     const handleResize = () => {
       setSidebarActive(window.innerWidth > 768);
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const getUserLocation = useCallback((map: maplibregl.Map) => {
@@ -45,7 +45,11 @@ const Map: React.FC = () => {
           map.flyTo({ center: userLocation, zoom: 14 });
         },
         (error) => {
-          console.error('Geolocation error:', error);
+          if (error.code === error.PERMISSION_DENIED) {
+            alert("Location access denied. Using default location.");
+          } else {
+            console.error("Geolocation error:", error);
+          }
           fallbackToDefaultLocation(map);
         }
       );
@@ -62,14 +66,14 @@ const Map: React.FC = () => {
   }, []);
 
   const addMarkerForNode = useCallback((map: maplibregl.Map, node: Node) => {
-    const markerEl = document.createElement('div');
-    markerEl.className = 'map-marker';
+    const markerEl = document.createElement("div");
+    markerEl.className = "map-marker";
 
     new maplibregl.Marker({ element: markerEl })
       .setLngLat([node.lon, node.lat])
       .addTo(map)
       .getElement()
-      .addEventListener('click', () => {
+      .addEventListener("click", () => {
         selectNode(map, node);
       });
   }, []);
@@ -81,14 +85,16 @@ const Map: React.FC = () => {
         style: {
           version: 8,
           sources: {
-            'osm-tiles': {
-              type: 'raster',
-              tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+            "osm-tiles": {
+              type: "raster",
+              tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
               tileSize: 256,
-              attribution: 'Map data © <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors.',
+              attribution: "Map data © <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors.",
             },
           },
-          layers: [{ id: 'osm-tiles', type: 'raster', source: 'osm-tiles', minzoom: 0, maxzoom: 19 }],
+          layers: [
+            { id: "osm-tiles", type: "raster", source: "osm-tiles", minzoom: 0, maxzoom: 19 },
+          ],
         },
         zoom: 12,
         center: [13.405, 52.52],
@@ -96,13 +102,20 @@ const Map: React.FC = () => {
 
       mapInstanceRef.current = map;
 
-      map.on('load', () => {
-        map.getCanvas().style.filter = 'grayscale(100%)';
+      map.on("load", () => {
+        map.getCanvas().style.filter = "grayscale(100%)";
         nodes.forEach((node) => addMarkerForNode(map, node));
       });
 
       getUserLocation(map);
     }
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
   }, [nodes, addMarkerForNode, getUserLocation]);
 
   const selectNode = useCallback((map: maplibregl.Map, node: Node) => {
@@ -113,7 +126,7 @@ const Map: React.FC = () => {
       curve: 1,
     });
 
-    map.once('moveend', () => {
+    map.once("moveend", () => {
       setPreviewNode(node);
       setShowPreviewPopup(true);
 
@@ -123,8 +136,15 @@ const Map: React.FC = () => {
     });
   }, []);
 
-  const adjustPopupPositionToScreen = (screenPos: maplibregl.PointLike, map: maplibregl.Map): { x: number; y: number } => {
-    const { x, y } = screenPos instanceof maplibregl.Point ? screenPos : { x: 0, y: 0 };
+  const adjustPopupPositionToScreen = (
+    screenPos: maplibregl.PointLike,
+    map: maplibregl.Map
+  ): { x: number; y: number } => {
+    if (!(screenPos instanceof maplibregl.Point)) {
+      console.error("Invalid screen position:", screenPos);
+      return { x: 0, y: 0 };
+    }
+    const { x, y } = screenPos;
     const bounds = map.getContainer().getBoundingClientRect();
     return {
       x: Math.min(Math.max(x, 50), bounds.width - 50),
@@ -134,9 +154,9 @@ const Map: React.FC = () => {
 
   const renderSphereForNode = (node: Node) => {
     switch (node.visualType) {
-      case 'ThisWeek':
+      case "ThisWeek":
         return <TorusSphereWeek />;
-      case 'AllTime':
+      case "AllTime":
         return <TorusSphereAll />;
       default:
         return <TorusSphere />;
@@ -145,7 +165,7 @@ const Map: React.FC = () => {
 
   const handleConfirmAddVenue = (venueName: string) => {
     if (!currentLocation) {
-      alert('Cannot create a venue: no user location found.');
+      alert("Cannot create a venue: no user location found.");
       setShowAddVenueModal(false);
       return;
     }
@@ -157,10 +177,10 @@ const Map: React.FC = () => {
       lat,
       lon,
       label: venueName,
-      details: 'User-created venue details.',
-      contact: 'mailto:info@usercreated.com',
-      visualType: 'Today',
-      type: 'Venue',
+      details: "User-created venue details.",
+      contact: "mailto:info@usercreated.com",
+      visualType: "Today",
+      type: "Venue",
     };
 
     setNodes((prev) => [...prev, newNode]);
@@ -196,17 +216,28 @@ const Map: React.FC = () => {
       />
 
       <button
-        className={`toggle-sidebar ${sidebarActive ? 'attached' : 'tab'}`}
+        className={`toggle-sidebar ${sidebarActive ? "attached" : "tab"}`}
         onClick={toggleSidebar}
-        style={{ position: 'absolute', bottom: '80px', right: '20px', zIndex: 1100, width: '50px', height: '50px', fontSize: '1.2rem' }}
+        style={{
+          position: "absolute",
+          bottom: "80px",
+          right: "20px",
+          zIndex: 1100,
+          width: "70px",
+          height: "70px",
+          fontSize: "1.5rem",
+          borderRadius: "50%",
+        }}
+        aria-label={sidebarActive ? "Close sidebar" : "Open sidebar"}
       >
-        {sidebarActive ? '←' : '→'}
+        {sidebarActive ? "←" : "→"}
       </button>
+
       {showPreviewPopup && previewNode && popupPosition && (
         <div
           className="small-popup"
           style={{
-            position: 'absolute',
+            position: "absolute",
             top: popupPosition.y,
             left: popupPosition.x,
             zIndex: 2000,
@@ -217,11 +248,12 @@ const Map: React.FC = () => {
               className="close-popup-btn"
               onClick={() => setShowPreviewPopup(false)}
               style={{ zIndex: 3000 }}
+              aria-label="Close preview popup"
             >
               ×
             </button>
             <div className="popup-title">
-              <h3 style={{ textAlign: 'center', margin: '0 0 10px 0' }}>{previewNode.label}</h3>
+              <h3 style={{ textAlign: "center", margin: "0 0 10px 0" }}>{previewNode.label}</h3>
             </div>
             <div className="sphere-preview">{renderSphereForNode(previewNode)}</div>
             <button
@@ -230,6 +262,7 @@ const Map: React.FC = () => {
                 handleShowVenueProfile(previewNode);
                 setShowPreviewPopup(false);
               }}
+              aria-label="Show more info"
             >
               More Info
             </button>
@@ -251,8 +284,9 @@ const Map: React.FC = () => {
       {currentLocation && (
         <button
           className="venue-selector-button"
-          style={{ bottom: '60px' }}
+          style={{ bottom: "60px" }}
           onClick={() => setShowAddVenueModal(true)}
+          aria-label="Add a new venue"
         >
           Add Venue
         </button>
