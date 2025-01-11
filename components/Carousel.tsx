@@ -1,4 +1,3 @@
-// ./components/Carousel.jsx
 import React, { useState } from 'react';
 
 export default function Carousel({ children }) {
@@ -25,13 +24,13 @@ export default function Carousel({ children }) {
         ))}
       </div>
       <button
-        className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-white p-2 rounded-full"
+        className="base-button absolute top-1/2 left-2 transform -translate-y-1/2"
         onClick={prevSlide}
       >
         ◀
       </button>
       <button
-        className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-white p-2 rounded-full"
+        className="base-button absolute top-1/2 right-2 transform -translate-y-1/2"
         onClick={nextSlide}
       >
         ▶

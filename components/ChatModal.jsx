@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
 import Bubble from './Bubble';
 import { useChat } from 'ai/react';
 import PromptSuggestionRow from './PromptSuggestions/PromptSuggestionsRow';
 import AudioRecorder from './AudioRecorder';
-import Carousel from './Carousel'; // Assuming you have or will create a Carousel component
+import Carousel from './Carousel';
 
 export default function ChatModal({ onConfigureOpen, showModal }) {
   const { append, messages, input, handleInputChange, handleSubmit } = useChat();
@@ -24,12 +24,12 @@ export default function ChatModal({ onConfigureOpen, showModal }) {
     e.preventDefault();
     handleSubmit(e);
     handleInputChange({ target: { value: '' } });
-    setShowIntroMessage(false); // Hide the intro message when the user sends a message
+    setShowIntroMessage(false);
   };
 
   const handlePrompt = (text) => {
     append({ id: crypto.randomUUID(), content: text, role: 'user' });
-    setShowIntroMessage(false); // Hide the intro message when the user uses a prompt
+    setShowIntroMessage(false);
   };
 
   const handleAudioUpload = async (audioBlob) => {
@@ -49,7 +49,6 @@ export default function ChatModal({ onConfigureOpen, showModal }) {
       const data = await response.json();
       console.log('Transcription:', data.transcription);
 
-      // Append the transcription to the chat
       handlePrompt(data.transcription);
     } catch (error) {
       console.error('Error uploading audio:', error);
@@ -59,9 +58,9 @@ export default function ChatModal({ onConfigureOpen, showModal }) {
   return (
     <section
       ref={messagesEndRef}
-      className="chatbot-section flex flex-col w-full md:w-[600px] mx-auto bg-white rounded-lg shadow-lg p-4 max-h-[85vh] overflow-y-auto"
+      className="chatbot-section flex flex-col w-full max-w-md md:max-w-3xl mx-auto h-full md:h-[90vh] bg-white rounded-lg shadow-lg p-4 overflow-hidden"
     >
-      {/* Carousel Overlay */}
+      {/* Carousel Section */}
       <div className="overlay-carousel flex items-center justify-center mb-4 rounded-lg p-4 bg-gradient-to-r from-orange-300 to-pink-300">
         <Carousel>
           <div className="text-center">
@@ -83,7 +82,7 @@ export default function ChatModal({ onConfigureOpen, showModal }) {
         </Carousel>
       </div>
 
-      {/* Chat Messages */}
+      {/* Chat Messages Section */}
       <div className="flex-1 relative overflow-y-auto mb-4">
         <div className="absolute w-full overflow-x-hidden">
           {showIntroMessage && (
@@ -101,12 +100,10 @@ export default function ChatModal({ onConfigureOpen, showModal }) {
         </div>
       </div>
 
-      {/* Prompt Suggestion Row (when no messages exist) */}
-      {!messages.length && (
-        <PromptSuggestionRow onPromptClick={handlePrompt} />
-      )}
+      {/* Prompt Suggestions */}
+      {!messages.length && <PromptSuggestionRow onPromptClick={handlePrompt} />}
 
-      {/* Audio Recorder Positioned Above Input Field */}
+      {/* Audio Recorder Section */}
       <div className="audio-recorder-container mb-4 flex justify-center">
         <AudioRecorder
           onRecordingComplete={handleAudioUpload}
@@ -114,13 +111,13 @@ export default function ChatModal({ onConfigureOpen, showModal }) {
         />
       </div>
 
-      {/* Input and Buttons */}
+      {/* Input and Control Buttons */}
       <div className="flex items-center gap-2 mt-4">
         <form className="flex flex-1 gap-2" onSubmit={handleSend}>
           <input
             onChange={handleInputChange}
             value={input}
-            className="chatbot-input flex-1 text-sm md:text-base outline-none bg-transparent rounded-md p-3"
+            className="chatbot-input flex-1 text-sm md:text-base outline-none bg-gray-100 rounded-md p-3"
             placeholder="Send a message..."
           />
           <button type="submit" className="base-button primary">

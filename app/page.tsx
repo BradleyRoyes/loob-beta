@@ -1,9 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-
-// Import necessary components
-import ChatSection from '../components/ChatModal';
+import ChatModal from '../components/ChatModal';
 import ModalOverlay from '../components/ModalOverlay';
 import ConfigureModal from '../components/ConfigureModal';
 import Profile from '../components/Profile';
@@ -23,30 +21,24 @@ export default function Page() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-black text-white">
+    <div className="flex flex-col h-screen bg-black text-white">
       {/* Main Content Area */}
-      <main className="flex flex-1 flex-col items-center justify-between pb-32">
+      <main className="flex flex-1 items-center justify-center">
         {/* Modal Overlay */}
         {showModal && <ModalOverlay onClose={() => setShowModal(false)} />}
 
         {/* Dynamic View Rendering */}
         {view === 'Profile' && <Profile />}
-        {view === 'Map' && (
-          <div className="absolute inset-0">
-            <Map />
-          </div>
-        )}
+        {view === 'Map' && <Map />}
         {view === 'Chat' && (
-          <ChatSection
+          <ChatModal
             onConfigureOpen={handleConfigureClick}
             showModal={() => setShowModal(true)}
           />
         )}
 
         {/* Configure Modal */}
-        {configureOpen && (
-          <ConfigureModal onClose={() => setConfigureOpen(false)} />
-        )}
+        {configureOpen && <ConfigureModal onClose={() => setConfigureOpen(false)} />}
       </main>
 
       {/* Footer */}

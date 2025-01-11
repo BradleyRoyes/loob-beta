@@ -6,7 +6,6 @@ import TorusSphere from './TorusSphere';
 import TorusSphereWeek from './TorusSphereWeek';
 import TorusSphereAll from './TorusSphereAll';
 import VenueProfile from './VenueProfile';
-import Footer from './Footer'; // Import Footer component
 import './Profile.css'; // Import the corresponding CSS
 
 type VisualView = 'Today' | 'ThisWeek' | 'AllTime';
@@ -91,7 +90,6 @@ const Profile: React.FC = () => {
         <VenueProfile venue={activeVenue} onClose={closeVenueProfile} />
       )}
 
-      <Footer />
     </div>
   );
 };

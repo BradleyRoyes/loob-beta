@@ -4,6 +4,12 @@ const Footer = ({ className = "" }) => {
   return (
     <footer
       className={`footer-container bg-gray-800 text-gray-400 flex justify-between items-center px-4 py-2 text-sm ${className}`}
+      style={{
+        position: "sticky",
+        bottom: 0,
+        zIndex: 10,
+        boxShadow: "0 -2px 5px rgba(0, 0, 0, 0.2)", // Adds a shadow for better separation
+      }}
     >
       {/* Left Section: Link to Labs */}
       <a
