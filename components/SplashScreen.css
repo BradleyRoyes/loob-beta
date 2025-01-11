@@ -8,6 +8,8 @@
   background-color: black;
   color: #f3f3f3; /* Off-white for all text */
   font-family: 'Inter', sans-serif; /* Modern, professional font */
+  overflow: hidden; /* Prevent scrollbars */
+  z-index: 1000; /* Ensure it stays on top */
 }
 
 /* Content */
@@ -27,6 +29,7 @@
   -webkit-text-fill-color: transparent;
   animation: textGlow 2s infinite alternate ease-in-out;
   letter-spacing: 2px;
+  line-height: 1.2;
 }
 
 @keyframes textGlow {
@@ -40,13 +43,14 @@
 
 /* Login Phase Title */
 .mainTitle {
-  font-size: 4rem; /* Big and bold */
+  font-size: 3.5rem; /* Slightly smaller for better responsiveness */
   font-weight: 800;
   background: linear-gradient(90deg, #f3f3f3, #ffb48f, #f3f3f3);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: 1px;
   margin-bottom: 10px;
+  line-height: 1.2;
 }
 
 .superSubtitle {
@@ -67,6 +71,12 @@
   color: #f3f3f3;
   text-align: center;
   margin-bottom: 20px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.pseudonymInput:focus {
+  border-color: #ffb48f; /* Highlight on focus */
 }
 
 .pseudonymInput::placeholder {
@@ -97,6 +107,7 @@
 .actionButton:hover {
   background: linear-gradient(45deg, #ffb48f, #ff7e79);
   transform: translateY(-2px);
+  box-shadow: 0px 4px 10px rgba(255, 120, 120, 0.3);
 }
 
 /* Secondary Button */
@@ -109,6 +120,7 @@
   background: transparent;
   border-radius: 8px;
   cursor: pointer;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .actionButton.secondary:hover {
@@ -136,8 +148,69 @@
   }
 }
 
+/* Fade Overlay */
 .fadeOverlay {
   position: absolute;
   inset: 0;
   background: black;
+  z-index: 999; /* Above the animation but below content */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .logoText {
+    font-size: 3rem; /* Adjust for smaller screens */
+  }
+
+  .mainTitle {
+    font-size: 2.5rem; /* Adjust for smaller screens */
+  }
+
+  .superSubtitle {
+    font-size: 1.2rem; /* Adjust for smaller screens */
+  }
+
+  .pseudonymInput {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+
+  .actionButton {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+
+  .actionButton.secondary {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .logoText {
+    font-size: 2.5rem; /* Adjust further for very small screens */
+  }
+
+  .mainTitle {
+    font-size: 2rem;
+  }
+
+  .superSubtitle {
+    font-size: 1rem;
+  }
+
+  .pseudonymInput {
+    padding: 8px;
+    font-size: 0.8rem;
+  }
+
+  .actionButton {
+    padding: 8px;
+    font-size: 0.8rem;
+  }
+
+  .actionButton.secondary {
+    padding: 8px;
+    font-size: 0.8rem;
+  }
 }

@@ -58,21 +58,31 @@ body {
   color: var(--text-secondary, #a6aaae); /* Fallback */
 }
 
-.chatbot-send-button {
-  background-color: var(--background-secondary, #232323); /* Fallback */
-  color: var(--text-primary, #ffffff); /* Fallback */
-  border: 1px solid var(--border-primary, #3a3a3a); /* Fallback */
+/* Single Base Button Style */
+.base-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
+  border: none; /* Default border */
+  background-color: var(--background-secondary, #232323); /* Default background */
+  color: var(--text-primary, #ffffff); /* Default text color */
 }
 
-.chatbot-button-primary {
-  background-color: var(--background-secondary, #232323); /* Fallback */
-  color: var(--text-primary, #ffffff); /* Fallback */
-  border: 1px solid var(--border-primary, #3a3a3a); /* Fallback */
+.base-button:hover {
+  background-color: var(--background-soft, #1e1e1e); /* Darker background on hover */
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3); /* Add shadow */
 }
 
-.chatbot-button-secondary {
-  border: 1px solid var(--border-primary, #3a3a3a); /* Fallback */
-  color: var(--text-secondary, #a6aaae); /* Fallback */
+.base-button:disabled {
+  background-color: #ccc; /* Disabled state background */
+  color: #777; /* Disabled state text */
+  cursor: not-allowed;
 }
 
 /* Bubble Styles */
@@ -113,42 +123,6 @@ body {
   50%, 100% {
     background-color: rgba(255, 255, 255, 0.2);
   }
-}
-
-/* Button Hover Effects */
-.prompt-button {
-  background-color: var(--background-soft, #1e1e1e); /* Fallback */
-  color: var(--text-primary, #ffffff); /* Fallback */
-}
-
-.button-dash {
-  padding: 3px 11px;
-  border: 2px solid var(--text-primary, #ffffff); /* Fallback */
-  border-radius: 8px;
-  color: var(--text-primary, #ffffff); /* Fallback */
-  background-color: transparent;
-  transition: background-color 0.3s, color 0.3s;
-}
-
-.button-dash:hover {
-  background-color: var(--background-bubble-primary-gradient, #d66d75); /* Fallback */
-}
-
-.button {
-  padding: 0.9rem 1.8rem;
-  color: var(--text-primary, #ffffff); /* Fallback */
-  font-size: 1rem;
-  font-weight: bold;
-  border: 2px solid transparent;
-  border-radius: 16px;
-  cursor: pointer;
-  background: linear-gradient(45deg, #333333, #444444);
-  transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-}
-
-.button:hover {
-  transform: scale(1.05);
-  box-shadow: 0px 5px 15px rgba(255, 255, 255, 0.3);
 }
 
 /* Word Cloud Container */

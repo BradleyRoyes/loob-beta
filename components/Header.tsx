@@ -1,10 +1,12 @@
+"use client";
+
 import React from 'react';
-import './Header.css'; // Import updated CSS
 import { UserIcon, MapIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
+import './Header.css'; // Import only component-specific styles
 
 interface HeaderProps {
   toggleView: (view: 'Chat' | 'Profile' | 'Map') => void;
-  onConfigureClick: () => void; // Function to handle Configure button click
+  onConfigureClick: () => void;
   activeView: 'Chat' | 'Profile' | 'Map';
 }
 
@@ -17,7 +19,9 @@ const Header: React.FC<HeaderProps> = ({
     <header>
       {/* Profile Icon */}
       <button
-        className={`icon-button ${activeView === 'Profile' ? 'active' : ''}`}
+        className={`icon-button base-button ${
+          activeView === 'Profile' ? 'active' : ''
+        }`}
         onClick={() => toggleView('Profile')}
       >
         <UserIcon className="h-6 w-6" />
@@ -31,13 +35,17 @@ const Header: React.FC<HeaderProps> = ({
           }`}
         ></div>
         <button
-          className={activeView === 'Chat' ? 'active' : ''}
+          className={`base-button ${
+            activeView === 'Chat' ? 'active' : ''
+          }`}
           onClick={() => toggleView('Chat')}
         >
           Chat w/ Loob
         </button>
         <button
-          className={activeView === 'Map' ? 'active' : ''}
+          className={`base-button ${
+            activeView === 'Map' ? 'active' : ''
+          }`}
           onClick={() => toggleView('Map')}
         >
           Discover
@@ -47,14 +55,16 @@ const Header: React.FC<HeaderProps> = ({
       {/* Map and Configure Icons */}
       <div className="flex space-x-4">
         <button
-          className={`icon-button ${activeView === 'Map' ? 'active' : ''}`}
+          className={`icon-button base-button ${
+            activeView === 'Map' ? 'active' : ''
+          }`}
           onClick={() => toggleView('Map')}
         >
           <MapIcon className="h-6 w-6" />
         </button>
         <button
-          className="icon-button"
-          onClick={onConfigureClick} // Distinct handler for Configure
+          className="icon-button base-button"
+          onClick={onConfigureClick}
         >
           <Cog6ToothIcon className="h-6 w-6" />
         </button>

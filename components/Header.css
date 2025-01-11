@@ -1,48 +1,35 @@
-/* Root Variables */
-:root {
-    --background-primary: #121212;
-    --background-secondary: #232323;
-    --background-soft: #1e1e1e;
-    --slider-gradient: linear-gradient(to right, #ff7eb3, #fba779);
-    --text-primary: #ffffff;
-    --text-secondary: #a6aaae;
-    --border-primary: #3a3a3a;
-  }
-  
-  /* Header Styling */
-  header {
+/* Header Styles */
+header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: var(--background-secondary, #232323); /* Fallback */
+    background-color: var(--background-secondary, #232323); /* Fallback to a dark background */
     padding: 1rem;
-    border-bottom: 1px solid var(--border-primary, #3a3a3a); /* Fallback */
-    gap: 1rem; /* Consistent spacing between elements */
+    border-bottom: 1px solid var(--border-primary, #3a3a3a); /* Subtle border */
+    gap: 1rem; /* Even spacing between elements */
     flex-wrap: nowrap; /* Prevent wrapping */
-    position: sticky; /* Make header sticky */
-    top: 0; /* Stick to the top of the viewport */
+    position: sticky; /* Sticky header at the top */
+    top: 0; /* Stick to the viewport's top */
     z-index: 100; /* Ensure it stays above other content */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Light shadow for depth */
   }
   
-  /* Header Icons */
-  header .icon-button {
-    color: black; /* Default text color */
-    background-color: transparent; /* Default background */
-    cursor: pointer;
+  /* Icon Button Styles */
+  .icon-button {
     padding: 0.5rem;
-    border-radius: 50%;
-    transition: color 0.3s ease, background-color 0.3s ease;
+    border-radius: 50%; /* Circular buttons */
+    background-color: transparent; /* Transparent by default */
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
   
-  header .icon-button.active {
-    color: white; /* White text color for active state */
-    background-color: var(--background-soft, #1e1e1e); /* Subtle background for active state */
+  .icon-button.active {
+    background-color: var(--background-soft, #1e1e1e); /* Highlight active state */
+    color: var(--text-primary, #ffffff); /* Active text color */
   }
   
-  header .icon-button:hover {
-    color: white; /* White text on hover */
-    background-color: var(--background-soft, rgba(255, 255, 255, 0.1)); /* Soft hover background */
+  .icon-button:hover {
+    background-color: var(--background-soft, rgba(255, 255, 255, 0.1)); /* Subtle hover effect */
+    color: var(--text-primary, #ffffff);
   }
   
   /* Slider Container */
@@ -51,87 +38,58 @@
     align-items: center;
     justify-content: center;
     position: relative;
-    background-color: var(--background-soft, #1e1e1e); /* Background for slider container */
-    border-radius: 9999px; /* Fully rounded slider shape */
+    background-color: var(--background-soft, #1e1e1e); /* Dark slider background */
+    border-radius: 9999px; /* Fully rounded */
     padding: 0.4rem;
     width: fit-content;
-    max-width: 400px; /* Limit slider size on larger screens */
+    max-width: 400px; /* Limit the width */
     gap: 1rem;
     flex-grow: 1;
   }
   
-  /* Sliding Pill */
   .slider-container .slider-pill {
     position: absolute;
     top: 0;
     left: 0;
     height: 100%;
-    width: 50%; /* Default width for the pill */
-    background: var(--slider-gradient, #ff7eb3); /* Gradient for the active tab */
-    border-radius: 9999px; /* Match the container's rounded edges */
-    z-index: 0; /* Ensure it's behind the buttons */
-    transition: all 0.3s ease; /* Smooth sliding animation */
+    background: var(--slider-gradient, #ff7eb3); /* Gradient pill */
+    border-radius: 9999px; /* Match the slider's rounded edges */
+    z-index: 0; /* Ensure it stays behind the buttons */
+    transition: all 0.3s ease; /* Smooth animation */
   }
   
-  /* Slider Buttons */
-  .slider-container button {
-    background: none;
-    border: none;
-    padding: 0.5rem 1.5rem;
-    font-size: 1rem;
-    font-weight: bold;
-    color: black;
-    border-radius: 9999px;
-    cursor: pointer;
-    transition: color 0.3s ease;
-    position: relative; /* Ensure above the sliding pill */
-    z-index: 1; /* Ensure above the sliding pill */
-  }
-  
-  .slider-container button.active {
-    color: white; /* Active button text color */
-  }
-  
-  .slider-container button:hover {
-    color: var(--text-secondary, #a6aaae); /* Subtle hover effect */
-  }
-  
-  /* Focus States */
-  .slider-container button:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5); /* Accessible focus ring */
-  }
-  
-  /* Sliding Pill Positions */
   .slider-container .slider-pill.active-chat {
     left: 0; /* Align with the "Chat" button */
-    width: 50%; /* Adjust to fit the button */
+    width: 50%; /* Match the button's width */
   }
   
   .slider-container .slider-pill.active-discover {
     left: 50%; /* Align with the "Discover" button */
-    width: 50%; /* Adjust to fit the button */
+    width: 50%; /* Match the button's width */
+  }
+  
+  /* Button Styles Inside the Slider */
+  .slider-container button {
+    font-size: 1rem;
+    font-weight: bold;
+    z-index: 1; /* Ensure above the sliding pill */
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem 1.5rem;
+    transition: color 0.3s ease;
+    border-radius: 9999px; /* Fully rounded button */
+  }
+  
+  .slider-container button.active {
+    color: var(--text-primary, #ffffff); /* Active button text */
+  }
+  
+  .slider-container button:hover {
+    color: var(--text-secondary, #a6aaae); /* Subtle hover text */
   }
   
   /* Responsive Design */
-  @media (max-width: 1024px) {
-    header {
-      padding: 0.8rem; /* Adjust padding for tablets */
-      gap: 0.8rem; /* Adjust gap for smaller screens */
-    }
-  
-    .slider-container {
-      max-width: 300px; /* Adjust slider size for tablets */
-      padding: 0.3rem;
-      gap: 0.8rem;
-    }
-  
-    .slider-container button {
-      font-size: 0.9rem;
-      padding: 0.4rem 1rem;
-    }
-  }
-  
   @media (max-width: 768px) {
     header {
       padding: 0.6rem;

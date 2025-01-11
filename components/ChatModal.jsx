@@ -114,7 +114,7 @@ export default function ChatModal({ onConfigureOpen, showModal }) {
         />
       </div>
 
-      {/* Input and Send Button */}
+      {/* Input and Buttons */}
       <div className="flex items-center gap-2 mt-4">
         <form className="flex flex-1 gap-2" onSubmit={handleSend}>
           <input
@@ -123,13 +123,13 @@ export default function ChatModal({ onConfigureOpen, showModal }) {
             className="chatbot-input flex-1 text-sm md:text-base outline-none bg-transparent rounded-md p-3"
             placeholder="Send a message..."
           />
-          <button type="submit" className="bg-pink-500 text-white py-2 px-4 rounded-md hover:bg-pink-600">
+          <button type="submit" className="base-button primary">
             Send
           </button>
         </form>
         <button
           onClick={showModal}
-          className="bg-gray-700 text-white py-2 px-4 rounded-md hover:bg-gray-800"
+          className="base-button secondary"
         >
           End Chat
         </button>
