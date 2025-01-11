@@ -11,10 +11,10 @@ header {
     top: 0;
     z-index: 100;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  /* Slider Container */
-  .slider-container {
+}
+
+/* Slider Container */
+header .slider-container {
     position: relative;
     display: flex;
     justify-content: center;
@@ -25,31 +25,34 @@ header {
     width: fit-content;
     max-width: 400px;
     gap: 0.5rem;
-  }
-  
-  .slider-container button {
+}
+
+/* Slider Buttons - Scoped and Reset */
+header .slider-container button {
+    all: unset; /* Reset all inherited styles */
+    display: inline-block;
     font-size: 1rem;
     font-weight: 600;
-    background: none;
-    border: none;
     padding: 0.5rem 1.5rem;
     border-radius: 9999px;
+    background: none;
     color: var(--text-primary, #ffffff);
-    z-index: 1; /* Ensure it's above the sliding pill */
     cursor: pointer;
+    z-index: 1; /* Ensure it's above the sliding pill */
     transition: color 0.3s ease;
-  }
-  
-  .slider-container button.active {
+    text-align: center;
+}
+
+header .slider-container button.active {
     color: var(--text-primary, #ffffff); /* Active button text color */
-  }
-  
-  .slider-container button:hover {
+}
+
+header .slider-container button:hover {
     color: var(--text-secondary, #a6aaae); /* Subtle hover effect */
-  }
-  
-  /* Sliding Pill */
-  .slider-pill {
+}
+
+/* Sliding Pill */
+header .slider-pill {
     position: absolute;
     top: 0;
     left: 0;
@@ -59,43 +62,62 @@ header {
     border-radius: 9999px;
     z-index: 0; /* Ensure it's behind the buttons */
     transition: all 0.3s ease; /* Smooth sliding animation */
-  }
-  
-  /* Sliding Pill Positions */
-  .slider-pill.active-chat {
+}
+
+/* Sliding Pill Positions */
+header .slider-pill.active-chat {
     left: 0; /* Align with "Chat w/ Loob" */
-  }
-  
-  .slider-pill.active-discover {
+}
+
+header .slider-pill.active-discover {
     left: 50%; /* Align with "Discover" */
-  }
-  
-  /* Responsive Adjustments */
-  @media (max-width: 768px) {
-    .slider-container {
-      max-width: 300px;
-      gap: 0.4rem;
+}
+
+/* Icon Buttons */
+header .icon-button {
+    all: unset; /* Reset all inherited styles */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+header .icon-button:hover {
+    background: var(--background-hover, rgba(255, 255, 255, 0.1)); /* Subtle hover effect */
+}
+
+header .icon-button.active {
+    background: var(--background-active, rgba(255, 255, 255, 0.2)); /* Active button background */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    header .slider-container {
+        max-width: 300px;
+        gap: 0.4rem;
     }
-  
-    .slider-container button {
-      font-size: 0.9rem;
-      padding: 0.4rem 1rem;
+
+    header .slider-container button {
+        font-size: 0.9rem;
+        padding: 0.4rem 1rem;
     }
-  
-    .slider-pill {
-      width: 50%; /* Maintain pill width on smaller screens */
+
+    header .slider-pill {
+        width: 50%; /* Maintain pill width on smaller screens */
     }
-  }
-  
-  @media (max-width: 480px) {
-    .slider-container {
-      max-width: 250px;
-      gap: 0.3rem;
+}
+
+@media (max-width: 480px) {
+    header .slider-container {
+        max-width: 250px;
+        gap: 0.3rem;
     }
-  
-    .slider-container button {
-      font-size: 0.8rem;
-      padding: 0.3rem 0.8rem;
+
+    header .slider-container button {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.8rem;
     }
-  }
-  
+}

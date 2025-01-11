@@ -26,31 +26,30 @@ const Header: React.FC<HeaderProps> = ({
       >
         <UserIcon className="h-6 w-6" />
       </button>
-
-      {/* Slider */}
-      <div className="slider-container">
-        <div
-          className={`slider-pill ${
-            activeView === 'Chat' ? 'active-chat' : 'active-discover'
-          }`}
-        ></div>
-        <button
-          className={`base-button ${
-            activeView === 'Chat' ? 'active' : ''
-          }`}
-          onClick={() => toggleView('Chat')}
-        >
-          Chat w/ Loob
-        </button>
-        <button
-          className={`base-button ${
-            activeView === 'Map' ? 'active' : ''
-          }`}
-          onClick={() => toggleView('Map')}
-        >
-          Discover
-        </button>
-      </div>
+{/* Slider */}
+<div className="slider-container">
+  <div
+    className={`slider-pill ${
+      activeView === 'Chat' ? 'active-chat' : 'active-discover'
+    }`}
+  ></div>
+  <button
+    className={`slider-button ${
+      activeView === 'Chat' ? 'active' : ''
+    }`}
+    onClick={() => toggleView('Chat')}
+  >
+    Chat w/ Loob
+  </button>
+  <button
+    className={`slider-button ${
+      activeView === 'Map' ? 'active' : ''
+    }`}
+    onClick={() => toggleView('Map')}
+  >
+    Discover
+  </button>
+</div>
 
       {/* Map and Configure Icons */}
       <div className="flex space-x-4">

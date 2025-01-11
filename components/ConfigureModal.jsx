@@ -1,7 +1,7 @@
 // components/ConfigureModal.jsx
 
 import React from 'react';
-import Configure from './Configure';
+import Configure from './Settings';
 
 export default function ConfigureModal({ onClose }) {
   return (
