@@ -46,7 +46,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
   };
 
   const handlePreviousPhase = () => {
-    setCurrentPhase((prev) => prev - 1); // Go back to the previous phase
+    setCurrentPhase((prev) => prev - 1);
   };
 
   return (
@@ -64,7 +64,8 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
           <>
             <h2 className="title">Get your Loobrary card here</h2>
             <p className="description">
-              Your Loobrary card is your key to the Loob ecosystem of talent, gear, and spaces. It just takes two minutes to sign up.
+              Your Loobrary card is your key to the Loob ecosystem of talent, gear, and spaces. It
+              just takes two minutes to sign up.
             </p>
             <form className="form">
               <div className="formGroup">
@@ -109,6 +110,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
                   }
                 />
               </div>
+              {error && <p className="error">{error}</p>}
               <button type="button" onClick={handleNext}>
                 Next
               </button>
@@ -121,7 +123,8 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
             <form className="form">
               <h2 className="title">Can you offer something to the Loobrary?</h2>
               <p className="description">
-                The Loobrary thrives on community contributions. Whether it’s a venue, talent, or gear, your offer helps others and builds the community.
+                The Loobrary thrives on community contributions. Whether it’s a venue, talent, or
+                gear, your offer helps others and builds the community.
               </p>
               <div className="formGroup">
                 <label>Title</label>
@@ -181,7 +184,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
           <div className="finalPhase">
             <h2>Thanks for joining!</h2>
             <p>
-              We'll be in contact with you via email about picking up your Loobrary card.
+              We&apos;ll be in contact with you via email about picking up your Loobrary card.
             </p>
             <p>You can now use your pseudonym to explore Loob.</p>
           </div>

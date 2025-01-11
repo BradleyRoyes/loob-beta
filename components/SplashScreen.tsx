@@ -81,7 +81,7 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               transition={{ duration: 1 }}
             >
               <h1 className="mainTitle">Loob</h1>
-              <h2 className="superSubtitle">The experience designer's library</h2>
+              <h2 className="superSubtitle">The experience designer&apos;s library</h2>
               <div className="inputContainer">
                 <input
                   type="text"

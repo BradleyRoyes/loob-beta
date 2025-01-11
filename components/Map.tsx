@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './Map.css';
@@ -34,38 +34,7 @@ const Map: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
-    if (mapContainerRef.current && !mapInstanceRef.current) {
-      const map = new maplibregl.Map({
-        container: mapContainerRef.current,
-        style: {
-          version: 8,
-          sources: {
-            'osm-tiles': {
-              type: 'raster',
-              tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-              tileSize: 256,
-              attribution: 'Map data © <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors.',
-            },
-          },
-          layers: [{ id: 'osm-tiles', type: 'raster', source: 'osm-tiles', minzoom: 0, maxzoom: 19 }],
-        },
-        zoom: 12,
-        center: [13.405, 52.52],
-      });
-
-      mapInstanceRef.current = map;
-
-      map.on('load', () => {
-        map.getCanvas().style.filter = 'grayscale(100%)';
-        nodes.forEach((node) => addMarkerForNode(map, node));
-      });
-
-      getUserLocation(map);
-    }
-  }, [nodes]);
-
-  const getUserLocation = (map: maplibregl.Map) => {
+  const getUserLocation = useCallback((map: maplibregl.Map) => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -83,16 +52,16 @@ const Map: React.FC = () => {
     } else {
       fallbackToDefaultLocation(map);
     }
-  };
+  }, []);
 
-  const fallbackToDefaultLocation = (map: maplibregl.Map) => {
+  const fallbackToDefaultLocation = useCallback((map: maplibregl.Map) => {
     const berlinLocation: [number, number] = [13.405, 52.52];
     setCurrentLocation(berlinLocation);
     map.setCenter(berlinLocation);
     map.flyTo({ center: berlinLocation, zoom: 12 });
-  };
+  }, []);
 
-  const addMarkerForNode = (map: maplibregl.Map, node: Node) => {
+  const addMarkerForNode = useCallback((map: maplibregl.Map, node: Node) => {
     const markerEl = document.createElement('div');
     markerEl.className = 'map-marker';
 
@@ -103,9 +72,40 @@ const Map: React.FC = () => {
       .addEventListener('click', () => {
         selectNode(map, node);
       });
-  };
+  }, []);
 
-  const selectNode = (map: maplibregl.Map, node: Node) => {
+  useEffect(() => {
+    if (mapContainerRef.current && !mapInstanceRef.current) {
+      const map = new maplibregl.Map({
+        container: mapContainerRef.current,
+        style: {
+          version: 8,
+          sources: {
+            'osm-tiles': {
+              type: 'raster',
+              tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+              tileSize: 256,
+              attribution: 'Map data © <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors.',
+            },
+          },
+          layers: [{ id: 'osm-tiles', type: 'raster', source: 'osm-tiles', minzoom: 0, maxzoom: 19 }],
+        },
+        zoom: 12,
+        center: [13.405, 52.52],
+      });
+
+      mapInstanceRef.current = map;
+
+      map.on('load', () => {
+        map.getCanvas().style.filter = 'grayscale(100%)';
+        nodes.forEach((node) => addMarkerForNode(map, node));
+      });
+
+      getUserLocation(map);
+    }
+  }, [nodes, addMarkerForNode, getUserLocation]);
+
+  const selectNode = useCallback((map: maplibregl.Map, node: Node) => {
     map.flyTo({
       center: [node.lon, node.lat],
       zoom: 14,
@@ -121,7 +121,7 @@ const Map: React.FC = () => {
       const popupPos = adjustPopupPositionToScreen(screenPos, map);
       setPopupPosition(popupPos);
     });
-  };
+  }, []);
 
   const adjustPopupPositionToScreen = (screenPos: maplibregl.PointLike, map: maplibregl.Map): { x: number; y: number } => {
     const { x, y } = screenPos instanceof maplibregl.Point ? screenPos : { x: 0, y: 0 };
@@ -203,39 +203,39 @@ const Map: React.FC = () => {
         {sidebarActive ? '←' : '→'}
       </button>
       {showPreviewPopup && previewNode && popupPosition && (
-  <div
-    className="small-popup"
-    style={{
-      position: 'absolute',
-      top: popupPosition.y,
-      left: popupPosition.x,
-      zIndex: 2000, /* Ensure it stays in front */
-    }}
-  >
-    <div className="small-popup-inner">
-      <button
-        className="close-popup-btn"
-        onClick={() => setShowPreviewPopup(false)}
-        style={{ zIndex: 3000 }} /* Ensure button is on top */
-      >
-        ×
-      </button>
-      <div className="popup-title">
-        <h3 style={{ textAlign: 'center', margin: '0 0 10px 0' }}>{previewNode.label}</h3>
-      </div>
-      <div className="sphere-preview">{renderSphereForNode(previewNode)}</div>
-      <button
-        className="more-info-btn"
-        onClick={() => {
-          handleShowVenueProfile(previewNode);
-          setShowPreviewPopup(false);
-        }}
-      >
-        More Info
-      </button>
-    </div>
-  </div>
-)}
+        <div
+          className="small-popup"
+          style={{
+            position: 'absolute',
+            top: popupPosition.y,
+            left: popupPosition.x,
+            zIndex: 2000,
+          }}
+        >
+          <div className="small-popup-inner">
+            <button
+              className="close-popup-btn"
+              onClick={() => setShowPreviewPopup(false)}
+              style={{ zIndex: 3000 }}
+            >
+              ×
+            </button>
+            <div className="popup-title">
+              <h3 style={{ textAlign: 'center', margin: '0 0 10px 0' }}>{previewNode.label}</h3>
+            </div>
+            <div className="sphere-preview">{renderSphereForNode(previewNode)}</div>
+            <button
+              className="more-info-btn"
+              onClick={() => {
+                handleShowVenueProfile(previewNode);
+                setShowPreviewPopup(false);
+              }}
+            >
+              More Info
+            </button>
+          </div>
+        </div>
+      )}
 
       {showVenueProfile && activeNode && (
         <div
