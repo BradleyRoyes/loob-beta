@@ -4,7 +4,10 @@ module.exports = {
     './pages/**/*.{js,ts,jsx,tsx}',
     './components/**/*.{js,ts,jsx,tsx}',
     './styles/**/*.css',
+    './layouts/**/*.{js,ts,jsx,tsx}', // Example: Add other folders
+    './lib/**/*.{js,ts,jsx,tsx}', // Example: Add lib files if used
   ],
+  
   future: {
     hoverOnlyWhenSupported: true,
   },
