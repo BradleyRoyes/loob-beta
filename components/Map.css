@@ -2,236 +2,181 @@
    FULL SCREEN MAP CONTAINER
 ============================ */
 .map-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
-  }
-  
-  .map-layer {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1; /* Map behind other elements */
-  }
-  
-  /* ============================
-     SIDEBAR STYLING
-  ============================ */
-  .sidebar-container {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    width: 260px;
-    max-height: 80vh;
-    background: rgba(0, 0, 0, 0.8); /* Dark overlay */
-    color: #fff;
-    padding: 1rem;
-    border-radius: 8px;
-    overflow-y: auto;
-    z-index: 1000;
-  }
-  
-  .sidebar-title {
-    font-weight: bold;
-    font-size: 1.25rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .sidebar-input {
-    width: 100%;
-    margin-bottom: 0.75rem;
-    padding: 0.5rem;
-    border: none;
-    border-radius: 4px;
-    background-color: #333;
-    color: #fff;
-  }
-  
-  .sidebar-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  
-  .sidebar-item {
-    background: #222;
-    padding: 0.75rem;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  
-  .sidebar-item:hover {
-    background: #333;
-  }
-  
-  .sidebar-item-title {
-    font-weight: bold;
-    margin-bottom: 0.3rem;
-    color: #fed7aa; /* Subtle pastel accent for titles */
-  }
-  
-  .sidebar-item-description {
-    font-size: 0.875rem;
-    color: #bbb;
-  }
-  
-  /* "Add Venue" button or other links */
-  .sidebar-item-link {
-    display: inline-block;
-    text-align: center;
-    background: linear-gradient(to right, #fed7aa, #fcd1d1); /* Pastel orange → pink */
-    color: #333;
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    margin-bottom: 0.25rem;
-  }
-  .sidebar-item-link:hover {
-    opacity: 0.9;
-  }
-  
-  /* ============================
-     GLOWING ORANGE MAP MARKER
-  ============================ */
-  .map-marker {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #ffa07a; /* Pastel orange base */
-    box-shadow: 0 0 15px 4px rgba(255, 160, 122, 0.6); /* Glowing effect */
-    cursor: pointer;
-  }
-  
-  /* ============================
-     SMALL POPUP PREVIEW
-  ============================ */
-  .small-popup {
-    transform: translate(-50%, -100%); /* Position above the marker */
-    z-index: 1500;
-  }
-  
-  .small-popup-inner {
-    position: relative;
-    width: 250px;
-    background-color: #2d3748ee; /* Dark background with slight transparency */
-    border-radius: 8px;
-    padding: 1rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-    color: #fff;
-  }
-  
-  /* 3D Sphere container */
-  .sphere-preview {
-    width: 100%;
-    height: 150px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-  }
-  
-  /* Close (X) button for popup */
-  .close-popup-btn {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    background: none;
-    border: none;
-    font-size: 1.2rem;
-    color: #fff;
-    cursor: pointer;
-  }
-  
-  /* "More Info" in popup */
-  .more-info-btn {
-    display: block;
-    width: 100%;
-    margin-top: 0.75rem;
-    padding: 0.5rem;
-    text-align: center;
-    cursor: pointer;
-    background: linear-gradient(to right, #fed7aa, #fcd1d1); /* pastel orange → pink */
-    color: #333;
-    border-radius: 4px;
-    border: none;
-    font-weight: 500;
-  }
-  .more-info-btn:hover {
-    opacity: 0.9;
-  }
-  
-  /* ============================
-     LARGE VENUE PROFILE MODAL
-  ============================ */
-  .venue-profile-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 2000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
+  position: relative; /* Ensures absolute positioning works inside this container */
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* Prevents elements from spilling outside */
+}
+
+
+.map-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1; /* Map behind other elements */
+}
+
+/* ============================
+   MAP MARKER STYLING
+============================ */
+.map-marker {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffa07a; /* Pastel orange base */
+  box-shadow: 0 0 15px 4px rgba(255, 160, 122, 0.6); /* Glowing effect */
+  cursor: pointer;
+}
+
+/* ============================
+   SMALL POPUP PREVIEW
+============================ */
+.small-popup {
+  transform: translate(-50%, -100%); /* Position above the marker */
+  z-index: 1500;
+}
+
+.small-popup-inner {
+  position: relative;
+  width: 250px;
+  background-color: #2d3748ee; /* Dark background with slight transparency */
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  color: #fff;
+}
+
+.sphere-preview {
+  width: 100%;
+  height: 150px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.close-popup-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #fff;
+  cursor: pointer;
+}
+
+.more-info-btn {
+  display: block;
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  text-align: center;
+  cursor: pointer;
+  background: linear-gradient(to right, #fed7aa, #fcd1d1); /* pastel orange → pink */
+  color: #333;
+  border-radius: 4px;
+  border: none;
+  font-weight: 500;
+}
+
+.more-info-btn:hover {
+  opacity: 0.9;
+}
+
+/* ============================
+   LARGE VENUE PROFILE MODAL
+============================ */
+.venue-profile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.venue-profile-modal {
+  position: relative;
+  background-color: #2d3748; /* Dark-themed modal */
+  width: 50%;
+  max-width: 600px;
+  max-height: 80%;
+  overflow-y: auto;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  color: #fff;
+}
+
+/* ============================
+   VENUE SELECTOR BUTTON
+============================ */
+.venue-selector-button {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  z-index: 1100;
+  background: linear-gradient(to right, #fed7aa, #fcd1d1); /* pastel gradient */
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #333;
+  transition: opacity 0.3s;
+}
+
+.venue-selector-button:hover {
+  opacity: 0.9;
+}
+
+/* ============================
+   RESPONSIVE DESIGN
+============================ */
+@media (max-width: 768px) {
   .venue-profile-modal {
-    position: relative;
-    background-color: #2d3748; /* Dark-themed modal */
-    width: 50%;
-    max-width: 600px;
-    max-height: 80%;
-    overflow-y: auto;
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-    color: #fff;
+    width: 90%;
+    max-height: 90%;
   }
-  
-  /* ============================
-     TOGGLE SIDEBAR BUTTON
-  ============================ */
-  .toggle-sidebar {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 1100;
-    background: linear-gradient(to right, #fed7aa, #fcd1d1); /* pastel gradient */
-    border: none;
-    padding: 0.6rem;
-    border-radius: 50%;
-    cursor: pointer;
-    color: #333;
-    font-weight: bold;
-  }
-  .toggle-sidebar:hover {
-    opacity: 0.9;
-  }
-  
-  /* ============================
-     VENUE SELECTOR BUTTON
-  ============================ */
+
   .venue-selector-button {
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    z-index: 1100;
-    background: linear-gradient(to right, #fed7aa, #fcd1d1); /* pastel gradient */
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    color: #333;
-    transition: opacity 0.3s;
+    bottom: 15px;
+    right: 15px;
   }
-  .venue-selector-button:hover {
-    opacity: 0.9;
-  }
-  
+}
+
+.toggle-sidebar {
+  position: absolute;
+  bottom: 80px; /* Keeps it above the footer */
+  left: 10px; /* Fixed distance from the left */
+  width: 40px; /* Circular button */
+  height: 40px;
+  background: linear-gradient(to right, #fed7aa, #fcd1d1); /* Gradient styling */
+  border: none;
+  border-radius: 50%; /* Makes it circular */
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  color: #333;
+  z-index: 1100;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow */
+  transition: transform 0.3s ease-in-out;
+}
+
+.toggle-sidebar:hover {
+  transform: scale(1.1); /* Slight hover effect */
+}
+
+.toggle-sidebar.attached {
+  left: 270px; /* Adjust when the sidebar is open */
+}
+

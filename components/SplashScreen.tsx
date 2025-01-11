@@ -1,217 +1,134 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { motion } from "framer-motion";
-import { useGlobalState } from "./GlobalStateContext";
-import "./SplashScreen.css";
-import AudioRecorder from "./AudioRecorder";
+'use client';
 
-const SplashScreen: React.FC<{ onEnter: (prompt?: string) => void }> = ({ onEnter }) => {
-  const { setSessionId, setUserId } = useGlobalState();
-  const [phase, setPhase] = useState<
-    "welcomePhase" | "introPhase" | "modalityPhase" | "promptPhase"
-  >("welcomePhase");
-  const [username, setUsername] = useState<string>("");
-  const [fadeToBlack, setFadeToBlack] = useState<boolean>(false);
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useGlobalState } from './GlobalStateContext';
+import LoobrarySignUp from './LoobrarySignUp';
+import './SplashScreen.css';
 
-  const proceed = useCallback(
-    (nextPhase: "welcomePhase" | "introPhase" | "modalityPhase" | "promptPhase") => {
-      setPhase(nextPhase);
-    },
-    []
-  );
+const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const { setUserId, setSessionId } = useGlobalState();
+  const [phase, setPhase] = useState<'introPhase' | 'loginPhase' | 'signupPhase'>('introPhase');
+  const [username, setUsername] = useState<string>('');
+  const [isClosing, setIsClosing] = useState<boolean>(false);
 
   useEffect(() => {
-    if (phase === "introPhase") {
-      proceed("modalityPhase");
+    if (phase === 'introPhase') {
+      const timer = setTimeout(() => setPhase('loginPhase'), 2000);
+      return () => clearTimeout(timer);
     }
-  }, [phase, proceed]);
+  }, [phase]);
 
   const handleLogin = () => {
     if (username.trim()) {
       setUserId(username);
-      setSessionId(username); // Use username as session ID
-      proceed("introPhase");
+      setSessionId(generateSessionId());
+      closeSplash();
     } else {
-      alert("Please enter a pseudonym.");
+      alert('Please enter a pseudonym.');
     }
-  };
-
-  const handleTapChip = () => {
-    alert("Tap chip functionality coming soon.");
-    setUserId("TapChipUser");
-    setSessionId("TapChipSession");
-    proceed("introPhase");
   };
 
   const handleStayAnonymous = () => {
     const randomId = `anon-${Math.random().toString(36).substr(2, 9)}`;
-    setUserId(null);
-    setSessionId(randomId);
-    proceed("introPhase");
+    setUserId(randomId);
+    setSessionId(generateSessionId());
+    closeSplash();
   };
 
-  const handleRecordingComplete = async (audioBlob: Blob) => {
-    setFadeToBlack(true);
-
-    const formData = new FormData();
-    formData.append("audio", audioBlob, "audio/webm");
-
-    try {
-      const response = await fetch("/api/transcribe", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Server responded with ${response.status}`);
-      }
-
-      const data = await response.json();
-      onEnter(data.transcription);
-    } catch (error) {
-      console.error("Error uploading audio:", error);
-      alert("There was an error processing your audio. Please try again.");
-    }
+  const handleSignUp = () => {
+    setPhase('signupPhase');
   };
+
+  const closeSplash = () => {
+    setIsClosing(true);
+    setTimeout(() => onClose(), 1000);
+  };
+
+  const generateSessionId = () => `session-${Math.random().toString(36).substr(2, 12)}`;
 
   return (
-    <div className="splashScreen" style={{ padding: "3rem", background: "radial-gradient(circle, #1a1a1a, #000)", height: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
-      {/* 3D Grid Background */}
-      <div className="gridBackground"></div>
+    <AnimatePresence>
+      {!isClosing && (
+        <motion.div
+          className="splashScreen"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <div className="gridBackground"></div>
 
-      <div className="content" style={{ padding: "1.5rem", textAlign: "center" }}>
-        {phase === "welcomePhase" && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="text-center"
-            style={{ maxWidth: "400px", width: "100%" }}
-          >
-            <h2 className="gradientText biggerText" style={{ color: "#fff", marginBottom: "1.5rem" }}>
-              Loob <span className="smallText" style={{ fontSize: "1rem", opacity: 0.8 }}>beta</span>
-            </h2>
-            <div className="mt-4" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <input
-                type="text"
-                placeholder="Enter pseudonym"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="pseudonymInput"
-                style={{
-                  padding: "0.8rem",
-                  fontSize: "1rem",
-                  borderRadius: "0.5rem",
-                  border: "none",
-                  outline: "none",
-                  width: "100%",
-                  maxWidth: "300px",
-                  background: "#333",
-                  color: "#fff",
-                  textAlign: "center",
-                }}
-              />
-              <button className="actionButton" onClick={handleLogin} style={{ padding: "0.8rem 1.5rem", fontSize: "1rem", backgroundColor: "#ff7b00", color: "#fff", border: "none", borderRadius: "0.5rem", cursor: "pointer" }}>
-                Log In
-              </button>
-              <button
-                className="actionButton"
-                onClick={handleTapChip}
-                style={{ padding: "0.8rem 1.5rem", fontSize: "1rem", backgroundColor: "#ff7b00", color: "#fff", border: "none", borderRadius: "0.5rem", cursor: "pointer" }}
-              >
-                Tap Chip
-              </button>
-              <button
-                className="actionButton"
-                onClick={handleStayAnonymous}
-                style={{ padding: "0.8rem 1.5rem", fontSize: "1rem", backgroundColor: "#ff7b00", color: "#fff", border: "none", borderRadius: "0.5rem", cursor: "pointer" }}
-              >
-                Stay Anonymous
-              </button>
-            </div>
-          </motion.div>
-        )}
-
-        {phase === "modalityPhase" && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="text-center"
-          >
-            <h3 className="gradientText" style={{ marginBottom: "2rem", color: "#fff" }}>
-              Choose your modality
-            </h3>
-            <div
-              className="modalityContainer"
-              style={{ display: "flex", justifyContent: "center", gap: "1rem" }}
+          {/* Intro Phase with "Loob" Text */}
+          {phase === 'introPhase' && (
+            <motion.div
+              className="content intro"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1 }}
             >
-              <button
-                className="modalityButton voice globalButton"
-                onClick={() => proceed("promptPhase")}
-                style={{ padding: "0.8rem 1.5rem", fontSize: "1rem", backgroundColor: "#ff7b00", color: "#fff", border: "none", borderRadius: "0.5rem", cursor: "pointer" }}
-              >
-                🎙️ Voice
-              </button>
-              <button
-                className="modalityButton image globalButton"
-                onClick={() => alert("Coming soon")}
-                style={{ padding: "0.8rem 1.5rem", fontSize: "1rem", backgroundColor: "#666", color: "#fff", border: "none", borderRadius: "0.5rem", cursor: "pointer" }}
-              >
-                🖼️ Image
-              </button>
-              <button
-                className="modalityButton text globalButton"
-                onClick={() => onEnter("Text Chat")}
-                style={{ padding: "0.8rem 1.5rem", fontSize: "1rem", backgroundColor: "#666", color: "#fff", border: "none", borderRadius: "0.5rem", cursor: "pointer" }}
-              >
-                ✍️ Chat
-              </button>
-              <button
-                className="modalityButton wearable globalButton"
-                onClick={() => alert("Coming soon")}
-                style={{ padding: "0.8rem 1.5rem", fontSize: "1rem", backgroundColor: "#666", color: "#fff", border: "none", borderRadius: "0.5rem", cursor: "pointer" }}
-              >
-                ⌚ Link Wearable
-              </button>
-            </div>
-          </motion.div>
-        )}
+              <h1 className="logoText">Loob</h1>
+            </motion.div>
+          )}
 
-        {phase === "promptPhase" && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="text-center"
-          >
-            <h3 className="gradientText" style={{ marginBottom: "2rem", color: "#fff" }}>
-              Talk to me.
-            </h3>
-            <div
-              className="buttonContainer mt-6"
-              style={{ marginTop: "2.5rem" }}
+          {/* Login Phase */}
+          {phase === 'loginPhase' && (
+            <motion.div
+              className="content login"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1 }}
             >
-              <div className="recordWrapper" style={{ boxShadow: "none" }}>
-                <AudioRecorder
-                  onRecordingComplete={handleRecordingComplete}
-                  startRecording={() => console.log("Recording started")}
+              <h1 className="mainTitle">Loob</h1>
+              <h2 className="superSubtitle">The experience designer's library</h2>
+              <div className="inputContainer">
+                <input
+                  type="text"
+                  placeholder="Enter your pseudonym"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="pseudonymInput"
                 />
+                <div className="buttonGroup">
+                  <button className="actionButton" onClick={handleLogin}>
+                    Log In
+                  </button>
+                  <button className="actionButton" onClick={handleSignUp}>
+                    Sign Up
+                  </button>
+                </div>
+                <button className="actionButton secondary" onClick={handleStayAnonymous}>
+                  Stay Anonymous
+                </button>
               </div>
-            </div>
-          </motion.div>
-        )}
-      </div>
+            </motion.div>
+          )}
 
-      {/* Fade-to-Black Overlay */}
-      {fadeToBlack && (
+          {/* SignUp Phase */}
+          {phase === 'signupPhase' && (
+            <motion.div
+              className="content signup"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1 }}
+            >
+              <LoobrarySignUp onBack={() => setPhase('loginPhase')} />
+            </motion.div>
+          )}
+        </motion.div>
+      )}
+
+      {isClosing && (
         <motion.div
           className="fadeOverlay"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 1.5 }}
-        ></motion.div>
+          transition={{ duration: 1 }}
+        />
       )}
-    </div>
+    </AnimatePresence>
   );
 };
 

@@ -27,7 +27,7 @@
     "**/*.tsx",
     "components/**/*.ts",
     "components/**/*.tsx"
-, "components/TorusSphere.jsx"  ],
+, "components/TorusSphere.jsx", "components/ChatModal.jsx"  ],
   "ts-node": {
     "compilerOptions": {
       "module": "commonjs"

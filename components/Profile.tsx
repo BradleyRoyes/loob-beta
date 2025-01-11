@@ -1,50 +1,97 @@
+'use client';
+
 import React, { useState } from 'react';
+import { useGlobalState } from './GlobalStateContext'; // Adjust the path as necessary
 import TorusSphere from './TorusSphere';
 import TorusSphereWeek from './TorusSphereWeek';
 import TorusSphereAll from './TorusSphereAll';
+import VenueProfile from './VenueProfile';
+import Footer from './Footer'; // Import Footer component
+import './Profile.css'; // Import the corresponding CSS
+
+type VisualView = 'Today' | 'ThisWeek' | 'AllTime';
+
+interface Venue {
+  id: string;
+  label: string;
+  details: string;  // Using 'details' instead of 'vibe'
+  visualType: VisualView;
+}
 
 const Profile: React.FC = () => {
-  const [visualView, setVisualView] = useState<'Today' | 'This Week' | 'All Time'>('Today');
-  const [vibeNodes, setVibeNodes] = useState([
-    { id: 'Berghain', label: 'Berghain' },
-    { id: 'Sisyphos', label: 'Sisyphos' },
+  const { userId } = useGlobalState(); // Fetch pseudonym from global state
+
+  const [visualView, setVisualView] = useState<VisualView>('Today');
+
+  // Updated venue data to use 'details' instead of 'vibe'
+  const [myVenues] = useState<Venue[]>([
+    { id: 'venue1', label: 'My Loft Party', details: 'Energetic and intimate', visualType: 'Today' },
+    { id: 'venue2', label: 'Rooftop Techno', details: 'Open-air vibes with deep beats', visualType: 'ThisWeek' },
   ]);
 
+  const [activeVenue, setActiveVenue] = useState<Venue | null>(null);
+  const [showVenueProfile, setShowVenueProfile] = useState(false);
+
+  const openVenueProfile = (venue: Venue) => {
+    setActiveVenue(venue);  // No need to map 'details' to 'vibe' anymore
+    setShowVenueProfile(true);
+  };
+
+  const closeVenueProfile = () => {
+    setActiveVenue(null);
+    setShowVenueProfile(false);
+  };
+
+  const renderSphereForView = () => {
+    switch (visualView) {
+      case 'ThisWeek':
+        return <TorusSphereWeek />;
+      case 'AllTime':
+        return <TorusSphereAll />;
+      default:
+        return <TorusSphere />;
+    }
+  };
+
   return (
-    <div className="profile-container flex flex-col h-full w-full p-4 bg-gray-900 text-white overflow-y-auto">
-      <h1 className="text-3xl font-bold mb-4 text-center">Your Profile</h1>
+    <div className="profile-container">
+      <main className="profile-main">
+        <div className="profile-content-wrapper">
+          <section className="pseudonym-section">
+            <p className="pseudonym-label">Pseudonym:</p>
+            <p className="pseudonym-value">{userId ?? 'No pseudonym set'}</p>
+          </section>
 
-      <div className="flex justify-center space-x-4 mb-4">
-        {['Today', 'This Week', 'All Time'].map((view) => (
-          <button
-            key={view}
-            onClick={() => setVisualView(view as 'Today' | 'This Week' | 'All Time')}
-            className={`px-4 py-2 border rounded-md transition-colors ${
-              visualView === view
-                ? 'border-blue-500 text-white bg-blue-600'
-                : 'border-gray-500 text-gray-300 hover:border-blue-500 hover:text-white'
-            }`}
-          >
-            {view}
-          </button>
-        ))}
-      </div>
+          <section className="visual-toggles">
+            {(['Today', 'ThisWeek', 'AllTime'] as VisualView[]).map((view) => (
+              <button key={view} onClick={() => setVisualView(view)}>
+                {view}
+              </button>
+            ))}
+          </section>
 
-      <div className="flex justify-center items-center mb-6">
-        {visualView === 'Today' && <TorusSphere />}
-        {visualView === 'This Week' && <TorusSphereWeek />}
-        {visualView === 'All Time' && <TorusSphereAll />}
-      </div>
+          <section className="visualization-section">{renderSphereForView()}</section>
 
-      <div className="mb-4 text-center">
-        <p className="text-lg">Anonymous Identifier: <span className="font-mono">0xA1B2C3D4</span></p>
-        <p className="text-lg mt-4">Associated Vibes:</p>
-        <ul className="list-disc list-inside mt-2">
-          {vibeNodes.map((node) => (
-            <li key={node.id}>{node.label}</li>
-          ))}
-        </ul>
-      </div>
+          <section className="your-venues-section">
+            <h2 className="venues-heading">Your Venues</h2>
+            <ul className="venues-list">
+              {myVenues.map((venue) => (
+                <li key={venue.id} className="venue-item">
+                  <span className="venue-label">{venue.label}</span>
+                  <button onClick={() => openVenueProfile(venue)}>Open</button>
+                </li>
+              ))}
+              {myVenues.length === 0 && <p className="no-venues">You have no venues yet.</p>}
+            </ul>
+          </section>
+        </div>
+      </main>
+
+      {showVenueProfile && activeVenue && (
+        <VenueProfile venue={activeVenue} onClose={closeVenueProfile} />
+      )}
+
+      <Footer />
     </div>
   );
 };

@@ -1,12 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 interface GlobalState {
-  sessionId: string | null; // Session ID can be null
-  userId: string | null; // User ID can be null
-  setSessionId: (id: string | null) => void; // Accept null for resetting session ID
-  setUserId: (id: string | null) => void; // Accept null for resetting user ID
+  sessionId: string | null; // Session ID is always present after initialization
+  userId: string | null;    // "userId" acts as the user's pseudonym
+  setSessionId: (id: string | null) => void;
+  setUserId: (id: string | null) => void;
 }
 
 const GlobalStateContext = createContext<GlobalState | undefined>(undefined);
@@ -15,11 +15,26 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [sessionId, setSessionIdState] = useState<string | null>(null);
   const [userId, setUserIdState] = useState<string | null>(null);
 
-  const setSessionId = (id: string | null) => setSessionIdState(id);
-  const setUserId = (id: string | null) => setUserIdState(id);
+  // Generate a unique session ID when the app initializes
+  useEffect(() => {
+    if (!sessionId) {
+      const newSessionId = `session-${Math.random().toString(36).substr(2, 12)}`;
+      setSessionIdState(newSessionId);
+    }
+  }, [sessionId]);
+
+  const setSessionId = (id: string | null) => {
+    setSessionIdState(id);
+  };
+
+  const setUserId = (id: string | null) => {
+    setUserIdState(id);
+  };
 
   return (
-    <GlobalStateContext.Provider value={{ sessionId, userId, setSessionId, setUserId }}>
+    <GlobalStateContext.Provider
+      value={{ sessionId, userId, setSessionId, setUserId }}
+    >
       {children}
     </GlobalStateContext.Provider>
   );

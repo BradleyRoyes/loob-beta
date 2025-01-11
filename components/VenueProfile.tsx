@@ -1,80 +1,123 @@
-import React, { useState } from 'react';
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
+import './VenueProfile.css'; // Ensure you have appropriate CSS
 import TorusSphere from './TorusSphere';
 import TorusSphereWeek from './TorusSphereWeek';
 import TorusSphereAll from './TorusSphereAll';
 
-const VenueProfile: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  const [visualView, setVisualView] = useState<'Today' | 'This Week' | 'All Time'>('Today');
-  const [vibeNodes, setVibeNodes] = useState([
-    { id: 'Event1', label: 'Underground Techno Night' },
-    { id: 'Event2', label: 'Open Air Chill' },
-  ]);
+type VisualView = 'Today' | 'ThisWeek' | 'AllTime';
+
+interface Venue {
+  id: string;
+  label: string;
+  details: string;  // Use 'details' instead of 'vibe'
+  visualType: VisualView;
+}
+
+interface VenueProfileProps {
+  venue: Venue;
+  onClose: () => void;
+}
+
+const VenueProfile: React.FC<VenueProfileProps> = ({ venue, onClose }) => {
+  const [visualView, setVisualView] = useState<VisualView>('Today');
+  const chartRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Effect to handle visual representation (canvas chart)
+  useEffect(() => {
+    if (chartRef.current) {
+      const ctx = chartRef.current.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = '#111';
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.fillStyle = '#fff';
+        ctx.font = '14px sans-serif';
+        ctx.fillText('Mocked “Vibe Over Time” Chart', 10, 20);  // A placeholder for actual chart
+      }
+    }
+  }, []);
+
+  // Render the appropriate visualization based on the selected view
+  const renderSphereForView = () => {
+    switch (visualView) {
+      case 'ThisWeek':
+        return <TorusSphereWeek />;
+      case 'AllTime':
+        return <TorusSphereAll />;
+      default:
+        return <TorusSphere />;
+    }
+  };
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-      style={{ backdropFilter: 'blur(10px)' }}
+      className="venue-profile-overlay"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();  // Close the modal when clicking outside
+        }
+      }}
     >
-      {/* Modal Content */}
-      <div className="relative bg-gray-800 text-white rounded-lg shadow-lg max-w-4xl w-full p-6">
-        {/* Close Button */}
-        <button
-          className="absolute top-4 right-4 text-gray-300 hover:text-white text-lg"
-          onClick={onClose}
-        >
-          ✖
+      <div className="venue-profile-modal">
+        {/* Close button */}
+        <button className="close-button" onClick={onClose}>
+          &times;
         </button>
 
-        {/* Venue Title */}
-        <h2 className="text-2xl sm:text-4xl font-bold mb-6 text-center">Berghain</h2>
+        {/* Venue Title and Details */}
+        <h2 className="venue-title">{venue.label}</h2>
+        <p className="venue-description">{venue.details}</p> {/* Using 'details' directly */}
 
-        {/* Venue Info */}
-        <div className="text-center mb-6">
-          <p className="text-lg sm:text-xl mb-2">
-            Vibe: <span className="italic">Pulsating beats and untamed energy</span>
-          </p>
-          <p className="text-lg sm:text-xl mb-2">Location: Berlin, Germany</p>
-          <p className="text-lg sm:text-xl mt-4 font-semibold">Upcoming Events:</p>
-          <ul className="list-disc list-inside mt-2 text-sm sm:text-lg">
-            {vibeNodes.map((node) => (
-              <li key={node.id} className="mt-1">{node.label}</li>
+        {/* Visual Representation */}
+        <section className="visual-section">
+          <div className="visual-toggles">
+            {(['Today', 'ThisWeek', 'AllTime'] as VisualView[]).map((view) => (
+              <button
+                key={view}
+                onClick={() => setVisualView(view)}
+                className={visualView === view ? 'active' : ''}
+              >
+                {view}
+              </button>
             ))}
-          </ul>
-        </div>
+          </div>
+          <div className="visualization-section">{renderSphereForView()}</div>
+        </section>
 
-        {/* View Selector */}
-        <div className="flex justify-center space-x-2 sm:space-x-4 mb-6">
-          {['Today', 'This Week', 'All Time'].map((view) => (
-            <button
-              key={view}
-              onClick={() => setVisualView(view as 'Today' | 'This Week' | 'All Time')}
-              className={`px-4 py-2 rounded-lg ${
-                visualView === view
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
-            >
-              {view}
+        {/* Scrollable content section */}
+        <section className="scrollable-content">
+          {/* Word Cloud */}
+          <div className="word-cloud-section">
+            <h3 className="section-heading">Word Cloud</h3>
+            <div className="word-cloud">
+              <span>Techno</span>
+              <span>Berlin</span>
+              <span>Industrial</span>
+              <span>Dark</span>
+              <span>Minimal</span>
+              <span>Long Sets</span>
+              <span>Legendary</span>
+              <span>Beats</span>
+              <span>Underground</span>
+            </div>
+          </div>
+
+          {/* Vibe Over Time Chart */}
+          <div className="chart-section">
+            <h3 className="section-heading">Vibe Over Time</h3>
+            <div className="chart-container">
+              <canvas ref={chartRef} width="400" height="150" />
+            </div>
+          </div>
+
+          {/* Organizer Log In Section */}
+          <div className="organizer-login-section">
+            <button onClick={() => alert('Redirecting to Organizer Dashboard...')}>
+              Organizer Log In
             </button>
-          ))}
-        </div>
-
-        {/* Visualization */}
-        <div className="flex justify-center items-center bg-black p-4 rounded-lg mb-6">
-          {visualView === 'Today' && <TorusSphere />}
-          {visualView === 'This Week' && <TorusSphereWeek />}
-          {visualView === 'All Time' && <TorusSphereAll />}
-        </div>
-
-        {/* Organizer Login */}
-        <div className="text-center">
-          <button
-            className="px-6 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-400"
-            onClick={() => alert('Redirecting to Organizer Dashboard...')}
-          >
-            Organizer Log In
-          </button>
-        </div>
+          </div>
+        </section>
       </div>
     </div>
   );

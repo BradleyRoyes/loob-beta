@@ -1,0 +1,245 @@
+/* General Layout */
+.signupScreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #1a1a1a, #2a2a2a); /* Gradient background */
+    min-height: 100vh;
+    font-family: 'Nunito', sans-serif;
+    color: #fff;
+    position: relative;
+  }
+  
+  /* Back Button */
+  .topBackButton {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: none; /* No background */
+    color: #fff;
+    border: none;
+    font-size: 1.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  
+  .topBackButton.bigBackButton {
+    font-size: 2.5rem; /* Larger back arrow for final phase */
+  }
+  
+  .topBackButton:focus {
+    outline: none; /* Remove focus outline */
+  }
+  
+  .topBackButton:hover {
+    transform: none; /* No hover effect */
+  }
+  
+  /* Form Container */
+  .formContainer {
+    width: 100%;
+    max-width: 450px;
+    background: #222; /* Dark form background */
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); /* Subtle shadow */
+    padding: 20px;
+  }
+  
+  /* Title and Description */
+  .title {
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 15px;
+    color: #ffb48f; /* Gradient text */
+    background: linear-gradient(45deg, #ff7e79, #ffb48f);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .description {
+    text-align: center;
+    font-size: 1rem;
+    color: #bbb;
+    margin-bottom: 25px;
+  }
+  
+  /* Error Message */
+  .error {
+    color: #ff7e79;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+    text-align: center;
+  }
+  
+  /* Form Layout */
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Space between fields */
+  }
+  
+  .formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  /* Inputs, Textareas, and Selects */
+  input,
+  textarea,
+  select {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    border: 1px solid #444; /* Border color */
+    border-radius: 5px;
+    background: #333; /* Darker input background */
+    color: #fff;
+    transition: all 0.3s ease;
+  }
+  
+  input:focus,
+  textarea:focus,
+  select:focus {
+    border-color: #ff7e79;
+    box-shadow: 0 0 5px rgba(255, 120, 100, 0.5); /* Glow effect */
+    outline: none;
+  }
+  
+  textarea {
+    min-height: 80px; /* Fixed height for text areas */
+    resize: none; /* Disable resizing */
+  }
+  
+  /* Checkbox Group */
+  .checkboxGroup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px; /* Space between checkboxes */
+  }
+  
+  .checkboxOption {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Spacing between checkbox and label */
+    font-size: 0.9rem;
+    color: #ccc;
+  }
+  
+  .checkboxGroup input[type="checkbox"] {
+    accent-color: #ff7e79; /* Orange checkbox color */
+  }
+  
+  /* Nested Offering Section */
+  .nested {
+    border-left: 2px solid #444;
+    padding-left: 15px;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Space between fields */
+  }
+  
+  .nested label {
+    font-size: 0.9rem;
+    color: #bbb;
+  }
+  
+  .nested input,
+  .nested textarea,
+  .nested select {
+    padding: 10px;
+    border-radius: 5px;
+    background: #333;
+    border: 1px solid #444;
+    color: #fff;
+  }
+  
+  /* Buttons */
+  button {
+    padding: 12px;
+    background: linear-gradient(45deg, #ff7e79, #ffb48f); /* Gradient button */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+  
+  button:hover {
+    background: linear-gradient(45deg, #ffb48f, #ff7e79);
+    transform: translateY(-2px); /* Subtle lift effect */
+  }
+  
+  /* Final Phase */
+  .finalPhase {
+    text-align: center;
+    font-size: 1rem;
+    color: #fff;
+    padding: 20px;
+  }
+  
+  .finalPhase h2 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #ffb48f;
+    background: linear-gradient(45deg, #ff7e79, #ffb48f);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .finalPhase p {
+    margin: 10px 0;
+    font-size: 1rem;
+    color: #bbb;
+  }
+  
+  /* Button Group */
+  .buttonGroup {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 480px) {
+    .formContainer {
+      padding: 15px;
+    }
+  
+    .title {
+      font-size: 1.8rem;
+    }
+  
+    .description {
+      font-size: 0.9rem;
+    }
+  
+    button {
+      font-size: 0.9rem;
+      padding: 10px;
+    }
+  
+    input,
+    textarea,
+    select {
+      padding: 10px;
+      font-size: 0.9rem;
+    }
+  
+    .topBackButton {
+      font-size: 1.5rem;
+    }
+  
+    .topBackButton.bigBackButton {
+      font-size: 2rem;
+    }
+  }
+  

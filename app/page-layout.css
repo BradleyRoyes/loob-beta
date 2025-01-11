@@ -1,0 +1,19 @@
+/* Custom styles in your global or page-specific CSS (page-layout.css) */
+.overlay-box {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.7);
+    text-align: center;
+    border-bottom: 2px solid #ffffff;
+  }
+  
+  .overlay-box h2 {
+    font-size: 2rem;
+    color: white;
+    font-weight: bold;
+  }
+  

@@ -6,181 +6,49 @@
 @tailwind components;
 @tailwind utilities;
 
-
 :root {
-  --text-primary: #FFFFFF;
-  --text-primary-inverse: #090909;
-  --text-primary-main: #FFE5B4;
-  --text-secondary: #A6AAAE;
-  --text-secondary-inverse: #494A4D;
-  --background-bubble-primary: #6aa7b3;
-  --background-bubble-secondary: #F7F7F7;
-  --border-primary: #CED0D2;
-  --background-soft: #F3E5F5;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-  --text-tertiary: #6B6F73;
-  --shadow-primary: 0px 6px 16px 0px #0A0A0A1F, 0px 4px 14px 0px #0A0A0A14, 0px 8px 10px 0px #0A0A0A14;
-  --processing-dot-size: 4px;
-  --font-family-primary: 'Ninuto';
-}
-
-
-.dark {
-  --text-primary: #090909;
-  --text-primary-inverse: #FFFFFF;
-  --text-primary-main: #9946B9;
-  --text-secondary: #494A4D;
-  --text-secondary-inverse: #A6AAAE;
-  --background-bubble-primary: #ffbe98;
-  --background-bubble-secondary: #232324;
-  --background-soft: #200033;
-  --border-primary: #262626;
-  --background-start-rgb: 23, 23, 23;
-  --background-end-rgb: 28, 28, 28;
+  --text-primary: #ffffff;
+  --text-secondary: #a6aaae;
+  --text-tertiary: #6b6f73;
+  --background-primary: #121212;
+  --background-secondary: #232323;
+  --background-bubble-primary-gradient: linear-gradient(to left, #d66d75, #e29587); /* Gradient for primary bubbles */
+  --background-bubble-user-gradient: linear-gradient(to right, pink, #fba779); /* Gradient for user bubbles */
+  --background-soft: #1e1e1e;
+  --border-primary: #3a3a3a;
+  --shadow-primary: 0px 6px 16px 0px #00000050, 0px 4px 14px 0px #00000040, 0px 8px 10px 0px #00000030;
   --font-family-primary: 'Nunito';
 }
 
-/* latin-ext */
-@font-face {
-  font-family: 'Varela Round';
-  font-style: normal;
-  font-weight: 400;
-  src: url(https://fonts.gstatic.com/s/varelaround/v20/w8gdH283Tvk__Lua32TysjIfqcuPP9g.woff2) format('woff2');
-  unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-
-/* latin */
-@font-face {
-  font-family: 'Nunito';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url(https://fonts.gstatic.com/s/nunito/v26/XRXI3I6Li01BKofiOc5wtlZ2di8HDIkhdTQ3jw.woff2) format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
-@keyframes fadeIn {
-  0% {
-    opacity: 0;
-    transform: scale(1); /* Start smaller */
-  }
-  100% {
-    opacity: 1;
-    transform: scale(3); /* Scale up to normal size */
-  }
-}
-
-@keyframes fadeOut {
-  0% {
-    opacity: 1;
-    transform: scale(3); /* Start at normal size */
-  }
-  100% {
-    opacity: 0;
-    transform: scale(0.5); /* End smaller */
-  }
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 20px;
-  border-radius: 10px;
-  z-index: 1000; /* Ensure it's above other content */
-  display: none; /* Initially don't display the modal */
-}
-.modal-content {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  padding: 20px;
-  background: white;
-  border-radius: 10px;
-  color: var(--text-primary); /* Change to use variable for text color */
-  font-size: 2rem;
-  text-align: center;
-  box-shadow: 0 0 10px darkred; /* Dark red drop shadow */
-  opacity: 0; /* Initially hidden */
-  animation: fade 8s infinite alternate; /* 8 seconds for both fade in and fade out */
-}
-
-@keyframes fade {
-  0%, 100% { opacity: 0; } /* Fully transparent at the beginning and end */
-  50% { opacity: 1; } /* Fully visible at the middle */
-}
-
-.modal-overlay.show {
-  display: block;
-  animation: fadeIn 1s forwards; /* Use forwards to keep the state at the end of the animation */
-}
-
-.modal-overlay.hide {
-  animation: fadeOut 1s forwards;
-}
-
 body {
-  background: linear-gradient(to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
-  font-family: 'Nunito';
+  background-color: var(--background-primary);
+  font-family: var(--font-family-primary);
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0;
 }
-
-.button-row {
-  display: flex;
-  justify-content: center;
-  gap: 10px; /* Adjust the gap between buttons */
-  margin-bottom: 20px; /* Space before the chat input box */
-  position: relative;
-  flex-direction: row;
-}
-
-.button-row .inline-button {
-  position: relative; 
-  margin-top: 0;}
 
 .chatbot-section {
-  background-color: var(--text-primary);
+  background-color: var(--background-secondary);
   box-shadow: var(--shadow-primary);
   border: 1px solid var(--border-primary);
-  flex: 1; /* This will make it fill the available space */
-  overflow: hidden; /* Prevents it from stretching beyond the viewport */
-
+  flex: 1;
+  overflow: hidden;
 }
 
 .chatbot-header {
   padding-top: 0;
-  border-bottom: 1px solid var(--border-primary);;
+  border-bottom: 1px solid var(--border-primary);
 }
 
-.chatbot-header svg {
-  fill: var(--text-primary-inverse);
-}
-
-.chatbot-text-primary {
-  color: var(--text-primary-inverse);
-}
-
-.chatbot-text-secondary {
-  color: var(--text-secondary);
-}
-
-.chatbot-text-secondary-inverse {
-  color: var(--text-secondary-inverse);
-}
-
-.chatbot-text-tertiary {
-  color: var(--text-tertiary);
+.chatbot-header h1 {
+  color: var(--text-primary);
 }
 
 .chatbot-input {
-  color: var(--text-primary-inverse);
+  color: var(--text-primary);
   border: 1px solid var(--border-primary);
+  background-color: var(--background-soft);
   font-size: 16px;
 }
 
@@ -189,32 +57,20 @@ body {
 }
 
 .chatbot-send-button {
-  background-color: var(--text-primary-inverse);
+  background-color: var(--background-secondary);
   color: var(--text-primary);
-}
-
-.chatbot-send-button svg {
-  fill: var(--text-primary);
+  border: 1px solid var(--border-primary);
 }
 
 .chatbot-button-primary {
-  background-color: var(--text-primary-inverse);
+  background-color: var(--background-secondary);
   color: var(--text-primary);
+  border: 1px solid var(--border-primary);
 }
 
 .chatbot-button-secondary {
   border: 1px solid var(--border-primary);
-  color: var(--text-primary-inverse);
-}
-
-.chatbot-faq-link {
-  border: 1px solid var(--border-primary);
-  border-radius: 24px;
-  color: var(--background-bubble-primary);
-}
-
-.chatbot-faq-link svg {
-  fill: var(--text-tertiary);
+  color: var(--text-secondary);
 }
 
 .talk-bubble {
@@ -222,7 +78,7 @@ body {
   display: inline-block;
   position: relative;
   color: var(--text-primary);
-  background: linear-gradient(to left, #d66d75, #e29587); /* Gradient from pink to orange */
+  background: var(--background-bubble-primary-gradient);
   border-radius: 10px;
   border-bottom-left-radius: 0px;
   padding: 10px;
@@ -231,138 +87,79 @@ body {
 .talk-bubble.user {
   text-align: right;
   color: var(--text-primary);
-  background: linear-gradient(to right, pink, #fba779); /* Gradient from pink to orange */
+  background: var(--background-bubble-user-gradient);
   border-radius: 10px;
   border-bottom-right-radius: 0px;
   padding: 10px;
 }
 
-.talk-bubble svg {
-  position: absolute;
-  left: -1px;
-  bottom: 2px;
-  transform: translateY(100%) rotateY(180deg);
-  fill: #e29587; /* Set to left-most color for non-user bubbles */
-}
-
-.talk-bubble.user svg {
-  right: -1px;
-  left: auto;
-  bottom: 2px;
-  transform: translateY(100%);
-  fill: #ffc3a0; /* Set to right-most color for user bubbles */
-}
-
 .dot-flashing {
   position: relative;
-  /* padding-left: 8px; */
-  /* padding-right: 8px; */
-  width: var(--processing-dot-size);
-  height: var(--processing-dot-size);
+  width: 4px;
+  height: 4px;
   border-radius: 100%;
   background-color: var(--text-tertiary);
-  color: var(--text-tertiary);
   animation: dot-flashing 1s infinite linear alternate;
-  animation-delay: 0.5s;
-}
-
-.dot-flashing::before,
-.dot-flashing::after {
-  content: "";
-  display: inline-block;
-  position: absolute;
-  top: 0;
-}
-
-.dot-flashing::before {
-  left: -6px;
-  width: var(--processing-dot-size);
-  height: var(--processing-dot-size);
-  border-radius: 100%;
-  background-color: var(--text-tertiary);
-  color: var(--text-tertiary);
-  animation: dot-flashing 1s infinite alternate;
-  animation-delay: 0s;
-}
-
-.dot-flashing::after {
-  left: 6px;
-  width: var(--processing-dot-size);
-  height: var(--processing-dot-size);
-  border-radius: 100%;
-  background-color: var(--text-tertiary);
-  color: var(--text-tertiary);
-  animation: dot-flashing 1s infinite alternate;
-  animation-delay: 1s;
 }
 
 @keyframes dot-flashing {
   0% {
     background-color: var(--text-tertiary);
   }
-
   50%,
   100% {
-    background-color: rgba(152, 128, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.2);
   }
 }
 
 .prompt-button {
   background-color: var(--background-soft);
-  color: var(--text-primary-main);
+  color: var(--text-primary);
 }
 
-/* Toggle Styles */
-.toggle-background {
-  background-color: var(--background-bubble-primary);
+.button-dash {
+  padding: 3px 11px;
+  border: 2px solid var(--text-primary);
+  border-radius: 8px;
+  color: var(--text-primary);
+  background-color: transparent;
+  transition: background-color 0.3s, color 0.3s;
 }
 
-.toggle-boarder {
-  border: 1px solid var(--background-bubble-primary);
+.button-dash:hover {
+  background-color: var(--background-bubble-primary-gradient);
 }
 
-.vercel-link {
-  color: var(--text-primary-inverse);
-  background-color: var(--text-primary);
-  border-color: var(--border-primary);
+.button {
+  padding: 0.9rem 1.8rem;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: bold;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  cursor: pointer;
+  background: linear-gradient(45deg, #333333, #444444);
+  transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 }
 
-.vercel-link hr {
-  border-color: var(--border-primary);
+.button:hover {
+  transform: scale(1.05);
+  box-shadow: 0px 5px 15px rgba(255, 255, 255, 0.3);
 }
 
 .word-cloud-container {
-  max-width: 100%;
-  height: auto;
-  overflow: hidden;
-  text-align: center; /* Centers the word cloud SVG */
+  width: 100%;
+  height: 400px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
 }
 
 @media (max-width: 768px) {
   .chatbot-section {
-    padding: 2rem 1rem; /* Adjusts padding for smaller screens */
+    padding: 1rem;
   }
-  .grid {
-    grid-template-columns: 1fr; /* Stacks charts vertically on smaller screens */
-  }
-  .h1 {
-  max-width: 600px;
-  }
-}
-
-.visualization-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.word-cloud-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  overflow: auto;
 }
 
 @media (max-width: 640px) {
@@ -371,130 +168,76 @@ body {
   }
 }
 
-
-.button-dash {
-  padding: 3px 11px; /* Adjust as needed */
-  border: 2px solid var(--text-primary-inverse);
-  border-radius: 8px; /* Adjust as needed */
-  color: var(--text-primary-inverse); /* White text */
-  background-color: transparent; /* Primary background color */
-  border-color: #000000;
-  transition: background-color 0.3s, color 0.3s; /* Smooth transition for color changes */
-}
-
-.dark .button-dash {
-  color: var(--text-primary-inverse); /* Dark mode text color */
-  border-color: #FFFFFF;
-}
-
-.word-cloud-container {
-  width: 100%; /* Full width of its parent to use available space */
-  height: 400px; /* Set a fixed height or maintain aspect ratio */
-  display: flex; /* Use flex to center the SVG if needed */
-  justify-content: center; /* Center horizontally */
-  align-items: center; /* Center vertically */
-  margin: 0 auto; /* Ensure it's centered horizontally if within a wider section */
-}
-
-.modal-text {
-  color: #FFFFFF; /* White text */
-  font-size: 12px; /* Smaller text */
-}
-
-.modal-background {
-  background-color: #000000; /* Black background */
-}
-
-@keyframes swirlEffect {
-  0% {
-    transform: rotate(0deg);
-    border-color: #ff0000;
-  }
-  50% {
-    transform: rotate(180deg);
-    border-color: #00ff00;
-  }
-  100% {
-    transform: rotate(360deg);
-    border-color: #0000ff;
-  }
-}
-
-.animateSwirl {
-  animation: swirlEffect 2s linear;
-}
-
-.button-container {
-  display: flex;
-  justify-content: center; /* Center the items */
-  position: relative; /* Allows absolute positioning inside */
-}
-
-.record-button {
-  touch-action: manipulation;
-  /* Ensure the button is centered */
-}
-
-.end-chat-button {
-  position: absolute;
-  right: 0; /* Aligns the button to the right */
+html,
+body,
+.main-layout {
+  height: 100%; /* Allow full height layout for the app */
+  margin: 0;
 }
 
 .map-container {
+  flex: 1; /* Ensure the map grows to fill available space */
+  display: flex;
+  flex-direction: column;
   position: relative;
-  height: 100vh;
-  padding: 20px;
-  background-color: #f3f3f3;
 }
 
-#mock-map {
-  position: relative;
-  width: 100%;
-  height: 80%;
-  background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Blank_map_of_Berlin.png/1024px-Blank_map_of_Berlin.png') no-repeat center center;
-  background-size: cover;
-}
-
-.map-marker {
-  position: absolute;
-  padding: 5px 10px;
-  background-color: #3498db;
+.glow-effect {
+  background: linear-gradient(to right, #ff7eb3, brown);
   color: white;
-  border-radius: 5px;
-  cursor: pointer;
-  transform: translate(-50%, -50%);
+  border-color: transparent;
+  box-shadow: 0 0 10px 2px rgba(255, 117, 140, 0.7);
 }
 
-/* Tailwind classes are combined with your global styles */
-
-/* Sidebar Button Active States */
-.button-dash {
-  transition: all 0.3s ease-in-out;
-}
-.button-dash:hover {
-  transform: scale(1.05);
-  background: linear-gradient(to right, #ff7e79, #ffb48f);
-}
-
-/* Main Panel */
-.main-panel {
-  box-shadow: var(--shadow-primary);
-  overflow: hidden;
-  animation: swirlEffect 10s infinite;
-}
-
-/* Add a glowing animation for cyberdelic styling */
-@keyframes swirlEffect {
-  0% {
-    background-color: #800080;
-    transform: rotate(0deg);
+/* Add this if `animate-pulse` is unavailable */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
   }
   50% {
-    background-color: #ff007f;
-    transform: rotate(180deg);
-  }
-  100% {
-    background-color: #800080;
-    transform: rotate(360deg);
+    opacity: 0.8;
+    transform: scale(1.05);
   }
 }
+
+.animate-pulse {
+  animation: pulse 1.5s infinite;
+}
+
+.footer-container {
+  position: fixed; /* Fixes the footer to the bottom of the viewport */
+  bottom: 0;
+  width: 100%;
+  z-index: 10; /* Ensures it's above other elements */
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1); /* Adds a subtle shadow for separation */
+}
+
+/* Reset global button styling for slider buttons */
+.slider-container button {
+  all: unset; /* Remove any inherited button styles */
+  display: inline-block;
+  text-align: center;
+  cursor: pointer;
+  padding: 0.5rem 1rem; /* Padding for better button size */
+  border-radius: 9999px; /* Fully rounded */
+  font-size: 0.875rem;
+  font-weight: 600; /* Bold text for emphasis */
+  transition: color 0.3s ease;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e5e7eb; /* Light gray background */
+  border-radius: 9999px; /* Fully rounded slider container */
+  padding: 0.25rem; /* Add padding for a more polished look */
+  width: fit-content; /* Dynamically resize based on content */
+}
+
+.slider-container div {
+  position: absolute;
+}
+
+

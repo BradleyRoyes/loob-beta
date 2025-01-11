@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
 import Footer from './Footer';
-import Header from './Header';
 
 // Dynamically import components
 const Profile = dynamic(() => import('./Profile'), { ssr: false });
@@ -14,33 +13,17 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ onShowChat }) => {
-  const [view, setView] = useState<string>('Profile');
+  const [view, setView] = useState<string>('Map');
 
-  // Toggle view handler
-  const handleToggleView = (newView: string) => {
-    setView(newView);
-  };
+  const handleToggleView = (newView: string) => setView(newView);
 
   return (
     <div
       className="dashboard-container flex flex-col h-screen overflow-hidden"
       style={{
-        /* 
-          A slight pastel-orange (#fde2c8) at the very top,
-          fading to black at about 15% down the page. 
-          Adjust these values as needed. 
-        */
         background: 'linear-gradient(to bottom, #fde2c8 0%, #000000 40%, #000000 80%)',
       }}
     >
-      {/* Header with routing functions */}
-      <Header
-        onBackClick={onShowChat} // Navigate back to app/page.tsx (Chat)
-        toggleView={handleToggleView} // Switch between views dynamically
-        preserveState={() => console.log('Preserving chat state...')} // Placeholder for chat state
-        onProfileClick={() => handleToggleView('Profile')} // Profile-specific toggle
-      />
-
       {/* Main Content Area */}
       <div className="flex-grow relative">
         {view === 'Profile' ? (

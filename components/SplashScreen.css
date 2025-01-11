@@ -1,168 +1,143 @@
-/* Splash Screen General Styling */
+/* General SplashScreen Layout */
 .splashScreen {
   display: flex;
   justify-content: center;
   align-items: center;
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background-color: black;
-  color: white;
-  flex-direction: column;
-  z-index: 1000; /* High z-index to overlay content */
+  color: #f3f3f3; /* Off-white for all text */
+  font-family: 'Inter', sans-serif; /* Modern, professional font */
 }
 
-/* Content Layout */
+/* Content */
 .content {
+  text-align: center;
+  padding: 20px;
+  max-width: 500px;
+  width: 90%;
+}
+
+/* Intro Phase Logo */
+.logoText {
+  font-size: 4rem; /* Huge size for emphasis */
+  font-weight: 900;
+  background: linear-gradient(90deg, #f3f3f3, #ffb48f, #f3f3f3);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textGlow 2s infinite alternate ease-in-out;
+  letter-spacing: 2px;
+}
+
+@keyframes textGlow {
+  from {
+    text-shadow: 0 0 5px rgba(243, 243, 243, 0.5), 0 0 15px rgba(243, 243, 243, 0.7);
+  }
+  to {
+    text-shadow: 0 0 10px rgba(243, 243, 243, 0.7), 0 0 20px rgba(243, 243, 243, 0.9);
+  }
+}
+
+/* Login Phase Title */
+.mainTitle {
+  font-size: 4rem; /* Big and bold */
+  font-weight: 800;
+  background: linear-gradient(90deg, #f3f3f3, #ffb48f, #f3f3f3);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+.superSubtitle {
+  font-size: 1.5rem; /* Larger for emphasis */
+  color: #ccc;
+  margin-top: 5px;
+  font-style: italic;
+}
+
+/* Input Field */
+.pseudonymInput {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: #222;
+  color: #f3f3f3;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.pseudonymInput::placeholder {
+  color: #aaa;
+}
+
+/* Button Group */
+.buttonGroup {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 30px; /* Reduced space between elements */
-  padding: 20px;
-  max-width: 600px;
-  text-align: center;
-  z-index: 1;
-  transition: opacity 1s ease, transform 1s ease;
-  font-size: 1.0rem; /* Smaller font size */
+  gap: 15px;
+  margin-bottom: 15px;
 }
 
-/* Gradient Text Styling */
-.gradientText {
-  background: linear-gradient(45deg, pink, orange);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-size: 1.75rem; /* Smaller font size */
-  margin: 0;
-  text-align: center;
-}
-
-/* Action Buttons (Enter, Continue) */
-.splashScreen button {
-  padding: 6px 12px;
-  margin-top: 15px;
-  color: black;
-  border: 2px solid transparent;
-  background: linear-gradient(45deg, pink, orange);
-  border-radius: 16px;
-  cursor: pointer;
-  font-size: 1.2rem; /* Smaller font size */
-  font-weight: bold;
-  text-transform: none;
-  transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
-}
-
-/* Record Section Layout */
-.recordWrapper {
-  display: flex;
-  flex-direction: column; /* Stack button and text vertically */
-  align-items: center;
-  justify-content: center;
-  gap: 20px; /* Increased gap between buttons */
-  position: relative;
-  height: 200px; /* Fixed height ensures no displacement */
-}
-
-/* Record Button */
-.recordButton {
-  background: linear-gradient(45deg, pink, orange);
+/* Primary Button */
+.actionButton {
+  padding: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  background: linear-gradient(45deg, #ff7e79, #ffb48f);
+  color: white;
   border: none;
-  border-radius: 50%;
-  padding: 35px; /* Smaller padding for a smaller button */
+  border-radius: 8px;
   cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: transform 0.3s ease;
+  transition: transform 0.2s ease, background 0.3s ease;
 }
 
-.recordButton:hover {
-  transform: scale(1.1); /* Smaller hover scale */
+.actionButton:hover {
+  background: linear-gradient(45deg, #ffb48f, #ff7e79);
+  transform: translateY(-2px);
 }
 
-.recordButton svg {
-  width: 30px; /* Smaller icon size */
-  height: 30px;
-}
-
-/* Smaller New Question Button */
-.newPromptButton {
-  background: linear-gradient(45deg, pink, orange);
-  color: black; /* Text color changed to black */
-  padding: 3px 6px; /* Smaller padding */
-  border: none;
-  border-radius: 5px;
+/* Secondary Button */
+.actionButton.secondary {
+  padding: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ccc;
+  border: 1px solid #444;
+  background: transparent;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 13px; /* Smaller font size */
-  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-/* Circular Radial Gradient Background */
+.actionButton.secondary:hover {
+  background: #444;
+  color: white;
+}
+
+/* Background Animation */
 .gridBackground {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: radial-gradient(circle, rgba(255, 165, 0, 0.3) 0%, rgba(0, 0, 0, 0.6) 60%, transparent 100%);
   z-index: -1;
-  animation: intenseBreath 4s infinite ease-in-out; /* Faster breathing */
+  animation: intenseBreath 4s infinite ease-in-out;
 }
 
-/* More Intense Breathing Animation */
 @keyframes intenseBreath {
   0%, 100% {
     transform: scale(1);
     opacity: 0.7;
   }
   50% {
-    transform: scale(1.15); /* Less pronounced scaling */
+    transform: scale(1.15);
     opacity: 1;
   }
 }
 
-/* Fade-to-Black Overlay */
 .fadeOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: black;
-  z-index: 1000;
-  opacity: 0;
-  animation: fadeIn 1.5s forwards;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Mobile Layout Adjustments */
-@media (max-width: 768px) {
-  .content {
-    gap: 10px;
-    padding: 10px;
-    font-size: 1.2rem; /* Smaller font size for mobile */
-  }
-
-  .gradientText {
-    font-size: 1.5rem; /* Smaller font size for mobile */
-  }
-
-  .recordButton {
-    padding: 30px; /* Slightly smaller padding for mobile */
-  }
-
-  .newPromptButton {
-    font-size: 11px; /* Smaller font size for mobile */
-    padding: 2px 5px;
-  }
+  position: absolute;
+  inset: 0;
+  background: black;
 }
