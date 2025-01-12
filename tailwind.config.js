@@ -47,7 +47,6 @@ module.exports = {
     require('@tailwindcss/forms'), // Form controls styling
     require('@tailwindcss/typography'), // Prose content styling
     require('@tailwindcss/aspect-ratio'), // Aspect ratio utilities
-    require('@tailwindcss/line-clamp'), // Text truncation utilities
   ],
   future: {
     hoverOnlyWhenSupported: true, // Optimize hover behavior for touch devices

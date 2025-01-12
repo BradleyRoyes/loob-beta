@@ -39,7 +39,7 @@ const Header: React.FC<HeaderProps> = ({
     }`}
     onClick={() => toggleView('Chat')}
   >
-    Chat w/ Loob
+    Loob
   </button>
   <button
     className={`slider-button ${
