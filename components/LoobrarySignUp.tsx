@@ -1,3 +1,4 @@
+// LoobrarySignUp.tsx
 'use client';
 
 import React, { useState } from 'react';
@@ -22,6 +23,8 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
   });
 
   const [error, setError] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [submissionSuccess, setSubmissionSuccess] = useState<boolean>(false);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -36,6 +39,16 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
     }));
   };
 
+  const handlePhase1Change = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   const handleNext = () => {
     if (currentPhase === 1 && (!formData.pseudonym || !formData.email)) {
       setError('Pseudonym and email are required.');
@@ -46,7 +59,47 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
   };
 
   const handlePreviousPhase = () => {
+    setError('');
     setCurrentPhase((prev) => prev - 1);
+  };
+
+  const handleSubmit = async () => {
+    setError('');
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/populateDB2', { // Adjust the endpoint based on your routing
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        // Handle success (e.g., show a success message, reset form)
+        setSubmissionSuccess(true);
+        setFormData({
+          pseudonym: '',
+          email: '',
+          phone: '',
+          offerings: {
+            title: '',
+            type: '',
+            description: '',
+            location: '',
+          },
+        });
+      } else {
+        // Handle errors (e.g., show error message)
+        const errorData = await response.json();
+        setError(errorData.error || 'An error occurred.');
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setError('An unexpected error occurred.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -77,9 +130,8 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
                   name="pseudonym"
                   placeholder="Enter your pseudonym"
                   value={formData.pseudonym}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, pseudonym: e.target.value }))
-                  }
+                  onChange={handlePhase1Change}
+                  required
                 />
               </div>
               <div className="formGroup">
@@ -91,9 +143,8 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
                   name="email"
                   placeholder="Enter your email"
                   value={formData.email}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, email: e.target.value }))
-                  }
+                  onChange={handlePhase1Change}
+                  required
                 />
               </div>
               <div className="formGroup">
@@ -105,9 +156,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
                   name="phone"
                   placeholder="Enter your phone number"
                   value={formData.phone}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, phone: e.target.value }))
-                  }
+                  onChange={handlePhase1Change}
                 />
               </div>
               {error && <p className="error">{error}</p>}
@@ -134,6 +183,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
                   placeholder="Enter a title"
                   value={formData.offerings.title}
                   onChange={handleInputChange}
+                  required
                 />
               </div>
               <div className="formGroup">
@@ -142,6 +192,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
                   name="type"
                   value={formData.offerings.type}
                   onChange={handleInputChange}
+                  required
                 >
                   <option value="">Select type</option>
                   <option value="venue">Venue</option>
@@ -156,6 +207,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
                   placeholder="Provide a description"
                   value={formData.offerings.description}
                   onChange={handleInputChange}
+                  required
                 />
               </div>
               <div className="formGroup">
@@ -166,21 +218,23 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
                   placeholder="Enter a location"
                   value={formData.offerings.location}
                   onChange={handleInputChange}
+                  required
                 />
               </div>
+              {error && <p className="error">{error}</p>}
               <div className="buttonGroup">
                 <button type="button" onClick={handlePreviousPhase}>
                   Back
                 </button>
-                <button type="button" onClick={handleNext}>
-                  Submit
+                <button type="button" onClick={handleSubmit} disabled={isSubmitting}>
+                  {isSubmitting ? 'Submitting...' : 'Submit'}
                 </button>
               </div>
             </form>
           </>
         )}
 
-        {currentPhase === 3 && (
+        {currentPhase === 3 && submissionSuccess && (
           <div className="finalPhase">
             <h2>Thanks for joining!</h2>
             <p>
