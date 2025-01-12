@@ -1,12 +1,12 @@
 {
-  "name": "ragbot-starter",
+  "name": "loob",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build || true",
+    "build": "next build && npm run seed",
     "start": "next start",
-    "seed": "ts-node ./scripts/populateDb.ts",
+    "seed": "ts-node ./scripts/populateMemory.ts",
     "lint": "next lint",
     "analyze": "cross-env ANALYZE=true next build"
   },

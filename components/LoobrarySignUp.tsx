@@ -2,32 +2,32 @@
 
 import React, { useState } from 'react';
 import './LoobrarySignUp.css';
-import { useGlobalState } from '../components/GlobalStateContext'; // Adjust path as needed
+import { useGlobalState } from '../components/GlobalStateContext';
 
 interface LoobrarySignUpProps {
-  onBack: () => void; // Navigate back to the splash screen
-  onExplore: () => void; // Triggered when the user wants to explore Loob
+  onBack: () => void;
+  onExplore: () => void;
 }
 
 const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) => {
-  const { setUserId } = useGlobalState(); // Access global context to set the user pseudonym
+  const { setUserId } = useGlobalState();
   const [currentPhase, setCurrentPhase] = useState(1);
   const [formData, setFormData] = useState({
     pseudonym: '',
     email: '',
     phone: '',
-    offerings: {
-      title: '',
-      type: '',
-      description: '',
-      location: '',
-    },
+    title: '',
+    offeringType: '', // 'venue', 'gear', 'talent'
+    description: '',
+    location: '',
   });
-
   const [error, setError] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submissionSuccess, setSubmissionSuccess] = useState<boolean>(false);
 
+  /**
+   * Handle input changes for Phase 1 (Pseudonym, Email, Phone).
+   */
   const handlePhase1Change = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -36,19 +36,22 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
     }));
   };
 
+  /**
+   * Handle input changes for Phase 2 (Offerings).
+   */
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      offerings: {
-        ...prev.offerings,
-        [name]: value,
-      },
+      [name]: value,
     }));
   };
 
+  /**
+   * Move to the next phase of the form, validating inputs before proceeding.
+   */
   const handleNext = () => {
     if (currentPhase === 1 && (!formData.pseudonym || !formData.email)) {
       setError('Pseudonym and email are required.');
@@ -58,27 +61,45 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
     setCurrentPhase((prev) => prev + 1);
   };
 
+  /**
+   * Move back to the previous phase of the form.
+   */
   const handlePreviousPhase = () => {
     setError('');
     setCurrentPhase((prev) => prev - 1);
   };
 
+  /**
+   * Submit the form data to the server.
+   */
   const handleSubmit = async () => {
     setError('');
     setIsSubmitting(true);
     try {
-      const response = await fetch('/api/populateDB2', {
+      const payload = {
+        pseudonym: formData.pseudonym,
+        email: formData.email,
+        phone: formData.phone,
+        title: formData.title,
+        offeringType: formData.offeringType, // 'venue', 'gear', or 'talent'
+        description: formData.description,
+        location: formData.location,
+        dataType: 'userEntry',
+        createdAt: new Date().toISOString(),
+      };
+
+      const response = await fetch('/api/populateUserEntries', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
         setSubmissionSuccess(true);
-        setUserId(formData.pseudonym); // Set the pseudonym in global context
-        setCurrentPhase(3); // Proceed to the success phase
+        setUserId(formData.pseudonym);
+        setCurrentPhase(3);
       } else {
         const errorData = await response.json();
         setError(errorData.error || 'An error occurred.');
@@ -139,7 +160,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
               </div>
               <div className="formGroup">
                 <label htmlFor="phone">
-                  Phone <span className="info">(If you want to join our Telegram group)</span>
+                  Phone <span className="info">(Optional)</span>
                   <input
                     type="tel"
                     id="phone"
@@ -157,7 +178,6 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
             </form>
           </>
         )}
-
         {currentPhase === 2 && (
           <>
             <form className="form">
@@ -174,19 +194,19 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                     id="title"
                     name="title"
                     placeholder="Enter a title"
-                    value={formData.offerings.title}
+                    value={formData.title}
                     onChange={handleInputChange}
                     required
                   />
                 </label>
               </div>
               <div className="formGroup">
-                <label htmlFor="type">
+                <label htmlFor="offeringType">
                   Type
                   <select
-                    id="type"
-                    name="type"
-                    value={formData.offerings.type}
+                    id="offeringType"
+                    name="offeringType"
+                    value={formData.offeringType}
                     onChange={handleInputChange}
                     required
                   >
@@ -204,7 +224,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                     id="description"
                     name="description"
                     placeholder="Provide a description"
-                    value={formData.offerings.description}
+                    value={formData.description}
                     onChange={handleInputChange}
                     required
                   />
@@ -218,7 +238,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                     id="location"
                     name="location"
                     placeholder="Enter a location"
-                    value={formData.offerings.location}
+                    value={formData.location}
                     onChange={handleInputChange}
                     required
                   />
@@ -236,11 +256,10 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
             </form>
           </>
         )}
-
         {currentPhase === 3 && submissionSuccess && (
           <div className="finalPhase">
             <h2>Thanks for signing up!</h2>
-            <p>We will be in contact via email regarding how you can pick up your card.</p>
+            <p>We will contact you via email regarding your card.</p>
             <p>In the meantime, use your pseudonym to explore Loob.</p>
             <button className="exploreButton" onClick={onExplore}>
               Explore Loob
