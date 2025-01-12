@@ -120,9 +120,46 @@ textarea {
     gap: 12px; /* Adjusted gap between label and input */
 }
 
+/* Label Styling */
 label {
-    font-size: 1rem;
-    color: #bbb;
+  font-size: 1rem;
+  color: #fc6969; /* Label color on the light background */
+}
+
+/* Input Fields Styling */
+input, textarea, select {
+  width: 100%;
+  padding: 14px;
+  font-size: 1rem;
+  border: 1px solid #444;
+  border-radius: 5px;
+  background: #333; /* Dark background for input fields */
+  color: #000; /* Black text color for input fields */
+  transition: all 0.3s ease;
+}
+
+/* Focused Input Fields */
+input:focus, textarea:focus, select:focus {
+  border-color: #ff7e79;
+  box-shadow: 0 0 5px rgba(255, 120, 100, 0.5); /* Glow effect */
+  outline: none;
+}
+
+/* Placeholder Text */
+input::placeholder, textarea::placeholder {
+  color: #888;
+}
+
+/* Adjusted for Text Color Inside the Input Fields */
+input, textarea, select {
+  color: #000; /* Black text color for the typed text in inputs */
+}
+
+/* Form Group (for labels and inputs) */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* Adjusted gap between label and input */
 }
 
 /* Buttons */
