@@ -1,14 +1,16 @@
-// LoobrarySignUp.tsx
 'use client';
 
 import React, { useState } from 'react';
 import './LoobrarySignUp.css';
+import { useGlobalState } from '../components/GlobalStateContext'; // Adjust path as needed
 
 interface LoobrarySignUpProps {
-  onBack: () => void; // This will navigate to the splash screen
+  onBack: () => void; // Navigate back to the splash screen
+  onExplore: () => void; // Triggered when the user wants to explore Loob
 }
 
-const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
+const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) => {
+  const { setUserId } = useGlobalState(); // Access global context to set the user pseudonym
   const [currentPhase, setCurrentPhase] = useState(1);
   const [formData, setFormData] = useState({
     pseudonym: '',
@@ -26,6 +28,14 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submissionSuccess, setSubmissionSuccess] = useState<boolean>(false);
 
+  const handlePhase1Change = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -36,16 +46,6 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
         ...prev.offerings,
         [name]: value,
       },
-    }));
-  };
-
-  const handlePhase1Change = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
     }));
   };
 
@@ -67,7 +67,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
     setError('');
     setIsSubmitting(true);
     try {
-      const response = await fetch('/api/populateDB2', { // Adjust the endpoint based on your routing
+      const response = await fetch('/api/populateDB2', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -76,21 +76,10 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
       });
 
       if (response.ok) {
-        // Handle success (e.g., show a success message, reset form)
         setSubmissionSuccess(true);
-        setFormData({
-          pseudonym: '',
-          email: '',
-          phone: '',
-          offerings: {
-            title: '',
-            type: '',
-            description: '',
-            location: '',
-          },
-        });
+        setUserId(formData.pseudonym); // Set the pseudonym in global context
+        setCurrentPhase(3); // Proceed to the success phase
       } else {
-        // Handle errors (e.g., show error message)
         const errorData = await response.json();
         setError(errorData.error || 'An error occurred.');
       }
@@ -104,7 +93,6 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
 
   return (
     <div className="signupScreen">
-      {/* Back arrow always goes to the splash screen */}
       <button
         type="button"
         className={`topBackButton ${currentPhase === 3 ? 'bigBackButton' : ''}`}
@@ -122,42 +110,45 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
             </p>
             <form className="form">
               <div className="formGroup">
-                <label>
+                <label htmlFor="pseudonym">
                   Pseudonym <span className="info">(To remember you)</span>
+                  <input
+                    type="text"
+                    id="pseudonym"
+                    name="pseudonym"
+                    placeholder="Enter your pseudonym"
+                    value={formData.pseudonym}
+                    onChange={handlePhase1Change}
+                    required
+                  />
                 </label>
-                <input
-                  type="text"
-                  name="pseudonym"
-                  placeholder="Enter your pseudonym"
-                  value={formData.pseudonym}
-                  onChange={handlePhase1Change}
-                  required
-                />
               </div>
               <div className="formGroup">
-                <label>
+                <label htmlFor="email">
                   Email <span className="info">(To contact you about your card)</span>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Enter your email"
+                    value={formData.email}
+                    onChange={handlePhase1Change}
+                    required
+                  />
                 </label>
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Enter your email"
-                  value={formData.email}
-                  onChange={handlePhase1Change}
-                  required
-                />
               </div>
               <div className="formGroup">
-                <label>
+                <label htmlFor="phone">
                   Phone <span className="info">(If you want to join our Telegram group)</span>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    placeholder="Enter your phone number"
+                    value={formData.phone}
+                    onChange={handlePhase1Change}
+                  />
                 </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  placeholder="Enter your phone number"
-                  value={formData.phone}
-                  onChange={handlePhase1Change}
-                />
               </div>
               {error && <p className="error">{error}</p>}
               <button type="button" onClick={handleNext}>
@@ -176,50 +167,62 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
                 gear, your offer helps others and builds the community.
               </p>
               <div className="formGroup">
-                <label>Title</label>
-                <input
-                  type="text"
-                  name="title"
-                  placeholder="Enter a title"
-                  value={formData.offerings.title}
-                  onChange={handleInputChange}
-                  required
-                />
+                <label htmlFor="title">
+                  Title
+                  <input
+                    type="text"
+                    id="title"
+                    name="title"
+                    placeholder="Enter a title"
+                    value={formData.offerings.title}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </label>
               </div>
               <div className="formGroup">
-                <label>Type</label>
-                <select
-                  name="type"
-                  value={formData.offerings.type}
-                  onChange={handleInputChange}
-                  required
-                >
-                  <option value="">Select type</option>
-                  <option value="venue">Venue</option>
-                  <option value="talent">Talent</option>
-                  <option value="gear">Gear</option>
-                </select>
+                <label htmlFor="type">
+                  Type
+                  <select
+                    id="type"
+                    name="type"
+                    value={formData.offerings.type}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="">Select type</option>
+                    <option value="venue">Venue</option>
+                    <option value="talent">Talent</option>
+                    <option value="gear">Gear</option>
+                  </select>
+                </label>
               </div>
               <div className="formGroup">
-                <label>Description</label>
-                <textarea
-                  name="description"
-                  placeholder="Provide a description"
-                  value={formData.offerings.description}
-                  onChange={handleInputChange}
-                  required
-                />
+                <label htmlFor="description">
+                  Description
+                  <textarea
+                    id="description"
+                    name="description"
+                    placeholder="Provide a description"
+                    value={formData.offerings.description}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </label>
               </div>
               <div className="formGroup">
-                <label>Location</label>
-                <input
-                  type="text"
-                  name="location"
-                  placeholder="Enter a location"
-                  value={formData.offerings.location}
-                  onChange={handleInputChange}
-                  required
-                />
+                <label htmlFor="location">
+                  Location
+                  <input
+                    type="text"
+                    id="location"
+                    name="location"
+                    placeholder="Enter a location"
+                    value={formData.offerings.location}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </label>
               </div>
               {error && <p className="error">{error}</p>}
               <div className="buttonGroup">
@@ -236,11 +239,12 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack }) => {
 
         {currentPhase === 3 && submissionSuccess && (
           <div className="finalPhase">
-            <h2>Thanks for joining!</h2>
-            <p>
-              We&apos;ll be in contact with you via email about picking up your Loobrary card.
-            </p>
-            <p>You can now use your pseudonym to explore Loob.</p>
+            <h2>Thanks for signing up!</h2>
+            <p>We will be in contact via email regarding how you can pick up your card.</p>
+            <p>In the meantime, use your pseudonym to explore Loob.</p>
+            <button className="exploreButton" onClick={onExplore}>
+              Explore Loob
+            </button>
           </div>
         )}
       </div>

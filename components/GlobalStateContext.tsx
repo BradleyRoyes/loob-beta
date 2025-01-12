@@ -3,8 +3,8 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 interface GlobalState {
-  sessionId: string | null; // Session ID is always present after initialization
-  userId: string | null;    // "userId" acts as the user's pseudonym
+  sessionId: string | null;
+  userId: string | null;
   setSessionId: (id: string | null) => void;
   setUserId: (id: string | null) => void;
 }
@@ -15,7 +15,6 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [sessionId, setSessionIdState] = useState<string | null>(null);
   const [userId, setUserIdState] = useState<string | null>(null);
 
-  // Generate a unique session ID when the app initializes
   useEffect(() => {
     if (!sessionId) {
       const newSessionId = `session-${Math.random().toString(36).substr(2, 12)}`;
@@ -32,9 +31,7 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
   };
 
   return (
-    <GlobalStateContext.Provider
-      value={{ sessionId, userId, setSessionId, setUserId }}
-    >
+    <GlobalStateContext.Provider value={{ sessionId, userId, setSessionId, setUserId }}>
       {children}
     </GlobalStateContext.Provider>
   );

@@ -15,6 +15,7 @@ const RootLayout: React.FC = () => {
   const [view, setView] = useState<'Chat' | 'Profile' | 'Map'>('Chat');
   const [configureOpen, setConfigureOpen] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [chatActive, setChatActive] = useState(true); // Track chat modal visibility
 
   const handleSplashComplete = () => setShowSplash(false); // Hide splash screen after interaction
 
@@ -22,6 +23,11 @@ const RootLayout: React.FC = () => {
 
   const handleConfigureClick = () => setConfigureOpen(true);
   const handleCloseConfigure = () => setConfigureOpen(false);
+
+  const handleShowModal = () => {
+    setChatActive(false); // Close the chat modal when "End Chat" is clicked
+    console.log('Chat ended'); // Optional: Add any additional logic for ending chat
+  };
 
   const renderAppContent = () => {
     switch (view) {
@@ -32,10 +38,12 @@ const RootLayout: React.FC = () => {
       case 'Chat':
       default:
         return (
-          <ChatSection
-            onConfigureOpen={handleConfigureClick}
-            showModal={() => console.log('Toggle modal')} // Replace with modal logic if necessary
-          />
+          chatActive && (
+            <ChatSection
+              onConfigureOpen={handleConfigureClick}
+              showModal={handleShowModal} // Pass the function for "End Chat"
+            />
+          )
         );
     }
   };
