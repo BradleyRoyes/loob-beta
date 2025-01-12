@@ -20,7 +20,16 @@ export default function Carousel({ children }) {
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
       >
         {React.Children.map(children, (child, index) => (
-          <div className="inline-block w-full">{child}</div>
+          <div
+            className="inline-block w-full"
+            style={{
+              padding: '0 1.5rem', // Add padding to keep text away from the edges
+              boxSizing: 'border-box', // Ensure padding doesn't break layout
+              textAlign: 'center', // Center-align text
+            }}
+          >
+            {child}
+          </div>
         ))}
       </div>
       <button

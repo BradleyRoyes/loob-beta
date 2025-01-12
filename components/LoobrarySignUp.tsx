@@ -124,10 +124,10 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
       <div className="formContainer">
         {currentPhase === 1 && (
           <>
-            <h2 className="title">Get your Loobrary card here</h2>
+            <h2 className="title">Get your Loobrary card</h2>
             <p className="description">
-              Your Loobrary card is your key to the Loob ecosystem of talent, gear, and spaces. It
-              just takes two minutes to sign up.
+              Your Loobrary card is your key to the Loob talent, gear, and spaces. It
+              just takes two minutes. I swear.
             </p>
             <form className="form">
               <div className="formGroup">
@@ -160,7 +160,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
               </div>
               <div className="formGroup">
                 <label htmlFor="phone">
-                  Phone <span className="info">(Optional)</span>
+                  Phone <span className="info">(If you want to join the Telegram group)</span>
                   <input
                     type="tel"
                     id="phone"
@@ -183,7 +183,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
             <form className="form">
               <h2 className="title">Can you offer something to the Loobrary?</h2>
               <p className="description">
-                The Loobrary thrives on community contributions. Whether it’s a venue, talent, or
+                The Loobrary thrives on community contributions. Whether its a venue, talent, or
                 gear, your offer helps others and builds the community.
               </p>
               <div className="formGroup">

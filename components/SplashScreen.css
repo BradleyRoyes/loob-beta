@@ -13,7 +13,7 @@
 }
 
 /* Content */
-.content {
+.splashScreen .content {
   text-align: center;
   padding: 20px;
   max-width: 500px;
@@ -21,7 +21,7 @@
 }
 
 /* Intro Phase Logo */
-.logoText {
+.splashScreen .logoText {
   font-size: 4rem; /* Huge size for emphasis */
   font-weight: 900;
   background: linear-gradient(90deg, #f3f3f3, #ffb48f, #f3f3f3);
@@ -42,7 +42,7 @@
 }
 
 /* Login Phase Title */
-.mainTitle {
+.splashScreen .mainTitle {
   font-size: 3.5rem; /* Slightly smaller for better responsiveness */
   font-weight: 800;
   background: linear-gradient(90deg, #f3f3f3, #ffb48f, #f3f3f3);
@@ -53,7 +53,7 @@
   line-height: 1.2;
 }
 
-.superSubtitle {
+.splashScreen .superSubtitle {
   font-size: 1.5rem; /* Larger for emphasis */
   color: #ccc;
   margin-top: 5px;
@@ -61,12 +61,12 @@
 }
 
 /* Input Field */
-.pseudonymInput {
+.splashScreen .pseudonymInput {
   width: 100%;
   padding: 12px;
   font-size: 1rem;
   border-radius: 8px;
-  border: 1px solid #444;
+  border: 1px solid #351010;
   background: #222;
   color: #f3f3f3;
   text-align: center;
@@ -75,16 +75,16 @@
   transition: border-color 0.3s ease;
 }
 
-.pseudonymInput:focus {
+.splashScreen .pseudonymInput:focus {
   border-color: #ffb48f; /* Highlight on focus */
 }
 
-.pseudonymInput::placeholder {
+.splashScreen .pseudonymInput::placeholder {
   color: #aaa;
 }
 
 /* Button Group */
-.buttonGroup {
+.splashScreen .buttonGroup {
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -92,7 +92,7 @@
 }
 
 /* Primary Button */
-.actionButton {
+.splashScreen .actionButton {
   padding: 12px;
   font-size: 1rem;
   font-weight: 600;
@@ -104,14 +104,14 @@
   transition: transform 0.2s ease, background 0.3s ease;
 }
 
-.actionButton:hover {
+.splashScreen .actionButton:hover {
   background: linear-gradient(45deg, #ffb48f, #ff7e79);
   transform: translateY(-2px);
   box-shadow: 0px 4px 10px rgba(255, 120, 120, 0.3);
 }
 
 /* Secondary Button */
-.actionButton.secondary {
+.splashScreen .actionButton.secondary {
   padding: 12px;
   font-size: 1rem;
   font-weight: 600;
@@ -123,13 +123,13 @@
   transition: background 0.3s ease, color 0.3s ease;
 }
 
-.actionButton.secondary:hover {
+.splashScreen .actionButton.secondary:hover {
   background: #444;
   color: white;
 }
 
 /* Background Animation */
-.gridBackground {
+.splashScreen .gridBackground {
   position: absolute;
   inset: 0;
   background: radial-gradient(circle, rgba(255, 165, 0, 0.3) 0%, rgba(0, 0, 0, 0.6) 60%, transparent 100%);
@@ -149,7 +149,7 @@
 }
 
 /* Fade Overlay */
-.fadeOverlay {
+.splashScreen .fadeOverlay {
   position: absolute;
   inset: 0;
   background: black;
@@ -158,58 +158,58 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .logoText {
+  .splashScreen .logoText {
     font-size: 3rem; /* Adjust for smaller screens */
   }
 
-  .mainTitle {
+  .splashScreen .mainTitle {
     font-size: 2.5rem; /* Adjust for smaller screens */
   }
 
-  .superSubtitle {
+  .splashScreen .superSubtitle {
     font-size: 1.2rem; /* Adjust for smaller screens */
   }
 
-  .pseudonymInput {
+  .splashScreen .pseudonymInput {
     padding: 10px;
     font-size: 0.9rem;
   }
 
-  .actionButton {
+  .splashScreen .actionButton {
     padding: 10px;
     font-size: 0.9rem;
   }
 
-  .actionButton.secondary {
+  .splashScreen .actionButton.secondary {
     padding: 10px;
     font-size: 0.9rem;
   }
 }
 
 @media (max-width: 480px) {
-  .logoText {
+  .splashScreen .logoText {
     font-size: 2.5rem; /* Adjust further for very small screens */
   }
 
-  .mainTitle {
+  .splashScreen .mainTitle {
     font-size: 2rem;
   }
 
-  .superSubtitle {
+  .splashScreen .superSubtitle {
     font-size: 1rem;
   }
 
-  .pseudonymInput {
+  .splashScreen .pseudonymInput {
     padding: 8px;
     font-size: 0.8rem;
   }
 
-  .actionButton {
+  .splashScreen .actionButton {
     padding: 8px;
     font-size: 0.8rem;
   }
 
-  .actionButton.secondary {
+  .splashScreen .actionButton.secondary {
     padding: 8px;
     font-size: 0.8rem;
   }

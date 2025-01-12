@@ -12,6 +12,8 @@ import VenueProfile from "./VenueProfile";
 import MapSidebar from "./MapSidebar";
 import AddVenueModal from "./AddVenueModal";
 
+const DEFAULT_LOCATION: [number, number] = [13.405, 52.52]; // Berlin
+
 const Map: React.FC = () => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
@@ -27,42 +29,33 @@ const Map: React.FC = () => {
   const [sidebarActive, setSidebarActive] = useState(() => window.innerWidth > 768);
 
   useEffect(() => {
-    const handleResize = () => {
-      setSidebarActive(window.innerWidth > 768);
-    };
+    const handleResize = () => setSidebarActive(window.innerWidth > 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const getUserLocation = useCallback((map: maplibregl.Map) => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          const userLocation: [number, number] = [longitude, latitude];
-          setCurrentLocation(userLocation);
-          map.setCenter(userLocation);
-          map.flyTo({ center: userLocation, zoom: 14 });
-        },
-        (error) => {
-          if (error.code === error.PERMISSION_DENIED) {
-            alert("Location access denied. Using default location.");
-          } else {
-            console.error("Geolocation error:", error);
-          }
-          fallbackToDefaultLocation(map);
-        }
-      );
-    } else {
+    if (!navigator.geolocation) {
       fallbackToDefaultLocation(map);
+      return;
     }
+
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        const userLocation: [number, number] = [coords.longitude, coords.latitude];
+        setCurrentLocation(userLocation);
+        map.setCenter(userLocation);
+        map.flyTo({ center: userLocation, zoom: 14 });
+      },
+      () => fallbackToDefaultLocation(map),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
   }, []);
 
   const fallbackToDefaultLocation = useCallback((map: maplibregl.Map) => {
-    const berlinLocation: [number, number] = [13.405, 52.52];
-    setCurrentLocation(berlinLocation);
-    map.setCenter(berlinLocation);
-    map.flyTo({ center: berlinLocation, zoom: 12 });
+    setCurrentLocation(DEFAULT_LOCATION);
+    map.setCenter(DEFAULT_LOCATION);
+    map.flyTo({ center: DEFAULT_LOCATION, zoom: 12 });
   }, []);
 
   const addMarkerForNode = useCallback((map: maplibregl.Map, node: Node) => {
@@ -97,7 +90,7 @@ const Map: React.FC = () => {
           ],
         },
         zoom: 12,
-        center: [13.405, 52.52],
+        center: DEFAULT_LOCATION,
       });
 
       mapInstanceRef.current = map;
@@ -141,7 +134,6 @@ const Map: React.FC = () => {
     map: maplibregl.Map
   ): { x: number; y: number } => {
     if (!(screenPos instanceof maplibregl.Point)) {
-      console.error("Invalid screen position:", screenPos);
       return { x: 0, y: 0 };
     }
     const { x, y } = screenPos;
@@ -165,7 +157,6 @@ const Map: React.FC = () => {
 
   const handleConfirmAddVenue = (venueName: string) => {
     if (!currentLocation) {
-      alert("Cannot create a venue: no user location found.");
       setShowAddVenueModal(false);
       return;
     }

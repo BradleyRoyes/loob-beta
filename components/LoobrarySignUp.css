@@ -1,144 +1,104 @@
 /* General Layout */
 .signupScreen {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 30px;
-    background: linear-gradient(135deg, #1a1a1a, #2a2a2a); /* Dark gradient background */
-    min-height: 100vh;
-    font-family: 'Nunito', sans-serif;
-    color: #fff;
-    position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  background: linear-gradient(135deg, #1a1a1a, #2a2a2a); /* Dark gradient background */
+  min-height: 100vh;
+  font-family: 'Nunito', sans-serif;
+  color: #fff;
+  position: relative;
+  box-sizing: border-box; /* Ensure padding and borders are included in element width */
 }
 
 /* Back Button */
 .topBackButton {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    background: none; /* No background */
-    color: #fff;
-    border: none;
-    font-size: 1.8rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: transform 0.2s ease;
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: none; /* No background */
+  color: #fff;
+  border: none;
+  font-size: 1.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s ease;
 }
 
 .topBackButton.bigBackButton {
-    font-size: 2.5rem; /* Larger back arrow for final phase */
+  font-size: 2.5rem; /* Larger back arrow for final phase */
 }
 
 .topBackButton:focus {
-    outline: none; /* Remove focus outline */
+  outline: none; /* Remove focus outline */
 }
 
 .topBackButton:hover {
-    transform: none; /* No hover effect */
+  transform: none; /* No hover effect */
 }
 
 /* Form Container */
 .formContainer {
-    width: 100%;
-    max-width: 480px;
-    background: #222; /* Dark form background */
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); /* Subtle shadow */
-    padding: 30px;
+  width: 90%; /* Adjusted to ensure it fits within small screens */
+  max-width: 480px;
+  background: #222; /* Dark form background */
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); /* Subtle shadow */
+  padding: 20px; /* Adjusted padding for smaller screens */
+  box-sizing: border-box;
 }
 
 /* Title and Description */
 .title {
-    font-size: 2.2rem;
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 20px;
-    color: #ffb48f; /* Gradient text */
-    background: linear-gradient(45deg, #ff7e79, #ffb48f);
-    -webkit-background-clip: text; /* Gradient for text */
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+  font-size: 2rem; /* Adjusted font size for smaller screens */
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 15px;
+  color: #ffb48f; /* Gradient text */
+  background: linear-gradient(45deg, #ff7e79, #ffb48f);
+  -webkit-background-clip: text; /* Gradient for text */
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .description {
-    text-align: center;
-    font-size: 1.1rem;
-    color: #bbb;
-    margin-bottom: 35px;
+  text-align: center;
+  font-size: 1rem;
+  color: #bbb;
+  margin-bottom: 25px;
 }
 
 /* Error Message */
 .error {
-    color: #ff7e79;
-    font-size: 1rem;
-    margin-bottom: 18px;
-    text-align: center;
+  color: #ff7e79;
+  font-size: 1rem;
+  margin-bottom: 15px;
+  text-align: center;
 }
 
 /* Form Layout */
 .form {
-    display: flex;
-    flex-direction: column;
-    gap: 25px; /* Adequate space between form fields */
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* Adequate space between form fields */
 }
 
 /* Input Fields */
 input, textarea, select {
-    width: 100%;
-    padding: 14px;
-    font-size: 1rem;
-    border: 1px solid #444;
-    border-radius: 5px;
-    background: #333;
-    color: #aaa;
-    transition: all 0.3s ease;
-}
-
-/* Input Focus Styles */
-input:focus, textarea:focus, select:focus {
-    border-color: #ff7e79;
-    box-shadow: 0 0 5px rgba(255, 120, 100, 0.5); /* Glow effect */
-    outline: none;
-}
-
-/* Placeholder Text */
-input::placeholder, textarea::placeholder {
-    color: #888;
-}
-
-/* Textarea */
-textarea {
-    min-height: 100px;
-    resize: none;
-}
-
-/* Form Group (for labels and inputs) */
-.formGroup {
-    display: flex;
-    flex-direction: column;
-    gap: 12px; /* Adjusted gap between label and input */
-}
-
-/* Label Styling */
-label {
-  font-size: 1rem;
-  color: #fc6969; /* Label color on the light background */
-}
-
-/* Input Fields Styling */
-input, textarea, select {
   width: 100%;
-  padding: 14px;
+  padding: 12px;
   font-size: 1rem;
   border: 1px solid #444;
   border-radius: 5px;
-  background: #333; /* Dark background for input fields */
-  color: #000; /* Black text color for input fields */
+  background: #333;
+  color: #aaa;
   transition: all 0.3s ease;
+  box-sizing: border-box; /* Include padding in width calculation */
 }
 
-/* Focused Input Fields */
+/* Input Focus Styles */
 input:focus, textarea:focus, select:focus {
   border-color: #ff7e79;
   box-shadow: 0 0 5px rgba(255, 120, 100, 0.5); /* Glow effect */
@@ -150,89 +110,150 @@ input::placeholder, textarea::placeholder {
   color: #888;
 }
 
-/* Adjusted for Text Color Inside the Input Fields */
-input, textarea, select {
-  color: #000; /* Black text color for the typed text in inputs */
+/* Textarea */
+textarea {
+  min-height: 100px;
+  resize: none;
 }
 
-/* Form Group (for labels and inputs) */
-.formGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 12px; /* Adjusted gap between label and input */
+/* Label Styling */
+label {
+  font-size: 1rem;
+  color: #ec6464; /* Label color on the light background */
 }
 
 /* Buttons */
 button {
-    padding: 14px;
-    background: linear-gradient(45deg, #ff7e79, #ffb48f);
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.3s ease, transform 0.2s ease;
+  padding: 12px;
+  background: linear-gradient(45deg, #ff7e79, #ffb48f);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
 }
 
 button:hover {
-    background: linear-gradient(45deg, #ffb48f, #ff7e79);
-    transform: translateY(-3px); /* Slight lift on hover */
+  background: linear-gradient(45deg, #ffb48f, #ff7e79);
+  transform: translateY(-3px); /* Slight lift on hover */
 }
 
 /* Final Phase */
 .finalPhase {
-    text-align: center;
-    font-size: 1rem;
-    color: #fff;
-    padding: 25px;
+  text-align: center;
+  font-size: 1rem;
+  color: #fff;
+  padding: 20px;
 }
 
 .finalPhase h2 {
-    font-size: 2.2rem;
-    font-weight: bold;
-    margin-bottom: 15px;
-    color: #ffb48f;
-    background: linear-gradient(45deg, #ff7e79, #ffb48f);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #ffb48f;
+  background: linear-gradient(45deg, #ff7e79, #ffb48f);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .finalPhase p {
-    margin: 15px 0;
-    font-size: 1.1rem;
-    color: #bbb;
+  margin: 10px 0;
+  font-size: 1rem;
+  color: #bbb;
 }
 
 /* Button Group */
 .buttonGroup {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
 }
 
 /* Responsive Design */
 @media (max-width: 480px) {
-    .formContainer {
-        padding: 20px;
-    }
+  .formContainer {
+      padding: 15px;
+  }
 
-    .title {
-        font-size: 1.8rem;
-    }
+  .title {
+      font-size: 1.6rem;
+  }
 
-    .description {
-        font-size: 1rem;
-    }
+  .description {
+      font-size: 0.9rem;
+  }
 
-    input, textarea, select {
-        padding: 12px;
-        font-size: 1rem;
-    }
+  input, textarea, select {
+      padding: 10px;
+      font-size: 0.9rem;
+  }
 
-    button {
-        font-size: 1rem;
-        padding: 12px;
-    }
+  button {
+      font-size: 0.9rem;
+      padding: 10px;
+  }
+
+  .buttonGroup {
+      flex-direction: column;
+      gap: 10px; /* Stack buttons vertically with spacing */
+  }
+}
+/* General Layout */
+.signupScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  background: transparent !important; /* Make the background invisible */
+  height: 80vh !important; /* Retain the height adjustment */
+  margin: 10vh 0 !important; /* Retain spacing from top and bottom */
+  font-family: 'Nunito', sans-serif;
+  color: #fff;
+  position: relative;
+  box-sizing: border-box; /* Ensure padding and borders are included in element width */
+}
+
+
+/* Back Button */
+.topBackButton {
+  position: absolute;
+  top: 20px; /* Adjust position for consistency */
+  left: 20px;
+  background: none; /* No background */
+  color: #fff;
+  border: none;
+  font-size: 1.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  z-index: 10; /* Ensure the button stays above other elements */
+}
+
+.topBackButton.bigBackButton {
+  font-size: 2.5rem; /* Larger back arrow for final phase */
+}
+
+.topBackButton:focus {
+  outline: none; /* Remove focus outline */
+}
+
+.topBackButton:hover {
+  transform: scale(1.05); /* Slight scale effect for hover */
+}
+
+/* For smaller screens */
+@media (max-width: 480px) {
+  .topBackButton {
+      font-size: 1.5rem; /* Reduce size on mobile */
+      top: 15px; /* Adjust positioning */
+      left: 15px;
+  }
+
+  .topBackButton.bigBackButton {
+      font-size: 2rem;
+  }
 }
