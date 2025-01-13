@@ -14,56 +14,58 @@
 }
 
 /* Back Button */
-.topBackButton {
+.signupScreen .topBackButton {
   position: absolute;
   top: 20px;
   left: 20px;
-  background: none; /* No background */
+  background: none;
   color: #fff;
   border: none;
   font-size: 1.8rem;
   font-weight: bold;
   cursor: pointer;
   transition: transform 0.2s ease;
+  z-index: 10; /* Ensure the button stays above other elements */
 }
 
-.topBackButton.bigBackButton {
-  font-size: 2.5rem; /* Larger back arrow for final phase */
+.signupScreen .topBackButton.bigBackButton {
+  font-size: 2.5rem;
 }
 
-.topBackButton:focus {
-  outline: none; /* Remove focus outline */
+.signupScreen .topBackButton:focus {
+  outline: none;
 }
 
-.topBackButton:hover {
-  transform: none; /* No hover effect */
+.signupScreen .topBackButton:hover {
+  transform: scale(1.05); /* Slight scale effect for hover */
 }
 
 /* Form Container */
-.formContainer {
-  width: 90%; /* Adjusted to ensure it fits within small screens */
+.signupScreen .formContainer {
+  width: 90%;
   max-width: 480px;
   background: #222; /* Dark form background */
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); /* Subtle shadow */
-  padding: 20px; /* Adjusted padding for smaller screens */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  margin: 10px auto; /* Add vertical spacing on smaller screens */
   box-sizing: border-box;
 }
 
 /* Title and Description */
-.title {
-  font-size: 2rem; /* Adjusted font size for smaller screens */
+.signupScreen .title {
+  font-size: 2rem;
   font-weight: bold;
   text-align: center;
-  margin-bottom: 15px;
-  color: #ffb48f; /* Gradient text */
+  margin-bottom: 20px; /* Increased spacing */
+  color: #ffb48f;
   background: linear-gradient(45deg, #ff7e79, #ffb48f);
-  -webkit-background-clip: text; /* Gradient for text */
+  -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.description {
+.signupScreen .description {
   text-align: center;
   font-size: 1rem;
   color: #bbb;
@@ -71,53 +73,57 @@
 }
 
 /* Error Message */
-.error {
+.signupScreen .error {
   color: #ff7e79;
   font-size: 1rem;
-  margin-bottom: 15px;
+  margin-bottom: 20px; /* Extra spacing for clarity */
   text-align: center;
 }
 
 /* Form Layout */
-.form {
+.signupScreen .form {
   display: flex;
   flex-direction: column;
-  gap: 20px; /* Adequate space between form fields */
+  gap: 20px;
 }
 
 /* Input Fields */
-input, textarea, select {
+.signupScreen input,
+.signupScreen textarea,
+.signupScreen select {
   width: 100%;
   padding: 12px;
   font-size: 1rem;
   border: 1px solid #444;
   border-radius: 5px;
   background: #333;
-  color: #aaa;
   transition: all 0.3s ease;
-  box-sizing: border-box; /* Include padding in width calculation */
+  box-sizing: border-box;
 }
 
 /* Input Focus Styles */
-input:focus, textarea:focus, select:focus {
+.signupScreen input:focus,
+.signupScreen textarea:focus,
+.signupScreen select:focus {
   border-color: #ff7e79;
   box-shadow: 0 0 5px rgba(255, 120, 100, 0.5); /* Glow effect */
   outline: none;
 }
 
 /* Placeholder Text */
-input::placeholder, textarea::placeholder {
+.signupScreen input::placeholder,
+.signupScreen textarea::placeholder {
   color: #888;
 }
 
 /* Textarea */
-textarea {
+.signupScreen textarea {
   min-height: 100px;
   resize: none;
 }
 
 /* Buttons */
-button {
+.signupScreen button {
   padding: 12px;
   background: linear-gradient(45deg, #ff7e79, #ffb48f);
   color: white;
@@ -129,20 +135,20 @@ button {
   transition: background 0.3s ease, transform 0.2s ease;
 }
 
-button:hover {
+.signupScreen button:hover {
   background: linear-gradient(45deg, #ffb48f, #ff7e79);
-  transform: translateY(-3px); /* Slight lift on hover */
+  transform: translateY(-3px);
 }
 
 /* Final Phase */
-.finalPhase {
+.signupScreen .finalPhase {
   text-align: center;
   font-size: 1rem;
   color: #fff;
   padding: 20px;
 }
 
-.finalPhase h2 {
+.signupScreen .finalPhase h2 {
   font-size: 2rem;
   font-weight: bold;
   margin-bottom: 10px;
@@ -153,14 +159,14 @@ button:hover {
   -webkit-text-fill-color: transparent;
 }
 
-.finalPhase p {
+.signupScreen .finalPhase p {
   margin: 10px 0;
   font-size: 1rem;
   color: #bbb;
 }
 
 /* Button Group */
-.buttonGroup {
+.signupScreen .buttonGroup {
   display: flex;
   justify-content: space-between;
   gap: 15px;
@@ -168,96 +174,39 @@ button:hover {
 
 /* Responsive Design */
 @media (max-width: 480px) {
-  .formContainer {
-      padding: 15px;
+  .signupScreen .formContainer {
+    padding: 20px;
+    margin: 15px auto; /* Extra vertical spacing on mobile */
   }
 
-  .title {
-      font-size: 1.6rem;
+  .signupScreen .title {
+    font-size: 1.8rem; /* Slightly smaller for mobile */
+    margin-bottom: 15px; /* Adjust spacing */
   }
 
-  .description {
-      font-size: 0.9rem;
+  .signupScreen .description {
+    font-size: 0.95rem;
+    margin-bottom: 20px;
   }
 
-  input, textarea, select {
-      padding: 10px;
-      font-size: 0.9rem;
+  .signupScreen input,
+  .signupScreen textarea,
+  .signupScreen select {
+    padding: 12px;
+    font-size: 0.9rem;
   }
 
-  button {
-      font-size: 0.9rem;
-      padding: 10px;
+  .signupScreen button {
+    font-size: 0.9rem;
+    padding: 12px;
   }
 
-  .buttonGroup {
-      flex-direction: column;
-      gap: 10px; /* Stack buttons vertically with spacing */
-  }
-}
-/* General Layout */
-.signupScreen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 30px;
-  background: transparent !important; /* Make the background invisible */
-  height: 80vh !important; /* Retain the height adjustment */
-  margin: 10vh 0 !important; /* Retain spacing from top and bottom */
-  font-family: 'Nunito', sans-serif;
-  color: #fff;
-  position: relative;
-  box-sizing: border-box; /* Ensure padding and borders are included in element width */
-}
-
-
-/* Back Button */
-.topBackButton {
-  position: absolute;
-  top: 20px; /* Adjust position for consistency */
-  left: 20px;
-  background: none; /* No background */
-  color: #fff;
-  border: none;
-  font-size: 1.8rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-  z-index: 10; /* Ensure the button stays above other elements */
-}
-
-.topBackButton.bigBackButton {
-  font-size: 2.5rem; /* Larger back arrow for final phase */
-}
-
-.topBackButton:focus {
-  outline: none; /* Remove focus outline */
-}
-
-.topBackButton:hover {
-  transform: scale(1.05); /* Slight scale effect for hover */
-}
-
-/* For smaller screens */
-@media (max-width: 480px) {
-  .topBackButton {
-      font-size: 1.5rem; /* Reduce size on mobile */
-      top: 15px; /* Adjust positioning */
-      left: 15px;
+  .signupScreen .buttonGroup {
+    flex-direction: column; /* Stack buttons vertically */
+    gap: 15px; /* Adequate spacing between buttons */
   }
 
-  .topBackButton.bigBackButton {
-      font-size: 2rem;
+  .signupScreen .finalPhase h2 {
+    font-size: 1.6rem; /* Adjust heading size for mobile */
   }
-}
-
-/* 1) Make sure the text in our new "loobrary-input" is visible (black text) */
-.loobrary-input {
-  color: #000; /* Make typed text black */
-}
-
-/* Optionally, adjust placeholder color if it's too light or invisible: */
-.loobrary-input::placeholder {
-  color: #888; /* or whatever color you prefer for placeholders */
 }
