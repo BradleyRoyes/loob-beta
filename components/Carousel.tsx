@@ -1,49 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function Carousel({ children }) {
+  const totalSlides = React.Children.count(children);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [finishedCycle, setFinishedCycle] = useState(false);
 
-  const nextSlide = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % React.Children.count(children));
-  };
+  // Automatically cycle slides ONCE
+  useEffect(() => {
+    if (!finishedCycle) {
+      const slideInterval = setInterval(() => {
+        setCurrentIndex((prevIndex) => {
+          if (prevIndex === totalSlides - 1) {
+            // If we’re at the last slide, stop cycling
+            setFinishedCycle(true);
+            return prevIndex;
+          } else {
+            return prevIndex + 1;
+          }
+        });
+      }, 3000); // 3s interval; adjust as needed
 
-  const prevSlide = () => {
-    setCurrentIndex((prevIndex) =>
-      prevIndex === 0 ? React.Children.count(children) - 1 : prevIndex - 1
-    );
+      return () => clearInterval(slideInterval);
+    }
+  }, [finishedCycle, totalSlides]);
+
+  // Advance to the next slide on click
+  const handleClick = () => {
+    setCurrentIndex((prevIndex) => {
+      // If we’re already at the last slide, do nothing
+      if (prevIndex === totalSlides - 1) return 0;
+
+      return prevIndex + 1;
+    });
   };
 
   return (
-    <div className="relative w-full overflow-hidden">
+    <div
+      className="relative w-full overflow-hidden"
+      onClick={handleClick}  // Advance to next slide upon click
+      style={{ cursor: 'pointer' }} // Let users know they can click
+    >
       <div
         className="whitespace-nowrap transition-transform duration-500"
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
       >
-        {React.Children.map(children, (child, index) => (
+        {React.Children.map(children, (child) => (
           <div
             className="inline-block w-full"
             style={{
-              padding: '0 1.5rem', // Add padding to keep text away from the edges
-              boxSizing: 'border-box', // Ensure padding doesn't break layout
-              textAlign: 'center', // Center-align text
+              padding: '0 1.5rem',
+              boxSizing: 'border-box',
+              textAlign: 'center',
             }}
           >
             {child}
           </div>
         ))}
       </div>
-      <button
-        className="base-button absolute top-1/2 left-2 transform -translate-y-1/2"
-        onClick={prevSlide}
-      >
-        ◀
-      </button>
-      <button
-        className="base-button absolute top-1/2 right-2 transform -translate-y-1/2"
-        onClick={nextSlide}
-      >
-        ▶
-      </button>
     </div>
   );
 }

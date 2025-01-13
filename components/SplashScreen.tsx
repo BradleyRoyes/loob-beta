@@ -11,6 +11,12 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [phase, setPhase] = useState<'introPhase' | 'loginPhase' | 'signupPhase'>('introPhase');
   const [username, setUsername] = useState<string>(userId || ''); // Initialize with userId if available
 
+  // NEW: Password state
+  const [password, setPassword] = useState<string>('');
+
+  // NEW: Track login errors
+  const [loginError, setLoginError] = useState<string>('');
+
   useEffect(() => {
     if (phase === 'introPhase') {
       const timer = setTimeout(() => setPhase('loginPhase'), 2000); // Auto-transition from intro to login
@@ -18,13 +24,42 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     }
   }, [phase]);
 
-  const handleLogin = () => {
-    if (username.trim()) {
-      setUserId(username); // Save pseudonym to global state
-      setSessionId(generateSessionId()); // Generate session ID
-      onClose(); // Notify parent layout to close the splash screen
-    } else {
-      alert('Please enter a pseudonym.');
+  // NEW: Updated handleLogin to call /api/auth/login
+  const handleLogin = async () => {
+    setLoginError(''); // Reset error each time user tries login
+
+    if (!username.trim() || !password.trim()) {
+      setLoginError('Please enter both a pseudonym and a password.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/auth/login/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pseudonym: username, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setLoginError(errorData.error || 'Login failed. Check your credentials.');
+        return;
+      }
+
+      // If successful, parse user data from server
+      const { pseudonym } = await response.json();
+
+      // Save pseudonym globally
+      setUserId(pseudonym);
+
+      // Generate and save a session ID, etc. (not from the DB, just local for now)
+      setSessionId(generateSessionId());
+
+      // Close the splash screen
+      onClose();
+    } catch (error) {
+      console.error('Error logging in:', error);
+      setLoginError('An unexpected error occurred.');
     }
   };
 
@@ -84,11 +119,25 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 onChange={(e) => setUsername(e.target.value)}
                 className="pseudonymInput"
               />
+              <input
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pseudonymInput"
+              />
+
+              {/* Display login error if any */}
+              {loginError && <p className="error">{loginError}</p>}
+
               <div className="buttonGroup">
                 <button className="actionButton" onClick={handleLogin}>
                   Log In
                 </button>
-                <button className="actionButton" onClick={() => setPhase('signupPhase')}>
+                <button
+                  className="actionButton"
+                  onClick={() => setPhase('signupPhase')}
+                >
                   Sign Up
                 </button>
               </div>

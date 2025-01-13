@@ -12,6 +12,8 @@ interface LoobrarySignUpProps {
 const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) => {
   const { setUserId } = useGlobalState();
   const [currentPhase, setCurrentPhase] = useState(1);
+
+  // Keep all sign-up data here, including password
   const [formData, setFormData] = useState({
     pseudonym: '',
     email: '',
@@ -20,14 +22,18 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
     offeringType: '', // 'venue', 'gear', 'talent'
     description: '',
     location: '',
+    password: '',
   });
+
+  // For errors, loading, & success
   const [error, setError] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submissionSuccess, setSubmissionSuccess] = useState<boolean>(false);
 
-  /**
-   * Handle input changes for Phase 1 (Pseudonym, Email, Phone).
-   */
+  // Generate a session ID (optional)
+  const [sessionId] = useState(`session-${Math.random().toString(36).substr(2, 12)}`);
+
+  // Phase-1 input changes (pseudonym, email, phone, password)
   const handlePhase1Change = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -36,9 +42,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
     }));
   };
 
-  /**
-   * Handle input changes for Phase 2 (Offerings).
-   */
+  // Phase-2 input changes (title, offeringType, description, location)
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -49,10 +53,9 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
     }));
   };
 
-  /**
-   * Move to the next phase of the form, validating inputs before proceeding.
-   */
+  // "Next" button from Phase 1 → Phase 2
   const handleNext = () => {
+    // Quick check if pseudonym + email are provided
     if (currentPhase === 1 && (!formData.pseudonym || !formData.email)) {
       setError('Pseudonym and email are required.');
       return;
@@ -61,51 +64,51 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
     setCurrentPhase((prev) => prev + 1);
   };
 
-  /**
-   * Move back to the previous phase of the form.
-   */
+  // "Back" button from Phase 2 → Phase 1
   const handlePreviousPhase = () => {
     setError('');
     setCurrentPhase((prev) => prev - 1);
   };
 
-  /**
-   * Submit the form data to the server.
-   */
+  // Final "Submit" button: send sign-up data to server
   const handleSubmit = async () => {
     setError('');
     setIsSubmitting(true);
     try {
+      // Build the payload with all fields
       const payload = {
         pseudonym: formData.pseudonym,
+        password: formData.password,
         email: formData.email,
         phone: formData.phone,
         title: formData.title,
-        offeringType: formData.offeringType, // 'venue', 'gear', or 'talent'
+        offeringType: formData.offeringType,
         description: formData.description,
         location: formData.location,
-        dataType: 'userEntry',
+        sessionId, // optional, in case your server route wants it
+        dataType: 'userEntry', // if you need a type flag
         createdAt: new Date().toISOString(),
       };
 
-      const response = await fetch('/api/populateUserEntries', {
+      // POST to your sign-up route (instead of /api/populateUserEntries)
+      const response = await fetch('app/api/loobrary-signup', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
       if (response.ok) {
+        // Success
         setSubmissionSuccess(true);
-        setUserId(formData.pseudonym);
+        setUserId(formData.pseudonym); // Save pseudonym globally
         setCurrentPhase(3);
       } else {
+        // Not OK → parse & show error
         const errorData = await response.json();
-        setError(errorData.error || 'An error occurred.');
+        setError(errorData.error || errorData.message || 'An error occurred.');
       }
-    } catch (error) {
-      console.error('Error submitting form:', error);
+    } catch (err) {
+      console.error('Error submitting form:', err);
       setError('An unexpected error occurred.');
     } finally {
       setIsSubmitting(false);
@@ -114,6 +117,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
 
   return (
     <div className="signupScreen">
+      {/* Back button at top (goes back to SplashScreen) */}
       <button
         type="button"
         className={`topBackButton ${currentPhase === 3 ? 'bigBackButton' : ''}`}
@@ -121,7 +125,9 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
       >
         ←
       </button>
+
       <div className="formContainer">
+        {/* -------------------- PHASE 1 -------------------- */}
         {currentPhase === 1 && (
           <>
             <h2 className="title">Get your Loobrary card</h2>
@@ -134,6 +140,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                 <label htmlFor="pseudonym">
                   Pseudonym <span className="info">(To remember you)</span>
                   <input
+                    className="loobrary-input"
                     type="text"
                     id="pseudonym"
                     name="pseudonym"
@@ -148,6 +155,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                 <label htmlFor="email">
                   Email <span className="info">(To contact you about your card)</span>
                   <input
+                    className="loobrary-input"
                     type="email"
                     id="email"
                     name="email"
@@ -162,6 +170,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                 <label htmlFor="phone">
                   Phone <span className="info">(If you want to join the Telegram group)</span>
                   <input
+                    className="loobrary-input"
                     type="tel"
                     id="phone"
                     name="phone"
@@ -171,6 +180,24 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                   />
                 </label>
               </div>
+
+              {/* Password field */}
+              <div className="formGroup">
+                <label htmlFor="password">
+                  Password <span className="info">(Choose a secure password)</span>
+                  <input
+                    className="loobrary-input"
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Enter your password"
+                    value={formData.password}
+                    onChange={handlePhase1Change}
+                    required
+                  />
+                </label>
+              </div>
+
               {error && <p className="error">{error}</p>}
               <button type="button" onClick={handleNext}>
                 Next
@@ -178,18 +205,21 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
             </form>
           </>
         )}
+
+        {/* -------------------- PHASE 2 -------------------- */}
         {currentPhase === 2 && (
           <>
             <form className="form">
               <h2 className="title">Can you offer something to the Loobrary?</h2>
               <p className="description">
-                The Loobrary thrives on community contributions. Whether its a venue, talent, or
-                gear, your offer helps others and builds the community.
+                The Loobrary thrives on community contributions. Whether it's a venue,
+                talent, or gear, your offer helps others and builds the community.
               </p>
               <div className="formGroup">
                 <label htmlFor="title">
                   Title
                   <input
+                    className="loobrary-input"
                     type="text"
                     id="title"
                     name="title"
@@ -204,6 +234,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                 <label htmlFor="offeringType">
                   Type
                   <select
+                    className="loobrary-input"
                     id="offeringType"
                     name="offeringType"
                     value={formData.offeringType}
@@ -221,6 +252,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                 <label htmlFor="description">
                   Description
                   <textarea
+                    className="loobrary-input"
                     id="description"
                     name="description"
                     placeholder="Provide a description"
@@ -234,6 +266,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                 <label htmlFor="location">
                   Location
                   <input
+                    className="loobrary-input"
                     type="text"
                     id="location"
                     name="location"
@@ -244,7 +277,9 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                   />
                 </label>
               </div>
+
               {error && <p className="error">{error}</p>}
+
               <div className="buttonGroup">
                 <button type="button" onClick={handlePreviousPhase}>
                   Back
@@ -256,6 +291,8 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
             </form>
           </>
         )}
+
+        {/* -------------------- FINAL PHASE (Success) -------------------- */}
         {currentPhase === 3 && submissionSuccess && (
           <div className="finalPhase">
             <h2>Thanks for signing up!</h2>

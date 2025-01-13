@@ -1,10 +1,17 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
-import maplibregl from "maplibre-gl";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  MutableRefObject,
+} from "react";
+import maplibregl, { Marker } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./Map.css";
-import mockMapData, { Node } from "./MockMapData";
+
+// Child components (you already have these)
 import TorusSphere from "./TorusSphere";
 import TorusSphereWeek from "./TorusSphereWeek";
 import TorusSphereAll from "./TorusSphereAll";
@@ -12,105 +19,220 @@ import VenueProfile from "./VenueProfile";
 import MapSidebar from "./MapSidebar";
 import AddVenueModal from "./AddVenueModal";
 
-const DEFAULT_LOCATION: [number, number] = [13.405, 52.52]; // Berlin
+// Types
+export type VisualView = "Today" | "ThisWeek" | "AllTime";
+
+export interface Node {
+  id: string;
+  lat: number;
+  lon: number;
+  label: string;     // e.g. "Berghain"
+  type: string;      // e.g. "Venue", "Gear", etc.
+  details: string;   // e.g. description or details
+  contact: string;   // e.g. "mailto:someone@example.com"
+  visualType: VisualView; // "Today", "ThisWeek", "AllTime"
+}
+
+// Berlin center (longitude, latitude)
+const DEFAULT_LOCATION: [number, number] = [13.405, 52.52];
 
 const Map: React.FC = () => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
 
-  const [nodes, setNodes] = useState<Node[]>(mockMapData);
+  // We'll store references to the markers so we can remove them if needed.
+  const markersRef = useRef<Marker[]>([]);
+
+  // Our array of nodes from DB
+  const [nodes, setNodes] = useState<Node[]>([]);
+
+  // Current user geolocation
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
+
+  // Pop-up / preview logic
   const [previewNode, setPreviewNode] = useState<Node | null>(null);
   const [showPreviewPopup, setShowPreviewPopup] = useState(false);
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
+
+  // Venue profile logic
   const [showVenueProfile, setShowVenueProfile] = useState(false);
   const [activeNode, setActiveNode] = useState<Node | null>(null);
+
+  // "Add Venue" modal logic
   const [showAddVenueModal, setShowAddVenueModal] = useState(false);
+
+  // Sidebar logic
   const [sidebarActive, setSidebarActive] = useState(() => window.innerWidth > 768);
 
+  /**
+   * 1) On mount, fetch data from /api/mapData
+   */
+  useEffect(() => {
+    async function fetchUserEntries() {
+      try {
+        const response = await fetch("/api/mapData");
+        if (!response.ok) {
+          throw new Error(`Error fetching map data: ${response.status}`);
+        }
+        const data = await response.json();
+        /**
+         * data is an array of docs from your library collection
+         * We'll create random coords if we have no lat/lon.
+         * In future, you might store real lat/lon or do geocoding.
+         */
+
+        function getRandomCoordsNearBerlin(): [number, number] {
+          const lon = 13.2 + Math.random() * 0.5; // ~13.2 to ~13.7
+          const lat = 52.4 + Math.random() * 0.4; // ~52.4 to ~52.8
+          return [lon, lat];
+        }
+
+        const newNodes: Node[] = data.map((entry: any) => {
+          // For now, ignoring entry.location — you can parse it or geocode it.
+          const [lon, lat] = getRandomCoordsNearBerlin();
+
+          return {
+            id: entry.document_id || `temp-${Math.random()}`,
+            lat,
+            lon,
+            label: entry.title ?? "Untitled Entry",
+            type: entry.offeringType ?? "UserEntry",
+            details: entry.description ?? "No description provided.",
+            contact: entry.email ? `mailto:${entry.email}` : "No contact info",
+            // Just pick 'Today' or something. You could also do logic like:
+            // if (entry.offeringType === 'gear') => "ThisWeek", etc.
+            visualType: "Today",
+          };
+        });
+
+        setNodes(newNodes);
+      } catch (err) {
+        console.error("Failed to fetch map data:", err);
+      }
+    }
+
+    fetchUserEntries();
+  }, []);
+
+  /**
+   * 2) Adjust sidebar on window resize
+   */
   useEffect(() => {
     const handleResize = () => setSidebarActive(window.innerWidth > 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const getUserLocation = useCallback((map: maplibregl.Map) => {
-    if (!navigator.geolocation) {
-      fallbackToDefaultLocation(map);
-      return;
-    }
+  /**
+   * 3) Map initialization — run once
+   */
+  useEffect(() => {
+    if (!mapContainerRef.current || mapInstanceRef.current) return;
 
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        const userLocation: [number, number] = [coords.longitude, coords.latitude];
-        setCurrentLocation(userLocation);
-        map.setCenter(userLocation);
-        map.flyTo({ center: userLocation, zoom: 14 });
+    const map = new maplibregl.Map({
+      container: mapContainerRef.current,
+      style: {
+        version: 8,
+        sources: {
+          "osm-tiles": {
+            type: "raster",
+            tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+            tileSize: 256,
+            attribution: 'Map data © <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors.',
+          },
+        },
+        layers: [
+          {
+            id: "osm-tiles",
+            type: "raster",
+            source: "osm-tiles",
+            minzoom: 0,
+            maxzoom: 19,
+          },
+        ],
       },
-      () => fallbackToDefaultLocation(map),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
+      center: DEFAULT_LOCATION,
+      zoom: 12,
+    });
+
+    mapInstanceRef.current = map;
+
+    map.on("load", () => {
+      // A styling effect (optional)
+      map.getCanvas().style.filter = "grayscale(100%)";
+    });
+
+    // Attempt to get user location once
+    getUserLocation(map);
+
+    // Cleanup if unmounted
+    return () => {
+      map.remove();
+      mapInstanceRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /**
+   * 4) Whenever `nodes` changes, we remove old markers and add new ones.
+   */
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    // Remove existing markers from the map
+    markersRef.current.forEach((marker) => marker.remove());
+    markersRef.current = [];
+
+    // Add new markers
+    nodes.forEach((node) => {
+      const markerEl = document.createElement("div");
+      markerEl.className = "map-marker";
+
+      const marker = new maplibregl.Marker({ element: markerEl })
+        .setLngLat([node.lon, node.lat])
+        .addTo(map);
+
+      marker.getElement().addEventListener("click", () => {
+        selectNode(map, node);
+      });
+
+      markersRef.current.push(marker);
+    });
+  }, [nodes]);
+
+  /**
+   * 5) Geolocation logic
+   */
   const fallbackToDefaultLocation = useCallback((map: maplibregl.Map) => {
     setCurrentLocation(DEFAULT_LOCATION);
     map.setCenter(DEFAULT_LOCATION);
     map.flyTo({ center: DEFAULT_LOCATION, zoom: 12 });
   }, []);
 
-  const addMarkerForNode = useCallback((map: maplibregl.Map, node: Node) => {
-    const markerEl = document.createElement("div");
-    markerEl.className = "map-marker";
-
-    new maplibregl.Marker({ element: markerEl })
-      .setLngLat([node.lon, node.lat])
-      .addTo(map)
-      .getElement()
-      .addEventListener("click", () => {
-        selectNode(map, node);
-      });
-  }, []);
-
-  useEffect(() => {
-    if (mapContainerRef.current && !mapInstanceRef.current) {
-      const map = new maplibregl.Map({
-        container: mapContainerRef.current,
-        style: {
-          version: 8,
-          sources: {
-            "osm-tiles": {
-              type: "raster",
-              tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-              tileSize: 256,
-              attribution: "Map data © <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors.",
-            },
-          },
-          layers: [
-            { id: "osm-tiles", type: "raster", source: "osm-tiles", minzoom: 0, maxzoom: 19 },
-          ],
-        },
-        zoom: 12,
-        center: DEFAULT_LOCATION,
-      });
-
-      mapInstanceRef.current = map;
-
-      map.on("load", () => {
-        map.getCanvas().style.filter = "grayscale(100%)";
-        nodes.forEach((node) => addMarkerForNode(map, node));
-      });
-
-      getUserLocation(map);
-    }
-
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
+  const getUserLocation = useCallback(
+    (map: maplibregl.Map) => {
+      if (!navigator.geolocation) {
+        fallbackToDefaultLocation(map);
+        return;
       }
-    };
-  }, [nodes, addMarkerForNode, getUserLocation]);
+      navigator.geolocation.getCurrentPosition(
+        ({ coords }) => {
+          const userLoc: [number, number] = [coords.longitude, coords.latitude];
+          setCurrentLocation(userLoc);
+          map.setCenter(userLoc);
+          map.flyTo({ center: userLoc, zoom: 14 });
+        },
+        () => fallbackToDefaultLocation(map),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    },
+    [fallbackToDefaultLocation]
+  );
 
+  /**
+   * 6) Node selection logic -> popup
+   */
   const selectNode = useCallback((map: maplibregl.Map, node: Node) => {
     map.flyTo({
       center: [node.lon, node.lat],
@@ -129,10 +251,10 @@ const Map: React.FC = () => {
     });
   }, []);
 
-  const adjustPopupPositionToScreen = (
+  function adjustPopupPositionToScreen(
     screenPos: maplibregl.PointLike,
     map: maplibregl.Map
-  ): { x: number; y: number } => {
+  ): { x: number; y: number } {
     if (!(screenPos instanceof maplibregl.Point)) {
       return { x: 0, y: 0 };
     }
@@ -142,8 +264,11 @@ const Map: React.FC = () => {
       x: Math.min(Math.max(x, 50), bounds.width - 50),
       y: Math.min(Math.max(y - 30, 50), bounds.height - 50),
     };
-  };
+  }
 
+  /**
+   * 7) Render sphere by visualType
+   */
   const renderSphereForNode = (node: Node) => {
     switch (node.visualType) {
       case "ThisWeek":
@@ -155,14 +280,17 @@ const Map: React.FC = () => {
     }
   };
 
+  /**
+   * 8) Logic for AddVenueModal
+   */
   const handleConfirmAddVenue = (venueName: string) => {
     if (!currentLocation) {
       setShowAddVenueModal(false);
       return;
     }
-
     const [lon, lat] = currentLocation;
 
+    // We'll create a new node at the user's current location
     const newNode: Node = {
       id: `Node-${Date.now()}`,
       lat,
@@ -177,35 +305,46 @@ const Map: React.FC = () => {
     setNodes((prev) => [...prev, newNode]);
     setShowAddVenueModal(false);
 
-    if (mapInstanceRef.current) {
-      addMarkerForNode(mapInstanceRef.current, newNode);
-      selectNode(mapInstanceRef.current, newNode);
+    // Optionally fly to the newly created node
+    const map = mapInstanceRef.current;
+    if (map) {
+      map.flyTo({ center: [lon, lat], zoom: 14 });
     }
   };
 
+  /**
+   * 9) Show venue profile
+   */
   const handleShowVenueProfile = (node: Node) => {
     setActiveNode(node);
     setShowVenueProfile(true);
   };
 
+  /**
+   * 10) Sidebar toggle
+   */
   const toggleSidebar = () => setSidebarActive((prev) => !prev);
 
   return (
     <div className="map-container">
-      <div ref={mapContainerRef} className="map-layer"></div>
+      {/* The map layer */}
+      <div ref={mapContainerRef} className="map-layer" />
 
+      {/* Sidebar */}
       <MapSidebar
         nodes={nodes}
         sidebarActive={sidebarActive}
         toggleSidebar={toggleSidebar}
         onNodeSelect={(node) => {
-          if (mapInstanceRef.current) {
-            selectNode(mapInstanceRef.current, node);
+          const map = mapInstanceRef.current;
+          if (map) {
+            selectNode(map, node);
           }
         }}
         onMoreInfo={handleShowVenueProfile}
       />
 
+      {/* Toggle button for sidebar (the round button on bottom-right) */}
       <button
         className={`toggle-sidebar ${sidebarActive ? "attached" : "tab"}`}
         onClick={toggleSidebar}
@@ -224,6 +363,7 @@ const Map: React.FC = () => {
         {sidebarActive ? "←" : "→"}
       </button>
 
+      {/* Small popup for the node preview */}
       {showPreviewPopup && previewNode && popupPosition && (
         <div
           className="small-popup"
@@ -244,7 +384,9 @@ const Map: React.FC = () => {
               ×
             </button>
             <div className="popup-title">
-              <h3 style={{ textAlign: "center", margin: "0 0 10px 0" }}>{previewNode.label}</h3>
+              <h3 style={{ textAlign: "center", margin: "0 0 10px 0" }}>
+                {previewNode.label}
+              </h3>
             </div>
             <div className="sphere-preview">{renderSphereForNode(previewNode)}</div>
             <button
@@ -261,30 +403,43 @@ const Map: React.FC = () => {
         </div>
       )}
 
+      {/* Venue profile overlay */}
       {showVenueProfile && activeNode && (
         <div
           className="venue-profile-overlay"
-          onClick={(e) => e.target === e.currentTarget && setShowVenueProfile(false)}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowVenueProfile(false);
+            }
+          }}
         >
           <div className="venue-profile-modal">
-            <VenueProfile venue={activeNode} onClose={() => setShowVenueProfile(false)} />
+            <VenueProfile
+              venue={activeNode}
+              onClose={() => setShowVenueProfile(false)}
+            />
           </div>
         </div>
       )}
+{
+  /*
+  <button
+    className="venue-selector-button"
+    style={{ bottom: "60px" }}
+    onClick={() => setShowAddVenueModal(true)}
+    aria-label="Add a new venue"
+  >
+    Add Venue
+  </button>
+  */
+}
 
-      {currentLocation && (
-        <button
-          className="venue-selector-button"
-          style={{ bottom: "60px" }}
-          onClick={() => setShowAddVenueModal(true)}
-          aria-label="Add a new venue"
-        >
-          Add Venue
-        </button>
-      )}
-
+      {/* AddVenueModal */}
       {showAddVenueModal && (
-        <AddVenueModal onClose={() => setShowAddVenueModal(false)} onConfirm={handleConfirmAddVenue} />
+        <AddVenueModal
+          onClose={() => setShowAddVenueModal(false)}
+          onConfirm={handleConfirmAddVenue}
+        />
       )}
     </div>
   );

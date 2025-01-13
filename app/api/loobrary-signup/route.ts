@@ -1,101 +1,84 @@
-import { NextResponse } from 'next/server';
-import { AstraDB, Collection } from '@datastax/astra-db-ts';
-import { v4 as uuidv4 } from 'uuid';
+import { NextRequest, NextResponse } from 'next/server';
+import { initializeCollection, getCollection } from '../../../lib/astraDb';
+import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
+import OpenAI from 'openai';
 
-// Initialize AstraDB with your configuration
-const astraDb = new AstraDB(
-  process.env.ASTRA_DB_APPLICATION_TOKEN!,
-  process.env.ASTRA_DB_ENDPOINT!,
-  process.env.ASTRA_DB_NAMESPACE!
-);
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY!,
+});
 
-// Function to get the 'messages' collection
-const getMessagesCollection = async (): Promise<Collection> => {
+// Text splitter configuration for chunking
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 500, // Adjust chunk size for user-generated content
+  chunkOverlap: 50,
+});
+
+export async function POST(req: NextRequest) {
   try {
-    const collection = await astraDb.collection('messages');
-    return collection;
-  } catch (error) {
-    console.error('Error accessing messages collection:', error);
-    throw new Error('Database connection failed.');
-  }
-};
+    // Parse request body
+    const body = await req.json();
+    const { pseudonym, email, phone, title, offeringType, description, location } = body;
 
-// Handle POST requests for sign-up
-export async function POST(request: Request) {
-  try {
-    const data = await request.json();
-
-    const { pseudonym, email, phone, interests, offerings, sessionId } = data;
-
-    // Basic Validation
-    if (!pseudonym || !email || !phone || !interests || !offerings || !sessionId) {
-      return NextResponse.json(
-        { message: 'All fields are required.' },
-        { status: 400 }
-      );
+    // Validate required fields
+    if (!pseudonym || !email || !title || !offeringType || !description || !location) {
+      return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 });
     }
 
-    // Email Format Validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { message: 'Invalid email format.' },
-        { status: 400 }
-      );
+    // Initialize the library collection with vector search enabled
+    await initializeCollection('library', 'cosine');
+
+    // Combine content for embedding generation
+    const combinedText = `${title} ${description} ${location}`;
+    const chunks =
+      combinedText.length > 500
+        ? await splitter.splitText(combinedText)
+        : [combinedText];
+
+    // Generate embeddings and store in the library collection
+    const collection = await getCollection('library');
+    let i = 0;
+
+    for (const chunk of chunks) {
+      try {
+        // Generate embedding
+        const embeddingResponse = await openai.embeddings.create({
+          input: chunk,
+          model: 'text-embedding-ada-002',
+        });
+
+        const embedding = embeddingResponse.data[0]?.embedding;
+        if (!embedding) {
+          console.warn('Failed to generate embedding for chunk:', chunk);
+          continue;
+        }
+
+        // Create and insert document with embedding and metadata
+        const document = {
+          document_id: `${email}-${Date.now()}-${i}`,
+          $vector: embedding, // Embedding vector
+          title,
+          offeringType,
+          description,
+          location,
+          pseudonym,
+          email,
+          phone,
+          dataType: 'userEntry',
+          chunk,
+          createdAt: new Date(),
+        };
+
+        await collection.insertOne(document);
+        i++;
+      } catch (err) {
+        console.error('Error generating embedding or inserting document:', err);
+      }
     }
 
-    // Get the 'messages' collection
-    const messagesCollection = await getMessagesCollection();
-
-    // Pseudonym Availability Check
-    const existingUsers = await messagesCollection.find({ pseudonym }).toArray(); // Use toArray to retrieve results
-    if (existingUsers.length > 0) {
-      return NextResponse.json(
-        { message: 'Pseudonym is already taken. Please choose another one.' },
-        { status: 409 }
-      );
-    }
-
-    // Prepare sign-up data
-    const signupData = {
-      id: uuidv4(), // Unique identifier
-      userId: pseudonym, // Pseudonym as the userId
-      sessionId, // Session ID
-      email,
-      phone,
-      interests, // Array of selected interests
-      offerings, // Short answer field
-      createdAt: new Date().toISOString(), // Timestamp
-    };
-
-    // Insert sign-up data into 'messages' collection
-    await messagesCollection.insertOne(signupData);
-
-    return NextResponse.json({ message: 'Success' }, { status: 200 });
+    return NextResponse.json({ message: 'User entry added successfully.' }, { status: 201 });
   } catch (error) {
-    console.error('Error in /api/loobrary-signup:', error);
-    return NextResponse.json(
-      { message: 'Internal Server Error' },
-      { status: 500 }
-    );
-  }
-}
-
-// Handle GET requests to fetch all sign-ups (for testing)
-export async function GET(request: Request) {
-  try {
-    // Get the 'messages' collection
-    const messagesCollection = await getMessagesCollection();
-
-    // Fetch all sign-up entries
-    const allSignups = await messagesCollection.find({}).toArray(); // Use toArray to retrieve all results
-
-    return NextResponse.json(allSignups, { status: 200 });
-  } catch (error) {
-    console.error('Error fetching Loobrary signups:', error);
-    return NextResponse.json(
-      { message: 'Internal Server Error' },
-      { status: 500 }
-    );
+    console.error('Error processing user entry:', error);
+    return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
   }
 }

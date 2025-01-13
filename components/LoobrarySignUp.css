@@ -116,12 +116,6 @@ textarea {
   resize: none;
 }
 
-/* Label Styling */
-label {
-  font-size: 1rem;
-  color: #ec6464; /* Label color on the light background */
-}
-
 /* Buttons */
 button {
   padding: 12px;
@@ -256,4 +250,14 @@ button:hover {
   .topBackButton.bigBackButton {
       font-size: 2rem;
   }
+}
+
+/* 1) Make sure the text in our new "loobrary-input" is visible (black text) */
+.loobrary-input {
+  color: #000; /* Make typed text black */
+}
+
+/* Optionally, adjust placeholder color if it's too light or invisible: */
+.loobrary-input::placeholder {
+  color: #888; /* or whatever color you prefer for placeholders */
 }

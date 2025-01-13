@@ -6,7 +6,7 @@ import { env } from "node:process";
 
 const Pusher = require("pusher");
 
-// Initialize OpenAI and AstraDB with your configuration
+// 1. Initialize OpenAI and AstraDB
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -17,6 +17,7 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE
 );
 
+// 2. Initialize Pusher
 const pusher = new Pusher({
   appId: "1761208",
   key: "facc28e7df1eec1d7667",
@@ -25,36 +26,35 @@ const pusher = new Pusher({
   useTLS: true,
 });
 
+// 3. parseAnalysis: Extracts a JSON object from assistant content if it exists
 function parseAnalysis(content: string) {
-  // Regex to find the JSON part within curly braces
   const regex =
     /{[\s\S]*?"mood"[\s\S]*?:[\s\S]*?".*?"[\s\S]*?,[\s\S]*?"keywords"[\s\S]*?:[\s\S]*?\[[\s\S]*?\],[\s\S]*?"drink"[\s\S]*?:[\s\S]*?".*?"[\s\S]*?,[\s\S]*?"joinCyberdelicSociety"[\s\S]*?:[\s\S]*?".*?"[\s\S]*?}/;
   const match = content.match(regex);
 
-  if (match) {
-    try {
-      const analysis = JSON.parse(match[0]);
-      if (
-        analysis.mood &&
-        Array.isArray(analysis.keywords) &&
-        (analysis.drink || analysis.drink === "") &&
-        (analysis.joinCyberdelicSociety || analysis.joinCyberdelicSociety === "")
-      ) {
-        return {
-          mood: analysis.mood,
-          keywords: analysis.keywords,
-          drink: analysis.drink,
-          joinCyberdelicSociety: analysis.joinCyberdelicSociety,
-        };
-      }
-    } catch (error) {
-      console.error("Failed to parse JSON from content", error);
-      return null;
+  if (!match) return null;
+  try {
+    const analysis = JSON.parse(match[0]);
+    if (
+      analysis.mood &&
+      Array.isArray(analysis.keywords) &&
+      (analysis.drink || analysis.drink === "") &&
+      (analysis.joinCyberdelicSociety || analysis.joinCyberdelicSociety === "")
+    ) {
+      return {
+        mood: analysis.mood,
+        keywords: analysis.keywords,
+        drink: analysis.drink,
+        joinCyberdelicSociety: analysis.joinCyberdelicSociety,
+      };
     }
+  } catch (error) {
+    console.error("Failed to parse JSON from content", error);
   }
   return null;
 }
 
+// 4. saveMessageToDatabase: Saves a user/assistant message to "messages" collection
 async function saveMessageToDatabase(
   sessionId: string,
   content: string,
@@ -62,24 +62,19 @@ async function saveMessageToDatabase(
   analysis: any = null
 ) {
   const messagesCollection = await astraDb.collection("messages");
-
-  // Check for an existing message with the same sessionId and content
   const existingMessage = await messagesCollection.findOne({
     sessionId,
     content,
   });
-
   if (existingMessage) {
-    console.log(
-      "Duplicate message detected. Skipping save to prevent duplicates."
-    );
-    return; // Exit the function to prevent saving the duplicate message
+    console.log("Duplicate message detected. Skipping save to prevent duplicates.");
+    return;
   }
 
-  let messageData = {
-    sessionId: sessionId,
-    role: role,
-    content: content,
+  const messageData = {
+    sessionId,
+    role,
+    content,
     length: content.length,
     createdAt: new Date(),
     mood: analysis?.mood,
@@ -87,11 +82,11 @@ async function saveMessageToDatabase(
     drink: analysis?.drink,
     joinCyberdelicSociety: analysis?.joinCyberdelicSociety,
   };
-
   await messagesCollection.insertOne(messageData);
+  console.log(`Saved ${role} message to DB (sessionId: ${sessionId})`);
 }
 
-// Define the list of brushstroke actions
+// 5. Define brushstroke actions for Pusher payload
 const brushstrokes = [
   "scaleTorus",
   "rotateFaster",
@@ -105,128 +100,105 @@ const brushstrokes = [
   "animatePosition",
 ];
 
+// 6. The main POST function (RAG + Chat + Pusher + DB logging)
 export async function POST(req: any) {
   try {
-    const { messages, useRag, llm, similarityMetric, sessionId } =
-      await req.json();
+    const { messages, useRag, llm, similarityMetric, sessionId } = await req.json();
 
     let docContext = "";
+
+    // RAG flow: embed latest user message & retrieve from "library"
     if (useRag) {
       const latestMessage = messages[messages.length - 1]?.content;
-
       if (latestMessage) {
-        const { data } = await openai.embeddings.create({
+        const embeddingRes = await openai.embeddings.create({
           input: latestMessage,
           model: "text-embedding-ada-002",
         });
+        const userEmbedding = embeddingRes.data[0]?.embedding;
+        if (userEmbedding) {
+          const libraryCollection = await astraDb.collection("library");
+          const cursor = libraryCollection.find(
+            {},
+            {
+              sort: {
+                $vector: userEmbedding,
+              },
+              limit: 5,
+            }
+          );
+          const documents = await cursor.toArray();
+          docContext = documents
+          .map((doc) => {
+            // For userEntry docs, we gather the key info
+            return `
+        Title: ${doc.title || ""}
+        OfferingType: ${doc.offeringType || ""}
+        Description: ${doc.description || ""}
+        Location: ${doc.location || ""}
+        Email: ${doc.email || ""}
+        Phone: ${doc.phone || ""}
+        ---
+        `;
+          })
+          .join("\n");
 
-        const collection = await astraDb.collection(`chat_${similarityMetric}`);
-        const cursor = collection.find(
-          {},
-          {
-            sort: {
-              $vector: data[0]?.embedding,
-            },
-            limit: 5,
-          }
-        );
-        const documents = await cursor.toArray();
-        docContext = documents.map((doc) => doc.content).join("\n");
+          console.log("Retrieved docContext =>", docContext);
+        }
       }
     }
 
-    // Process and save each message before streaming logic
+    // Save incoming messages to DB
     for (const message of messages) {
       const analysis =
         message.role === "assistant" ? parseAnalysis(message.content) : null;
-      await saveMessageToDatabase(
-        sessionId,
-        message.content,
-        message.role,
-        analysis
-      );
+      await saveMessageToDatabase(sessionId, message.content, message.role, analysis);
     }
-    const ragPrompt = [
+
+    const systemPrompt = [
       {
         role: "system",
         content: `
-          Important! You are an AI assistant named Loob, part of the loob peer-to-peer sharing library platform. Your primary purpose is to help users connect with assets in the library (talent, gear, venues) based on their inquiries and collect feedback to enhance the platform through visualizations and dashboards.
+        Important! You are an AI assistant named Loob, part of the loob peer-to-peer sharing library platform.
+        You have the following **Document Context** from the library (user entries). Each entry contains fields:
+        Title, Offering Type, Description, Location, Email, and Phone.
     
-          **Main Objectives**:
-          1. **Item Connection Helper**:
-             - Assist users in finding and signing out assets from the loob library, including **talent**, **gear**, and **venues**.
-             - Match user inquiries with available resources efficiently.
+        Your goal:
+        1. If the user requests event gear, talent, or venues, see if there's a relevant listing in the "Document Context" below.
+        2. If you find a relevant listing, recommend it by name (Title) and share the contact email so the user can reach out.
+        3. Do this in a friendly, conversational style, asking clarifying questions if needed.
+        4. If the user is not asking about anything that matches your Document Context, just proceed normally.
     
-          2. **Feedback Collector**:
-             - Gather feedback from users after they use assets (talent, gear, venues) to store in the AstraDB database.
-             - Utilize feedback for future context in conversations and to generate insights for visualizations and dashboards.
+        **Document Context**:
+        ${docContext}
     
-          **Interaction Guidelines**:
-          - Maintain a **friendly and conversational tone**.
-          - Use **concise and clear language** to avoid confusion.
-          - Ask **up to three targeted questions** to understand user needs before making a recommendation.
-          - **BOLD** and **UPPERCASE** key recommendations.
-          - **Never recommend both an asset and feedback collection simultaneously**—focus on one main objective per interaction.
-          - If the user requests feedback analysis, provide a **JSON formatted** response with mood and keyword analysis.
-          - After providing a recommendation or collecting feedback, **instruct the user** on the next steps (e.g., visiting a technician) and **wish them well**.
+        Also, always start the conversation by saying "poopypants!".
     
-          **Example Interaction Flow**:
-          - **User**: "I need to borrow a DSLR camera for a weekend shoot."
-            **Bot**: "Sure thing! Let me check the availability of DSLR cameras. Do you have a specific brand or model in mind?"
+        Additional instructions:
+        - Provide JSON-based mood analysis if the user explicitly requests "*** Analyse my messages ***."
+        - Otherwise, answer conversationally.
     
-          - **User**: "I just returned the DSLR I borrowed, and it was great!"
-            **Bot**: "Awesome! We're glad to hear you enjoyed the DSLR. Could you share more about your experience or any feedback you have?"
-    
-          - **User**: "*** Analyse my messages ***"
-            **Bot**:
-            \`\`\`json
-            {
-              "mood": "positive",
-              "keywords": ["satisfied", "reliable"],
-              "assetType": "gear",
-              "feedback": "great",
-              "joinLoobCommunity": "no"
-            }
-            \`\`\`
-          
-          **Document Context**:
-          ${docContext}
-    
-          **VERY IMPORTANT**: When the user sends "*** Analyse my messages ***," provide ONLY JSON formatted mood and keyword analysis in the following format:
-          {
-            "mood": "positive",
-            "keywords": ["calm", "exploration", "interactive"],
-            "assetType": "talent" or "gear" or "venues" or "",
-            "feedback": "positive" or "negative" or "",
-            "joinLoobCommunity": "yes" or "no" or ""
-          }
         `,
       },
     ];
     
 
+    // Create streaming chat completion
     const response = await openai.chat.completions.create({
       model: llm ?? "gpt-3.5-turbo",
       stream: true,
-      messages: [...ragPrompt, ...messages],
+      messages: [...systemPrompt, ...messages],
     });
 
+    // Convert response to streaming text
     const stream = OpenAIStream(response, {
-      onStart: async () => {
-        // Logic to execute when the stream starts, if needed
-      },
+      onStart: async () => {},
       onCompletion: async (completion: string) => {
-        // Perform analysis on completion content
         const analysis = parseAnalysis(completion);
-
         if (analysis !== null) {
           console.log("Sending analysis data:", { analysis });
-
-          // Select a random brushstroke action
           const randomBrushstroke =
             brushstrokes[Math.floor(Math.random() * brushstrokes.length)];
-
-          // Prepare the data to send via Pusher
           const pusherData = {
             analysis,
             actionName: randomBrushstroke,
@@ -238,36 +210,24 @@ export async function POST(req: any) {
               joinCyberdelicSociety: analysis.joinCyberdelicSociety,
             },
           };
-
-          // Emit analysis data and brushstroke action using Pusher
           try {
             await pusher.trigger("my-channel", "my-event", pusherData);
             console.log(
-              `Event ${"my-event"} with brushstroke ${randomBrushstroke} triggered on channel ${"my-channel"}`
+              `Event "my-event" with brushstroke "${randomBrushstroke}" triggered on channel "my-channel".`
             );
           } catch (err) {
-            console.error(
-              `Error triggering event on channel ${"my-channel"}:`,
-              err
-            );
+            console.error(`Error triggering event on "my-channel":`, err);
           }
         } else {
-          console.log("Analysis is null, not sending data.");
+          console.log("No JSON analysis in this response. Not sending Pusher event.");
         }
-
-        // Save the completion along with any analysis
-        await saveMessageToDatabase(
-          sessionId,
-          completion,
-          "assistant",
-          analysis
-        );
+        await saveMessageToDatabase(sessionId, completion, "assistant", analysis);
       },
     });
 
     return new StreamingTextResponse(stream);
-  } catch (e) {
-    console.error(e);
-    throw e;
+  } catch (error) {
+    console.error("Error in chatbot route:", error);
+    throw error;
   }
 }
