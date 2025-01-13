@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs'; // Import bcryptjs for password comparison
 import { AstraDB, Collection } from '@datastax/astra-db-ts';
 
 // 1) Initialize AstraDB
@@ -8,51 +9,53 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE!
 );
 
-// 2) Helper to get "messages" collection
-async function getMessagesCollection(): Promise<Collection> {
+// 2) Helper to get the "library" collection
+async function getLibraryCollection(): Promise<Collection> {
   try {
-    return await astraDb.collection('messages');
+    return await astraDb.collection('library');
   } catch (error) {
-    console.error('Error accessing messages collection:', error);
+    console.error('Error accessing library collection:', error);
     throw new Error('Database connection failed.');
   }
 }
 
+// 3) Error handling utility function
+const handleError = (message: string, status: number, code: string = '') => {
+  console.error(`[ERROR] ${message}`);
+  return NextResponse.json({ error: message, code }, { status });
+};
+
 // ---------------------------
 // POST: Check user login
 // ---------------------------
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const { pseudonym, password } = await request.json();
 
-    // Basic checks
+    // Basic checks for empty fields
     if (!pseudonym || !password) {
-      return NextResponse.json(
-        { error: 'Missing pseudonym or password.' },
-        { status: 400 }
-      );
+      return handleError('Missing pseudonym or password.', 400, 'missing_fields');
     }
 
-    // Access "messages" collection
-    const messagesCollection = await getMessagesCollection();
+    // Access the "library" collection
+    const libraryCollection = await getLibraryCollection();
 
-    // Look up the user doc by pseudonym
-    const userDoc = await messagesCollection.findOne({ pseudonym });
+    // Look up the user document by pseudonym
+    const userDoc = await libraryCollection.findOne({ pseudonym });
 
     if (!userDoc) {
-      // No user with that pseudonym
-      return NextResponse.json(
-        { error: 'User not found.' },
-        { status: 401 }
-      );
+      // No user found with that pseudonym
+      return handleError('User not found.', 401, 'user_not_found');
     }
 
-    // Compare password (still plain text)
-    if (userDoc.password !== password) {
-      return NextResponse.json({ error: 'Invalid password.' }, { status: 401 });
+    // Compare the provided password with the stored hashed password
+    const passwordMatch = await bcrypt.compare(password, userDoc.password);
+
+    if (!passwordMatch) {
+      return handleError('Invalid password.', 401, 'invalid_password');
     }
 
-    // If matched, return success + user info
+    // If login is successful, return user information (excluding password)
     return NextResponse.json(
       {
         message: 'Login successful.',
@@ -60,13 +63,13 @@ export async function POST(request: Request) {
           pseudonym: userDoc.pseudonym,
           email: userDoc.email,
           phone: userDoc.phone,
-          // ...include any additional fields if you want
+          // You can add more user fields as needed
         },
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error('Error in /api/loobrary-login:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('Error in /api/auth/login:', error);
+    return handleError('Internal Server Error', 500, 'internal_error');
   }
 }

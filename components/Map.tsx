@@ -88,7 +88,6 @@ const Map: React.FC = () => {
         }
 
         const newNodes: Node[] = data.map((entry: any) => {
-          // For now, ignoring entry.location — you can parse it or geocode it.
           const [lon, lat] = getRandomCoordsNearBerlin();
 
           return {
@@ -99,8 +98,6 @@ const Map: React.FC = () => {
             type: entry.offeringType ?? "UserEntry",
             details: entry.description ?? "No description provided.",
             contact: entry.email ? `mailto:${entry.email}` : "No contact info",
-            // Just pick 'Today' or something. You could also do logic like:
-            // if (entry.offeringType === 'gear') => "ThisWeek", etc.
             visualType: "Today",
           };
         });
@@ -123,55 +120,61 @@ const Map: React.FC = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  /**
-   * 3) Map initialization — run once
-   */
-  useEffect(() => {
-    if (!mapContainerRef.current || mapInstanceRef.current) return;
+ /**
+ * 3) Map initialization — run once
+ */
+useEffect(() => {
+  if (!mapContainerRef.current || mapInstanceRef.current) return;
 
-    const map = new maplibregl.Map({
-      container: mapContainerRef.current,
-      style: {
-        version: 8,
-        sources: {
-          "osm-tiles": {
-            type: "raster",
-            tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-            tileSize: 256,
-            attribution: 'Map data © <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors.',
-          },
+  const map = new maplibregl.Map({
+    container: mapContainerRef.current,
+    style: {
+      version: 8,
+      sources: {
+        "osm-tiles": {
+          type: "raster",
+          tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+          tileSize: 256,
+          attribution: 'Map data © <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors.',
         },
-        layers: [
-          {
-            id: "osm-tiles",
-            type: "raster",
-            source: "osm-tiles",
-            minzoom: 0,
-            maxzoom: 19,
-          },
-        ],
       },
-      center: DEFAULT_LOCATION,
-      zoom: 12,
-    });
+      layers: [
+        {
+          id: "osm-tiles",
+          type: "raster",
+          source: "osm-tiles",
+          minzoom: 0,
+          maxzoom: 19,
+        },
+      ],
+    },
+    center: DEFAULT_LOCATION,
+    zoom: 12,
+  });
 
-    mapInstanceRef.current = map;
+  mapInstanceRef.current = map;
 
-    map.on("load", () => {
-      // A styling effect (optional)
-      map.getCanvas().style.filter = "grayscale(100%)";
-    });
+  // Add grayscale effect to the map on load
+  map.on("load", () => {
+    map.getCanvas().style.filter = "grayscale(100%)";
+  });
 
-    // Attempt to get user location once
-    getUserLocation(map);
+  // Hide the modal when the map moves
+  map.on("move", () => {
+    setShowPreviewPopup(false); // Hide the mini modal
+    setPreviewNode(null); // Reset the preview node
+  });
 
-    // Cleanup if unmounted
-    return () => {
-      map.remove();
-      mapInstanceRef.current = null;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Attempt to get user location once
+  getUserLocation(map);
+
+  // Cleanup if unmounted
+  return () => {
+    map.remove();
+    mapInstanceRef.current = null;
+  };
+}, []);
+
 
   /**
    * 4) Whenever `nodes` changes, we remove old markers and add new ones.
@@ -290,7 +293,6 @@ const Map: React.FC = () => {
     }
     const [lon, lat] = currentLocation;
 
-    // We'll create a new node at the user's current location
     const newNode: Node = {
       id: `Node-${Date.now()}`,
       lat,
@@ -305,7 +307,6 @@ const Map: React.FC = () => {
     setNodes((prev) => [...prev, newNode]);
     setShowAddVenueModal(false);
 
-    // Optionally fly to the newly created node
     const map = mapInstanceRef.current;
     if (map) {
       map.flyTo({ center: [lon, lat], zoom: 14 });
@@ -327,10 +328,8 @@ const Map: React.FC = () => {
 
   return (
     <div className="map-container">
-      {/* The map layer */}
       <div ref={mapContainerRef} className="map-layer" />
 
-      {/* Sidebar */}
       <MapSidebar
         nodes={nodes}
         sidebarActive={sidebarActive}
@@ -344,7 +343,6 @@ const Map: React.FC = () => {
         onMoreInfo={handleShowVenueProfile}
       />
 
-      {/* Toggle button for sidebar (the round button on bottom-right) */}
       <button
         className={`toggle-sidebar ${sidebarActive ? "attached" : "tab"}`}
         onClick={toggleSidebar}
@@ -363,7 +361,6 @@ const Map: React.FC = () => {
         {sidebarActive ? "←" : "→"}
       </button>
 
-      {/* Small popup for the node preview */}
       {showPreviewPopup && previewNode && popupPosition && (
         <div
           className="small-popup"
@@ -403,7 +400,6 @@ const Map: React.FC = () => {
         </div>
       )}
 
-      {/* Venue profile overlay */}
       {showVenueProfile && activeNode && (
         <div
           className="venue-profile-overlay"
@@ -421,20 +417,7 @@ const Map: React.FC = () => {
           </div>
         </div>
       )}
-{
-  /*
-  <button
-    className="venue-selector-button"
-    style={{ bottom: "60px" }}
-    onClick={() => setShowAddVenueModal(true)}
-    aria-label="Add a new venue"
-  >
-    Add Venue
-  </button>
-  */
-}
 
-      {/* AddVenueModal */}
       {showAddVenueModal && (
         <AddVenueModal
           onClose={() => setShowAddVenueModal(false)}

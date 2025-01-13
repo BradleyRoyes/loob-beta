@@ -1,6 +1,15 @@
-import React, { useState, useMemo } from 'react';
-import './MapSidebar.css';
-import { Node } from './MockMapData';
+import React, { useMemo, useState } from "react";
+import { FaMapMarkerAlt, FaUser, FaTools } from "react-icons/fa";
+import "./MapSidebar.css";
+
+export interface Node {
+  id: string;
+  lat: number;
+  lon: number;
+  label: string;
+  type: string;
+  details: string;
+}
 
 interface MapSidebarProps {
   nodes: Node[];
@@ -10,14 +19,20 @@ interface MapSidebarProps {
   toggleSidebar: () => void;
 }
 
-const MapSidebar: React.FC<MapSidebarProps> = ({ nodes, onNodeSelect, onMoreInfo, sidebarActive, toggleSidebar }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedType, setSelectedType] = useState<string | 'All'>('All');
+const MapSidebar: React.FC<MapSidebarProps> = ({
+  nodes,
+  onNodeSelect,
+  onMoreInfo,
+  sidebarActive,
+  toggleSidebar,
+}) => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedType, setSelectedType] = useState<string | "All">("All");
 
   const filteredNodes = useMemo(() => {
     return nodes.filter(
       (node) =>
-        (selectedType === 'All' || node.type === selectedType) &&
+        (selectedType === "All" || node.type === selectedType) &&
         (node.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
           node.type.toLowerCase().includes(searchQuery.toLowerCase()))
     );
@@ -30,16 +45,12 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ nodes, onNodeSelect, onMoreInfo
     }
   };
 
-  const uniqueTypes = useMemo(() => {
-    const types = nodes.map((node) => node.type);
-    return ['All', ...Array.from(new Set(types))];
-  }, [nodes]);
-
   return (
-    <div className={`sidebar-container ${sidebarActive ? 'active' : ''}`}>
-      <div className={`sidebar-content ${sidebarActive ? 'visible' : 'hidden'}`}>
+    <div className={`sidebar-container ${sidebarActive ? "active" : ""}`}>
+      <div className={`sidebar-content ${sidebarActive ? "visible" : "hidden"}`}>
         <div className="sticky-controls">
           <h2 className="sidebar-title">Search Locations</h2>
+
           <input
             type="text"
             className="sidebar-input"
@@ -47,29 +58,42 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ nodes, onNodeSelect, onMoreInfo
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <div className="filter-container">
-            <label htmlFor="type-filter">Filter by Type:</label>
-            <select
-              id="type-filter"
-              className="type-filter"
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-            >
-              {uniqueTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
+
+          <div className="search-by-container">
+            <h3 className="search-by-title">Search by...</h3>
+            <div className="search-by-icons">
+              <div
+                className={`search-icon ${selectedType === "Venue" ? "active" : ""}`}
+                onClick={() => setSelectedType("Venue")}
+              >
+                <FaMapMarkerAlt className="icon" />
+                <span>Venues</span>
+              </div>
+              <div
+                className={`search-icon ${selectedType === "Talent" ? "active" : ""}`}
+                onClick={() => setSelectedType("Talent")}
+              >
+                <FaUser className="icon" />
+                <span>Talent</span>
+              </div>
+              <div
+                className={`search-icon ${selectedType === "Gear" ? "active" : ""}`}
+                onClick={() => setSelectedType("Gear")}
+              >
+                <FaTools className="icon" />
+                <span>Gear</span>
+              </div>
+            </div>
           </div>
         </div>
+
         <div className="sidebar-list">
           {filteredNodes.map((node) => (
             <div
               key={node.id}
               className="sidebar-item"
               onClick={() => handleNodeSelect(node)}
-              style={{ cursor: 'pointer' }}
+              style={{ cursor: "pointer" }}
             >
               <div className="sidebar-item-content">
                 <div className="sidebar-item-title">{node.label}</div>

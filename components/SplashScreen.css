@@ -223,3 +223,30 @@
     font-size: 0.8rem;
   }
 }
+
+.splashScreen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgb(5, 5, 5);
+  transition: opacity 1s ease-in-out;
+}
+
+.splashScreen.fadeOut {
+  background-color: black;  /* Dark background during fade-out */
+  opacity: 0;
+}
+
+.content {
+  /* Your content styles */
+  opacity: 1;
+  transition: opacity 1s ease-in-out;
+}
+
+.content.fadeOut {
+  opacity: 0;
+}
+
+

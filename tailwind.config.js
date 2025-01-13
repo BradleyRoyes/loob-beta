@@ -73,7 +73,6 @@ module.exports = {
     require('@tailwindcss/forms'), // Improved form control styles
     require('@tailwindcss/typography'), // Prose content
     require('@tailwindcss/aspect-ratio'), // Aspect ratio utilities
-    require('@tailwindcss/line-clamp'), // Line clamping for truncating text
   ],
   corePlugins: {
     container: false, // Use custom container styles for mobile

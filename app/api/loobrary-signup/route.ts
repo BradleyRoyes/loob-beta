@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs'; // bcrypt for password hashing
 import { getCollection } from '../../../lib/astraDb';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import OpenAI from 'openai';
@@ -14,30 +15,34 @@ const splitter = new RecursiveCharacterTextSplitter({
   chunkOverlap: 50,
 });
 
+// Error handling utility
+const handleError = (message: string, status: number, code: string = '') => {
+  console.error(`[ERROR] ${message}`);
+  return NextResponse.json({ error: message, code }, { status });
+};
+
 export async function POST(req: NextRequest) {
   try {
     console.log('Processing user entry...');
-    // Parse request body
     const body = await req.json();
-    const { pseudonym, email, phone, title, offeringType, description, location } = body;
+    const { pseudonym, email, phone, title, offeringType, description, location, password } = body;
 
     // Validate required fields
-    if (!pseudonym || !email || !title || !offeringType || !description || !location) {
-      console.error('Missing required fields in request:', body);
-      return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 });
+    if (!pseudonym || !email || !title || !offeringType || !description || !location || !password) {
+      return handleError('Missing required fields.', 400, 'missing_fields');
     }
 
     console.log('Request validated successfully.');
 
-    // Combine content for embedding generation
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10); // Use 10 salt rounds
+
     const combinedText = `${title} ${description} ${location}`;
     const chunks = combinedText.length > 500 ? await splitter.splitText(combinedText) : [combinedText];
     console.log('Text chunks for embedding:', chunks);
 
-    // Get the `library` collection
     const collection = await getCollection('library');
 
-    // Generate embeddings and store data
     let i = 0;
     for (const chunk of chunks) {
       try {
@@ -63,6 +68,7 @@ export async function POST(req: NextRequest) {
           pseudonym,
           email,
           phone,
+          password: hashedPassword, // Store the hashed password
           dataType: 'userEntry',
           chunk,
           createdAt: new Date(),
@@ -74,13 +80,14 @@ export async function POST(req: NextRequest) {
         i++;
       } catch (err) {
         console.error(`Error processing chunk ${i}:`, err);
+        return handleError(`Error processing chunk ${i}.`, 500, 'chunk_processing_error');
       }
     }
 
     console.log('All chunks processed successfully.');
     return NextResponse.json({ message: 'User entry added successfully.' }, { status: 201 });
   } catch (error) {
-    console.error('Error processing user entry:', error);
-    return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
+    console.error('Unexpected error processing user entry:', error);
+    return handleError('Internal server error.', 500, 'internal_error');
   }
 }

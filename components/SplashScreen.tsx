@@ -1,75 +1,109 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useGlobalState } from './GlobalStateContext';
-import LoobrarySignUp from './LoobrarySignUp';
-import './SplashScreen.css';
+import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useGlobalState } from "./GlobalStateContext"; // Adjust path if needed
+import LoobrarySignUp from "./LoobrarySignUp"; // Adjust path if needed
+import "./SplashScreen.css";
 
 const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  const { setUserId, setSessionId, userId } = useGlobalState(); // Access global state
-  const [phase, setPhase] = useState<'introPhase' | 'loginPhase' | 'signupPhase'>('introPhase');
-  const [username, setUsername] = useState<string>(userId || ''); // Initialize with userId if available
-  const [password, setPassword] = useState<string>(''); // Track password state
-  const [loginError, setLoginError] = useState<string>(''); // Track login errors
+  const { userId, setUserId, setSessionId } = useGlobalState();
+  const [phase, setPhase] = useState<"introPhase" | "loginPhase" | "signupPhase" | "fadeOut">(
+    "introPhase"
+  );
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [loginError, setLoginError] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
+  // Fade from intro to login after 2s
   useEffect(() => {
-    // Auto-transition to login phase after intro
-    if (phase === 'introPhase') {
-      const timer = setTimeout(() => setPhase('loginPhase'), 2000);
+    if (phase === "introPhase") {
+      const timer = setTimeout(() => setPhase("loginPhase"), 2000);
       return () => clearTimeout(timer);
     }
   }, [phase]);
 
+  /**
+   * Attempt to log in with the typed pseudonym + password.
+   * We do two steps:
+   *  (1) Set userId in global state to what user typed.
+   *  (2) Then attempt server auth. If it fails, you can revert userId or keep it.
+   */
   const handleLogin = async () => {
-    setLoginError(''); // Reset error
+    setLoginError("");
+    setLoading(true);
 
+    // 1) Basic input checks
     if (!username.trim() || !password.trim()) {
-      setLoginError('Please enter both a pseudonym and a password.');
+      setLoginError("Please enter both a pseudonym and a password.");
+      setLoading(false);
       return;
     }
 
+    // 2) Immediately set userId in the global state
+    setUserId(username.trim());
+
     try {
-      const response = await fetch('/api/auth/login/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pseudonym: username, password }),
+      // 3) Attempt server authentication
+      const response = await fetch("/api/auth/login/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pseudonym: username.trim(), password }),
       });
+
+      setLoading(false);
 
       if (!response.ok) {
         const errorData = await response.json();
-        setLoginError(errorData.error || 'Login failed. Check your credentials.');
+        setLoginError(errorData.error || "Login failed. Check your credentials.");
+        // Optionally revert userId if you don't want the pseudonym set on failure
+        // setUserId(null);
         return;
       }
 
+      // 4) On success, parse the pseudonym from server
       const { pseudonym } = await response.json();
+      console.log("Server says login successful. Confirming userId:", pseudonym);
+
+      // 5) Optionally: re-set userId to what server says
+      //    If you trust the user typed the correct one, skip this if you want.
       setUserId(pseudonym);
+
+      // 6) Set session ID, do fade-out
       setSessionId(generateSessionId());
-      onClose(); // Close splash screen
+      setPhase("fadeOut");
+      setTimeout(() => onClose(), 1000);
     } catch (error) {
-      console.error('Error logging in:', error);
-      setLoginError('An unexpected error occurred.');
+      console.error("Error logging in:", error);
+      setLoginError("An unexpected error occurred.");
+      setLoading(false);
+
+      // If you want to revert userId on fatal error:
+      // setUserId(null);
     }
   };
 
+  // Stay anonymous => set userId to random + session ID
   const handleStayAnonymous = () => {
-    const randomId = `anon-${Math.random().toString(36).substr(2, 9)}`;
-    setUserId(randomId);
+    const anonId = `anon-${Math.random().toString(36).substr(2, 9)}`;
+    setUserId(anonId);
     setSessionId(generateSessionId());
-    onClose(); // Notify parent to close the splash screen
+    onClose();
   };
 
+  // On sign-up complete, close the splash
   const handleSignUpComplete = () => {
-    onClose(); // Close splash screen after sign-up
+    onClose();
   };
 
+  // Generates a unique session ID
   const generateSessionId = () => `session-${Math.random().toString(36).substr(2, 12)}`;
 
   return (
-    // Ensure the splash screen renders immediately with the intro phase
     <AnimatePresence>
       <motion.div
-        className="splashScreen"
+        className={`splashScreen ${phase === "fadeOut" ? "fadeOut" : ""}`}
         initial={{ opacity: 1 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -79,12 +113,12 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <div className="gridBackground"></div>
 
         {/* Intro Phase */}
-        {phase === 'introPhase' && (
+        {phase === "introPhase" && (
           <motion.div
             className="content intro"
-            initial={{ opacity: 1 }} // Render immediately
-            animate={{ opacity: 1 }} // Keep fully visible
-            exit={{ opacity: 0 }} // Fade out when moving to login phase
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 1 }}
           >
             <h1 className="logoText">Loob</h1>
@@ -92,7 +126,7 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         )}
 
         {/* Login Phase */}
-        {phase === 'loginPhase' && (
+        {phase === "loginPhase" && (
           <motion.div
             className="content login"
             initial={{ opacity: 0 }}
@@ -109,6 +143,7 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="pseudonymInput"
+                disabled={loading}
               />
               <input
                 type="password"
@@ -116,20 +151,40 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="pseudonymInput"
+                disabled={loading}
               />
-              {loginError && <p className="error">{loginError}</p>}
+              {loginError && (
+                <motion.p
+                  className="error"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  {loginError}
+                </motion.p>
+              )}
               <div className="buttonGroup">
-                <button className="actionButton" onClick={handleLogin}>
-                  Log In
+                <button
+                  className="actionButton"
+                  onClick={handleLogin}
+                  disabled={loading}
+                >
+                  {loading ? "Logging in..." : "Log In"}
                 </button>
                 <button
                   className="actionButton"
-                  onClick={() => setPhase('signupPhase')}
+                  onClick={() => setPhase("signupPhase")}
+                  disabled={loading}
                 >
                   Sign Up
                 </button>
               </div>
-              <button className="actionButton secondary" onClick={handleStayAnonymous}>
+              <button
+                className="actionButton secondary"
+                onClick={handleStayAnonymous}
+                disabled={loading}
+              >
                 Stay Anonymous
               </button>
             </div>
@@ -137,7 +192,7 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         )}
 
         {/* Sign-Up Phase */}
-        {phase === 'signupPhase' && (
+        {phase === "signupPhase" && (
           <motion.div
             className="content signup"
             initial={{ opacity: 0 }}
@@ -146,7 +201,7 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             transition={{ duration: 1 }}
           >
             <LoobrarySignUp
-              onBack={() => setPhase('loginPhase')}
+              onBack={() => setPhase("loginPhase")}
               onExplore={handleSignUpComplete}
             />
           </motion.div>

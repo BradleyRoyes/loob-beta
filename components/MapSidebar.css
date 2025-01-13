@@ -114,3 +114,72 @@
     }
 }
 
+/* Desktop adjustments */
+@media (min-width: 769px) {
+    .sidebar-container {
+        width: 525px; /* 75% wider than the original 300px */
+    }
+}
+
+/* Search by icons container */
+.search-by-container {
+    margin-top: 1rem;
+    text-align: center;
+  }
+  
+  .search-by-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #fed7aa; /* A pastel orange accent */
+  }
+  
+  .search-by-icons {
+    display: flex;
+    justify-content: space-around;
+    gap: 1rem;
+  }
+  
+  .search-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background-color: #333;
+    border-radius: 12px;
+    transition: transform 0.3s, background 0.3s;
+    cursor: pointer;
+    width: 80px;
+    height: 80px;
+  }
+  
+  .search-icon .icon {
+    font-size: 2rem;
+    color: #fcd1d1; /* A pastel pink accent */
+  }
+  
+  .search-icon span {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: #fff;
+  }
+  
+  .search-icon:hover {
+    transform: scale(1.1);
+    background-color: #444; /* Slightly lighter hover effect */
+  }
+  
+  .search-icon.active {
+    background: linear-gradient(to right, #fed7aa, #fcd1d1); /* Pastel gradient */
+    color: #333;
+  }
+  
+  .search-icon.active .icon {
+    color: #333;
+  }
+  
+  .search-icon.active span {
+    color: #333;
+  }
+  
