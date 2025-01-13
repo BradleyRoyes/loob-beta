@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import './LoobrarySignUp.css';
 import { useGlobalState } from '../components/GlobalStateContext';
 
 interface LoobrarySignUpProps {
@@ -47,14 +46,6 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
     return true;
   };
 
-  const handlePhase1Change = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -85,14 +76,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
 
     try {
       const payload = {
-        pseudonym: formData.pseudonym,
-        password: formData.password,
-        email: formData.email,
-        phone: formData.phone,
-        title: formData.title,
-        offeringType: formData.offeringType,
-        description: formData.description,
-        location: formData.location,
+        ...formData,
         dataType: 'userEntry',
         createdAt: new Date().toISOString(),
       };
@@ -120,82 +104,70 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
   };
 
   return (
-    <div className="signupScreen">
+    <div className="signupScreen flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white px-4">
       <button
         type="button"
-        className={`topBackButton ${currentPhase === 3 ? 'bigBackButton' : ''}`}
+        className={`topBackButton absolute top-4 left-4 text-xl font-bold transition ${
+          currentPhase === 3 ? 'text-2xl' : ''
+        }`}
         onClick={onBack}
       >
         ←
       </button>
 
-      <div className="formContainer">
+      <div className="formContainer w-full max-w-md bg-gray-800 rounded-lg shadow-md p-6">
         {currentPhase === 1 && (
           <>
-            <h2 className="title">Get your Loobrary card</h2>
-            <p className="description">
+            <h2 className="title text-2xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-400 mb-4">
+              Get your Loobrary card
+            </h2>
+            <p className="description text-center text-sm text-gray-400 mb-6">
               Join the Loobrary beta! During this phase, we ask everyone to offer something to the
               Loobrary. This helps build a strong community.
             </p>
-            <form className="form">
-              <div className="formGroup">
-                <label htmlFor="pseudonym">
-                  Pseudonym <span className="info">(To identify you)</span>
-                  <input
-                    type="text"
-                    id="pseudonym"
-                    name="pseudonym"
-                    placeholder="Enter your pseudonym"
-                    value={formData.pseudonym}
-                    onChange={handlePhase1Change}
-                    required
-                  />
-                </label>
-              </div>
-              <div className="formGroup">
-                <label htmlFor="email">
-                  Email <span className="info">(To contact you)</span>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    placeholder="Enter your email"
-                    value={formData.email}
-                    onChange={handlePhase1Change}
-                    required
-                  />
-                </label>
-              </div>
-              <div className="formGroup">
-                <label htmlFor="phone">
-                  Phone <span className="info">(Optional, for joining Telegram group)</span>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    placeholder="Enter your phone number"
-                    value={formData.phone}
-                    onChange={handlePhase1Change}
-                  />
-                </label>
-              </div>
-              <div className="formGroup">
-                <label htmlFor="password">
-                  Password <span className="info">(Choose a secure password)</span>
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    placeholder="Enter your password"
-                    value={formData.password}
-                    onChange={handlePhase1Change}
-                    required
-                  />
-                </label>
-              </div>
+            <form className="form flex flex-col gap-4">
+              <input
+                type="text"
+                name="pseudonym"
+                placeholder="Enter your pseudonym"
+                value={formData.pseudonym}
+                onChange={handleInputChange}
+                required
+                className="inputField"
+              />
+              <input
+                type="email"
+                name="email"
+                placeholder="Enter your email"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+                className="inputField"
+              />
+              <input
+                type="tel"
+                name="phone"
+                placeholder="Enter your phone number (optional)"
+                value={formData.phone}
+                onChange={handleInputChange}
+                className="inputField"
+              />
+              <input
+                type="password"
+                name="password"
+                placeholder="Enter your password"
+                value={formData.password}
+                onChange={handleInputChange}
+                required
+                className="inputField"
+              />
 
-              {error && <p className="error">{error}</p>}
-              <button type="button" onClick={handleNext}>
+              {error && <p className="error text-red-400 text-sm">{error}</p>}
+              <button
+                type="button"
+                onClick={handleNext}
+                className="w-full bg-gradient-to-r from-pink-500 to-orange-400 text-white font-bold py-3 rounded-md hover:from-orange-400 hover:to-pink-500 transition"
+              >
                 Next
               </button>
             </form>
@@ -204,77 +176,67 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
 
         {currentPhase === 2 && (
           <>
-            <form className="form">
-              <h2 className="title">Contribute to the Loobrary</h2>
-              <p className="description">
-                Please fill out all fields to offer your talent, venue, or gear.
-              </p>
-              <div className="formGroup">
-                <label htmlFor="title">
-                  Title
-                  <input
-                    type="text"
-                    id="title"
-                    name="title"
-                    placeholder="Enter a title"
-                    value={formData.title}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </label>
-              </div>
-              <div className="formGroup">
-                <label htmlFor="offeringType">
-                  Type
-                  <select
-                    id="offeringType"
-                    name="offeringType"
-                    value={formData.offeringType}
-                    onChange={handleInputChange}
-                    required
-                  >
-                    <option value="">Select type</option>
-                    <option value="venue">Venue</option>
-                    <option value="talent">Talent</option>
-                    <option value="gear">Gear</option>
-                  </select>
-                </label>
-              </div>
-              <div className="formGroup">
-                <label htmlFor="description">
-                  Description
-                  <textarea
-                    id="description"
-                    name="description"
-                    placeholder="Provide a description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </label>
-              </div>
-              <div className="formGroup">
-                <label htmlFor="location">
-                  Location
-                  <input
-                    type="text"
-                    id="location"
-                    name="location"
-                    placeholder="Enter a location"
-                    value={formData.location}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </label>
-              </div>
+            <h2 className="title text-2xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-400 mb-4">
+              Contribute to the Loobrary
+            </h2>
+            <p className="description text-center text-sm text-gray-400 mb-6">
+              Please fill out all fields to offer your talent, venue, or gear.
+            </p>
+            <form className="form flex flex-col gap-4">
+              <input
+                type="text"
+                name="title"
+                placeholder="Enter a title"
+                value={formData.title}
+                onChange={handleInputChange}
+                required
+                className="inputField"
+              />
+              <select
+                name="offeringType"
+                value={formData.offeringType}
+                onChange={handleInputChange}
+                required
+                className="inputField"
+              >
+                <option value="">Select type</option>
+                <option value="venue">Venue</option>
+                <option value="talent">Talent</option>
+                <option value="gear">Gear</option>
+              </select>
+              <textarea
+                name="description"
+                placeholder="Provide a description"
+                value={formData.description}
+                onChange={handleInputChange}
+                required
+                className="inputField"
+              />
+              <input
+                type="text"
+                name="location"
+                placeholder="Enter a location"
+                value={formData.location}
+                onChange={handleInputChange}
+                required
+                className="inputField"
+              />
 
-              {error && <p className="error">{error}</p>}
-
-              <div className="buttonGroup">
-                <button type="button" onClick={handlePreviousPhase}>
+              {error && <p className="error text-red-400 text-sm">{error}</p>}
+              <div className="buttonGroup flex justify-between">
+                <button
+                  type="button"
+                  onClick={handlePreviousPhase}
+                  className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-500 transition"
+                >
                   Back
                 </button>
-                <button type="button" onClick={handleSubmit} disabled={isSubmitting}>
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="bg-gradient-to-r from-pink-500 to-orange-400 text-white font-bold px-4 py-2 rounded-md hover:from-orange-400 hover:to-pink-500 transition"
+                >
                   {isSubmitting ? 'Submitting...' : 'Submit'}
                 </button>
               </div>
@@ -283,10 +245,17 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
         )}
 
         {currentPhase === 3 && submissionSuccess && (
-          <div className="finalPhase">
-            <h2>Thanks for signing up!</h2>
-            <p>We’ll contact you about your Loobrary card.</p>
-            <button onClick={onExplore}>Explore Loob</button>
+          <div className="finalPhase text-center">
+            <h2 className="text-2xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-400">
+              Thanks for signing up!
+            </h2>
+            <p className="text-sm text-gray-400 mb-4">We’ll contact you about your Loobrary card.</p>
+            <button
+              onClick={onExplore}
+              className="bg-gradient-to-r from-pink-500 to-orange-400 text-white font-bold py-2 px-4 rounded-md hover:from-orange-400 hover:to-pink-500 transition"
+            >
+              Explore Loob
+            </button>
           </div>
         )}
       </div>

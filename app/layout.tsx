@@ -50,7 +50,7 @@ const RootLayout: React.FC = () => {
 
   return (
     <html lang="en">
-      <body className="bg-background-primary text-text-primary-inverse flex flex-col min-h-screen">
+      <body className="bg-background-primary text-text-primary flex flex-col min-h-screen">
         {/* Wrap the entire app in GlobalStateProvider */}
         <GlobalStateProvider>
           {showSplash ? (

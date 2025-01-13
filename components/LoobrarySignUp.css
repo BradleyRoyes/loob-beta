@@ -122,24 +122,6 @@
   resize: none;
 }
 
-/* Buttons */
-.signupScreen button {
-  padding: 12px;
-  background: linear-gradient(45deg, #ff7e79, #ffb48f);
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.3s ease, transform 0.2s ease;
-}
-
-.signupScreen button:hover {
-  background: linear-gradient(45deg, #ffb48f, #ff7e79);
-  transform: translateY(-3px);
-}
-
 /* Final Phase */
 .signupScreen .finalPhase {
   text-align: center;
