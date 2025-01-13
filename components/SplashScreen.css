@@ -250,3 +250,65 @@
 }
 
 
+/* Title Styling */
+.title {
+  font-size: 2.0rem !important; /* Larger for prominence */
+  font-weight: 900 !important; /* Bold for emphasis */
+  text-align: center !important;
+  background: linear-gradient(90deg, #f3f3f3, #ffb48f, #f3f3f3) !important; /* Gradient effect */
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important; /* Makes the gradient apply to text only */
+  letter-spacing: 1.5px !important; /* Subtle letter spacing */
+  line-height: 1.3 !important; /* Balanced line height */
+  margin-bottom: 15px !important; /* Spacing from subtitle */
+  animation: glowText 2s infinite alternate ease-in-out !important; /* Glow animation */
+}
+
+/* Description/Subtitles Styling */
+.description, .superSubtitle {
+  font-size: 1.3rem !important; /* Slightly larger for readability */
+  font-weight: 400 !important; /* Regular weight for balance */
+  text-align: center !important;
+  color: #f3f3f3 !important; /* Light text color */
+  margin: 10px 0 !important; /* Spacing from other elements */
+  line-height: 1.6 !important; /* Comfortable line spacing */
+  font-style: italic !important; /* Adds a touch of elegance */
+  opacity: 0.9 !important; /* Slightly softer look */
+  animation: fadeInText 1.5s ease-in-out !important; /* Smooth fade-in animation */
+}
+
+/* Main Title Styling */
+.mainTitle {
+  font-size: 2.5rem !important; /* Very prominent */
+  font-weight: 900 !important;
+  text-align: center !important;
+  background: linear-gradient(90deg, #f3f3f3, #ff7e79, #ffb48f) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  letter-spacing: 2px !important;
+  line-height: 1.2 !important;
+  margin-bottom: 20px !important;
+  animation: glowText 2s infinite alternate ease-in-out !important;
+}
+
+/* Glow Animation for Title and Main Title */
+@keyframes glowText {
+  from {
+    text-shadow: 0 0 5px rgba(243, 243, 243, 0.5), 0 0 15px rgba(243, 243, 243, 0.7) !important;
+  }
+  to {
+    text-shadow: 0 0 10px rgba(243, 243, 243, 0.7), 0 0 20px rgba(243, 243, 243, 0.9) !important;
+  }
+}
+
+/* Fade-In Animation for Subtitles */
+@keyframes fadeInText {
+  from {
+    opacity: 0 !important;
+    transform: translateY(10px) !important;
+  }
+  to {
+    opacity: 0.9 !important;
+    transform: translateY(0) !important;
+  }
+}

@@ -104,7 +104,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
   };
 
   return (
-    <div className="signupScreen flex flex-col items-center justify-center min-h-screen px-4">
+    <div className="signupScreen">
       {/* Back Button */}
       <button
         type="button"
@@ -118,14 +118,12 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
       <div className="formContainer">
         {currentPhase === 1 && (
           <>
-            <h2 className="title">
-              Get your Loobrary card
-            </h2>
+            <h2 className="title">Get your Loobrary card</h2>
             <p className="description">
-              Join the Loobrary beta! During this phase, we ask everyone to offer something to the
-              Loobrary. This helps build a strong community.
+              While still in alpha, we ask everyone who signs up to offer something to the
+              Loobrary. Prefer not to? Check back in beta!
             </p>
-            <form className="form">
+            <form>
               <input
                 type="text"
                 name="pseudonym"
@@ -133,7 +131,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                 value={formData.pseudonym}
                 onChange={handleInputChange}
                 required
-                className="inputField"
+                className="pseudonymInput"
               />
               <input
                 type="email"
@@ -142,7 +140,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                 value={formData.email}
                 onChange={handleInputChange}
                 required
-                className="inputField"
+                className="pseudonymInput"
               />
               <input
                 type="tel"
@@ -150,7 +148,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                 placeholder="Enter your phone number (optional)"
                 value={formData.phone}
                 onChange={handleInputChange}
-                className="inputField"
+                className="pseudonymInput"
               />
               <input
                 type="password"
@@ -159,14 +157,14 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                 value={formData.password}
                 onChange={handleInputChange}
                 required
-                className="inputField"
+                className="pseudonymInput"
               />
 
               {error && <p className="error">{error}</p>}
               <button
                 type="button"
                 onClick={handleNext}
-                className="base-button"
+                className="actionButton"
               >
                 Next
               </button>
@@ -176,13 +174,11 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
 
         {currentPhase === 2 && (
           <>
-            <h2 className="title">
-              Contribute to the Loobrary
-            </h2>
+            <h2 className="title">Contribute to the Loobrary</h2>
             <p className="description">
-              Please fill out all fields to offer your talent, venue, or gear.
+              Please fill out all fields to succesfully log your entry. Be descriptive, it will help our AI!
             </p>
-            <form className="form">
+            <form>
               <input
                 type="text"
                 name="title"
@@ -190,14 +186,14 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                 value={formData.title}
                 onChange={handleInputChange}
                 required
-                className="inputField"
+                className="pseudonymInput"
               />
               <select
                 name="offeringType"
                 value={formData.offeringType}
                 onChange={handleInputChange}
                 required
-                className="inputField"
+                className="pseudonymInput"
               >
                 <option value="">Select type</option>
                 <option value="venue">Venue</option>
@@ -210,7 +206,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                 value={formData.description}
                 onChange={handleInputChange}
                 required
-                className="inputField"
+                className="pseudonymInput"
               />
               <input
                 type="text"
@@ -219,7 +215,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                 value={formData.location}
                 onChange={handleInputChange}
                 required
-                className="inputField"
+                className="pseudonymInput"
               />
 
               {error && <p className="error">{error}</p>}
@@ -227,7 +223,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                 <button
                   type="button"
                   onClick={handlePreviousPhase}
-                  className="base-button"
+                  className="actionButton secondary"
                 >
                   Back
                 </button>
@@ -235,7 +231,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                   type="button"
                   onClick={handleSubmit}
                   disabled={isSubmitting}
-                  className="base-button"
+                  className="actionButton"
                 >
                   {isSubmitting ? 'Submitting...' : 'Submit'}
                 </button>
@@ -246,15 +242,13 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
 
         {currentPhase === 3 && submissionSuccess && (
           <div className="finalPhase">
-            <h2 className="finalTitle">
-              Thanks for signing up!
-            </h2>
-            <p className="finalDescription">
+            <h2 className="mainTitle">Thanks for signing up!</h2>
+            <p className="superSubtitle">
               We’ll contact you about your Loobrary card.
             </p>
             <button
               onClick={onExplore}
-              className="base-button"
+              className="actionButton"
             >
               Explore Loob
             </button>

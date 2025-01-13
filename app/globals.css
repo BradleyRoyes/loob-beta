@@ -238,3 +238,9 @@ body {
   --text-primary: #ffffff;
 }
 
+/* Tailwind Override for back button arrow on sign up screen */
+button.topBackButton {
+  @apply text-4xl !important; /* Tailwind class for larger text (5.6rem equivalent) */
+  @apply text-white !important; /* Text color */
+  @apply no-underline !important; /* Reset any links if applied */
+}

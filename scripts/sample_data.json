@@ -32,5 +32,279 @@
   {
     "url": "https://www.aliusresearch.org/viscereality.html",
     "title": "viscereality experiment",
-    "content": "The Viscereality Project innovatively combines breathwork and virtual reality to induce altered states of consciousness. At its core is a bio-responsive VR application that dynamically adapts to users' breathing patterns. This approach aims to couple interoception (internal bodily awareness) with exteroception (perception of the external world) by synchronizing immersive virtual environments with breathing techniques such as circular breathing and hyperventilation. By blurring the boundaries between internal physiological states and external virtual contexts, the project seeks to facilitate a dissolution of the sense of self - a key characteristic of altered states. This novel method explores how the interplay of bodily sensations and responsive digital environments can influence consciousness, potentially offering new insights into subjective experiences and opening avenues for therapeutic applications in mental health." }
+    "content": "The Viscereality Project innovatively combines breathwork and virtual reality to induce altered states of consciousness. At its core is a bio-responsive VR application that dynamically adapts to users' breathing patterns. This approach aims to couple interoception (internal bodily awareness) with exteroception (perception of the external world) by synchronizing immersive virtual environments with breathing techniques such as circular breathing and hyperventilation. By blurring the boundaries between internal physiological states and external virtual contexts, the project seeks to facilitate a dissolution of the sense of self - a key characteristic of altered states. This novel method explores how the interplay of bodily sensations and responsive digital environments can influence consciousness, potentially offering new insights into subjective experiences and opening avenues for therapeutic applications in mental health."
+  },
+
+  {
+    "_id": "fccf5720-2b4f-4045-b1f5-7773b9cd72d1",
+    "document_id": "ina.merkel@example.com-1736790001000-0",
+    "$vector": [0.0042, -0.0031, 0.0077, -0.0025],
+    "title": "Berliner ZenHaus Workshop Space",
+    "offeringType": "venue",
+    "description": "A cozy loft space in Kreuzberg, perfect for deep-dive workshops, featuring a mini tea bar and meditation area.",
+    "location": "Berlin",
+    "pseudonym": "Inamerk",
+    "email": "ina.merkel@example.com",
+    "phone": "+49 152 33449822",
+    "dataType": "userEntry",
+    "chunk": "Berliner ZenHaus Workshop Space in Kreuzberg, cozy loft for deep introspective sessions",
+    "createdAt": {
+      "$date": 1736790001000
+    }
+  },
+  {
+    "_id": "b98c658d-a24e-4357-a0c9-2ecac7678f31",
+    "document_id": "adam.sonic@example.com-1736790002000-1",
+    "$vector": [-0.0015, 0.0082, -0.0035, 0.0047],
+    "title": "Surround Sound Immersion Kit",
+    "offeringType": "gear",
+    "description": "Portable 360-degree speaker system designed for immersive audio experiences. Ideal for pop-up events or sonic ceremonies.",
+    "location": "Berlin",
+    "pseudonym": "SonicAdam",
+    "email": "adam.sonic@example.com",
+    "phone": "+49 176 78112233",
+    "dataType": "userEntry",
+    "chunk": "Surround Sound Immersion Kit 360-degree speaker system for immersive audio in Berlin",
+    "createdAt": {
+      "$date": 1736790002000
+    }
+  },
+  {
+    "_id": "72910c9a-2225-4385-9dad-a8a7288a9c6c",
+    "document_id": "marika.visuals@example.com-1736790003000-2",
+    "$vector": [0.0062, 0.0013, -0.0077, 0.0054],
+    "title": "Live Visuals Projectionist",
+    "offeringType": "talent",
+    "description": "Marika specializes in real-time visual mixing and projection mapping, adding surreal layers to VR/AR installations.",
+    "location": "Berlin",
+    "pseudonym": "MarikaVJ",
+    "email": "marika.visuals@example.com",
+    "phone": "+49 157 44223311",
+    "dataType": "userEntry",
+    "chunk": "Live Visuals Projectionist real-time mixing projection mapping for immersive events in Berlin",
+    "createdAt": {
+      "$date": 1736790003000
+    }
+  },
+  {
+    "_id": "32e9166b-7b6a-4b65-9f75-1be50daf36e8",
+    "document_id": "doc.martin@example.com-1736790004000-3",
+    "$vector": [0.0033, -0.0028, 0.0091, -0.0014],
+    "title": "VR Treadmill Experience Set",
+    "offeringType": "gear",
+    "description": "A cutting-edge omnidirectional treadmill and VR headset bundle for full-body interactive experiences.",
+    "location": "Berlin",
+    "pseudonym": "DocMartinXR",
+    "email": "doc.martin@example.com",
+    "phone": "+49 176 98989898",
+    "dataType": "userEntry",
+    "chunk": "VR Treadmill Experience Set with omnidirectional treadmill for immersive Berlin events",
+    "createdAt": {
+      "$date": 1736790004000
+    }
+  },
+  {
+    "_id": "5be1eefd-7f68-4cae-9bcb-3ec0e78ba5f5",
+    "document_id": "giulia.space@example.com-1736790005000-4",
+    "$vector": [-0.0021, 0.0010, -0.0043, 0.0051],
+    "title": "RainbowTherm Community Sauna",
+    "offeringType": "venue",
+    "description": "An intimate sauna and chill space for group detox sessions, combined with a small performance stage for experimental sound journeys.",
+    "location": "Berlin",
+    "pseudonym": "GSpace",
+    "email": "giulia.space@example.com",
+    "phone": "+49 170 22334455",
+    "dataType": "userEntry",
+    "chunk": "RainbowTherm Community Sauna intimate gathering space for workshops and sound experiences in Berlin",
+    "createdAt": {
+      "$date": 1736790005000
+    }
+  },
+  {
+    "_id": "cf876c34-2f90-4ea1-8531-8c0f4dad4ba8",
+    "document_id": "lucy.lights@example.com-1736790006000-5",
+    "$vector": [0.0073, -0.0055, 0.0022, -0.0032],
+    "title": "Lumina Aurora LED Kit",
+    "offeringType": "gear",
+    "description": "Compact LED pixel-strips for vibrant light art installations. Syncs with music or biometric sensors for reactive effects.",
+    "location": "Berlin",
+    "pseudonym": "LucyLumen",
+    "email": "lucy.lights@example.com",
+    "phone": "+49 160 88997766",
+    "dataType": "userEntry",
+    "chunk": "Lumina Aurora LED Kit compact LED pixel-strips sync with music, perfect for Berlin events",
+    "createdAt": {
+      "$date": 1736790006000
+    }
+  },
+  {
+    "_id": "eb1e889c-2bfe-4903-9108-bf9f7fa9b7c2",
+    "document_id": "dean.scape@example.com-1736790007000-6",
+    "$vector": [-0.0034, 0.0027, -0.0092, 0.0011],
+    "title": "Dean Scape Sound Shaman",
+    "offeringType": "talent",
+    "description": "Experienced sound facilitator using a fusion of shamanic instruments and electronic loops to guide group journeys.",
+    "location": "Berlin",
+    "pseudonym": "DeanScape",
+    "email": "dean.scape@example.com",
+    "phone": "+49 172 11122334",
+    "dataType": "userEntry",
+    "chunk": "Dean Scape Sound Shaman merges shamanic instruments and electronic loops for immersive group sound journeys",
+    "createdAt": {
+      "$date": 1736790007000
+    }
+  },
+  {
+    "_id": "af94ead9-eda7-4da8-a2f9-1470bcbac4d6",
+    "document_id": "cloud9venues@example.com-1736790008000-7",
+    "$vector": [0.0022, 0.0088, -0.0011, -0.0042],
+    "title": "Cloud Nine Rooftop Pavilion",
+    "offeringType": "venue",
+    "description": "High-rise rooftop space in Mitte equipped with VR scanning booths, perfect for futuristic immersive workshop series.",
+    "location": "Berlin",
+    "pseudonym": "C9Host",
+    "email": "cloud9venues@example.com",
+    "phone": "+49 152 66667777",
+    "dataType": "userEntry",
+    "chunk": "Cloud Nine Rooftop Pavilion VR scanning booths and panoramic Berlin views for creative workshops",
+    "createdAt": {
+      "$date": 1736790008000
+    }
+  },
+  {
+    "_id": "aef73b2e-4ad2-4b28-808a-617d096c2bf9",
+    "document_id": "moritz.hands@example.com-1736790009000-8",
+    "$vector": [0.0011, 0.0044, -0.0026, 0.0065],
+    "title": "Interactive Hologram Stage",
+    "offeringType": "gear",
+    "description": "Holographic stage equipment that creates floating 3D illusions for immersive performances and live art demos.",
+    "location": "Berlin",
+    "pseudonym": "MoriHands",
+    "email": "moritz.hands@example.com",
+    "phone": "+49 178 55221144",
+    "dataType": "userEntry",
+    "chunk": "Interactive Hologram Stage floating 3D illusions for immersive performances in Berlin",
+    "createdAt": {
+      "$date": 1736790009000
+    }
+  },
+  {
+    "_id": "5ba27ef6-2690-4c3b-b689-5e2a04b4851b",
+    "document_id": "tamara.faces@example.com-1736790010000-9",
+    "$vector": [-0.0023, -0.0055, 0.0069, 0.0017],
+    "title": "Mask & Movement Workshop Facilitator",
+    "offeringType": "talent",
+    "description": "Tamara combines mask-making and expressive dance to help participants unlock new creative pathways in group settings.",
+    "location": "Berlin",
+    "pseudonym": "TamaFaces",
+    "email": "tamara.faces@example.com",
+    "phone": "+49 171 11223344",
+    "dataType": "userEntry",
+    "chunk": "Mask & Movement Workshop Facilitator blending mask-making and dance for transformative experiences in Berlin",
+    "createdAt": {
+      "$date": 1736790010000
+    }
+  },
+  {
+    "_id": "fe5b13ab-d289-4374-8ee2-b2833b3b355c",
+    "document_id": "kai.floats@example.com-1736790011000-10",
+    "$vector": [0.0099, 0.0021, -0.0022, 0.0033],
+    "title": "Floating Dome Pavilion",
+    "offeringType": "venue",
+    "description": "Dome structure near the Spree offering water projection surfaces and floating platforms for immersive aquatic-themed gatherings.",
+    "location": "Berlin",
+    "pseudonym": "KaiFloat",
+    "email": "kai.floats@example.com",
+    "phone": "+49 160 12349999",
+    "dataType": "userEntry",
+    "chunk": "Floating Dome Pavilion near Spree with water projections for immersive aquatic-themed experiences in Berlin",
+    "createdAt": {
+      "$date": 1736790011000
+    }
+  },
+  {
+    "_id": "06a9cd7d-947f-4638-a7a9-6da981327aba",
+    "document_id": "valerie.smoke@example.com-1736790012000-11",
+    "$vector": [-0.0055, 0.0008, 0.0061, -0.0034],
+    "title": "Aerial Performance Coach",
+    "offeringType": "talent",
+    "description": "Valerie specializes in integrating aerial arts with interactive tech, guiding performers to synchronously move with projected visuals.",
+    "location": "Berlin",
+    "pseudonym": "ValeAir",
+    "email": "valerie.smoke@example.com",
+    "phone": "+49 174 99887766",
+    "dataType": "userEntry",
+    "chunk": "Aerial Performance Coach merges aerial arts with interactive visuals for immersive shows in Berlin",
+    "createdAt": {
+      "$date": 1736790012000
+    }
+  },
+  {
+    "_id": "10930918-19c0-4a20-a254-1de59a5131dc",
+    "document_id": "sam.engineer@example.com-1736790013000-12",
+    "$vector": [0.0045, 0.0091, -0.0042, -0.0016],
+    "title": "Spatial Audio Engineer",
+    "offeringType": "talent",
+    "description": "Sam designs 3D soundscapes for multi-room experiences, integrating ultrasonic sensors for real-time audio tracking.",
+    "location": "Berlin",
+    "pseudonym": "SpatialSam",
+    "email": "sam.engineer@example.com",
+    "phone": "+49 176 44335566",
+    "dataType": "userEntry",
+    "chunk": "Spatial Audio Engineer creates 3D soundscapes with ultrasonic sensors for interactive events in Berlin",
+    "createdAt": {
+      "$date": 1736790013000
+    }
+  },
+  {
+    "_id": "9ac04197-ae5a-4383-9d24-317d1171c47d",
+    "document_id": "tek.lev@example.com-1736790014000-13",
+    "$vector": [-0.0007, 0.0033, 0.0068, -0.0019],
+    "title": "Levitation Platform Lab Kit",
+    "offeringType": "gear",
+    "description": "Experimental kit featuring ultrasonic levitation modules to suspend small objects or mists for surreal show elements.",
+    "location": "Berlin",
+    "pseudonym": "TekLev",
+    "email": "tek.lev@example.com",
+    "phone": "+49 158 66221144",
+    "dataType": "userEntry",
+    "chunk": "Levitation Platform Lab Kit using ultrasonic modules for futuristic performance illusions in Berlin",
+    "createdAt": {
+      "$date": 1736790014000
+    }
+  },
+  {
+    "_id": "d1a3d6f4-e2a5-4223-b645-b9ea2103e5ed",
+    "document_id": "saul.community@example.com-1736790015000-14",
+    "$vector": [0.0081, -0.0062, 0.0015, 0.0029],
+    "title": "Urban Garden Workshop Space",
+    "offeringType": "venue",
+    "description": "Community garden in Neukölln with an indoor greenhouse, perfect for nature-infused immersive workshops and pop-up gatherings.",
+    "location": "Berlin",
+    "pseudonym": "SaulGarden",
+    "email": "saul.community@example.com",
+    "phone": "+49 175 66778899",
+    "dataType": "userEntry",
+    "chunk": "Urban Garden Workshop Space in Neukölln with indoor greenhouse for nature-infused immersive sessions",
+    "createdAt": {
+      "$date": 1736790015000
+    }
+  },
+  {
+    "_id": "5d99ebef-1374-497e-8760-f2209ba9909b",
+    "document_id": "karo.coach@example.com-1736790016000-15",
+    "$vector": [0.0054, 0.0027, 0.0098, -0.0022],
+    "title": "Mind-Body Sync Facilitator",
+    "offeringType": "talent",
+    "description": "Karo guides group sessions focusing on syncopated body movement and breathwork to enhance presence in tech-heavy environments.",
+    "location": "Berlin",
+    "pseudonym": "KaroCoach",
+    "email": "karo.coach@example.com",
+    "phone": "+49 162 55443322",
+    "dataType": "userEntry",
+    "chunk": "Mind-Body Sync Facilitator breathwork and body movement to stay grounded in immersive tech events Berlin",
+    "createdAt": {
+      "$date": 1736790016000
+    }
+  }
 ]
