@@ -104,28 +104,28 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
   };
 
   return (
-    <div className="signupScreen flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white px-4">
+    <div className="signupScreen flex flex-col items-center justify-center min-h-screen px-4">
+      {/* Back Button */}
       <button
         type="button"
-        className={`topBackButton absolute top-4 left-4 text-xl font-bold transition ${
-          currentPhase === 3 ? 'text-2xl' : ''
-        }`}
+        className="topBackButton"
         onClick={onBack}
       >
         ←
       </button>
 
-      <div className="formContainer w-full max-w-md bg-gray-800 rounded-lg shadow-md p-6">
+      {/* Form Container */}
+      <div className="formContainer">
         {currentPhase === 1 && (
           <>
-            <h2 className="title text-2xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-400 mb-4">
+            <h2 className="title">
               Get your Loobrary card
             </h2>
-            <p className="description text-center text-sm text-gray-400 mb-6">
+            <p className="description">
               Join the Loobrary beta! During this phase, we ask everyone to offer something to the
               Loobrary. This helps build a strong community.
             </p>
-            <form className="form flex flex-col gap-4">
+            <form className="form">
               <input
                 type="text"
                 name="pseudonym"
@@ -162,11 +162,11 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                 className="inputField"
               />
 
-              {error && <p className="error text-red-400 text-sm">{error}</p>}
+              {error && <p className="error">{error}</p>}
               <button
                 type="button"
                 onClick={handleNext}
-                className="w-full bg-gradient-to-r from-pink-500 to-orange-400 text-white font-bold py-3 rounded-md hover:from-orange-400 hover:to-pink-500 transition"
+                className="base-button"
               >
                 Next
               </button>
@@ -176,13 +176,13 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
 
         {currentPhase === 2 && (
           <>
-            <h2 className="title text-2xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-400 mb-4">
+            <h2 className="title">
               Contribute to the Loobrary
             </h2>
-            <p className="description text-center text-sm text-gray-400 mb-6">
+            <p className="description">
               Please fill out all fields to offer your talent, venue, or gear.
             </p>
-            <form className="form flex flex-col gap-4">
+            <form className="form">
               <input
                 type="text"
                 name="title"
@@ -222,12 +222,12 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                 className="inputField"
               />
 
-              {error && <p className="error text-red-400 text-sm">{error}</p>}
-              <div className="buttonGroup flex justify-between">
+              {error && <p className="error">{error}</p>}
+              <div className="buttonGroup">
                 <button
                   type="button"
                   onClick={handlePreviousPhase}
-                  className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-500 transition"
+                  className="base-button"
                 >
                   Back
                 </button>
@@ -235,7 +235,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
                   type="button"
                   onClick={handleSubmit}
                   disabled={isSubmitting}
-                  className="bg-gradient-to-r from-pink-500 to-orange-400 text-white font-bold px-4 py-2 rounded-md hover:from-orange-400 hover:to-pink-500 transition"
+                  className="base-button"
                 >
                   {isSubmitting ? 'Submitting...' : 'Submit'}
                 </button>
@@ -245,14 +245,16 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
         )}
 
         {currentPhase === 3 && submissionSuccess && (
-          <div className="finalPhase text-center">
-            <h2 className="text-2xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-400">
+          <div className="finalPhase">
+            <h2 className="finalTitle">
               Thanks for signing up!
             </h2>
-            <p className="text-sm text-gray-400 mb-4">We’ll contact you about your Loobrary card.</p>
+            <p className="finalDescription">
+              We’ll contact you about your Loobrary card.
+            </p>
             <button
               onClick={onExplore}
-              className="bg-gradient-to-r from-pink-500 to-orange-400 text-white font-bold py-2 px-4 rounded-md hover:from-orange-400 hover:to-pink-500 transition"
+              className="base-button"
             >
               Explore Loob
             </button>

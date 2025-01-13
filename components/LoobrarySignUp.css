@@ -5,12 +5,13 @@
   align-items: center;
   justify-content: center;
   padding: 30px;
-  background: linear-gradient(135deg, #1a1a1a, #2a2a2a); /* Dark gradient background */
+  background: transparent !important; /* Transparent background */
   min-height: 100vh;
   font-family: 'Nunito', sans-serif;
-  color: #fff;
+  color: #ffffff;
   position: relative;
-  box-sizing: border-box; /* Ensure padding and borders are included in element width */
+  box-sizing: border-box;
+  z-index: 10; /* Ensure it floats above the background */
 }
 
 /* Back Button */
@@ -19,37 +20,30 @@
   top: 20px;
   left: 20px;
   background: none;
-  color: #fff;
+  color: #ffffff !important; /* Ensure visibility */
   border: none;
   font-size: 1.8rem;
   font-weight: bold;
   cursor: pointer;
   transition: transform 0.2s ease;
-  z-index: 10; /* Ensure the button stays above other elements */
-}
-
-.signupScreen .topBackButton.bigBackButton {
-  font-size: 2.5rem;
-}
-
-.signupScreen .topBackButton:focus {
-  outline: none;
+  z-index: 15; /* Ensure the button stays above other elements */
 }
 
 .signupScreen .topBackButton:hover {
-  transform: scale(1.05); /* Slight scale effect for hover */
+  transform: scale(1.05); /* Hover effect */
 }
 
 /* Form Container */
 .signupScreen .formContainer {
   width: 90%;
   max-width: 480px;
-  background: #222; /* Dark form background */
+  background: rgba(0, 0, 0, 0.8) !important; /* Transparent black for floating effect */
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); /* Subtle shadow for depth */
   padding: 20px;
-  margin: 10px auto; /* Add vertical spacing on smaller screens */
+  margin: 10px auto;
   box-sizing: border-box;
+  z-index: 11; /* Above background */
 }
 
 /* Title and Description */
@@ -57,7 +51,7 @@
   font-size: 2rem;
   font-weight: bold;
   text-align: center;
-  margin-bottom: 20px; /* Increased spacing */
+  margin-bottom: 20px;
   color: #ffb48f;
   background: linear-gradient(45deg, #ff7e79, #ffb48f);
   -webkit-background-clip: text;
@@ -68,23 +62,8 @@
 .signupScreen .description {
   text-align: center;
   font-size: 1rem;
-  color: #bbb;
+  color: #f3f3f3;
   margin-bottom: 25px;
-}
-
-/* Error Message */
-.signupScreen .error {
-  color: #ff7e79;
-  font-size: 1rem;
-  margin-bottom: 20px; /* Extra spacing for clarity */
-  text-align: center;
-}
-
-/* Form Layout */
-.signupScreen .form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
 }
 
 /* Input Fields */
@@ -94,101 +73,75 @@
   width: 100%;
   padding: 12px;
   font-size: 1rem;
-  border: 1px solid #444;
+  border: 1px solid #ff7e79 !important; /* Matches your theme */
   border-radius: 5px;
-  background: #333;
-  transition: all 0.3s ease;
+  background: #1a1a1a !important; /* Dark theme */
+  color: #ffffff !important;
   box-sizing: border-box;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Input Focus Styles */
 .signupScreen input:focus,
 .signupScreen textarea:focus,
 .signupScreen select:focus {
-  border-color: #ff7e79;
-  box-shadow: 0 0 5px rgba(255, 120, 100, 0.5); /* Glow effect */
+  border-color: #ffb48f !important; /* Matches your gradient */
+  box-shadow: 0 0 8px rgba(255, 120, 100, 0.5) !important; /* Glow effect */
   outline: none;
 }
 
-/* Placeholder Text */
 .signupScreen input::placeholder,
 .signupScreen textarea::placeholder {
-  color: #888;
+  color: #aaa !important; /* Subtle placeholder text */
 }
 
-/* Textarea */
-.signupScreen textarea {
-  min-height: 100px;
-  resize: none;
-}
-
-/* Final Phase */
-.signupScreen .finalPhase {
-  text-align: center;
+/* Button Styles */
+.signupScreen button {
+  width: 100%;
+  padding: 12px;
   font-size: 1rem;
-  color: #fff;
-  padding: 20px;
-}
-
-.signupScreen .finalPhase h2 {
-  font-size: 2rem;
-  font-weight: bold;
-  margin-bottom: 10px;
-  color: #ffb48f;
+  font-weight: 600;
+  border-radius: 5px;
+  cursor: pointer;
+  border: none;
   background: linear-gradient(45deg, #ff7e79, #ffb48f);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #ffffff;
+  transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 }
 
-.signupScreen .finalPhase p {
-  margin: 10px 0;
+.signupScreen button:hover {
+  background: linear-gradient(45deg, #ffb48f, #ff7e79);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(255, 120, 120, 0.3);
+}
+
+/* Error Message */
+.signupScreen .error {
+  color: #ff7e79;
   font-size: 1rem;
-  color: #bbb;
+  margin-bottom: 20px;
+  text-align: center;
 }
 
-/* Button Group */
-.signupScreen .buttonGroup {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
-}
-
-/* Responsive Design */
+/* Responsive Adjustments */
 @media (max-width: 480px) {
   .signupScreen .formContainer {
-    padding: 20px;
-    margin: 15px auto; /* Extra vertical spacing on mobile */
+    padding: 15px;
+    margin: 15px auto;
   }
 
   .signupScreen .title {
-    font-size: 1.8rem; /* Slightly smaller for mobile */
-    margin-bottom: 15px; /* Adjust spacing */
-  }
-
-  .signupScreen .description {
-    font-size: 0.95rem;
-    margin-bottom: 20px;
+    font-size: 1.8rem;
   }
 
   .signupScreen input,
   .signupScreen textarea,
   .signupScreen select {
-    padding: 12px;
     font-size: 0.9rem;
+    padding: 10px;
   }
 
   .signupScreen button {
     font-size: 0.9rem;
-    padding: 12px;
-  }
-
-  .signupScreen .buttonGroup {
-    flex-direction: column; /* Stack buttons vertically */
-    gap: 15px; /* Adequate spacing between buttons */
-  }
-
-  .signupScreen .finalPhase h2 {
-    font-size: 1.6rem; /* Adjust heading size for mobile */
+    padding: 10px;
   }
 }
