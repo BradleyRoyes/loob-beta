@@ -1,44 +1,50 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef, useState } from 'react';
-import Bubble from './Bubble';
-import { useChat } from 'ai/react';
-import PromptSuggestionRow from './PromptSuggestions/PromptSuggestionsRow';
-import AudioRecorder from './AudioRecorder';
-import Carousel from './Carousel';
+import React, { useEffect, useRef, useState, FormEvent } from "react";
+import Bubble from "./Bubble";
+import { useChat } from "ai/react";
+import PromptSuggestionRow from "./PromptSuggestions/PromptSuggestionsRow";
+import AudioRecorder from "./AudioRecorder";
+import Carousel from "./Carousel";
 
-export default function ChatModal({ onConfigureOpen, showModal }) {
+interface ChatModalProps {
+  onConfigureOpen?: () => void;
+  showModal?: () => void;
+}
+
+export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps) {
   const { append, messages, input, handleInputChange, handleSubmit } = useChat();
-  const messagesEndRef = useRef(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showIntroMessage, setShowIntroMessage] = useState(true);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = (e) => {
+  const handleSend = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    handleSubmit(e);
-    handleInputChange({ target: { value: '' } });
+    handleSubmit(e); // Ensure `handleSubmit` expects the correct type
+    handleInputChange({ target: { value: "" } } as React.ChangeEvent<HTMLInputElement>);
+    setShowIntroMessage(false);
+  };
+  
+
+  const handlePrompt = (text: string) => {
+    append({ id: crypto.randomUUID(), content: text, role: "user" });
     setShowIntroMessage(false);
   };
 
-  const handlePrompt = (text) => {
-    append({ id: crypto.randomUUID(), content: text, role: 'user' });
-    setShowIntroMessage(false);
-  };
-
-  const handleAudioUpload = async (audioBlob) => {
+  const handleAudioUpload = async (audioBlob: Blob) => {
     const formData = new FormData();
-    formData.append('audio', audioBlob, 'audio.webm');
+    formData.append("audio", audioBlob, "audio.webm");
 
     try {
-      const response = await fetch('/api/transcribe', {
-        method: 'POST',
+      const response = await fetch("/api/transcribe", {
+        method: "POST",
         body: formData,
       });
 
@@ -47,11 +53,11 @@ export default function ChatModal({ onConfigureOpen, showModal }) {
       }
 
       const data = await response.json();
-      console.log('Transcription:', data.transcription);
+      console.log("Transcription:", data.transcription);
 
       handlePrompt(data.transcription);
     } catch (error) {
-      console.error('Error uploading audio:', error);
+      console.error("Error uploading audio:", error);
     }
   };
 
@@ -89,7 +95,7 @@ export default function ChatModal({ onConfigureOpen, showModal }) {
             <Bubble
               key="intro-message"
               content={{
-                role: 'system',
+                role: "system",
                 content: "Hi there! I'm Loob. Ask me about planning your event—gear, venues, talent, and more!",
               }}
             />
@@ -107,7 +113,7 @@ export default function ChatModal({ onConfigureOpen, showModal }) {
       <div className="audio-recorder-container mb-4 flex justify-center">
         <AudioRecorder
           onRecordingComplete={handleAudioUpload}
-          startRecording={() => console.log('Recording started')}
+          startRecording={() => console.log("Recording started")}
         />
       </div>
 
@@ -124,12 +130,6 @@ export default function ChatModal({ onConfigureOpen, showModal }) {
             Send
           </button>
         </form>
-        <button
-          onClick={showModal}
-          className="base-button secondary"
-        >
-          End Chat
-        </button>
       </div>
     </section>
   );

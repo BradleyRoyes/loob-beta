@@ -111,23 +111,30 @@ body {
   color: #777;
   cursor: not-allowed;
 }
-
-/* Chat Bubbles */
+/* Base Bubble Style */
 .talk-bubble {
   display: inline-block;
   position: relative;
   color: var(--text-primary, #ffffff);
   background: var(--background-bubble-primary-gradient, #d66d75);
   border-radius: 10px;
-  border-bottom-left-radius: 0;
   padding: 10px;
   word-wrap: break-word;
 }
 
+/* System Bubble (default) */
+.talk-bubble:not(.user) {
+  border-bottom-left-radius: 0; /* Tail on the left for system messages */
+  float: left;
+}
+
+/* User Bubble (isolated styling for right side) */
 .talk-bubble.user {
   background: var(--background-bubble-user-gradient, pink);
-  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 10px; /* Reset left radius */
+  border-bottom-right-radius: 0; /* Tail on the right for user messages */
   color: var(--text-primary, #ffffff);
+  float: right; /* Align user bubbles to the right */
 }
 
 /* Dot-Flashing Animation */
