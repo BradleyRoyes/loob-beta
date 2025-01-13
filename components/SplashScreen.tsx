@@ -10,23 +10,19 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { setUserId, setSessionId, userId } = useGlobalState(); // Access global state
   const [phase, setPhase] = useState<'introPhase' | 'loginPhase' | 'signupPhase'>('introPhase');
   const [username, setUsername] = useState<string>(userId || ''); // Initialize with userId if available
-
-  // NEW: Password state
-  const [password, setPassword] = useState<string>('');
-
-  // NEW: Track login errors
-  const [loginError, setLoginError] = useState<string>('');
+  const [password, setPassword] = useState<string>(''); // Track password state
+  const [loginError, setLoginError] = useState<string>(''); // Track login errors
 
   useEffect(() => {
+    // Auto-transition to login phase after intro
     if (phase === 'introPhase') {
-      const timer = setTimeout(() => setPhase('loginPhase'), 2000); // Auto-transition from intro to login
+      const timer = setTimeout(() => setPhase('loginPhase'), 2000);
       return () => clearTimeout(timer);
     }
   }, [phase]);
 
-  // NEW: Updated handleLogin to call /api/auth/login
   const handleLogin = async () => {
-    setLoginError(''); // Reset error each time user tries login
+    setLoginError(''); // Reset error
 
     if (!username.trim() || !password.trim()) {
       setLoginError('Please enter both a pseudonym and a password.');
@@ -46,17 +42,10 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         return;
       }
 
-      // If successful, parse user data from server
       const { pseudonym } = await response.json();
-
-      // Save pseudonym globally
       setUserId(pseudonym);
-
-      // Generate and save a session ID, etc. (not from the DB, just local for now)
       setSessionId(generateSessionId());
-
-      // Close the splash screen
-      onClose();
+      onClose(); // Close splash screen
     } catch (error) {
       console.error('Error logging in:', error);
       setLoginError('An unexpected error occurred.');
@@ -65,18 +54,19 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
   const handleStayAnonymous = () => {
     const randomId = `anon-${Math.random().toString(36).substr(2, 9)}`;
-    setUserId(randomId); // Save anonymous ID in global state
+    setUserId(randomId);
     setSessionId(generateSessionId());
-    onClose(); // Notify parent layout to close the splash screen
+    onClose(); // Notify parent to close the splash screen
   };
 
   const handleSignUpComplete = () => {
-    onClose(); // Notify parent layout to close the splash screen after sign-up
+    onClose(); // Close splash screen after sign-up
   };
 
   const generateSessionId = () => `session-${Math.random().toString(36).substr(2, 12)}`;
 
   return (
+    // Ensure the splash screen renders immediately with the intro phase
     <AnimatePresence>
       <motion.div
         className="splashScreen"
@@ -85,15 +75,16 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         exit={{ opacity: 0 }}
         transition={{ duration: 1 }}
       >
+        {/* Background grid */}
         <div className="gridBackground"></div>
 
         {/* Intro Phase */}
         {phase === 'introPhase' && (
           <motion.div
             className="content intro"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 1 }} // Render immediately
+            animate={{ opacity: 1 }} // Keep fully visible
+            exit={{ opacity: 0 }} // Fade out when moving to login phase
             transition={{ duration: 1 }}
           >
             <h1 className="logoText">Loob</h1>
@@ -110,7 +101,7 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             transition={{ duration: 1 }}
           >
             <h1 className="mainTitle">Loob</h1>
-            <h2 className="superSubtitle">Berlin&apos;s Post-digital Lending library</h2>
+            <h2 className="superSubtitle">Berlin&apos;s Post-digital Lending Library</h2>
             <div className="inputContainer">
               <input
                 type="text"
@@ -126,10 +117,7 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="pseudonymInput"
               />
-
-              {/* Display login error if any */}
               {loginError && <p className="error">{loginError}</p>}
-
               <div className="buttonGroup">
                 <button className="actionButton" onClick={handleLogin}>
                   Log In
@@ -158,8 +146,8 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             transition={{ duration: 1 }}
           >
             <LoobrarySignUp
-              onBack={() => setPhase('loginPhase')} // Navigate back to login phase
-              onExplore={handleSignUpComplete} // Close splash screen after sign-up
+              onBack={() => setPhase('loginPhase')}
+              onExplore={handleSignUpComplete}
             />
           </motion.div>
         )}

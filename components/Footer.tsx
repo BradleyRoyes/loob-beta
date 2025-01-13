@@ -3,12 +3,12 @@ import React from "react";
 const Footer = ({ className = "" }) => {
   return (
     <footer
-      className={`footer-container bg-gray-800 text-gray-400 flex justify-between items-center px-4 py-2 text-sm ${className}`}
+      className={`footer-container bg-gray-800 text-gray-400 flex flex-wrap justify-between items-center px-4 py-2 text-sm w-full ${className}`}
       style={{
         position: "sticky",
         bottom: 0,
         zIndex: 10,
-        boxShadow: "0 -2px 5px rgba(0, 0, 0, 0.2)", // Adds a shadow for better separation
+        boxShadow: "0 -2px 5px rgba(0, 0, 0, 0.2)", // Shadow for separation
       }}
     >
       {/* Left Section: Link to Labs */}
@@ -23,7 +23,7 @@ const Footer = ({ className = "" }) => {
         <span>Loob Labs</span>
       </a>
 
-      {/* Center Section: Separator */}
+      {/* Center Section: Separator (hidden on small screens) */}
       <span className="hidden md:inline">|</span>
 
       {/* Right Section: Powered By */}

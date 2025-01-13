@@ -1,4 +1,6 @@
-/* General SplashScreen Layout */
+/* SPLASH SCREEN CSS */
+
+/* General Layout */
 .splashScreen {
   display: flex;
   justify-content: center;
@@ -6,28 +8,29 @@
   position: fixed;
   inset: 0;
   background-color: black;
-  color: #f3f3f3; /* Off-white for all text */
-  font-family: 'Inter', sans-serif; /* Modern, professional font */
+  color: #f3f3f3;
+  font-family: 'Inter', sans-serif; /* Modern, clean font */
   overflow: hidden; /* Prevent scrollbars */
   z-index: 1000; /* Ensure it stays on top */
 }
 
-/* Content */
+/* Content Styling */
 .splashScreen .content {
   text-align: center;
   padding: 20px;
   max-width: 500px;
   width: 90%;
+  animation: fadeIn 1s ease-in-out; /* Smooth fade-in effect */
 }
 
-/* Intro Phase Logo */
+/* Logo Text with Gradient and Animation */
 .splashScreen .logoText {
-  font-size: 4rem; /* Huge size for emphasis */
+  font-size: 4rem; /* Large size for emphasis */
   font-weight: 900;
   background: linear-gradient(90deg, #f3f3f3, #ffb48f, #f3f3f3);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: textGlow 2s infinite alternate ease-in-out;
+  animation: textGlow 2s infinite alternate ease-in-out; /* Subtle glowing effect */
   letter-spacing: 2px;
   line-height: 1.2;
 }
@@ -41,9 +44,9 @@
   }
 }
 
-/* Login Phase Title */
+/* Secondary Title (Main Title) */
 .splashScreen .mainTitle {
-  font-size: 3.5rem; /* Slightly smaller for better responsiveness */
+  font-size: 3rem; /* Adjust for better responsiveness */
   font-weight: 800;
   background: linear-gradient(90deg, #f3f3f3, #ffb48f, #f3f3f3);
   -webkit-background-clip: text;
@@ -53,10 +56,11 @@
   line-height: 1.2;
 }
 
+/* Subtitle Styling */
 .splashScreen .superSubtitle {
-  font-size: 1.5rem; /* Larger for emphasis */
+  font-size: 1.5rem; /* Slightly larger for emphasis */
   color: #ccc;
-  margin-top: 5px;
+  margin-top: 10px;
   font-style: italic;
 }
 
@@ -91,7 +95,7 @@
   margin-bottom: 15px;
 }
 
-/* Primary Button */
+/* Primary Button Styling */
 .splashScreen .actionButton {
   padding: 12px;
   font-size: 1rem;
@@ -101,13 +105,17 @@
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: transform 0.2s ease, background 0.3s ease;
+  transition: transform 0.2s ease, background 0.3s ease, box-shadow 0.3s ease;
 }
 
 .splashScreen .actionButton:hover {
   background: linear-gradient(45deg, #ffb48f, #ff7e79);
   transform: translateY(-2px);
   box-shadow: 0px 4px 10px rgba(255, 120, 120, 0.3);
+}
+
+.splashScreen .actionButton:active {
+  transform: translateY(0);
 }
 
 /* Secondary Button */
@@ -153,21 +161,32 @@
   position: absolute;
   inset: 0;
   background: black;
+  opacity: 0.8;
   z-index: 999; /* Above the animation but below content */
 }
 
-/* Responsive Design */
+/* Fade-in Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Responsive Adjustments */
 @media (max-width: 768px) {
   .splashScreen .logoText {
-    font-size: 3rem; /* Adjust for smaller screens */
+    font-size: 3rem;
   }
 
   .splashScreen .mainTitle {
-    font-size: 2.5rem; /* Adjust for smaller screens */
+    font-size: 2.5rem;
   }
 
   .splashScreen .superSubtitle {
-    font-size: 1.2rem; /* Adjust for smaller screens */
+    font-size: 1.2rem;
   }
 
   .splashScreen .pseudonymInput {
@@ -179,16 +198,11 @@
     padding: 10px;
     font-size: 0.9rem;
   }
-
-  .splashScreen .actionButton.secondary {
-    padding: 10px;
-    font-size: 0.9rem;
-  }
 }
 
 @media (max-width: 480px) {
   .splashScreen .logoText {
-    font-size: 2.5rem; /* Adjust further for very small screens */
+    font-size: 2.5rem;
   }
 
   .splashScreen .mainTitle {
@@ -205,11 +219,6 @@
   }
 
   .splashScreen .actionButton {
-    padding: 8px;
-    font-size: 0.8rem;
-  }
-
-  .splashScreen .actionButton.secondary {
     padding: 8px;
     font-size: 0.8rem;
   }

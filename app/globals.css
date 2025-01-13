@@ -232,3 +232,9 @@ body {
   color: var(--text-primary, #ffffff);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
+
+:root {
+  --gradient-primary: linear-gradient(to left, #d66d75, #e29587);
+  --text-primary: #ffffff;
+}
+
