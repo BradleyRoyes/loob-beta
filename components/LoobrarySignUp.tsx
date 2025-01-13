@@ -212,7 +212,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
             <form className="form">
               <h2 className="title">Can you offer something to the Loobrary?</h2>
               <p className="description">
-                The Loobrary thrives on community contributions. Whether it's a venue,
+                The Loobrary thrives on community contributions. Whether a venue,
                 talent, or gear, your offer helps others and builds the community.
               </p>
               <div className="formGroup">
