@@ -2,7 +2,6 @@ import OpenAI from "openai";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 import { AstraDB } from "@datastax/astra-db-ts";
 import { v4 as uuidv4 } from "uuid";
-import { env } from "node:process";
 import generateDocContext from "./generateDocContext";
 const Pusher = require("pusher");
 
@@ -85,17 +84,17 @@ const brushstrokes = [
 // Main POST function
 export async function POST(req: any) {
   try {
-    const { messages, useRag, llm, sessionId } = await req.json();
-    let docContext = "";
+    console.log("Received POST request...");
+    const { messages, llm, sessionId } = await req.json();
 
-    if (useRag) {
-      const latestMessage = messages[messages.length - 1]?.content;
-      if (latestMessage) {
-        console.log("Generating document context...");
-        docContext = await generateDocContext(latestMessage, astraDb, openai);
-        console.log("Document context generated:", docContext);
-      }
+    const latestMessage = messages[messages.length - 1]?.content;
+    if (!latestMessage) {
+      throw new Error("No latest message found in the request.");
     }
+
+    console.log("Generating document context...");
+    const docContext = await generateDocContext(latestMessage, astraDb, openai);
+    console.log("Document context generated:", docContext);
 
     for (const message of messages) {
       const analysis = message.role === "assistant" ? parseAnalysis(message.content) : null;
@@ -124,6 +123,7 @@ export async function POST(req: any) {
       },
     ];
 
+    console.log("Calling OpenAI API for chat completion...");
     const response = await openai.chat.completions.create({
       model: llm ?? "gpt-3.5-turbo",
       stream: true,

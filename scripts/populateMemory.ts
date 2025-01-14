@@ -20,7 +20,7 @@ const astraDb = new AstraDB(
   ASTRA_DB_NAMESPACE!
 );
 
-// Define a TypeScript interface for the entries
+// Define TypeScript interfaces for the entries
 interface MemoryEntry {
   url: string;
   title: string;
@@ -40,10 +40,8 @@ interface UserEntry {
   dataType: 'userEntry';
 }
 
-// Union type for either memory or userEntry
 type LibraryEntry = MemoryEntry | UserEntry;
 
-// Ensure `sampleData` is typed correctly
 const entries: LibraryEntry[] = sampleData as LibraryEntry[];
 
 /**
@@ -68,21 +66,14 @@ const createLibraryCollection = async (): Promise<void> => {
 };
 
 /**
- * Insert a 'memory' document into the `library` collection with fresh embeddings.
- * Skips insertion if a duplicate entry exists (based on `url`).
+ * Upsert a 'memory' document into the `library` collection.
+ * Ensures no duplicates by using `url` as the unique identifier.
  */
-const insertMemoryEntry = async (entry: MemoryEntry): Promise<void> => {
+const upsertMemoryEntry = async (entry: MemoryEntry): Promise<void> => {
   const collection = await astraDb.collection('library');
 
-  // Check for duplicates by url
-  const existingEntry = await collection.findOne({ url: entry.url });
-  if (existingEntry) {
-    console.log(`Duplicate memory found for URL: ${entry.url}. Skipping.`);
-    return;
-  }
-
   try {
-    // Generate embedding from content
+    // Generate embedding for the memory content
     console.log(`Generating embedding for memory URL: ${entry.url}`);
     const { data } = await openai.embeddings.create({
       input: entry.content,
@@ -95,33 +86,33 @@ const insertMemoryEntry = async (entry: MemoryEntry): Promise<void> => {
       return;
     }
 
-    // Create final doc to insert
     const memoryDoc = {
-      document_id: `${entry.url}-${Date.now()}`, // unique ID from url + timestamp
+      document_id: entry.url, // Use URL as the unique identifier
       $vector: embedding,
       url: entry.url,
       title: entry.title,
       content: entry.content,
-      dataType: 'memory', // explicitly label as memory
+      dataType: 'memory',
       createdAt: new Date().toISOString(),
     };
 
-    await collection.insertOne(memoryDoc);
-    console.log(`Inserted memory entry for URL: ${entry.url}`);
+    // Perform upsert (update if exists, insert if not)
+    await collection.update({ url: entry.url }, memoryDoc, { upsert: true });
+    console.log(`Upserted memory entry for URL: ${entry.url}`);
   } catch (error) {
-    console.error(`Error processing memory for URL: ${entry.url}`, error);
+    console.error(`Error upserting memory entry for URL: ${entry.url}`, error);
   }
 };
 
 /**
- * Insert a 'userEntry' document into the `library` collection.
- * Regenerates the vector using OpenAI, dynamically generates `_id`, and ensures no conflicts with existing schema.
+ * Upsert a 'userEntry' document into the `library` collection.
+ * Ensures no duplicates by using `email` as the unique identifier.
  */
-const insertUserEntry = async (entry: UserEntry): Promise<void> => {
+const upsertUserEntry = async (entry: UserEntry): Promise<void> => {
   const collection = await astraDb.collection('library');
 
   try {
-    // Generate embedding for the `chunk` field
+    // Generate embedding for the user entry chunk
     console.log(`Generating embedding for userEntry: ${entry.title}`);
     const { data } = await openai.embeddings.create({
       input: entry.chunk,
@@ -134,10 +125,9 @@ const insertUserEntry = async (entry: UserEntry): Promise<void> => {
       return;
     }
 
-    // Create final doc to insert
     const userDoc = {
-      document_id: `${entry.email}-${Date.now()}`, // Generate unique ID
-      $vector: embedding, // Use generated embedding
+      document_id: entry.email, // Use email as the unique identifier
+      $vector: embedding,
       title: entry.title,
       offeringType: entry.offeringType,
       description: entry.description,
@@ -146,31 +136,31 @@ const insertUserEntry = async (entry: UserEntry): Promise<void> => {
       email: entry.email,
       phone: entry.phone,
       dataType: 'userEntry',
-      createdAt: new Date().toISOString(), // Use the current timestamp
+      createdAt: new Date().toISOString(),
     };
 
-    // Insert into the DB
-    await collection.insertOne(userDoc);
-    console.log(`Inserted userEntry: ${entry.title}`);
+    // Perform upsert (update if exists, insert if not)
+    await collection.update({ email: entry.email }, userDoc, { upsert: true });
+    console.log(`Upserted userEntry: ${entry.title}`);
   } catch (error) {
-    console.error(`Error inserting userEntry: ${entry.title}`, error);
+    console.error(`Error upserting userEntry: ${entry.title}`, error);
   }
 };
 
 /**
- * Main function to handle creation of 'library' + insertion of both memory & user entries.
+ * Main function to handle creation of 'library' and upserting entries.
  */
-const populateMemory = async (): Promise<void> => {
+const populateLibrary = async (): Promise<void> => {
   console.log('Starting population of the library...');
   await createLibraryCollection();
 
   for (const entry of entries) {
     if (entry.dataType === 'memory') {
       // Handle memory entries
-      await insertMemoryEntry(entry);
+      await upsertMemoryEntry(entry);
     } else if (entry.dataType === 'userEntry') {
       // Handle user entries
-      await insertUserEntry(entry);
+      await upsertUserEntry(entry);
     } else {
       console.log(`Skipping entry with unknown dataType: ${JSON.stringify(entry)}`);
     }
@@ -180,6 +170,6 @@ const populateMemory = async (): Promise<void> => {
 };
 
 // Execute the script
-populateMemory().catch((error) => {
+populateLibrary().catch((error) => {
   console.error('Error during library population:', error);
 });
