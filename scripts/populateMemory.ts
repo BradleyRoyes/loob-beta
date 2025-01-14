@@ -96,8 +96,12 @@ const upsertMemoryEntry = async (entry: MemoryEntry): Promise<void> => {
       createdAt: new Date().toISOString(),
     };
 
-    // Perform upsert (update if exists, insert if not)
-    await collection.update({ url: entry.url }, memoryDoc, { upsert: true });
+    // Perform upsert using findOneAndReplace
+    await collection.findOneAndReplace(
+      { document_id: entry.url }, // Query by unique identifier
+      memoryDoc,
+      { upsert: true } // Replace or insert if not found
+    );
     console.log(`Upserted memory entry for URL: ${entry.url}`);
   } catch (error) {
     console.error(`Error upserting memory entry for URL: ${entry.url}`, error);
@@ -139,8 +143,12 @@ const upsertUserEntry = async (entry: UserEntry): Promise<void> => {
       createdAt: new Date().toISOString(),
     };
 
-    // Perform upsert (update if exists, insert if not)
-    await collection.update({ email: entry.email }, userDoc, { upsert: true });
+    // Perform upsert using findOneAndReplace
+    await collection.findOneAndReplace(
+      { document_id: entry.email }, // Query by unique identifier
+      userDoc,
+      { upsert: true } // Replace or insert if not found
+    );
     console.log(`Upserted userEntry: ${entry.title}`);
   } catch (error) {
     console.error(`Error upserting userEntry: ${entry.title}`, error);
