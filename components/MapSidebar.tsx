@@ -79,7 +79,7 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
                 onClick={() => handleTypeSelection("Venue")}
               >
                 <FaMapMarkerAlt className="icon" />
-                <span>Venues</span>
+                <span>Location</span>
               </div>
               <div
                 className={`search-icon ${selectedType === "Talent" ? "active" : ""}`}
@@ -93,7 +93,7 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
                 onClick={() => handleTypeSelection("Gear")}
               >
                 <FaTools className="icon" />
-                <span>Gear</span>
+                <span>Thing</span>
               </div>
             </div>
           </div>

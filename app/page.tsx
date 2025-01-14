@@ -7,15 +7,16 @@ import ConfigureModal from "../components/ConfigureModal";
 import Profile from "../components/Profile";
 import Map from "../components/Map";
 import NFCReader from "../components/NFCReader";
+import AddEntry from "../components/AddEntry"; // Import AddEntry
 
 export default function Page() {
-  const [view, setView] = useState<"Chat" | "Profile" | "Map" | "NFCReader">(
+  const [view, setView] = useState<"Chat" | "Profile" | "Map" | "NFCReader" | "AddEntry">(
     "Chat"
   );
   const [showModal, setShowModal] = useState(false);
   const [configureOpen, setConfigureOpen] = useState(false);
 
-  const handleToggleView = (newView: "Chat" | "Profile" | "Map" | "NFCReader") => {
+  const handleToggleView = (newView: "Chat" | "Profile" | "Map" | "NFCReader" | "AddEntry") => {
     setView(newView);
   };
 
@@ -40,6 +41,7 @@ export default function Page() {
           />
         )}
         {view === "NFCReader" && <NFCReader />}
+        {view === "AddEntry" && <AddEntry />} {/* AddEntry rendering */}
 
         {/* Configure Modal */}
         {configureOpen && <ConfigureModal onClose={() => setConfigureOpen(false)} />}

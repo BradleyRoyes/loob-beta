@@ -85,7 +85,7 @@ const brushstrokes = [
 export async function POST(req: any) {
   try {
     console.log("Received POST request...");
-    const { messages, llm, sessionId } = await req.json();
+    const { messages, llm, sessionId,  } = await req.json();
 
     const latestMessage = messages[messages.length - 1]?.content;
     if (!latestMessage) {

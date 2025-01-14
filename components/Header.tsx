@@ -6,13 +6,14 @@ import {
   MapIcon,
   Cog6ToothIcon,
   QrCodeIcon,
+  PlusCircleIcon,
 } from "@heroicons/react/24/outline";
 import "./Header.css";
 
 interface HeaderProps {
-  toggleView: (view: "Chat" | "Profile" | "Map" | "NFCReader") => void;
+  toggleView: (view: "Chat" | "Profile" | "Map" | "NFCReader" | "AddEntry") => void;
   onConfigureClick: () => void;
-  activeView: "Chat" | "Profile" | "Map" | "NFCReader";
+  activeView: "Chat" | "Profile" | "Map" | "NFCReader" | "AddEntry";
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -30,6 +31,16 @@ const Header: React.FC<HeaderProps> = ({
         onClick={() => toggleView("Profile")}
       >
         <UserIcon className="h-6 w-6" />
+      </button>
+
+      {/* Add Entry Icon */}
+      <button
+        className={`icon-button base-button ${
+          activeView === "AddEntry" ? "active" : ""
+        }`}
+        onClick={() => toggleView("AddEntry")}
+      >
+        <PlusCircleIcon className="h-6 w-6" />
       </button>
 
       {/* Slider */}

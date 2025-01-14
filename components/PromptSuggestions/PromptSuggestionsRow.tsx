@@ -1,7 +1,8 @@
 import PromptSuggestionButton from "./PromptSuggestionButton";
 
 const PromptSuggestionRow = ({ onPromptClick }) => {
-  const prompts = ["Tell me more about Loob"];
+  const prompts = ["Tell me more about Loob"] ;
+  
 
   return (
     <div className="flex flex-row flex-wrap justify-start items-center py-4 gap-2">
