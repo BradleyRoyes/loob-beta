@@ -20,7 +20,7 @@ const astraDb = new AstraDB(
   ASTRA_DB_NAMESPACE!
 );
 
-// Define TypeScript interfaces for the entries
+// Define a TypeScript interface for the entries
 interface MemoryEntry {
   url: string;
   title: string;
@@ -40,8 +40,10 @@ interface UserEntry {
   dataType: 'userEntry';
 }
 
+// Union type for either memory or userEntry
 type LibraryEntry = MemoryEntry | UserEntry;
 
+// Ensure `sampleData` is typed correctly
 const entries: LibraryEntry[] = sampleData as LibraryEntry[];
 
 /**
@@ -66,87 +68,118 @@ const createLibraryCollection = async (): Promise<void> => {
 };
 
 /**
- * Validate entries to ensure required fields are present.
+ * Insert a 'memory' document into the `library` collection with fresh embeddings.
+ * Skips insertion if a duplicate entry exists (based on `url`).
  */
-const isValidEntry = (entry: LibraryEntry): boolean => {
-  if (entry.dataType === 'memory') {
-    return !!entry.url && !!entry.content && !!entry.title;
-  }
-  if (entry.dataType === 'userEntry') {
-    return !!entry.email && !!entry.chunk && !!entry.title;
-  }
-  return false;
-};
-
-/**
- * Upsert a document into the `library` collection.
- * Ensures no duplicates and validates `_id` generation.
- */
-const upsertEntry = async (entry: LibraryEntry): Promise<void> => {
+const insertMemoryEntry = async (entry: MemoryEntry): Promise<void> => {
   const collection = await astraDb.collection('library');
 
-  // Determine unique `_id` based on entry type
-  const _id = entry.dataType === 'memory' ? entry.url : entry.email;
-
-  if (!_id) {
-    console.error(`Skipping entry due to missing unique identifier: ${JSON.stringify(entry)}`);
+  // Check for duplicates by url
+  const existingEntry = await collection.findOne({ url: entry.url });
+  if (existingEntry) {
+    console.log(`Duplicate memory found for URL: ${entry.url}. Skipping.`);
     return;
   }
 
   try {
-    // Generate embedding only for valid entries
-    console.log(`Generating embedding for entry: ${entry.title}`);
-    const input = entry.dataType === 'memory' ? entry.content : entry.chunk;
+    // Generate embedding from content
+    console.log(`Generating embedding for memory URL: ${entry.url}`);
     const { data } = await openai.embeddings.create({
-      input,
+      input: entry.content,
       model: 'text-embedding-ada-002',
     });
 
     const embedding = data[0]?.embedding;
     if (!embedding) {
-      console.error(`Failed to generate embedding for entry: ${entry.title}`);
+      console.error(`Failed to generate embedding for URL: ${entry.url}`);
       return;
     }
 
-    const doc = {
-      _id, // Use unique `_id` for deduplication
+    // Create final doc to insert
+    const memoryDoc = {
+      document_id: `${entry.url}-${Date.now()}`, // unique ID from url + timestamp
       $vector: embedding,
-      ...entry,
+      url: entry.url,
+      title: entry.title,
+      content: entry.content,
+      dataType: 'memory', // explicitly label as memory
       createdAt: new Date().toISOString(),
     };
 
-    // Upsert the document
-    await collection.findOneAndReplace(
-      { _id }, // Query by unique `_id`
-      doc,
-      { upsert: true } // Replace or insert
-    );
-    console.log(`Upserted entry: ${entry.title}`);
+    await collection.insertOne(memoryDoc);
+    console.log(`Inserted memory entry for URL: ${entry.url}`);
   } catch (error) {
-    console.error(`Error upserting entry: ${entry.title}`, error);
+    console.error(`Error processing memory for URL: ${entry.url}`, error);
   }
 };
 
 /**
- * Main function to handle creation of 'library' and upserting entries.
+ * Insert a 'userEntry' document into the `library` collection.
+ * Regenerates the vector using OpenAI, dynamically generates `_id`, and ensures no conflicts with existing schema.
  */
-const populateLibrary = async (): Promise<void> => {
+const insertUserEntry = async (entry: UserEntry): Promise<void> => {
+  const collection = await astraDb.collection('library');
+
+  try {
+    // Generate embedding for the `chunk` field
+    console.log(`Generating embedding for userEntry: ${entry.title}`);
+    const { data } = await openai.embeddings.create({
+      input: entry.chunk,
+      model: 'text-embedding-ada-002',
+    });
+
+    const embedding = data[0]?.embedding;
+    if (!embedding) {
+      console.error(`Failed to generate embedding for userEntry: ${entry.title}`);
+      return;
+    }
+
+    // Create final doc to insert
+    const userDoc = {
+      document_id: `${entry.email}-${Date.now()}`, // Generate unique ID
+      $vector: embedding, // Use generated embedding
+      title: entry.title,
+      offeringType: entry.offeringType,
+      description: entry.description,
+      location: entry.location,
+      pseudonym: entry.pseudonym,
+      email: entry.email,
+      phone: entry.phone,
+      dataType: 'userEntry',
+      createdAt: new Date().toISOString(), // Use the current timestamp
+    };
+
+    // Insert into the DB
+    await collection.insertOne(userDoc);
+    console.log(`Inserted userEntry: ${entry.title}`);
+  } catch (error) {
+    console.error(`Error inserting userEntry: ${entry.title}`, error);
+  }
+};
+
+/**
+ * Main function to handle creation of 'library' + insertion of both memory & user entries.
+ */
+const populateMemory = async (): Promise<void> => {
   console.log('Starting population of the library...');
   await createLibraryCollection();
 
   for (const entry of entries) {
-    if (!isValidEntry(entry)) {
-      console.log(`Skipping invalid entry: ${JSON.stringify(entry)}`);
-      continue;
+    if (entry.dataType === 'memory') {
+      // Handle memory entries
+      await insertMemoryEntry(entry);
+    } else if (entry.dataType === 'userEntry') {
+      // Handle user entries
+      await insertUserEntry(entry);
+    } else {
+      console.log(`Skipping entry with unknown dataType: ${JSON.stringify(entry)}`);
     }
-
-    await upsertEntry(entry);
   }
 
   console.log('Library population complete.');
 };
 
 // Execute the script
-populateLibrary().catch((error) => {
+populateMemory().catch((error) => {
   console.error('Error during library population:', error);
 });
