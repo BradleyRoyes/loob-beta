@@ -101,6 +101,18 @@ header .icon-button.active {
     background: var(--background-active, rgba(255, 255, 255, 0.2));
 }
 
+/* Styling for the Settings Button */
+header .icon-button.settings {
+    margin-left: auto; /* Ensure it's aligned to the far right */
+    padding: 0.6rem; /* Slightly larger padding for emphasis */
+    background-color: var(--background-soft, #2e2e2e); /* Add a subtle background */
+    border: 1px solid var(--border-primary, #3a3a3a); /* Add a border for distinction */
+}
+
+header .icon-button.settings:hover {
+    background-color: var(--background-hover, #444444); /* Darker background on hover */
+}
+
 /* Adjustments for responsiveness and spacing */
 header {
     display: flex;
@@ -127,6 +139,10 @@ header {
         font-size: 0.9rem;
         padding: 0.4rem 1rem;
     }
+
+    header .icon-button {
+        margin-left: 0.8rem; /* Adjust margin for smaller screens */
+    }
 }
 
 @media (max-width: 480px) {
@@ -143,5 +159,9 @@ header {
     header .slider-container button {
         font-size: 0.8rem;
         padding: 0.3rem 0.8rem;
+    }
+
+    header .icon-button {
+        margin-left: 0.5rem; /* Reduced margin for small screens */
     }
 }

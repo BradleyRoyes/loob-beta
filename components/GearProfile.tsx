@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./GearProfile.css";
 import TorusSphere from "./TorusSphere";
 import TorusSphereWeek from "./TorusSphereWeek";
@@ -25,21 +25,39 @@ interface GearProfileProps {
 
 const GearProfile: React.FC<GearProfileProps> = ({ gear, onClose }) => {
   const [sliderValue, setSliderValue] = useState(0);
+  const [fadeVisual, setFadeVisual] = useState<JSX.Element>(<TorusSphere />);
+  const [nextVisual, setNextVisual] = useState<JSX.Element | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSliderValue(Number(e.target.value));
+    const newValue = Number(e.target.value);
+
+    if (newValue === 0) setNextVisual(<TorusSphere />);
+    else if (newValue === 1) setNextVisual(<TorusSphereWeek />);
+    else if (newValue === 2) setNextVisual(<TorusSphereAll />);
+    
+    setSliderValue(newValue);
   };
 
-  const getView = () => {
+  useEffect(() => {
+    if (nextVisual) {
+      // Begin the fade transition
+      setIsTransitioning(true);
+
+      const timer = setTimeout(() => {
+        setFadeVisual(nextVisual); // Update the main visual
+        setIsTransitioning(false); // End the transition
+        setNextVisual(null); // Clear next visual
+      }, 8000); // Match fade duration
+
+      return () => clearTimeout(timer);
+    }
+  }, [nextVisual]);
+
+  const getViewLabel = () => {
     if (sliderValue === 0) return "Today";
     if (sliderValue === 1) return "This Week";
     return "All Time";
-  };
-
-  const renderSphereForView = () => {
-    if (sliderValue === 0) return <TorusSphere />;
-    if (sliderValue === 1) return <TorusSphereWeek />;
-    return <TorusSphereAll />;
   };
 
   return (
@@ -51,10 +69,10 @@ const GearProfile: React.FC<GearProfileProps> = ({ gear, onClose }) => {
         }
       }}
     >
-      <div className="bg-gray-800 text-white rounded-lg w-full max-w-lg md:max-w-2xl p-6 relative overflow-auto max-h-[90vh]">
+      <div className="bg-gray-800 text-white rounded-lg w-full max-w-lg md:max-w-2xl p-6 relative overflow-y-auto max-h-[80vh] md:max-h-[90vh]">
         {/* Close Button */}
         <button
-          className="absolute top-3 right-3 text-xl text-gray-400 hover:text-white"
+          className="absolute top-4 right-4 text-xl text-gray-400 hover:text-white"
           onClick={onClose}
         >
           &times;
@@ -66,9 +84,28 @@ const GearProfile: React.FC<GearProfileProps> = ({ gear, onClose }) => {
 
         {/* Visuals and Slider */}
         <div className="mb-4">
-          <div className="mb-4 flex justify-center">{renderSphereForView()}</div>
+          <div className="relative h-48 flex justify-center items-center">
+            {/* Current Visual */}
+            <div
+              className={`absolute transition-opacity duration-300 ${
+                isTransitioning ? "opacity-0" : "opacity-100"
+              }`}
+            >
+              {fadeVisual}
+            </div>
+            {/* Next Visual */}
+            {nextVisual && (
+              <div
+                className={`absolute transition-opacity duration-300 ${
+                  isTransitioning ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                {nextVisual}
+              </div>
+            )}
+          </div>
           <label htmlFor="viewSlider" className="text-gray-300 block text-center mb-2">
-            View: {getView()}
+            View: {getViewLabel()}
           </label>
           <input
             type="range"
