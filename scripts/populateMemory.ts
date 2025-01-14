@@ -66,92 +66,64 @@ const createLibraryCollection = async (): Promise<void> => {
 };
 
 /**
- * Upsert a 'memory' document into the `library` collection.
- * Ensures no duplicates by using `url` as the unique identifier.
+ * Validate entries to ensure required fields are present.
  */
-const upsertMemoryEntry = async (entry: MemoryEntry): Promise<void> => {
-  const collection = await astraDb.collection('library');
-
-  try {
-    // Generate embedding for the memory content
-    console.log(`Generating embedding for memory URL: ${entry.url}`);
-    const { data } = await openai.embeddings.create({
-      input: entry.content,
-      model: 'text-embedding-ada-002',
-    });
-
-    const embedding = data[0]?.embedding;
-    if (!embedding) {
-      console.error(`Failed to generate embedding for URL: ${entry.url}`);
-      return;
-    }
-
-    const memoryDoc = {
-      document_id: entry.url, // Use URL as the unique identifier
-      $vector: embedding,
-      url: entry.url,
-      title: entry.title,
-      content: entry.content,
-      dataType: 'memory',
-      createdAt: new Date().toISOString(),
-    };
-
-    // Perform upsert using findOneAndReplace
-    await collection.findOneAndReplace(
-      { document_id: entry.url }, // Query by unique identifier
-      memoryDoc,
-      { upsert: true } // Replace or insert if not found
-    );
-    console.log(`Upserted memory entry for URL: ${entry.url}`);
-  } catch (error) {
-    console.error(`Error upserting memory entry for URL: ${entry.url}`, error);
+const isValidEntry = (entry: LibraryEntry): boolean => {
+  if (entry.dataType === 'memory') {
+    return !!entry.url && !!entry.content && !!entry.title;
   }
+  if (entry.dataType === 'userEntry') {
+    return !!entry.email && !!entry.chunk && !!entry.title;
+  }
+  return false;
 };
 
 /**
- * Upsert a 'userEntry' document into the `library` collection.
- * Ensures no duplicates by using `email` as the unique identifier.
+ * Upsert a document into the `library` collection.
+ * Ensures no duplicates and validates `_id` generation.
  */
-const upsertUserEntry = async (entry: UserEntry): Promise<void> => {
+const upsertEntry = async (entry: LibraryEntry): Promise<void> => {
   const collection = await astraDb.collection('library');
 
+  // Determine unique `_id` based on entry type
+  const _id = entry.dataType === 'memory' ? entry.url : entry.email;
+
+  if (!_id) {
+    console.error(`Skipping entry due to missing unique identifier: ${JSON.stringify(entry)}`);
+    return;
+  }
+
   try {
-    // Generate embedding for the user entry chunk
-    console.log(`Generating embedding for userEntry: ${entry.title}`);
+    // Generate embedding only for valid entries
+    console.log(`Generating embedding for entry: ${entry.title}`);
+    const input = entry.dataType === 'memory' ? entry.content : entry.chunk;
     const { data } = await openai.embeddings.create({
-      input: entry.chunk,
+      input,
       model: 'text-embedding-ada-002',
     });
 
     const embedding = data[0]?.embedding;
     if (!embedding) {
-      console.error(`Failed to generate embedding for userEntry: ${entry.title}`);
+      console.error(`Failed to generate embedding for entry: ${entry.title}`);
       return;
     }
 
-    const userDoc = {
-      document_id: entry.email, // Use email as the unique identifier
+    const doc = {
+      _id, // Use unique `_id` for deduplication
       $vector: embedding,
-      title: entry.title,
-      offeringType: entry.offeringType,
-      description: entry.description,
-      location: entry.location,
-      pseudonym: entry.pseudonym,
-      email: entry.email,
-      phone: entry.phone,
-      dataType: 'userEntry',
+      ...entry,
       createdAt: new Date().toISOString(),
     };
 
-    // Perform upsert using findOneAndReplace
+    // Upsert the document
     await collection.findOneAndReplace(
-      { document_id: entry.email }, // Query by unique identifier
-      userDoc,
-      { upsert: true } // Replace or insert if not found
+      { _id }, // Query by unique `_id`
+      doc,
+      { upsert: true } // Replace or insert
     );
-    console.log(`Upserted userEntry: ${entry.title}`);
+    console.log(`Upserted entry: ${entry.title}`);
   } catch (error) {
-    console.error(`Error upserting userEntry: ${entry.title}`, error);
+    console.error(`Error upserting entry: ${entry.title}`, error);
   }
 };
 
@@ -163,15 +135,12 @@ const populateLibrary = async (): Promise<void> => {
   await createLibraryCollection();
 
   for (const entry of entries) {
-    if (entry.dataType === 'memory') {
-      // Handle memory entries
-      await upsertMemoryEntry(entry);
-    } else if (entry.dataType === 'userEntry') {
-      // Handle user entries
-      await upsertUserEntry(entry);
-    } else {
-      console.log(`Skipping entry with unknown dataType: ${JSON.stringify(entry)}`);
+    if (!isValidEntry(entry)) {
+      console.log(`Skipping invalid entry: ${JSON.stringify(entry)}`);
+      continue;
     }
+
+    await upsertEntry(entry);
   }
 
   console.log('Library population complete.');
