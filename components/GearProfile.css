@@ -1,0 +1,223 @@
+/***********************************
+  OVERLAY
+************************************/
+.gear-profile-overlay {
+    position: fixed;
+    inset: 0; /* top, right, bottom, left = 0 */
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /***********************************
+    MODAL (CARD) CONTAINER
+  ************************************/
+  .gear-profile-modal {
+    position: relative;
+    background-color: #2d3748; /* Dark slate */
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    border-radius: 8px;
+    overflow: hidden;
+    color: #fff;
+  
+    /* Layout tweak: flex column, top section for visuals, bottom for scrollable */
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /***********************************
+    CLOSE BUTTON
+  ************************************/
+  .close-button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: #bbb;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+  
+  .close-button:hover {
+    color: #fff;
+  }
+  
+  /***********************************
+    TITLE / DESCRIPTION
+  ************************************/
+  .gear-title {
+    margin-top: 1.25rem;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .gear-description {
+    text-align: center;
+    color: #ddd;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    padding: 0 1rem;
+    max-width: 600px;
+    margin: 0 auto 1rem auto;
+  }
+  
+  /***********************************
+    VISUAL SECTION (TOP)
+  ************************************/
+  .visual-section {
+    padding: 1rem 1rem 0.5rem;
+  }
+  
+  .visual-toggles {
+    text-align: center;
+    margin-bottom: 0.75rem;
+  }
+  
+  .visual-toggles button {
+    display: inline-block;
+    background: linear-gradient(to right, #fed7aa, #fcd1d1);
+    border: none;
+    color: #333;
+    margin: 0 0.25rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+  }
+  
+  .visual-toggles button:hover {
+    opacity: 0.9;
+  }
+  
+  .visual-toggles button.active {
+    outline: 2px solid #fff;
+    opacity: 0.8;
+  }
+  
+  .visualization-section {
+    background-color: #000;
+    border-radius: 4px;
+    width: 100%;
+    min-height: 220px; /* Enough for 3D embedding */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  
+  /***********************************
+    SCROLLABLE CONTENT (BOTTOM)
+  ************************************/
+  .scrollable-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    background-color: #1a202c;
+  }
+  
+  /***********************************
+    AVAILABILITY
+  ************************************/
+  .availability-section {
+    margin-bottom: 2rem;
+  }
+  
+  .availability-info {
+    margin-bottom: 0.5rem;
+  }
+  
+  .check-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  /***********************************
+    CHART SECTION
+  ************************************/
+  .chart-section {
+    margin-bottom: 2rem;
+  }
+  
+  .chart-container {
+    background-color: #222;
+    border-radius: 4px;
+    padding: 1rem;
+    text-align: center;
+  }
+  
+  .chart-container canvas {
+    width: 100%;
+    max-width: 400px;
+  }
+  
+  /***********************************
+    HISTORY SECTION
+  ************************************/
+  .history-section {
+    margin-bottom: 2rem;
+  }
+  
+  .history-toggle {
+    display: inline-block;
+    cursor: pointer;
+    user-select: none;
+  }
+  
+  .history-logs {
+    list-style: none;
+    padding-left: 0;
+    margin: 0.5rem 0 0;
+  }
+  
+  .history-logs li {
+    margin-bottom: 0.4rem;
+  }
+  
+  /***********************************
+    BUTTONS
+  ************************************/
+  .gradient-button {
+    background: linear-gradient(to right, #fed7aa, #fcd1d1);
+    border: none;
+    color: #333;
+    padding: 0.6rem 1.2rem;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+  }
+  
+  .gradient-button:hover {
+    opacity: 0.9;
+  }
+  
+  /* Modal Styling */
+.bg-black {
+    backdrop-filter: blur(8px);
+  }
+  
+  button:hover {
+    background-color: #444;
+  }
+  
+  input[type="range"] {
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(to right, #fed7aa, #fcd1d1);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  

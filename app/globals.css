@@ -212,33 +212,6 @@ body {
   align-items: center;
 }
 
-/* Slider */
-.slider-container button {
-  background: none;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 9999px;
-  font-size: 0.875rem;
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  transition: color 0.3s ease;
-}
-
-.slider-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--background-soft, #1e1e1e);
-  border-radius: 9999px;
-  padding: 0.25rem;
-  width: fit-content;
-}
-
-.slider-container button:hover {
-  background-color: var(--background-secondary, #232323);
-  color: var(--text-primary, #ffffff);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-}
 
 :root {
   --gradient-primary: linear-gradient(to left, #d66d75, #e29587);

@@ -2,82 +2,87 @@
 
 /* Base Header Styling */
 header {
+    all: unset; /* Unset all inherited styles to ensure no interference */
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: 100%; /* Ensure full width */
-    background-color: var(--background-secondary, #232323); /* Dark theme fallback */
+    width: 100%;
+    background-color: var(--background-secondary, #232323);
     padding: 1rem;
     border-bottom: 1px solid var(--border-primary, #3a3a3a);
     position: sticky;
     top: 0;
-    z-index: 1000; /* Ensure header is always on top */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* Slider Container */
 header .slider-container {
+    all: unset; /* Unset all inherited styles */
     position: relative;
     display: flex;
-    justify-content: center;
+    justify-content: space-between; /* Ensure the buttons are evenly spaced */
     align-items: center;
-    background-color: var(--background-soft, #1e1e1e); /* Subtle contrast */
-    border-radius: 9999px; /* Fully rounded for pill effect */
+    background-color: var(--background-soft, #1e1e1e);
+    border-radius: 9999px;
     padding: 0.4rem;
-    width: 100%; /* Default full width on smaller screens */
-    max-width: 400px; /* Constrain on larger screens */
+    width: auto;
+    max-width: 400px;
     gap: 0.5rem;
-    overflow: hidden; /* Prevent overflow on small screens */
+    overflow: hidden;
+    flex-grow: 1; /* Ensure the container expands on available space */
 }
 
-/* Slider Buttons - Scoped and Reset */
+/* Slider Buttons */
 header .slider-container button {
-    all: unset; /* Reset inherited styles */
+    all: unset; /* Unset all inherited styles */
     display: inline-block;
     text-align: center;
     font-size: 1rem;
     font-weight: 600;
-    padding: 0.5rem 1.5rem;
-    border-radius: 9999px; /* Match the pill container */
-    color: var(--text-primary, #ffffff); /* Button text color */
+    padding: 0.5rem 2.5rem;
+    border-radius: 9999px;
+    color: var(--text-primary, #ffffff);
     cursor: pointer;
     z-index: 1; /* Ensure above sliding pill */
     transition: color 0.3s ease;
 }
 
+/* Active Button Text */
 header .slider-container button.active {
-    color: var(--text-primary, #ffffff); /* Active button text */
+    color: var(--text-primary, #ffffff);
 }
 
+/* Remove hover effect for slider buttons */
 header .slider-container button:hover {
-    color: var(--text-secondary, #a6aaae); /* Subtle hover color */
+    color: var(--text-primary, #ffffff); /* Keep hover color consistent */
 }
 
 /* Sliding Pill */
 header .slider-pill {
+    all: unset; /* Unset all inherited styles */
     position: absolute;
     top: 0;
     left: 0;
     height: 100%;
-    width: 50%; /* Default width to align with one button */
-    background: linear-gradient(to right, #ff7eb3, #fba779); /* Gradient for the pill */
+    width: 50%;
+    background: linear-gradient(to right, #ff7eb3, #fba779);
     border-radius: 9999px;
-    z-index: 0; /* Ensure below buttons */
-    transition: all 0.3s ease; /* Smooth sliding animation */
+    z-index: 0;
+    transition: all 0.3s ease;
 }
 
 /* Sliding Pill Positions */
 header .slider-pill.active-chat {
-    left: 0; /* Align with the first button */
+    left: 0;
 }
 
 header .slider-pill.active-discover {
-    left: 50%; /* Align with the second button */
+    left: 50%;
 }
-
 /* Icon Buttons */
 header .icon-button {
-    all: unset; /* Reset inherited styles */
+    all: unset; /* Unset all inherited styles */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -85,49 +90,58 @@ header .icon-button {
     border-radius: 50%;
     cursor: pointer;
     transition: background 0.3s ease;
+    margin-right: 1rem; /* Add margin to create space between the icon and right edge */
 }
 
 header .icon-button:hover {
-    background: var(--background-hover, rgba(255, 255, 255, 0.1)); /* Subtle hover effect */
+    background: var(--background-hover, rgba(255, 255, 255, 0.1));
 }
 
 header .icon-button.active {
-    background: var(--background-active, rgba(255, 255, 255, 0.2)); /* Active button background */
+    background: var(--background-active, rgba(255, 255, 255, 0.2));
+}
+
+/* Adjustments for responsiveness and spacing */
+header {
+    display: flex;
+    justify-content: space-between; /* Ensure there's space between the elements */
+    align-items: center;
+    width: 100%;
+    padding: 1rem;
+    box-sizing: border-box; /* Ensures padding doesn't push out the content */
 }
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
     header {
-        padding: 0.8rem; /* Reduce padding for smaller screens */
+        padding: 0.8rem;
     }
 
     header .slider-container {
-        max-width: 300px; /* Constrain width for tablets */
+        max-width: 300px;
         gap: 0.4rem;
+        width: 100%; /* Ensure container doesn't overflow */
     }
 
     header .slider-container button {
-        font-size: 0.9rem; /* Adjust font size */
-        padding: 0.4rem 1rem; /* Adjust padding for buttons */
-    }
-
-    header .slider-pill {
-        width: 50%; /* Maintain width alignment */
+        font-size: 0.9rem;
+        padding: 0.4rem 1rem;
     }
 }
 
 @media (max-width: 480px) {
     header {
-        padding: 0.6rem; /* Further reduce padding for small devices */
+        padding: 0.6rem;
     }
 
     header .slider-container {
-        max-width: 250px; /* Constrain width for small phones */
-        gap: 0.3rem; /* Reduce gap */
+        max-width: 250px;
+        gap: 0.8rem;
+        width: 100%; /* Ensure container fits on smaller screens */
     }
 
     header .slider-container button {
-        font-size: 0.8rem; /* Smaller font for small screens */
-        padding: 0.3rem 0.8rem; /* Compact button padding */
+        font-size: 0.8rem;
+        padding: 0.3rem 0.8rem;
     }
 }

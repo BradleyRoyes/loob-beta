@@ -1,13 +1,18 @@
 "use client";
 
-import React from 'react';
-import { UserIcon, MapIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
-import './Header.css'; // Import only component-specific styles
+import React from "react";
+import {
+  UserIcon,
+  MapIcon,
+  Cog6ToothIcon,
+  QrCodeIcon,
+} from "@heroicons/react/24/outline";
+import "./Header.css";
 
 interface HeaderProps {
-  toggleView: (view: 'Chat' | 'Profile' | 'Map') => void;
+  toggleView: (view: "Chat" | "Profile" | "Map" | "NFCReader") => void;
   onConfigureClick: () => void;
-  activeView: 'Chat' | 'Profile' | 'Map';
+  activeView: "Chat" | "Profile" | "Map" | "NFCReader";
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -20,47 +25,51 @@ const Header: React.FC<HeaderProps> = ({
       {/* Profile Icon */}
       <button
         className={`icon-button base-button ${
-          activeView === 'Profile' ? 'active' : ''
+          activeView === "Profile" ? "active" : ""
         }`}
-        onClick={() => toggleView('Profile')}
+        onClick={() => toggleView("Profile")}
       >
         <UserIcon className="h-6 w-6" />
       </button>
-{/* Slider */}
-<div className="slider-container">
-  <div
-    className={`slider-pill ${
-      activeView === 'Chat' ? 'active-chat' : 'active-discover'
-    }`}
-  ></div>
-  <button
-    className={`slider-button ${
-      activeView === 'Chat' ? 'active' : ''
-    }`}
-    onClick={() => toggleView('Chat')}
-  >
-    Loob
-  </button>
-  <button
-    className={`slider-button ${
-      activeView === 'Map' ? 'active' : ''
-    }`}
-    onClick={() => toggleView('Map')}
-  >
-    Discover
-  </button>
-</div>
 
-      {/* Map and Configure Icons */}
+      {/* Slider */}
+      <div className="slider-container">
+        <div
+          className={`slider-pill ${
+            activeView === "Chat" ? "active-chat" : "active-discover"
+          }`}
+        ></div>
+        <button
+          className={`slider-button ${
+            activeView === "Chat" ? "active" : ""
+          }`}
+          onClick={() => toggleView("Chat")}
+        >
+          Loob
+        </button>
+        <button
+          className={`slider-button ${
+            activeView === "Map" ? "active" : ""
+          }`}
+          onClick={() => toggleView("Map")}
+        >
+          Discover
+        </button>
+      </div>
+
+      {/* Right-side Icons */}
       <div className="flex space-x-4">
+        {/* NFCReader Icon */}
         <button
           className={`icon-button base-button ${
-            activeView === 'Map' ? 'active' : ''
+            activeView === "NFCReader" ? "active" : ""
           }`}
-          onClick={() => toggleView('Map')}
+          onClick={() => toggleView("NFCReader")}
         >
-          <MapIcon className="h-6 w-6" />
+          <QrCodeIcon className="h-6 w-6" />
         </button>
+
+        {/* Settings Icon */}
         <button
           className="icon-button base-button"
           onClick={onConfigureClick}
