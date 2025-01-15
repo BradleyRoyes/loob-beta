@@ -1,83 +1,82 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  // Define the paths to all template files for tree-shaking unused styles
   content: [
-    './pages/**/*.{js,ts,jsx,tsx}', // Pages
-    './components/**/*.{js,ts,jsx,tsx}', // Components
-    './layouts/**/*.{js,ts,jsx,tsx}', // Layouts
-    './lib/**/*.{js,ts,jsx,tsx}', // Libraries
-    './styles/**/*.css', // Global and custom styles
-  ],
+    './app/**/*.{js,ts,jsx,tsx}', // If using the App Router
+    './components/**/*.{js,ts,jsx,tsx}',
+    './layouts/**/*.{js,ts,jsx,tsx}',
+    './lib/**/*.{js,ts,jsx,tsx}',
+    './styles/**/*.css',
+  ],  
   theme: {
     extend: {
-      // Responsive font sizes for better mobile UX
+      fontFamily: {
+        sans: ['Nunito', 'Varela Round', 'sans-serif'],
+        display: ['Inter', 'sans-serif'],
+        header: ['Modulus Pro', 'sans-serif'], // Add Modulus Pro font
+      },
       fontSize: {
-        xs: '0.75rem', // Extra small for captions
-        sm: '0.875rem', // Small text
-        base: '1rem', // Default body text
-        lg: '1.125rem', // Larger text for emphasis
-        xl: '1.25rem', // Headings
-        '2xl': '1.5rem', // Larger headings
+        xs: '0.75rem',
+        sm: '0.875rem',
+        base: '1rem',
+        lg: '1.125rem',
+        xl: '1.25rem',
+        '2xl': '1.5rem',
       },
       spacing: {
-        xs: '0.25rem', // Extra small spacing
-        sm: '0.5rem', // Small spacing
-        md: '0.75rem', // Medium spacing
-        lg: '1rem', // Larger spacing
-        xl: '1.5rem', // Extra large spacing
-        '2xl': '2rem', // Larger layouts
+        xs: '0.25rem',
+        sm: '0.5rem',
+        md: '0.75rem',
+        lg: '1rem',
+        xl: '1.5rem',
+        '2xl': '2rem',
+        header: '4rem', // Custom header height for offset
       },
       colors: {
-        primary: '#2563EB', // Primary blue
-        secondary: '#10B981', // Accent green
-        danger: '#EF4444', // Error red
-        success: '#22C55E', // Success green
+        primary: '#2563EB',
+        secondary: '#10B981',
+        danger: '#EF4444',
+        success: '#22C55E',
         neutral: {
-          light: '#F9FAFB', // Light gray
-          DEFAULT: '#9CA3AF', // Neutral gray
-          dark: '#1F2937', // Dark gray
+          light: '#F9FAFB',
+          DEFAULT: '#9CA3AF',
+          dark: '#1F2937',
         },
         background: {
-          light: '#FFFFFF', // Light background
-          dark: '#121212', // Dark background (mobile-first)
+          light: '#FFFFFF',
+          dark: '#121212',
         },
       },
-      fontFamily: {
-        sans: ['Nunito', 'Varela Round', 'sans-serif'], // Primary font
-        display: ['Inter', 'sans-serif'], // Headings and special use cases
-      },
-      // Custom screen breakpoints
       screens: {
-        xs: '360px', // Small devices (e.g., iPhone SE)
-        sm: '480px', // Small phones
-        md: '768px', // Tablets
-        lg: '1024px', // Laptops
-        xl: '1280px', // Desktops
-        '2xl': '1440px', // Larger desktops
+        xs: '360px',
+        sm: '480px',
+        md: '768px',
+        lg: '1024px',
+        xl: '1280px',
+        '2xl': '1440px',
       },
       boxShadow: {
-        sm: '0 1px 2px rgba(0, 0, 0, 0.05)', // Subtle shadow
-        md: '0 4px 6px rgba(0, 0, 0, 0.1)', // Medium shadow
-        lg: '0 10px 15px rgba(0, 0, 0, 0.15)', // Larger shadow
-        xl: '0 20px 25px rgba(0, 0, 0, 0.2)', // Bold shadow
+        sm: '0 1px 2px rgba(0, 0, 0, 0.05)',
+        md: '0 4px 6px rgba(0, 0, 0, 0.1)',
+        lg: '0 10px 15px rgba(0, 0, 0, 0.15)',
+        xl: '0 20px 25px rgba(0, 0, 0, 0.2)',
       },
       borderRadius: {
-        sm: '0.375rem', // Small radius
-        DEFAULT: '0.5rem', // Default radius
-        lg: '1rem', // Large radius
-        xl: '1.5rem', // Extra large radius
+        sm: '0.375rem',
+        DEFAULT: '0.5rem',
+        lg: '1rem',
+        xl: '1.5rem',
       },
     },
   },
   plugins: [
-    require('@tailwindcss/forms'), // Improved form control styles
-    require('@tailwindcss/typography'), // Prose content
-    require('@tailwindcss/aspect-ratio'), // Aspect ratio utilities
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/typography'),
+    require('@tailwindcss/aspect-ratio'),
   ],
   corePlugins: {
-    container: false, // Use custom container styles for mobile
+    container: true, // Enable container utility
   },
   future: {
-    hoverOnlyWhenSupported: true, // Prevent hover states on touch devices
+    hoverOnlyWhenSupported: true,
   },
 };

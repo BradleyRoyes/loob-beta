@@ -1,11 +1,10 @@
 /* ==========================================================
-   Global CSS - Refactored and Maintained for Consistency
+   ChatModal CSS - Comprehensive Dark-Themed Styles
    ========================================================== */
 
 /* ============= Import Fonts ============= */
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600&display=swap');
 @import url('https://fonts.googleapis.com/css?family=Varela+Round');
-@import url('https://fonts.googleapis.com/css2?family=Modulus+Pro:wght@700&display=swap');
 
 /* ============= Tailwind CSS Directives ============= */
 @tailwind base;
@@ -48,50 +47,93 @@ html, body {
   --font-size-default: 1rem;
 }
 
-/* ============= Global Styles ============= */
-body {
-  line-height: 1.6;
-  word-wrap: break-word;
-}
-
-/* Headers and Containers */
-.header-container {
-  position: fixed;
-  top: 0;
-  left: 0;
+/* ============= ChatModal Styles ============= */
+.chatbot-section {
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  z-index: 10;
+  max-width: 768px;
+  height: 100vh;
+  margin: 0 auto;
   background-color: var(--background-secondary);
+  border-radius: var(--border-radius-default);
   box-shadow: var(--shadow-primary);
+  padding: 1rem;
+  overflow: hidden;
 }
 
-.footer-container {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  z-index: 10;
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
-  background-color: var(--background-primary);
+.chatbot-header {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-primary);
+  text-align: center;
 }
 
-main {
-  padding-top: 4rem; /* Account for header height */
-  padding-bottom: 4rem; /* Account for footer height */
-}
-
-/* Input Fields */
-input {
+.chatbot-header h1 {
+  font-size: 1.5rem;
+  font-weight: var(--font-weight-bold);
   color: var(--text-primary);
-  background-color: var(--background-soft);
+}
+
+.chatbot-input {
+  color: var(--text-primary);
   border: 1px solid var(--border-primary);
+  background-color: var(--background-soft);
+  font-size: var(--font-size-default);
   padding: var(--padding-default);
   border-radius: var(--border-radius-default);
   outline: none;
 }
 
-input::placeholder {
+.chatbot-input::placeholder {
   color: var(--text-secondary);
+}
+
+/* Prompt Suggestions */
+.prompt-suggestion-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.prompt-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--border-radius-default);
+  background-color: var(--background-soft);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.prompt-button:hover {
+  background-color: var(--background-secondary);
+  color: var(--text-secondary);
+}
+
+/* Chat Messages */
+.talk-bubble {
+  display: inline-block;
+  position: relative;
+  color: var(--text-primary);
+  background: var(--gradient-primary);
+  border-radius: 10px;
+  padding: 10px;
+  word-wrap: break-word;
+  margin-bottom: 0.5rem;
+}
+
+.talk-bubble:not(.user) {
+  border-bottom-left-radius: 0;
+  float: left;
+}
+
+.talk-bubble.user {
+  background: var(--gradient-user);
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 0;
+  float: right;
 }
 
 /* Buttons */
@@ -121,6 +163,13 @@ input::placeholder {
   cursor: not-allowed;
 }
 
+/* Audio Recorder */
+.audio-recorder-container {
+  margin: 1rem 0;
+  display: flex;
+  justify-content: center;
+}
+
 /* Animations */
 .dot-flashing {
   position: relative;
@@ -142,13 +191,24 @@ input::placeholder {
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
-  main {
-    padding: 3.5rem 1rem;
+  .chatbot-section {
+    height: calc(100vh - 8rem);
+    padding: 1rem;
+  }
+
+  .prompt-button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
   }
 }
 
 @media (max-width: 640px) {
-  main {
-    padding: 3rem 0.5rem;
+  .chatbot-section {
+    margin: 0;
+    padding: 0.5rem;
+  }
+
+  .chatbot-header h1 {
+    font-size: 1.25rem;
   }
 }

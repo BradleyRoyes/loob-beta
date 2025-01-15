@@ -167,3 +167,8 @@
     }
   }
   
+  .header-logo {
+    height: 20px;
+    margin-right: 8px; /* Space between logo and text */
+  }
+  

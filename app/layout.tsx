@@ -16,7 +16,7 @@ import "./globals.css";
 const RootLayout: React.FC = () => {
   const [view, setView] = useState<
     "Chat" | "Profile" | "Map" | "NFCReader" | "AddEntry"
-  >("Chat"); // Include "AddEntry"
+  >("Chat");
   const [configureOpen, setConfigureOpen] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
 
@@ -39,7 +39,7 @@ const RootLayout: React.FC = () => {
         return <Map />;
       case "NFCReader":
         return <NFCReader />;
-      case "AddEntry": // Add this case
+      case "AddEntry":
         return <AddEntry />;
       case "Chat":
       default:
@@ -61,13 +61,15 @@ const RootLayout: React.FC = () => {
           ) : (
             <>
               {/* Sticky Header */}
-              <Header
-                toggleView={handleToggleView}
-                onConfigureClick={handleConfigureClick}
-                activeView={view}
-              />
+              <div className="sticky top-0 z-50 w-full bg-white shadow-md">
+                <Header
+                  toggleView={handleToggleView}
+                  onConfigureClick={handleConfigureClick}
+                  activeView={view}
+                />
+              </div>
               {/* Main Content */}
-              <main className="flex flex-1 flex-col items-center justify-between w-full overflow-hidden">
+              <main className="flex flex-1 flex-col items-center justify-between w-full pt-[4rem] px-4 md:px-6 overflow-y-auto">
                 {renderAppContent()}
                 {configureOpen && <ConfigureModal onClose={handleCloseConfigure} />}
               </main>

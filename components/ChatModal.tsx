@@ -6,6 +6,8 @@ import { useChat } from "ai/react";
 import PromptSuggestionRow from "./PromptSuggestions/PromptSuggestionsRow";
 import AudioRecorder from "./AudioRecorder";
 import Carousel from "./Carousel";
+import "./ChatModal.css";
+
 
 interface ChatModalProps {
   onConfigureOpen?: () => void;
@@ -63,9 +65,9 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
 
   return (
     <section
-      ref={messagesEndRef}
-      className="chatbot-section flex flex-col w-full max-w-md md:max-w-3xl mx-auto h-full md:h-[90vh] bg-white rounded-lg shadow-lg p-4 overflow-hidden"
-    >
+    ref={messagesEndRef}
+    className="chatbot-section flex flex-col w-full max-w-md md:max-w-3xl mx-auto h-full md:h-[90vh] rounded-lg shadow-lg p-4 overflow-hidden"
+  >  
       {/* Carousel Section */}
       <div className="overlay-carousel flex items-center justify-center mb-4 rounded-lg p-4 bg-gradient-to-r from-orange-300 to-pink-300">
         <Carousel>

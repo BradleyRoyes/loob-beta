@@ -1,0 +1,11 @@
+/* Footer */
+.footer-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+    background-color: var(--background-primary, #121212);
+  }
+  
