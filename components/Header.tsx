@@ -22,28 +22,31 @@ const Header: React.FC<HeaderProps> = ({
   activeView,
 }) => {
   return (
-    <header>
-      {/* Profile Icon */}
-      <button
-        className={`icon-button base-button ${
-          activeView === "Profile" ? "active" : ""
-        }`}
-        onClick={() => toggleView("Profile")}
-      >
-        <UserIcon className="h-6 w-6" />
-      </button>
+    <header className="header-container">
+      {/* Left Section */}
+      <div className="left-icons">
+        {/* Add Entry Icon */}
+        <button
+          className={`icon-button ${
+            activeView === "AddEntry" ? "active" : ""
+          }`}
+          onClick={() => toggleView("AddEntry")}
+        >
+          <PlusCircleIcon className="h-6 w-6" />
+        </button>
 
-      {/* Add Entry Icon */}
-      <button
-        className={`icon-button base-button ${
-          activeView === "AddEntry" ? "active" : ""
-        }`}
-        onClick={() => toggleView("AddEntry")}
-      >
-        <PlusCircleIcon className="h-6 w-6" />
-      </button>
+        {/* NFC Reader Icon */}
+        <button
+          className={`icon-button ${
+            activeView === "NFCReader" ? "active" : ""
+          }`}
+          onClick={() => toggleView("NFCReader")}
+        >
+          <QrCodeIcon className="h-6 w-6" />
+        </button>
+      </div>
 
-      {/* Slider */}
+      {/* Center Slider */}
       <div className="slider-container">
         <div
           className={`slider-pill ${
@@ -68,21 +71,21 @@ const Header: React.FC<HeaderProps> = ({
         </button>
       </div>
 
-      {/* Right-side Icons */}
-      <div className="flex space-x-4">
-        {/* NFCReader Icon */}
+      {/* Right Section */}
+      <div className="right-icons">
+        {/* Profile Icon */}
         <button
-          className={`icon-button base-button ${
-            activeView === "NFCReader" ? "active" : ""
+          className={`icon-button ${
+            activeView === "Profile" ? "active" : ""
           }`}
-          onClick={() => toggleView("NFCReader")}
+          onClick={() => toggleView("Profile")}
         >
-          <QrCodeIcon className="h-6 w-6" />
+          <UserIcon className="h-6 w-6" />
         </button>
 
         {/* Settings Icon */}
         <button
-          className="icon-button base-button"
+          className="icon-button"
           onClick={onConfigureClick}
         >
           <Cog6ToothIcon className="h-6 w-6" />

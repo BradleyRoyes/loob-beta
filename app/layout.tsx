@@ -10,18 +10,21 @@ import Map from "../components/Map";
 import ConfigureModal from "../components/ConfigureModal";
 import ChatSection from "../components/ChatModal";
 import NFCReader from "../components/NFCReader";
+import AddEntry from "../components/AddEntry"; // Import AddEntry
 import "./globals.css";
 
 const RootLayout: React.FC = () => {
-  const [view, setView] = useState<"Chat" | "Profile" | "Map" | "NFCReader">(
-    "Chat"
-  );
+  const [view, setView] = useState<
+    "Chat" | "Profile" | "Map" | "NFCReader" | "AddEntry"
+  >("Chat"); // Include "AddEntry"
   const [configureOpen, setConfigureOpen] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
 
   const handleSplashComplete = () => setShowSplash(false);
 
-  const handleToggleView = (newView: "Chat" | "Profile" | "Map" | "NFCReader") => {
+  const handleToggleView = (
+    newView: "Chat" | "Profile" | "Map" | "NFCReader" | "AddEntry"
+  ) => {
     setView(newView);
   };
 
@@ -36,6 +39,8 @@ const RootLayout: React.FC = () => {
         return <Map />;
       case "NFCReader":
         return <NFCReader />;
+      case "AddEntry": // Add this case
+        return <AddEntry />;
       case "Chat":
       default:
         return (

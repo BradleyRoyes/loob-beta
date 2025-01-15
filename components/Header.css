@@ -1,167 +1,169 @@
-/* HEADER COMPONENT STYLES */
-
-/* Base Header Styling */
-header {
-    all: unset; /* Unset all inherited styles to ensure no interference */
+/* Header Container */
+.header-container {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between; /* Space out left, center, and right sections */
     align-items: center;
     width: 100%;
     background-color: var(--background-secondary, #232323);
-    padding: 1rem;
-    border-bottom: 1px solid var(--border-primary, #3a3a3a);
+    padding: 0.8rem 1rem;
     position: sticky;
     top: 0;
     z-index: 1000;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-/* Slider Container */
-header .slider-container {
-    all: unset; /* Unset all inherited styles */
-    position: relative;
+    flex-wrap: nowrap; /* Prevent wrapping of items */
+  }
+  
+  /* Left Icons Section */
+  .left-icons {
     display: flex;
-    justify-content: space-between; /* Ensure the buttons are evenly spaced */
+    gap: 0.8rem; /* Spacing between icons */
     align-items: center;
-    background-color: var(--background-soft, #1e1e1e);
-    border-radius: 9999px;
-    padding: 0.4rem;
-    width: auto;
+  }
+  
+  /* Right Icons Section */
+  .right-icons {
+    display: flex;
+    gap: 0.8rem; /* Spacing between icons */
+    align-items: center;
+  }
+  
+  /* Slider Container */
+  .slider-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative; /* For the sliding pill */
+    flex-grow: 1; /* Ensures the slider takes available space */
     max-width: 400px;
-    gap: 0.5rem;
-    overflow: hidden;
-    flex-grow: 1; /* Ensure the container expands on available space */
-}
-
-/* Slider Buttons */
-header .slider-container button {
-    all: unset; /* Unset all inherited styles */
-    display: inline-block;
-    text-align: center;
-    font-size: 1rem;
-    font-weight: 600;
-    padding: 0.5rem 2.5rem;
-    border-radius: 9999px;
-    color: var(--text-primary, #ffffff);
-    cursor: pointer;
-    z-index: 1; /* Ensure above sliding pill */
-    transition: color 0.3s ease;
-}
-
-/* Active Button Text */
-header .slider-container button.active {
-    color: var(--text-primary, #ffffff);
-}
-
-/* Remove hover effect for slider buttons */
-header .slider-container button:hover {
-    color: var(--text-primary, #ffffff); /* Keep hover color consistent */
-}
-
-/* Sliding Pill */
-header .slider-pill {
-    all: unset; /* Unset all inherited styles */
+    padding: 0.4rem;
+    background-color: var(--background-soft, #1e1e1e);
+    border-radius: 9999px; /* Fully rounded edges */
+    overflow: hidden; /* Prevent pill from spilling out */
+  }
+  
+  /* Sliding Pill */
+  .slider-pill {
     position: absolute;
     top: 0;
     left: 0;
     height: 100%;
     width: 50%;
-    background: linear-gradient(to right, #ff7eb3, #fba779);
-    border-radius: 9999px;
-    z-index: 0;
-    transition: all 0.3s ease;
-}
-
-/* Sliding Pill Positions */
-header .slider-pill.active-chat {
+    background: linear-gradient(to right, #ff7eb3, #fba779); /* Original gradient */
+    border-radius: 9999px; /* Smooth rounded corners */
+    z-index: 0; /* Ensure it's below the buttons */
+    transition: all 0.3s ease; /* Smooth sliding effect */
+  }
+  
+  /* Sliding Pill Active States */
+  .slider-pill.active-chat {
     left: 0;
-}
-
-header .slider-pill.active-discover {
+  }
+  
+  .slider-pill.active-discover {
     left: 50%;
-}
-/* Icon Buttons */
-header .icon-button {
-    all: unset; /* Unset all inherited styles */
+  }
+  
+  /* Slider Buttons */
+  .slider-container button {
+    all: unset; /* Reset default button styles */
+    display: inline-block;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0.5rem 2.5rem;
+    border-radius: 9999px; /* Fully rounded edges */
+    color: var(--text-primary, #ffffff); /* Default button text color */
+    cursor: pointer;
+    z-index: 1; /* Ensure button is above the pill */
+  }
+  
+  .slider-container button.active {
+    color: var(--text-primary, #ffffff); /* Keep text color consistent */
+  }
+  
+  .slider-container button:hover {
+    color: var(--text-primary, #ffffff); /* Prevent hover color change */
+  }
+  
+  /* Icon Buttons */
+  .icon-button {
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0.5rem;
-    border-radius: 50%;
+    border-radius: 50%; /* Rounded buttons */
     cursor: pointer;
-    transition: background 0.3s ease;
-    margin-right: 1rem; /* Add margin to create space between the icon and right edge */
-}
-
-header .icon-button:hover {
-    background: var(--background-hover, rgba(255, 255, 255, 0.1));
-}
-
-header .icon-button.active {
-    background: var(--background-active, rgba(255, 255, 255, 0.2));
-}
-
-/* Styling for the Settings Button */
-header .icon-button.settings {
-    margin-left: auto; /* Ensure it's aligned to the far right */
-    padding: 0.6rem; /* Slightly larger padding for emphasis */
-    background-color: var(--background-soft, #2e2e2e); /* Add a subtle background */
-    border: 1px solid var(--border-primary, #3a3a3a); /* Add a border for distinction */
-}
-
-header .icon-button.settings:hover {
-    background-color: var(--background-hover, #444444); /* Darker background on hover */
-}
-
-/* Adjustments for responsiveness and spacing */
-header {
-    display: flex;
-    justify-content: space-between; /* Ensure there's space between the elements */
-    align-items: center;
-    width: 100%;
-    padding: 1rem;
-    box-sizing: border-box; /* Ensures padding doesn't push out the content */
-}
-
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-    header {
-        padding: 0.8rem;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+  
+  .icon-button:hover {
+    background: var(--background-hover, rgba(255, 255, 255, 0.1)); /* Hover background */
+    transform: scale(1.1); /* Slight scaling effect on hover */
+  }
+  
+  .icon-button.active {
+    background: var(--background-active, rgba(255, 255, 255, 0.2)); /* Active state */
+  }
+  
+  /* Specific Adjustments for Settings Button */
+  .icon-button.settings {
+    padding: 0.6rem;
+    background-color: var(--background-soft, #2e2e2e); /* Subtle background */
+    border: 1px solid var(--border-primary, #3a3a3a); /* Border for distinction */
+  }
+  
+  .icon-button.settings:hover {
+    background-color: var(--background-hover, #444444); /* Darker hover effect */
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    .header-container {
+      flex-direction: row; /* Keep icons and slider on the same row */
+      padding: 0.8rem 1rem;
     }
-
-    header .slider-container {
-        max-width: 300px;
-        gap: 0.4rem;
-        width: 100%; /* Ensure container doesn't overflow */
+  
+    .left-icons,
+    .right-icons {
+      gap: 0.5rem;
     }
-
-    header .slider-container button {
-        font-size: 0.9rem;
-        padding: 0.4rem 1rem;
+  
+    .slider-container {
+      max-width: 300px; /* Smaller slider width for tablets */
+      width: auto;
     }
-
-    header .icon-button {
-        margin-left: 0.8rem; /* Adjust margin for smaller screens */
+  
+    .slider-container button {
+      font-size: 0.9rem;
+      padding: 0.4rem 1rem;
     }
-}
-
-@media (max-width: 480px) {
-    header {
-        padding: 0.6rem;
+  }
+  
+  @media (max-width: 480px) {
+    .header-container {
+      flex-direction: row; /* Ensure everything stays in one row */
+      align-items: center;
+      justify-content: space-between; /* Even spacing for all items */
+      padding: 0.6rem;
     }
-
-    header .slider-container {
-        max-width: 250px;
-        gap: 0.8rem;
-        width: 100%; /* Ensure container fits on smaller screens */
+  
+    .left-icons,
+    .right-icons {
+      gap: 0.4rem; /* Reduce gap for smaller screens */
     }
-
-    header .slider-container button {
-        font-size: 0.8rem;
-        padding: 0.3rem 0.8rem;
+  
+    .slider-container {
+      max-width: 250px; /* Further reduce slider width */
+      width: auto;
     }
-
-    header .icon-button {
-        margin-left: 0.5rem; /* Reduced margin for small screens */
+  
+    .slider-container button {
+      font-size: 0.8rem;
+      padding: 0.3rem 0.8rem;
     }
-}
+  
+    .icon-button {
+      padding: 0.4rem; /* Reduce padding for smaller screens */
+    }
+  }
+  

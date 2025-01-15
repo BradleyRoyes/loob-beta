@@ -1,8 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useGlobalState } from './GlobalStateContext';
+import "./AddEntry.css";
 
+/**
+ * AddEntry Component
+ * This component allows logged-in users to add an entry to the Loobrary.
+ * It collects the title, offering type, description, and location, and automatically
+ * includes global user data (e.g., pseudonym, email, phone).
+ * Location validation is included to ensure a proper address is provided.
+ */
 const AddEntry: React.FC = () => {
+  // Access global state
+  const { userId, userEmail, userPhone } = useGlobalState();
+
+  // Local state to manage form inputs and submission status
   const [formData, setFormData] = useState({
     title: '',
     offeringType: '',
@@ -13,6 +26,10 @@ const AddEntry: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submissionSuccess, setSubmissionSuccess] = useState<boolean>(false);
 
+  /**
+   * Updates the formData state when form fields change.
+   * @param e - Change event from input, textarea, or select elements
+   */
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -23,15 +40,30 @@ const AddEntry: React.FC = () => {
     }));
   };
 
+  /**
+   * Validates the form fields to ensure all required fields are filled.
+   * @returns True if form is valid, false otherwise
+   */
   const validateForm = () => {
     const { title, offeringType, description, location } = formData;
     if (!title || !offeringType || !description || !location) {
       setError('All fields are required.');
       return false;
     }
+
+    // Basic validation for location (requires more robust validation in production)
+    if (location.length < 5) {
+      setError('Please provide a valid address.');
+      return false;
+    }
+
     return true;
   };
 
+  /**
+   * Handles form submission.
+   * Validates the form, sends data to the server, and handles response.
+   */
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
@@ -41,6 +73,9 @@ const AddEntry: React.FC = () => {
     try {
       const payload = {
         ...formData,
+        pseudonym: userId || 'Anonymous', // Automatically use global pseudonym
+        email: userEmail || '', // Automatically include email from global state
+        phone: userPhone || '', // Automatically include phone from global state
         dataType: 'userEntry',
         createdAt: new Date().toISOString(),
       };
@@ -68,9 +103,15 @@ const AddEntry: React.FC = () => {
 
   return (
     <div className="add-entry-container">
+      {/* If submission is successful, show success message */}
       {!submissionSuccess ? (
         <>
-          <h2 className="title">Add a New Entry</h2>
+          <div className="gridBackground"></div>
+          <div className="fadeOverlay"></div>
+          <h2 className="mainTitle">Add a New Entry to the Loobrary</h2>
+          <p className="description">
+            This is the place to contribute something to the Loobrary. It can be anything—venues, talents, gear, and more. Add as much detail as you can. 
+          </p>
           <form className="add-entry-form">
             <input
               type="text"
@@ -104,7 +145,7 @@ const AddEntry: React.FC = () => {
             <input
               type="text"
               name="location"
-              placeholder="Enter a location"
+              placeholder="Enter a valid address"
               value={formData.location}
               onChange={handleInputChange}
               required
@@ -116,7 +157,7 @@ const AddEntry: React.FC = () => {
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="submit-button"
+              className="actionButton"
             >
               {isSubmitting ? 'Submitting...' : 'Submit'}
             </button>
@@ -124,8 +165,8 @@ const AddEntry: React.FC = () => {
         </>
       ) : (
         <div className="success-message">
-          <h2>Entry Added Successfully!</h2>
-          <p>Your contribution has been recorded.</p>
+          <h2 className="mainTitle">Entry Added Successfully!</h2>
+          <p className="description">Your contribution has been recorded.</p>
         </div>
       )}
     </div>
