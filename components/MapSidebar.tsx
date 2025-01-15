@@ -2,27 +2,37 @@ import React, { useMemo, useState } from "react";
 import { FaMapMarkerAlt, FaUser, FaTools } from "react-icons/fa";
 import "./MapSidebar.css";
 
-// Match the Node type from Map.tsx
+/**
+ * Interface representing a node item in the map.
+ */
 export interface Node {
-  id: string;
-  lat: number;
-  lon: number;
-  label: string;
-  type: string; // e.g., "Venue", "Gear", "Talent", etc.
-  details: string; // e.g., description or details
-  contact: string; // e.g., "mailto:someone@example.com"
-  visualType: "Today" | "ThisWeek" | "AllTime"; // Matches VisualView type
+  id: string; // Unique identifier for the node
+  lat: number; // Latitude of the node location
+  lon: number; // Longitude of the node location
+  label: string; // Display label for the node
+  type: string; // Type of the node (e.g., "Venue", "Gear", "Talent", etc.)
+  details: string; // Additional details or description about the node
+  contact: string; // Contact information (e.g., email address)
+  visualType: "Today" | "ThisWeek" | "AllTime"; // Visibility duration for the node
 }
 
-// Props for MapSidebar
+/**
+ * Props interface for the MapSidebar component.
+ */
 interface MapSidebarProps {
-  nodes: Node[];
-  onNodeSelect: (node: Node) => void;
-  onMoreInfo: (node: Node) => void;
-  sidebarActive: boolean;
-  toggleSidebar: () => void;
+  nodes: Node[]; // Array of node data to display
+  onNodeSelect: (node: Node) => void; // Callback when a node is selected
+  onMoreInfo: (node: Node) => void; // Callback to show more information about a node
+  sidebarActive: boolean; // Whether the sidebar is currently active/visible
+  toggleSidebar: () => void; // Function to toggle the sidebar visibility
 }
 
+/**
+ * MapSidebar Component
+ * 
+ * Renders a sidebar for filtering and displaying map nodes. Users can search for nodes
+ * by text input or filter by specific types (e.g., Venue, Talent, Gear).
+ */
 const MapSidebar: React.FC<MapSidebarProps> = ({
   nodes,
   onNodeSelect,
@@ -30,10 +40,12 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
   sidebarActive,
   toggleSidebar,
 }) => {
-  const [searchQuery, setSearchQuery] = useState(""); // Search input state
-  const [selectedType, setSelectedType] = useState<string | "All">("All"); // Filter state
+  const [searchQuery, setSearchQuery] = useState(""); // Search query state
+  const [selectedType, setSelectedType] = useState<string | "All">("All"); // Selected filter type
 
-  // Filter nodes based on search query and type
+  /**
+   * Memoized filtered nodes based on search query and selected type.
+   */
   const filteredNodes = useMemo(() => {
     return nodes.filter(
       (node) =>
@@ -43,37 +55,46 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
     );
   }, [nodes, searchQuery, selectedType]);
 
+  /**
+   * Handles the selection of a node.
+   * Closes the sidebar if the viewport is small (mobile devices).
+   */
   const handleNodeSelect = (node: Node) => {
     onNodeSelect(node);
     if (window.innerWidth <= 768) {
-      toggleSidebar(); // Close the sidebar on mobile
+      toggleSidebar();
     }
   };
 
+  /**
+   * Toggles the selected type filter.
+   * If the current type is selected, resets to "All".
+   */
   const handleTypeSelection = (type: string) => {
-    // Toggle between "All" and the selected type
     setSelectedType(type === selectedType ? "All" : type);
   };
 
   return (
     <div className={`sidebar-container ${sidebarActive ? "active" : ""}`}>
       <div className={`sidebar-content ${sidebarActive ? "visible" : "hidden"}`}>
-        <div className="sticky-controls">
+        {/* Sticky header with title and toggle buttons */}
+        <div
+          className="sticky-controls"
+          style={{
+            position: "sticky",
+            top: 0,
+            backgroundColor: "#333",
+            zIndex: 10,
+            padding: "10px",
+          }}
+        >
           <h2 className="sidebar-title">Search Loobrary</h2>
 
-          {/* Search input */}
-          <input
-            type="text"
-            className="sidebar-input"
-            placeholder="Search for a venue, gear, artist..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-
-          {/* Search by icons */}
+          {/* Filter by type icons */}
           <div className="search-by-container">
             <h3 className="search-by-title">Search by...</h3>
             <div className="search-by-icons">
+              {/* Location Filter */}
               <div
                 className={`search-icon ${selectedType === "Venue" ? "active" : ""}`}
                 onClick={() => handleTypeSelection("Venue")}
@@ -81,6 +102,7 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
                 <FaMapMarkerAlt className="icon" />
                 <span>Location</span>
               </div>
+              {/* Talent Filter */}
               <div
                 className={`search-icon ${selectedType === "Talent" ? "active" : ""}`}
                 onClick={() => handleTypeSelection("Talent")}
@@ -88,6 +110,7 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
                 <FaUser className="icon" />
                 <span>Talent</span>
               </div>
+              {/* Gear Filter */}
               <div
                 className={`search-icon ${selectedType === "Gear" ? "active" : ""}`}
                 onClick={() => handleTypeSelection("Gear")}
@@ -99,7 +122,7 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
           </div>
         </div>
 
-        {/* Filtered nodes list */}
+        {/* Display filtered nodes */}
         <div className="sidebar-list">
           {filteredNodes.map((node) => (
             <div
@@ -123,6 +146,33 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
               </button>
             </div>
           ))}
+        </div>
+
+        {/* Search input at the bottom, sticky */}
+        <div
+          style={{
+            position: "sticky",
+            bottom: 0,
+            padding: "10px",
+            backgroundColor: "#333",
+          }}
+        >
+          <input
+            type="text"
+            className="sidebar-input"
+            placeholder="Search for a venue, gear, artist..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "8px",
+              backgroundColor: "#222",
+              color: "#fff",
+              border: "1px solid #555",
+              borderRadius: "4px",
+              outline: "none",
+            }}
+          />
         </div>
       </div>
     </div>
