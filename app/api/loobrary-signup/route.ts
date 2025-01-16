@@ -15,17 +15,27 @@ const splitter = new RecursiveCharacterTextSplitter({
   chunkOverlap: 50,
 });
 
-// Utility for handling errors
+// Utility function for handling errors
 const handleError = (message: string, status: number, code: string = '', missingFields: string[] = []) => {
-  console.error(`[ERROR] ${message}`);
+  console.error(`[ERROR]: ${message}`);
   return NextResponse.json({ error: message, code, missingFields }, { status });
 };
 
-/**
- * POST API Route to handle Loobrary entries.
- * - Validates fields, handles errors robustly, and provides feedback to the frontend.
- * - Adds entries to the database with AI embeddings if applicable.
- */
+// Validate tags: Ensure each tag has both `category` and `value`
+const validateTags = (tags: Array<{ category: string; value: string }>) => {
+  if (!tags || !Array.isArray(tags)) return false;
+  for (const tag of tags) {
+    if (!tag.category || !tag.value) return false;
+  }
+  return true;
+};
+
+// Address validation: Ensure the address has a minimum length and characters
+const validateAddress = (address: string) => {
+  const regex = /^[a-zA-Z0-9\s,.'-]{10,}$/; // Minimum 10 characters
+  return regex.test(address);
+};
+
 export async function POST(req: NextRequest) {
   try {
     console.log('Processing user entry...');
@@ -45,42 +55,50 @@ export async function POST(req: NextRequest) {
       externalLink,
       adminUsername,
       adminPassword,
+      tags,
     } = body;
 
-  // Validate required fields for each dataType
-const missingFields: string[] = []; // Explicitly define the type as string[]
+    // Validate required fields for each dataType
+    const missingFields: string[] = [];
+    if (!dataType) missingFields.push('dataType');
 
-if (!dataType) missingFields.push('dataType');
+    if (dataType === 'Loobricate') {
+      if (!name) missingFields.push('name');
+      if (!description) missingFields.push('description');
+      if (!address) missingFields.push('address');
+      if (!adminUsername) missingFields.push('adminUsername');
+      if (!adminPassword) missingFields.push('adminPassword');
+    } else {
+      if (!pseudonym) missingFields.push('pseudonym');
+      if (!email) missingFields.push('email');
+      if (!password) missingFields.push('password');
+      if (!title) missingFields.push('title');
+      if (!offeringType) missingFields.push('offeringType');
+      if (!description) missingFields.push('description');
+      if (!location) missingFields.push('location');
+    }
 
-if (dataType === 'Loobricate') {
-  if (!name) missingFields.push('name');
-  if (!description) missingFields.push('description');
-  if (!address) missingFields.push('address');
-  if (!adminUsername) missingFields.push('adminUsername');
-  if (!adminPassword) missingFields.push('adminPassword');
-} else {
-  if (!pseudonym) missingFields.push('pseudonym');
-  if (!email) missingFields.push('email');
-  if (!password) missingFields.push('password');
-  if (!title) missingFields.push('title');
-  if (!offeringType) missingFields.push('offeringType');
-  if (!description) missingFields.push('description');
-  if (!location) missingFields.push('location');
-}
+    // Validate tags for all entries
+    if (!validateTags(tags)) {
+      return handleError('Invalid tags. Each tag must have a category and value.', 400, 'invalid_tags');
+    }
 
-// Return an error with the missing fields if any
-if (missingFields.length > 0) {
-  return handleError(
-    `Missing required fields: ${missingFields.join(', ')}`,
-    400,
-    'missing_fields',
-    missingFields
-  );
-}
+    // Validate address
+    if (!validateAddress(address) && dataType === 'Loobricate') {
+      return handleError('Invalid address format for Loobricate.', 400, 'invalid_address');
+    }
+    if (!validateAddress(location) && dataType !== 'Loobricate') {
+      return handleError('Invalid location format.', 400, 'invalid_location');
+    }
 
-    // If there are missing fields, return them to the frontend
+    // Return an error if there are missing fields
     if (missingFields.length > 0) {
-      return handleError('Missing required fields.', 400, 'missing_fields', missingFields);
+      return handleError(
+        `Missing required fields: ${missingFields.join(', ')}`,
+        400,
+        'missing_fields',
+        missingFields
+      );
     }
 
     if (dataType === 'Loobricate') {
@@ -111,6 +129,7 @@ if (missingFields.length > 0) {
         externalLink: externalLink || 'N/A',
         adminUsername,
         adminPassword: hashedAdminPassword,
+        tags,
         createdAt: new Date(),
       };
 
@@ -163,6 +182,7 @@ if (missingFields.length > 0) {
           offeringType,
           description,
           location,
+          tags,
           pseudonym: placeholderPseudonym,
           email: placeholderEmail,
           phone: placeholderPhone,

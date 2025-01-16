@@ -142,4 +142,130 @@
   .form-input.dark-theme:focus {
     border-color: #ffb48f !important;
   }
+
+  .tag-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .small-plus {
+    background: linear-gradient(45deg, #ff7e79, #ffb48f);
+    color: white;
+    font-size: 1.5rem;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .small-plus:hover {
+    background: linear-gradient(45deg, #ffb48f, #ff7e79);
+    transform: translateY(-2px);
+    box-shadow: 0px 4px 10px rgba(255, 120, 120, 0.3);
+  }
+  
+  .form-input {
+    /* Same background and style for tags and other fields */
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: 1px solid #444;
+    background: #222;
+    color: #f3f3f3;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s ease;
+  }
+  
+  .tag-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 5px 0;
+    background: #333;
+    padding: 8px 12px;
+    border-radius: 6px;
+  }
+  
+  .tag-label {
+    font-size: 1rem;
+    color: #f3f3f3;
+  }
+  
+  .remove-tag {
+    background: none;
+    border: none;
+    color: #ff7e79;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  
+  .remove-tag:hover {
+    background: rgba(255, 126, 121, 0.2);
+    color: #ffb48f;
+  }
+  
+  
+
+  .form-input {
+    /* Ensuring the background stays dark */
+    background-color: #222 !important; /* Dark background for the input */
+    color: #f3f3f3 !important; /* Text stays white */
+    border: 1px solid #444 !important; /* Dark border */
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s ease;
+  }
+  
+  .form-input:focus {
+    border-color: #ffb48f !important; /* Highlight on focus */
+    background-color: #222 !important; /* Ensure no white appears on focus */
+  }
+  
+  .form-input::placeholder {
+    color: #aaa !important; /* Placeholder matches the dark theme */
+  }
+  
+  /* For all dark themes globally */
+  .dark-theme .form-input {
+    background-color: #222 !important;
+    color: #f3f3f3 !important;
+    border: 1px solid #444 !important;
+  }
+  
+  .dark-theme .form-input::placeholder {
+    color: #aaa !important;
+  }
+
+  .tag-category-selector {
+    width: 40%; /* Smaller dropdown */
+  }
+  
+  .tag-value-input {
+    width: 60%; /* Larger input for detailed values */
+    height: 80px; /* Encourage multi-line input */
+    resize: vertical;
+  }
+  
+  .tag-description {
+    font-size: 0.9rem;
+    color: #ccc;
+    margin-bottom: 10px;
+    text-align: left;
+  }
+  
   
