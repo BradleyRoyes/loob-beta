@@ -2,185 +2,256 @@
 SIDEBAR STYLING
 ============================ */
 .sidebar-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 300px; /* Wider for desktop */
-    max-height: 80vh;
-    background: rgba(0, 0, 0, 0.8); /* Dark overlay */
-    color: #fff;
-    border-radius: 8px 0 0 8px;
-    overflow-y: auto;
-    z-index: 1000;
-    transform: translateX(-110%); /* Hidden by default */
-    transition: transform 0.3s ease-in-out;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 300px; /* Wider for desktop */
+  max-height: 80vh;
+  background: rgba(0, 0, 0, 0.8); /* Dark overlay */
+  color: #fff;
+  border-radius: 8px 0 0 8px;
+  overflow-y: auto;
+  z-index: 1000;
+  transform: translateX(-110%); /* Hidden by default */
+  transition: transform 0.3s ease-in-out;
 }
 
 .sidebar-container.active {
-    transform: translateX(0); /* Slide in */
+  transform: translateX(0); /* Slide in */
 }
 
 .sidebar-content {
-    padding: 1rem;
+  padding: 1rem;
 }
 
 .sidebar-title {
-    font-weight: bold;
-    font-size: 1.25rem;
-    margin-bottom: 0.5rem;
+  font-weight: bold;
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
 }
 
 .sidebar-input {
-    width: 100%;
-    margin-bottom: 0.75rem;
-    padding: 0.5rem;
-    border: none;
-    border-radius: 4px;
-    background-color: #333;
-    color: #fff;
+  width: 100%;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #333;
+  color: #fff;
 }
 
 .sidebar-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .sidebar-item {
-    background: #222;
-    padding: 0.75rem;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.2s;
+  background: #222;
+  padding: 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
 .sidebar-item:hover {
-    background: #333;
+  background: #333;
 }
 
 .sidebar-item-title {
-    font-weight: bold;
-    margin-bottom: 0.3rem;
-    color: #fed7aa; /* Subtle pastel accent for titles */
+  font-weight: bold;
+  margin-bottom: 0.3rem;
+  color: #fed7aa; /* Subtle pastel accent for titles */
 }
 
 .sidebar-item-description {
-    font-size: 0.875rem;
-    color: #bbb;
+  font-size: 0.875rem;
+  color: #bbb;
 }
 
 /* ============================
-   TOGGLE SIDEBAR BUTTON
+TOGGLE SIDEBAR BUTTON
 ============================ */
 .toggle-sidebar {
-    position: fixed; /* Fixed to ensure it's always visible */
-    bottom: 80px; /* Align to the bottom */
-    right: 20px; /* Move to the right side */
-    width: 50px; /* Larger button */
-    height: 50px;
-    background: linear-gradient(to right, #fed7aa, #fcd1d1); /* pastel gradient */
-    border: none;
-    border-radius: 50%; /* Circular button */
-    cursor: pointer;
-    color: #333;
-    font-size: 1.2rem;
-    font-weight: bold;
-    z-index: 1100;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease-in-out, background 0.3s ease-in-out;
+  position: fixed; /* Fixed to ensure it's always visible */
+  bottom: 80px; /* Align to the bottom */
+  right: 20px; /* Move to the right side */
+  width: 50px; /* Larger button */
+  height: 50px;
+  background: linear-gradient(to right, #fed7aa, #fcd1d1); /* pastel gradient */
+  border: none;
+  border-radius: 50%; /* Circular button */
+  cursor: pointer;
+  color: #333;
+  font-size: 1.2rem;
+  font-weight: bold;
+  z-index: 1100;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease-in-out, background 0.3s ease-in-out;
 }
 
 .toggle-sidebar:hover {
-    transform: scale(1.1); /* Subtle hover effect */
-    background: linear-gradient(to right, #fcd1d1, #fed7aa); /* Reverse gradient on hover */
+  transform: scale(1.1); /* Subtle hover effect */
+  background: linear-gradient(to right, #fcd1d1, #fed7aa); /* Reverse gradient on hover */
 }
 
 /* Mobile adjustments */
 @media (max-width: 768px) {
-    .sidebar-container {
-        width: 80%; /* Adjust for mobile */
-        height: 100%; /* Cover entire screen vertically */
-        border-radius: 0; /* Remove rounded corners */
-        background: rgba(0, 0, 0, 0.9); /* Slightly darker for clarity */
-    }
+  .sidebar-container {
+      width: 80%; /* Adjust for mobile */
+      height: 100%; /* Cover entire screen vertically */
+      border-radius: 0; /* Remove rounded corners */
+      background: rgba(0, 0, 0, 0.9); /* Slightly darker for clarity */
+  }
 
-    .toggle-sidebar {
-        bottom: 15px; /* Adjust for mobile */
-        right: 15px; /* Slightly closer to the edge */
-    }
+  .toggle-sidebar {
+      bottom: 15px; /* Adjust for mobile */
+      right: 15px; /* Slightly closer to the edge */
+  }
 
-    .sidebar-container:not(.active) {
-        transform: translateX(-100%); /* Fully hidden by default */
-    }
+  .sidebar-container:not(.active) {
+      transform: translateX(-100%); /* Fully hidden by default */
+  }
 }
 
 /* Desktop adjustments */
 @media (min-width: 769px) {
-    .sidebar-container {
-        width: 525px; /* 75% wider than the original 300px */
-    }
+  .sidebar-container {
+      width: 525px; /* 75% wider than the original 300px */
+  }
 }
 
-/* Search by icons container */
+/* ============================
+SEARCH BY ICONS STYLING
+============================ */
 .search-by-container {
-    margin-top: 1rem;
-    text-align: center;
+  margin-top: 1rem;
+  text-align: center;
+  position: relative; /* Needed for the glowing thread positioning */
+}
+
+.search-by-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #fed7aa; /* A pastel orange accent */
+}
+
+.search-by-icons {
+  display: flex;
+  justify-content: space-around;
+  gap: 1rem;
+  position: relative; /* To stack icons above the glowing thread */
+  z-index: 2;
+}
+
+.search-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background-color: #333;
+  border-radius: 12px;
+  transition: transform 0.3s, background 0.3s;
+  cursor: pointer;
+  width: 80px;
+  height: 80px;
+}
+
+.search-icon .icon {
+  font-size: 2rem;
+  color: #fcd1d1; /* A pastel pink accent */
+}
+
+.search-icon span {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #fff;
+}
+
+.search-icon:hover {
+  transform: scale(1.1);
+  background-color: #444; /* Slightly lighter hover effect */
+}
+
+.search-icon.active {
+  background: linear-gradient(to right, #fed7aa, #fcd1d1); /* Pastel gradient */
+  color: #333;
+}
+
+.search-icon.active .icon {
+  color: #333;
+}
+
+.search-icon.active span {
+  color: #333;
+}
+
+/* ============================
+LOOBRICATE SPECIFIC STYLING
+============================ */
+/* Make Loobricate slightly bigger */
+.search-icon.loobricate {
+  width: 90px; /* Slightly larger */
+  height: 90px;
+}
+
+.search-icon.loobricate .icon {
+  font-size: 2.2rem; /* Slightly larger icon */
+}
+
+/* Glowing Traveling Thread Effect */
+.glowing-thread {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* Allows clicks to pass through */
+  overflow: hidden;
+}
+
+.glowing-thread::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -200%;
+  width: 200%;
+  height: 2px;
+  background: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.5) 50%,
+      rgba(255, 255, 255, 0) 100%
+  );
+  animation: moveGlow 3s linear infinite;
+  transform: translateY(-50%);
+}
+
+@keyframes moveGlow {
+  from {
+      transform: translateX(0) translateY(-50%);
   }
-  
-  .search-by-title {
-    font-size: 1.2rem;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-    color: #fed7aa; /* A pastel orange accent */
+  to {
+      transform: translateX(100%) translateY(-50%);
   }
-  
-  .search-by-icons {
-    display: flex;
-    justify-content: space-around;
-    gap: 1rem;
-  }
-  
-  .search-icon {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-    background-color: #333;
-    border-radius: 12px;
-    transition: transform 0.3s, background 0.3s;
-    cursor: pointer;
-    width: 80px;
-    height: 80px;
-  }
-  
-  .search-icon .icon {
-    font-size: 2rem;
-    color: #fcd1d1; /* A pastel pink accent */
-  }
-  
-  .search-icon span {
-    margin-top: 0.5rem;
-    font-size: 0.875rem;
-    color: #fff;
-  }
-  
-  .search-icon:hover {
-    transform: scale(1.1);
-    background-color: #444; /* Slightly lighter hover effect */
-  }
-  
-  .search-icon.active {
-    background: linear-gradient(to right, #fed7aa, #fcd1d1); /* Pastel gradient */
-    color: #333;
-  }
-  
-  .search-icon.active .icon {
-    color: #333;
-  }
-  
-  .search-icon.active span {
-    color: #333;
-  }
-  
-  
+}
+
+/* Highlight active icons when Loobricate is selected */
+.search-icon.active {
+  color: #00ffea; /* Example highlight color */
+}
+
+.search-icon.active .icon {
+  filter: drop-shadow(0 0 5px #00ffea);
+}
+
+/* Optional: Smooth transitions for active state */
+.search-icon {
+  transition: color 0.3s ease, transform 0.3s ease, background 0.3s ease;
+}
+
+.search-icon:hover {
+  transform: scale(1.1);
+}

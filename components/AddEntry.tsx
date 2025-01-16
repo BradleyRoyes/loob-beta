@@ -1,69 +1,55 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useGlobalState } from './GlobalStateContext';
-import "./AddEntry.css";
+import { FaMapMarkerAlt, FaUser, FaTools, FaUsers } from 'react-icons/fa';
+import './AddEntry.css';
+import { useGlobalState } from '../components/GlobalStateContext';
 
-/**
- * AddEntry Component
- * This component allows logged-in users to add an entry to the Loobrary.
- * It collects the title, offering type, description, and location, and automatically
- * includes global user data (e.g., pseudonym, email, phone).
- * Location validation is included to ensure a proper address is provided.
- */
-const AddEntry: React.FC = () => {
-  // Access global state
-  const { userId, userEmail, userPhone } = useGlobalState();
-
-  // Local state to manage form inputs and submission status
-  const [formData, setFormData] = useState({
+const AddEntry = () => {
+  const { pseudonym, email, phone } = useGlobalState();
+  const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [formData, setFormData] = useState<Record<string, any>>({
+    pseudonym: pseudonym || 'Anonymously Contributed',
+    email: email || 'Anonymously Contributed',
+    phone: phone || 'N/A',
+    password: 'default-password',
     title: '',
     offeringType: '',
     description: '',
     location: '',
   });
   const [error, setError] = useState<string>('');
+  const [missingFields, setMissingFields] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submissionSuccess, setSubmissionSuccess] = useState<boolean>(false);
 
-  /**
-   * Updates the formData state when form fields change.
-   * @param e - Change event from input, textarea, or select elements
-   */
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  /**
-   * Validates the form fields to ensure all required fields are filled.
-   * @returns True if form is valid, false otherwise
-   */
-  const validateForm = () => {
-    const { title, offeringType, description, location } = formData;
-    if (!title || !offeringType || !description || !location) {
-      setError('All fields are required.');
-      return false;
-    }
+  const handleTypeSelection = (type: string) => {
+    setSelectedType(type);
+    setFormData((prev) => ({ ...prev, offeringType: type.toLowerCase() }));
+  };
 
-    // Basic validation for location (requires more robust validation in production)
-    if (location.length < 5) {
-      setError('Please provide a valid address.');
+  const validateForm = () => {
+    const requiredFields = selectedType === 'Loobricate'
+      ? ['name', 'description', 'address', 'adminUsername', 'adminPassword']
+      : ['title', 'description', 'location'];
+
+    const missing = requiredFields.filter((field) => !formData[field]);
+    if (missing.length > 0) {
+      setMissingFields(missing);
+      setError('Please fill in the required fields.');
       return false;
     }
 
     return true;
   };
 
-  /**
-   * Handles form submission.
-   * Validates the form, sends data to the server, and handles response.
-   */
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
@@ -73,25 +59,37 @@ const AddEntry: React.FC = () => {
     try {
       const payload = {
         ...formData,
-        pseudonym: userId || 'Anonymous', // Automatically use global pseudonym
-        email: userEmail || '', // Automatically include email from global state
-        phone: userPhone || '', // Automatically include phone from global state
-        dataType: 'userEntry',
-        createdAt: new Date().toISOString(),
+        dataType: selectedType,
       };
 
-      const response = await fetch('/api/loobrary-signup', {
+      const endpoint = selectedType === 'Loobricate' ? '/api/loobricates' : '/api/loobrary-signup';
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
+      const result = await response.json();
+
       if (response.ok) {
         setSubmissionSuccess(true);
-        setFormData({ title: '', offeringType: '', description: '', location: '' });
+        setMissingFields([]);
+        setFormData({
+          pseudonym: pseudonym || 'Anonymously Contributed',
+          email: email || 'Anonymously Contributed',
+          phone: phone || 'N/A',
+          password: 'default-password',
+          title: '',
+          offeringType: '',
+          description: '',
+          location: '',
+        });
+      } else if (result.missingFields) {
+        setMissingFields(result.missingFields);
+        setError('Some fields are missing. Please complete the form.');
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || errorData.message || 'An error occurred.');
+        setError(result.error || 'An error occurred.');
       }
     } catch (err) {
       console.error('Error submitting form:', err);
@@ -101,74 +99,137 @@ const AddEntry: React.FC = () => {
     }
   };
 
-  return (
-    <div className="add-entry-container">
-      {/* If submission is successful, show success message */}
-      {!submissionSuccess ? (
-        <>
-          <div className="gridBackground"></div>
-          <div className="fadeOverlay"></div>
-          <h2 className="mainTitle">Add a New Entry to the Loobrary</h2>
-          <p className="description">
-            This is the place to contribute something to the Loobrary. It can be anything—venues, talents, gear, and more. Add as much detail as you can. 
-          </p>
-          <form className="add-entry-form">
+  const renderFormFields = () => {
+    switch (selectedType) {
+      case 'Location':
+      case 'Talent':
+      case 'Gear':
+        return (
+          <>
+            <p className="info-text">{`Add a new ${selectedType.toLowerCase()} to the Loobrary.`}</p>
             <input
               type="text"
               name="title"
-              placeholder="Enter a title"
-              value={formData.title}
+              placeholder={`${selectedType} Name`}
+              value={formData.title || ''}
               onChange={handleInputChange}
-              required
               className="form-input"
             />
-            <select
-              name="offeringType"
-              value={formData.offeringType}
-              onChange={handleInputChange}
-              required
-              className="form-input"
-            >
-              <option value="">Select type</option>
-              <option value="venue">Venue</option>
-              <option value="talent">Talent</option>
-              <option value="gear">Gear</option>
-            </select>
             <textarea
               name="description"
-              placeholder="Provide a description"
-              value={formData.description}
+              placeholder={`Describe the ${selectedType.toLowerCase()}.`}
+              value={formData.description || ''}
               onChange={handleInputChange}
-              required
               className="form-input"
             />
             <input
               type="text"
               name="location"
-              placeholder="Enter a valid address"
-              value={formData.location}
+              placeholder={`Location of the ${selectedType.toLowerCase()}`}
+              value={formData.location || ''}
               onChange={handleInputChange}
-              required
               className="form-input"
             />
+          </>
+        );
+      case 'Loobricate':
+        return (
+          <>
+            <p className="info-text">Provide all required information for Loobricate setup.</p>
+            <input
+              type="text"
+              name="name"
+              placeholder="Loobricate Name"
+              value={formData.name || ''}
+              onChange={handleInputChange}
+              className="form-input"
+            />
+            <textarea
+              name="description"
+              placeholder="Brief description of the Loobricate."
+              value={formData.description || ''}
+              onChange={handleInputChange}
+              className="form-input"
+            />
+            <input
+              type="text"
+              name="address"
+              placeholder="Address"
+              value={formData.address || ''}
+              onChange={handleInputChange}
+              className="form-input"
+            />
+            <input
+              type="text"
+              name="adminUsername"
+              placeholder="Admin Username"
+              value={formData.adminUsername || ''}
+              onChange={handleInputChange}
+              className="form-input"
+            />
+            <input
+              type="password"
+              name="adminPassword"
+              placeholder="Admin Password"
+              value={formData.adminPassword || ''}
+              onChange={handleInputChange}
+              className="form-input"
+            />
+          </>
+        );
+      default:
+        return null;
+    }
+  };
 
+  const renderDynamicFields = () => {
+    return missingFields.map((field) => (
+      <div key={field} className="dynamic-field">
+        <label htmlFor={field}>{field}</label>
+        <input
+          id={field}
+          type="text"
+          name={field}
+          value={formData[field] || ''}
+          onChange={handleInputChange}
+          className="form-input"
+        />
+      </div>
+    ));
+  };
+
+  return (
+    <div className="add-entry-container">
+      <h1 className="mainTitle">Add to Loob</h1>
+      <div className="entry-type-icons">
+        <FaMapMarkerAlt className={`icon ${selectedType === 'Location' ? 'active' : ''}`} onClick={() => handleTypeSelection('Location')} />
+        <FaUser className={`icon ${selectedType === 'Talent' ? 'active' : ''}`} onClick={() => handleTypeSelection('Talent')} />
+        <FaTools className={`icon ${selectedType === 'Gear' ? 'active' : ''}`} onClick={() => handleTypeSelection('Gear')} />
+        <FaUsers className={`icon ${selectedType === 'Loobricate' ? 'active' : ''}`} onClick={() => handleTypeSelection('Loobricate')} />
+      </div>
+
+      {selectedType && (
+        <>
+          <h2 className="subtitle">
+            {selectedType === 'Loobricate' ? 'Spawn Loobricate' : `Add ${selectedType}`}
+          </h2>
+          <div className="form-container">
+            {renderFormFields()}
+            {missingFields.length > 0 && (
+              <div className="dynamic-fields-container">
+                <h3>Additional Fields Required</h3>
+                {renderDynamicFields()}
+              </div>
+            )}
             {error && <p className="error-message">{error}</p>}
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="actionButton"
-            >
+            <button className="actionButton" onClick={handleSubmit} disabled={isSubmitting}>
               {isSubmitting ? 'Submitting...' : 'Submit'}
             </button>
-          </form>
+          </div>
         </>
-      ) : (
-        <div className="success-message">
-          <h2 className="mainTitle">Entry Added Successfully!</h2>
-          <p className="description">Your contribution has been recorded.</p>
-        </div>
       )}
+
+      {submissionSuccess && <p className="success-message">Your entry was successfully added!</p>}
     </div>
   );
 };

@@ -1,8 +1,13 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
-import { UserIcon, Cog6ToothIcon, QrCodeIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
+import {
+  UserIcon,
+  MapIcon,
+  Cog6ToothIcon,
+  QrCodeIcon,
+  PlusCircleIcon,
+} from "@heroicons/react/24/outline";
 import "./Header.css";
 
 interface HeaderProps {
@@ -20,21 +25,28 @@ const Header: React.FC<HeaderProps> = ({
     <header className="header-container">
       {/* Left Section */}
       <div className="left-icons">
+        {/* Add Entry Icon */}
         <button
-          className={`icon-button ${activeView === "AddEntry" ? "active" : ""}`}
+          className={`icon-button ${
+            activeView === "AddEntry" ? "active" : ""
+          }`}
           onClick={() => toggleView("AddEntry")}
         >
           <PlusCircleIcon className="h-6 w-6" />
         </button>
+
+        {/* NFC Reader Icon */}
         <button
-          className={`icon-button ${activeView === "NFCReader" ? "active" : ""}`}
+          className={`icon-button ${
+            activeView === "NFCReader" ? "active" : ""
+          }`}
           onClick={() => toggleView("NFCReader")}
         >
           <QrCodeIcon className="h-6 w-6" />
         </button>
       </div>
 
-      {/* Center Section with Logo */}
+      {/* Center Slider */}
       <div className="slider-container">
         <div
           className={`slider-pill ${
@@ -42,21 +54,17 @@ const Header: React.FC<HeaderProps> = ({
           }`}
         ></div>
         <button
-          className={`slider-button ${activeView === "Chat" ? "active" : ""}`}
+          className={`slider-button ${
+            activeView === "Chat" ? "active" : ""
+          }`}
           onClick={() => toggleView("Chat")}
         >
-          {/* Loob Logo */}
-          <Image
-            src="/LoobLogo.png" // From the public folder
-            alt="Loob Logo"
-            width={30} // Adjust the size as needed
-            height={30}
-            className="header-logo"
-          />
           Loob
         </button>
         <button
-          className={`slider-button ${activeView === "Map" ? "active" : ""}`}
+          className={`slider-button ${
+            activeView === "Map" ? "active" : ""
+          }`}
           onClick={() => toggleView("Map")}
         >
           Discover
@@ -65,13 +73,21 @@ const Header: React.FC<HeaderProps> = ({
 
       {/* Right Section */}
       <div className="right-icons">
+        {/* Profile Icon */}
         <button
-          className={`icon-button ${activeView === "Profile" ? "active" : ""}`}
+          className={`icon-button ${
+            activeView === "Profile" ? "active" : ""
+          }`}
           onClick={() => toggleView("Profile")}
         >
           <UserIcon className="h-6 w-6" />
         </button>
-        <button className="icon-button" onClick={onConfigureClick}>
+
+        {/* Settings Icon */}
+        <button
+          className="icon-button"
+          onClick={onConfigureClick}
+        >
           <Cog6ToothIcon className="h-6 w-6" />
         </button>
       </div>

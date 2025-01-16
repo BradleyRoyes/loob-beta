@@ -1,3 +1,5 @@
+// mapData/route.ts
+
 import { NextResponse } from 'next/server';
 import { AstraDB, Collection } from '@datastax/astra-db-ts';
 
@@ -8,7 +10,9 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE!
 );
 
-// Function to get the 'library' collection (or any collection name you prefer)
+/**
+ * Function to get the 'library' collection (or any collection name you prefer)
+ */
 async function getLibraryCollection(): Promise<Collection> {
   try {
     const collection = await astraDb.collection('library');
@@ -20,19 +24,49 @@ async function getLibraryCollection(): Promise<Collection> {
 }
 
 /**
- * GET /api/mapData
- * Fetch all documents (or just user entries) from the "library" collection.
+ * Interface for query parameters
  */
-export async function GET() {
+interface MapDataQuery {
+  dataType?: string;
+  loobricates?: string;
+}
+
+/**
+ * GET /api/mapData
+ * 
+ * Fetch all documents or filter by a specific Loobricate from the "library" collection.
+ * Supports query parameters:
+ *  - loobricate: string (optional) - to filter entries by a specific Loobricate
+ */
+export async function GET(request: Request) {
   try {
     const libraryCollection = await getLibraryCollection();
 
-    // Example: fetch only docs that have dataType = 'userEntry'
-    // If you need *all* docs, just do: libraryCollection.find({})
-    const documents = await libraryCollection.find({ dataType: 'userEntry' }).toArray();
+    // Parse query parameters
+    const url = new URL(request.url);
+    const loobricateParam = url.searchParams.get('loobricate');
+
+    // Build the query object
+    let query: MapDataQuery = { dataType: 'userEntry' };
+
+    if (loobricateParam) {
+      // Use the appropriate operator to query array fields.
+      // Depending on AstraDB's query syntax, this might vary.
+      // Assuming it uses MongoDB-like operators:
+      query.loobricates = loobricateParam;
+    }
+
+    // Fetch documents based on the query
+    const documents = await libraryCollection.find(query).toArray();
+
+    // Normalize data: ensure 'loobricates' is always an array
+    const normalizedDocuments = documents.map(doc => ({
+      ...doc,
+      loobricates: Array.isArray(doc.loobricates) ? doc.loobricates : [],
+    }));
 
     // Return the documents
-    return NextResponse.json(documents, { status: 200 });
+    return NextResponse.json(normalizedDocuments, { status: 200 });
   } catch (error) {
     console.error('Error in GET /api/mapData:', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });

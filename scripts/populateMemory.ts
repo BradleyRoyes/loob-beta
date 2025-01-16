@@ -1,9 +1,8 @@
 require('dotenv').config({ path: './.env.local' });
 import { AstraDB } from "@datastax/astra-db-ts";
 import OpenAI from 'openai';
-import sampleData from './sample_data.json'; // Adjust path if needed
+import sampleData from './sample_data.json';
 
-// Initialize OpenAI and AstraDB
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
@@ -11,7 +10,7 @@ const openai = new OpenAI({
 const {
   ASTRA_DB_APPLICATION_TOKEN,
   ASTRA_DB_ENDPOINT,
-  ASTRA_DB_NAMESPACE
+  ASTRA_DB_NAMESPACE,
 } = process.env;
 
 const astraDb = new AstraDB(
@@ -20,7 +19,6 @@ const astraDb = new AstraDB(
   ASTRA_DB_NAMESPACE!
 );
 
-// Define a TypeScript interface for the entries
 interface MemoryEntry {
   url: string;
   title: string;
@@ -37,25 +35,18 @@ interface UserEntry {
   email: string;
   phone: string;
   chunk: string;
+  loobricates: string[];
   dataType: 'userEntry';
 }
 
-// Union type for either memory or userEntry
 type LibraryEntry = MemoryEntry | UserEntry;
 
-// Ensure `sampleData` is typed correctly
 const entries: LibraryEntry[] = sampleData as LibraryEntry[];
 
-/**
- * Create or verify a 'library' collection with vector search capabilities.
- */
 const createLibraryCollection = async (): Promise<void> => {
   try {
     const res = await astraDb.createCollection('library', {
-      vector: {
-        dimension: 1536, // For text-embedding-ada-002 model
-        metric: 'cosine',
-      },
+      vector: { dimension: 1536, metric: 'cosine' },
     });
     console.log('Library collection created successfully:', res);
   } catch (error: any) {
@@ -67,119 +58,70 @@ const createLibraryCollection = async (): Promise<void> => {
   }
 };
 
-/**
- * Insert a 'memory' document into the `library` collection with fresh embeddings.
- * Skips insertion if a duplicate entry exists (based on `url`).
- */
-const insertMemoryEntry = async (entry: MemoryEntry): Promise<void> => {
+const insertEntry = async (entry: LibraryEntry): Promise<void> => {
   const collection = await astraDb.collection('library');
 
-  // Check for duplicates by url
-  const existingEntry = await collection.findOne({ url: entry.url });
+  const existingEntry = await collection.findOne({ title: entry.title });
   if (existingEntry) {
-    console.log(`Duplicate memory found for URL: ${entry.url}. Skipping.`);
+    console.log(`Duplicate entry found for title: "${entry.title}". Skipping.`);
     return;
   }
 
   try {
-    // Generate embedding from content
-    console.log(`Generating embedding for memory URL: ${entry.url}`);
-    const { data } = await openai.embeddings.create({
-      input: entry.content,
-      model: 'text-embedding-ada-002',
-    });
+    let embedding: number[] | null = null; // Allow both null and number[] types
 
-    const embedding = data[0]?.embedding;
-    if (!embedding) {
-      console.error(`Failed to generate embedding for URL: ${entry.url}`);
-      return;
+    if (entry.dataType === 'memory' || entry.dataType === 'userEntry') {
+      console.log(`Generating embedding for title: "${entry.title}"`);
+      const response = await openai.embeddings.create({
+        input: entry.dataType === 'memory' ? entry.content : entry.chunk,
+        model: 'text-embedding-ada-002',
+      });
+    
+      embedding = response.data[0]?.embedding || null; // Assign embedding or keep it as null
+      if (!embedding) {
+        console.error(`Failed to generate embedding for title: "${entry.title}"`);
+        return;
+      }
     }
+    
 
-    // Create final doc to insert
-    const memoryDoc = {
-      document_id: `${entry.url}-${Date.now()}`, // unique ID from url + timestamp
+    const document = {
+      document_id: `${entry.title}-${Date.now()}`,
       $vector: embedding,
-      url: entry.url,
-      title: entry.title,
-      content: entry.content,
-      dataType: 'memory', // explicitly label as memory
+      ...entry,
       createdAt: new Date().toISOString(),
     };
 
-    await collection.insertOne(memoryDoc);
-    console.log(`Inserted memory entry for URL: ${entry.url}`);
+    await collection.insertOne(document);
+    console.log(`Inserted entry for title: "${entry.title}"`);
   } catch (error) {
-    console.error(`Error processing memory for URL: ${entry.url}`, error);
+    console.error(`Error inserting entry for title: "${entry.title}"`, error);
   }
 };
 
-/**
- * Insert a 'userEntry' document into the `library` collection.
- * Regenerates the vector using OpenAI, dynamically generates `_id`, and ensures no conflicts with existing schema.
- */
-const insertUserEntry = async (entry: UserEntry): Promise<void> => {
-  const collection = await astraDb.collection('library');
-
-  try {
-    // Generate embedding for the `chunk` field
-    console.log(`Generating embedding for userEntry: ${entry.title}`);
-    const { data } = await openai.embeddings.create({
-      input: entry.chunk,
-      model: 'text-embedding-ada-002',
-    });
-
-    const embedding = data[0]?.embedding;
-    if (!embedding) {
-      console.error(`Failed to generate embedding for userEntry: ${entry.title}`);
-      return;
-    }
-
-    // Create final doc to insert
-    const userDoc = {
-      document_id: `${entry.email}-${Date.now()}`, // Generate unique ID
-      $vector: embedding, // Use generated embedding
-      title: entry.title,
-      offeringType: entry.offeringType,
-      description: entry.description,
-      location: entry.location,
-      pseudonym: entry.pseudonym,
-      email: entry.email,
-      phone: entry.phone,
-      dataType: 'userEntry',
-      createdAt: new Date().toISOString(), // Use the current timestamp
-    };
-
-    // Insert into the DB
-    await collection.insertOne(userDoc);
-    console.log(`Inserted userEntry: ${entry.title}`);
-  } catch (error) {
-    console.error(`Error inserting userEntry: ${entry.title}`, error);
-  }
-};
-
-/**
- * Main function to handle creation of 'library' + insertion of both memory & user entries.
- */
-const populateMemory = async (): Promise<void> => {
-  console.log('Starting population of the library...');
+const populateLibrary = async (): Promise<void> => {
+  console.log('Starting library population...');
   await createLibraryCollection();
 
   for (const entry of entries) {
-    if (entry.dataType === 'memory') {
-      // Handle memory entries
-      await insertMemoryEntry(entry);
-    } else if (entry.dataType === 'userEntry') {
-      // Handle user entries
-      await insertUserEntry(entry);
-    } else {
-      console.log(`Skipping entry with unknown dataType: ${JSON.stringify(entry)}`);
-    }
+    await insertEntry(entry);
   }
 
   console.log('Library population complete.');
 };
 
-// Execute the script
-populateMemory().catch((error) => {
-  console.error('Error during library population:', error);
+// Run the script only if not already populated
+const initializeLibrary = async (): Promise<void> => {
+  const collection = await astraDb.collection('library');
+  const count = await collection.countDocuments();
+  if (count > 0) {
+    console.log('Library already populated. Skipping initialization.');
+    return;
+  }
+
+  await populateLibrary();
+};
+
+initializeLibrary().catch((error) => {
+  console.error('Error initializing library:', error);
 });

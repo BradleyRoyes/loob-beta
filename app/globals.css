@@ -54,6 +54,27 @@ body {
   word-wrap: break-word;
 }
 
+input,
+textarea {
+  background-color: transparent !important;
+  color: inherit !important;
+  border: 2px solid transparent !important;
+  border-radius: 8px; /* Rounded corners for a modern look */
+  padding: 10px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.3s ease-in-out;
+  background-clip: padding-box;
+  box-shadow: 0 0 0 2px linear-gradient(to right, #ffb3ba, #ffdfba) border-box;
+}
+
+input:focus,
+textarea:focus {
+  border: 2px solid transparent;
+  box-shadow: 0 0 0 2px linear-gradient(to right, #d5d5d5, #dedede) border-box;
+}
+
+
 /* Headers and Containers */
 .header-container {
   position: fixed;
@@ -92,6 +113,12 @@ input {
 
 input::placeholder {
   color: var(--text-secondary);
+}
+
+@layer base {
+  input {
+    background-color: var(--background-soft) !important;
+  }
 }
 
 /* Buttons */

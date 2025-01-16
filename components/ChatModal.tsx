@@ -72,20 +72,21 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
       <div className="overlay-carousel flex items-center justify-center mb-4 rounded-lg p-4 bg-gradient-to-r from-orange-300 to-pink-300">
         <Carousel>
           <div className="text-center">
-            <h2 className="text-xl font-semibold text-white">Welcome to Loob!</h2>
-            <p className="text-white">Plan events, book rentals, find venues, and more!</p>
+            <h2 className="text-xl font-semibold text-white">Hi, I’m Loob.
+          </h2>
+            <p className="text-white">Plan events, book rentals, find new spaces.</p>
           </div>
           <div className="text-center">
             <h2 className="text-xl font-semibold text-white">Need Equipment?</h2>
-            <p className="text-white">Ask about gear rentals and event supplies.</p>
+            <p className="text-white">Ask me about gear or event supplies.</p>
           </div>
           <div className="text-center">
-            <h2 className="text-xl font-semibold text-white">Looking for Venues?</h2>
-            <p className="text-white">Find the perfect space for your next event.</p>
+            <h2 className="text-xl font-semibold text-white">Looking for Space?</h2>
+            <p className="text-white">Find a new spot for your next event.</p>
           </div>
           <div className="text-center">
-            <h2 className="text-xl font-semibold text-white">Hire Talent!</h2>
-            <p className="text-white">Discover performers, speakers, and event staff.</p>
+            <h2 className="text-xl font-semibold text-white">To Get Started</h2>
+            <p className="text-white">Simply talk to me or click some buttons.</p>
           </div>
         </Carousel>
       </div>

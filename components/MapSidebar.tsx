@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { FaMapMarkerAlt, FaUser, FaTools } from "react-icons/fa";
+import React, { useMemo, useState, useRef, useEffect } from "react";
+import { FaMapMarkerAlt, FaUser, FaTools, FaUsers } from "react-icons/fa"; // Imported FaUsers for Loobricate
 import "./MapSidebar.css";
 
 /**
@@ -14,6 +14,7 @@ export interface Node {
   details: string; // Additional details or description about the node
   contact: string; // Contact information (e.g., email address)
   visualType: "Today" | "ThisWeek" | "AllTime"; // Visibility duration for the node
+  loobricate?: string; // New field to associate a node with a Loobricate
 }
 
 /**
@@ -31,7 +32,7 @@ interface MapSidebarProps {
  * MapSidebar Component
  * 
  * Renders a sidebar for filtering and displaying map nodes. Users can search for nodes
- * by text input or filter by specific types (e.g., Venue, Talent, Gear).
+ * by text input or filter by specific types (e.g., Loobricate, Venue, Talent, Gear).
  */
 const MapSidebar: React.FC<MapSidebarProps> = ({
   nodes,
@@ -47,12 +48,20 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
    * Memoized filtered nodes based on search query and selected type.
    */
   const filteredNodes = useMemo(() => {
-    return nodes.filter(
-      (node) =>
-        (selectedType === "All" || node.type.toLowerCase() === selectedType.toLowerCase()) &&
-        (node.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          node.type.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
+    return nodes.filter((node) => {
+      const matchesType =
+        selectedType === "All" ||
+        (selectedType === "Loobricate"
+          ? node.loobricate // If Loobricate is selected, filter nodes that belong to any Loobricate
+          : node.type.toLowerCase() === selectedType.toLowerCase());
+
+      const matchesSearch =
+        node.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        node.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (node.loobricate && node.loobricate.toLowerCase().includes(searchQuery.toLowerCase()));
+
+      return matchesType && matchesSearch;
+    });
   }, [nodes, searchQuery, selectedType]);
 
   /**
@@ -77,49 +86,56 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
   return (
     <div className={`sidebar-container ${sidebarActive ? "active" : ""}`}>
       <div className={`sidebar-content ${sidebarActive ? "visible" : "hidden"}`}>
-        {/* Sticky header with title and toggle buttons */}
-        <div
-          className="sticky-controls"
-          style={{
-            position: "sticky",
-            top: 0,
-            backgroundColor: "#333",
-            zIndex: 10,
-            padding: "10px",
-          }}
-        >
-          <h2 className="sidebar-title">Search Loobrary</h2>
+        {/* Filter by type icons */}
+        <div className="search-by-container">
+          {/* "Search by..." Title */}
+          <h3 className="search-by-title">Search by...</h3>
 
-          {/* Filter by type icons */}
-          <div className="search-by-container">
-            <h3 className="search-by-title">Search by...</h3>
-            <div className="search-by-icons">
-              {/* Location Filter */}
-              <div
-                className={`search-icon ${selectedType === "Venue" ? "active" : ""}`}
-                onClick={() => handleTypeSelection("Venue")}
-              >
-                <FaMapMarkerAlt className="icon" />
-                <span>Location</span>
-              </div>
-              {/* Talent Filter */}
-              <div
-                className={`search-icon ${selectedType === "Talent" ? "active" : ""}`}
-                onClick={() => handleTypeSelection("Talent")}
-              >
-                <FaUser className="icon" />
-                <span>Talent</span>
-              </div>
-              {/* Gear Filter */}
-              <div
-                className={`search-icon ${selectedType === "Gear" ? "active" : ""}`}
-                onClick={() => handleTypeSelection("Gear")}
-              >
-                <FaTools className="icon" />
-                <span>Thing</span>
-              </div>
+          {/* Loobricate Filter - Own Row, Centered, Slightly Bigger */}
+          <div className="search-by-icons">
+            <div
+              className={`search-icon loobricate ${selectedType === "Loobricate" ? "active" : ""}`}
+              onClick={() => handleTypeSelection("Loobricate")}
+              aria-label="Loobricate"
+            >
+              <FaUsers className="icon" />
+              <span>Loobricate</span>
             </div>
           </div>
+
+          {/* Other Filters - Arranged Below Loobricate */}
+          <div className="search-by-icons other-filters">
+            {/* Venue Filter */}
+            <div
+              className={`search-icon ${selectedType === "Venue" ? "active" : ""}`}
+              onClick={() => handleTypeSelection("Venue")}
+              aria-label="Venue"
+            >
+              <FaMapMarkerAlt className="icon" />
+              <span>Venue</span>
+            </div>
+            {/* Talent Filter */}
+            <div
+              className={`search-icon ${selectedType === "Talent" ? "active" : ""}`}
+              onClick={() => handleTypeSelection("Talent")}
+              aria-label="Talent"
+            >
+              <FaUser className="icon" />
+              <span>Talent</span>
+            </div>
+            {/* Gear Filter */}
+            <div
+              className={`search-icon ${selectedType === "Gear" ? "active" : ""}`}
+              onClick={() => handleTypeSelection("Gear")}
+              aria-label="Gear"
+            >
+              <FaTools className="icon" />
+              <span>Gear</span>
+            </div>
+          </div>
+
+          {/* Glowing Traveling Thread Effect */}
+          {selectedType === "Loobricate" && <div className="glowing-thread"></div>}
         </div>
 
         {/* Display filtered nodes */}
@@ -160,7 +176,7 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
           <input
             type="text"
             className="sidebar-input"
-            placeholder="Search for a venue, gear, artist..."
+            placeholder="Search for a Loobricate, venue, gear, artist..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
