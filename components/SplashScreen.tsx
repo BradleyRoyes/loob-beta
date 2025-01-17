@@ -109,19 +109,22 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       >
         {/* Background grid */}
         <div className="gridBackground"></div>
-
-        {/* Intro Phase */}
         {phase === "introPhase" && (
-          <motion.div
-            className="content intro"
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1 }}
-          >
-            <h1 className="logoText">Loob</h1>
-          </motion.div>
-        )}
+  <motion.div
+    className="content intro centeredContainer"
+    initial={{ opacity: 1 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    transition={{ duration: 1 }}
+  >
+    <img
+      src="/favicon.ico"
+      alt="Loob Logo"
+      className="logoImage"
+    />
+  </motion.div>
+)}
+
 
         {/* Login Phase */}
         {phase === "loginPhase" && (

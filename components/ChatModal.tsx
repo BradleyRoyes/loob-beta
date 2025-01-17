@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useEffect, useRef, useState, FormEvent } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Bubble from "./Bubble";
 import { useChat } from "ai/react";
 import PromptSuggestionRow from "./PromptSuggestions/PromptSuggestionsRow";
 import AudioRecorder from "./AudioRecorder";
 import Carousel from "./Carousel";
 import "./ChatModal.css";
-
 
 interface ChatModalProps {
   onConfigureOpen?: () => void;
@@ -29,11 +28,10 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
 
   const handleSend = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    handleSubmit(e); // Ensure `handleSubmit` expects the correct type
+    handleSubmit(e);
     handleInputChange({ target: { value: "" } } as React.ChangeEvent<HTMLInputElement>);
     setShowIntroMessage(false);
   };
-  
 
   const handlePrompt = (text: string) => {
     append({ id: crypto.randomUUID(), content: text, role: "user" });
@@ -65,15 +63,14 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
 
   return (
     <section
-    ref={messagesEndRef}
-    className="chatbot-section flex flex-col w-full max-w-md md:max-w-3xl mx-auto h-full md:h-[90vh] rounded-lg shadow-lg p-4 overflow-hidden"
-  >  
+      ref={messagesEndRef}
+      className="chatbot-section flex flex-col w-full max-w-md md:max-w-3xl mx-auto h-full md:h-[90vh] rounded-lg shadow-lg p-4 overflow-hidden"
+    >
       {/* Carousel Section */}
       <div className="overlay-carousel flex items-center justify-center mb-4 rounded-lg p-4 bg-gradient-to-r from-orange-300 to-pink-300">
         <Carousel>
           <div className="text-center">
-            <h2 className="text-xl font-semibold text-white">Hi, I’m Loob.
-          </h2>
+            <h2 className="text-xl font-semibold text-white">Hi, I’m Loob.</h2>
             <p className="text-white">Plan events, book rentals, find new spaces.</p>
           </div>
           <div className="text-center">

@@ -1,41 +1,39 @@
 'use client';
 
 import React, { useState, useEffect } from "react";
-import GearProfile from "./GearProfile";
-import { useRouter } from "next/router";
+import ItemProfile from "./GearProfile"; // Import the updated ItemProfile component
 
 export default function NFCReader() {
   const [isScanning, setIsScanning] = useState(false);
   const [nfcMessage, setNfcMessage] = useState<string | null>(null);
   const [chipFound, setChipFound] = useState(false);
-  const [itemData, setItemData] = useState<any | null>(null);
-  const [showItemProfile, setShowItemProfile] = useState(false);
-  const router = useRouter();
+  const [itemData, setItemData] = useState<any | null>(null); // State for item data
+  const [showItemProfile, setShowItemProfile] = useState(false); // Show/hide ItemProfile
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
 
     if (isScanning) {
+      // Simulate scanning and finding a chip
       timeout = setTimeout(() => {
-        setChipFound(true);
+        setChipFound(true); // Simulate chip found
         setIsScanning(false);
         setNfcMessage("Sample NFC Data: Current Location: Library, Status: Checked In");
 
-        // Mock item data
+        // Mock item data after a successful scan
         setItemData({
           id: "item-001",
-          name: "Library Book: 'The Future of AI'",
+          name: "You've Unlocked a New Loobricate.",
           description:
-            "An insightful book discussing the advancements and challenges in Artificial Intelligence.",
+            "Moos is a community exploring advancements and challenges in Artificial Intelligence.",
           availability: "Checked In",
           history: [
-            { action: "Checked Out", date: "2025-01-10", location: "Library" },
-            { action: "Checked In", date: "2025-01-07", location: "Library" },
+            { action: "Open Decks", date: "2025-01-10", location: "MOOS" },
+            { action: "Experience Design Studio", date: "2025-01-07", location: "Online" },
           ],
         });
-
-        setShowItemProfile(true);
-      }, 3000);
+        setShowItemProfile(true); // Automatically show the ItemProfile modal
+      }, 3000); // Mock a 3-second scan delay
     }
 
     return () => clearTimeout(timeout);
@@ -44,26 +42,25 @@ export default function NFCReader() {
   const handleScanClick = () => {
     setIsScanning(true);
     setChipFound(false);
-    setNfcMessage(null);
-    setShowItemProfile(false);
+    setNfcMessage(null); // Reset previous message
+    setShowItemProfile(false); // Reset modal visibility
   };
 
   const handleCloseItemProfile = () => {
-    setShowItemProfile(false);
-  };
-
-  const handleAddToMap = () => {
-    router.push("/components/map"); // Navigate to the map view
+    setShowItemProfile(false); // Close the item profile modal
   };
 
   return (
     <div className="flex flex-col items-center justify-center h-screen">
+      {/* Scanning Animation */}
       <div className="relative flex items-center justify-center w-40 h-40">
+        {/* Pulsing Animation */}
         <div
           className={`absolute w-full h-full rounded-full border-4 ${
             isScanning ? "animate-ping border-gradient" : "border-transparent"
           }`}
         ></div>
+        {/* Main Button with Gradient */}
         <div className="relative z-10 w-28 h-28 rounded-full bg-gradient-to-r from-pink-300 to-orange-300 flex items-center justify-center shadow-lg">
           <button
             onClick={handleScanClick}
@@ -75,19 +72,20 @@ export default function NFCReader() {
         </div>
       </div>
 
+      {/* Status Message */}
       <div className="mt-4 text-center">
         {isScanning && <p className="text-pink-500">Searching for NFC chip...</p>}
         {!isScanning && !chipFound && nfcMessage === null && (
           <p className="text-gray-500">Click the button to start scanning.</p>
         )}
+        {!isScanning && !chipFound && nfcMessage === "" && (
+          <p className="text-red-500">No chip found. Try again.</p>
+        )}
       </div>
 
+      {/* Item Profile Modal */}
       {showItemProfile && itemData && (
-        <GearProfile
-          gear={itemData}
-          onClose={handleCloseItemProfile}
-          onAddToMap={handleAddToMap} // Pass the required function here
-        />
+        <ItemProfile gear={itemData} onClose={handleCloseItemProfile} />
       )}
     </div>
   );

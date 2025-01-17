@@ -174,7 +174,7 @@ HISTORY SECTION
 BUTTONS
 ************************************/
 .gradient-button {
-  background: linear-gradient(to right, #6ee7b7, #3b82f6); /* Softer, inviting gradient */
+  background: linear-gradient(to right, #6ee7b7, #fc7070); /* Softer, inviting gradient */
   border: none;
   color: #fff;
   padding: 0.6rem 1.2rem;

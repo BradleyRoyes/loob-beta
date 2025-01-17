@@ -52,22 +52,32 @@ const Header: React.FC<HeaderProps> = ({
       activeView === "Chat" ? "active-chat" : "active-discover"
     }`}
   ></div>
-  <button
-    className={`slider-button ${
-      activeView === "Chat" ? "active" : ""
-    }`}
-    onClick={() => toggleView("Chat")}
-  >
-    Loob
-  </button>
-  <button
-    className={`slider-button ${
-      activeView === "Map" ? "active" : ""
-    }`}
-    onClick={() => toggleView("Map")}
-  >
-    Discover
-  </button>
+<button
+  className={`slider-button flex items-center justify-center ${
+    activeView === "Chat" ? "active" : ""
+  }`}
+  onClick={() => toggleView("Chat")}
+>
+  <img
+    src="/favicon.ico"
+    alt="Favicon"
+    className="h-6 w-6 mr-2"
+  />
+  Loob
+</button>
+
+<button
+  className={`slider-button flex items-center justify-center ${
+    activeView === "Map" ? "active" : ""
+  }`}
+  onClick={() => toggleView("Map")}
+>
+  Explore
+  <MapIcon className="h-6 w-6 ml-2" />
+</button>
+
+
+
 </div>
 
       {/* Right Section */}
