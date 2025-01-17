@@ -7,7 +7,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { NextResponse } from 'next/server';
 
 // Set the ffmpeg path
-ffmpeg.setFfmpegPath(ffmpegPath.path);
+try {
+  ffmpeg.setFfmpegPath(ffmpegPath.path);
+} catch (err) {
+  console.error('FFmpeg binary not found, ensure the correct path is set.');
+}
 
 // Disable body parsing for file uploads
 export const config = {
