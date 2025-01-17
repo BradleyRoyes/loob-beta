@@ -2,16 +2,12 @@ import OpenAI from 'openai';
 import formidable from 'formidable-serverless';
 import fs from 'fs';
 import ffmpeg from 'fluent-ffmpeg';
-import ffmpegPath from '@ffmpeg-installer/ffmpeg';
+import ffmpegStatic from 'ffmpeg-static';
 import { v4 as uuidv4 } from 'uuid';
 import { NextResponse } from 'next/server';
 
-// Set the ffmpeg path
-try {
-  ffmpeg.setFfmpegPath(ffmpegPath.path);
-} catch (err) {
-  console.error('FFmpeg binary not found, ensure the correct path is set.');
-}
+// Set ffmpeg path with a fallback to system-wide ffmpeg
+ffmpeg.setFfmpegPath(ffmpegStatic || '/usr/bin/ffmpeg');
 
 // Disable body parsing for file uploads
 export const config = {
