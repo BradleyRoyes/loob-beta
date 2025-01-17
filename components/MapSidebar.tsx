@@ -1,38 +1,35 @@
-import React, { useMemo, useState, useRef, useEffect } from "react";
-import { FaMapMarkerAlt, FaUser, FaTools, FaUsers } from "react-icons/fa"; // Imported FaUsers for Loobricate
+import React, { useMemo, useState } from "react";
+import { FaMapMarkerAlt, FaUser, FaTools, FaUsers } from "react-icons/fa";
 import "./MapSidebar.css";
 
 /**
  * Interface representing a node item in the map.
  */
 export interface Node {
-  id: string; // Unique identifier for the node
-  lat: number; // Latitude of the node location
-  lon: number; // Longitude of the node location
-  label: string; // Display label for the node
-  type: string; // Type of the node (e.g., "Venue", "Gear", "Talent", etc.)
-  details: string; // Additional details or description about the node
-  contact: string; // Contact information (e.g., email address)
-  visualType: "Today" | "ThisWeek" | "AllTime"; // Visibility duration for the node
-  loobricate?: string; // New field to associate a node with a Loobricate
+  id: string;
+  lat: number;
+  lon: number;
+  label: string;
+  type: string;
+  details: string;
+  contact: string;
+  visualType: "Today" | "ThisWeek" | "AllTime";
+  loobricate?: string;
 }
 
 /**
  * Props interface for the MapSidebar component.
  */
 interface MapSidebarProps {
-  nodes: Node[]; // Array of node data to display
-  onNodeSelect: (node: Node) => void; // Callback when a node is selected
-  onMoreInfo: (node: Node) => void; // Callback to show more information about a node
-  sidebarActive: boolean; // Whether the sidebar is currently active/visible
-  toggleSidebar: () => void; // Function to toggle the sidebar visibility
+  nodes: Node[];
+  onNodeSelect: (node: Node) => void;
+  onMoreInfo: (node: Node) => void;
+  sidebarActive: boolean;
+  toggleSidebar: () => void;
 }
 
 /**
  * MapSidebar Component
- * 
- * Renders a sidebar for filtering and displaying map nodes. Users can search for nodes
- * by text input or filter by specific types (e.g., Loobricate, Venue, Talent, Gear).
  */
 const MapSidebar: React.FC<MapSidebarProps> = ({
   nodes,
@@ -41,8 +38,8 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
   sidebarActive,
   toggleSidebar,
 }) => {
-  const [searchQuery, setSearchQuery] = useState(""); // Search query state
-  const [selectedType, setSelectedType] = useState<string | "All">("All"); // Selected filter type
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedType, setSelectedType] = useState<string | "All">("All");
 
   /**
    * Memoized filtered nodes based on search query and selected type.
@@ -52,7 +49,7 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
       const matchesType =
         selectedType === "All" ||
         (selectedType === "Loobricate"
-          ? node.loobricate // If Loobricate is selected, filter nodes that belong to any Loobricate
+          ? node.loobricate
           : node.type.toLowerCase() === selectedType.toLowerCase());
 
       const matchesSearch =
@@ -66,7 +63,6 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
 
   /**
    * Handles the selection of a node.
-   * Closes the sidebar if the viewport is small (mobile devices).
    */
   const handleNodeSelect = (node: Node) => {
     onNodeSelect(node);
@@ -77,7 +73,6 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
 
   /**
    * Toggles the selected type filter.
-   * If the current type is selected, resets to "All".
    */
   const handleTypeSelection = (type: string) => {
     setSelectedType(type === selectedType ? "All" : type);
@@ -86,57 +81,33 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
   return (
     <div className={`sidebar-container ${sidebarActive ? "active" : ""}`}>
       <div className={`sidebar-content ${sidebarActive ? "visible" : "hidden"}`}>
+        <h3 className="search-by-title">Search by...</h3>
         {/* Filter by type icons */}
-        <div className="search-by-container">
-          {/* "Search by..." Title */}
-          <h3 className="search-by-title">Search by...</h3>
-
-          {/* Loobricate Filter - Own Row, Centered, Slightly Bigger */}
-          <div className="search-by-icons">
+        <div className="search-by-icons">
+          {["Loobricate", "Venue", "Talent", "Gear"].map((type) => (
             <div
-              className={`search-icon loobricate ${selectedType === "Loobricate" ? "active" : ""}`}
-              onClick={() => handleTypeSelection("Loobricate")}
-              aria-label="Loobricate"
+              key={type}
+              className={`search-icon ${
+                selectedType === type ? "active" : ""
+              } ${type === "Loobricate" ? "loobricate" : ""}`}
+              onClick={() => handleTypeSelection(type)}
+              aria-label={type}
             >
-              <FaUsers className="icon" />
-              <span>Loobricate</span>
+              {type === "Loobricate" ? (
+                <FaUsers className="icon" />
+              ) : type === "Venue" ? (
+                <FaMapMarkerAlt className="icon" />
+              ) : type === "Talent" ? (
+                <FaUser className="icon" />
+              ) : (
+                <FaTools className="icon" />
+              )}
+              <span>{type}</span>
             </div>
-          </div>
-
-          {/* Other Filters - Arranged Below Loobricate */}
-          <div className="search-by-icons other-filters">
-            {/* Venue Filter */}
-            <div
-              className={`search-icon ${selectedType === "Venue" ? "active" : ""}`}
-              onClick={() => handleTypeSelection("Venue")}
-              aria-label="Venue"
-            >
-              <FaMapMarkerAlt className="icon" />
-              <span>Venue</span>
-            </div>
-            {/* Talent Filter */}
-            <div
-              className={`search-icon ${selectedType === "Talent" ? "active" : ""}`}
-              onClick={() => handleTypeSelection("Talent")}
-              aria-label="Talent"
-            >
-              <FaUser className="icon" />
-              <span>Talent</span>
-            </div>
-            {/* Gear Filter */}
-            <div
-              className={`search-icon ${selectedType === "Gear" ? "active" : ""}`}
-              onClick={() => handleTypeSelection("Gear")}
-              aria-label="Gear"
-            >
-              <FaTools className="icon" />
-              <span>Gear</span>
-            </div>
-          </div>
-
-          {/* Glowing Traveling Thread Effect */}
-          {selectedType === "Loobricate" && <div className="glowing-thread"></div>}
+          ))}
         </div>
+        {/* Glowing thread animation when Loobricate is active */}
+        {selectedType === "Loobricate" && <div className="glowing-thread"></div>}
 
         {/* Display filtered nodes */}
         <div className="sidebar-list">
@@ -154,7 +125,7 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
               <button
                 className="more-info-btn"
                 onClick={(e) => {
-                  e.stopPropagation(); // Prevent triggering parent onClick
+                  e.stopPropagation();
                   onMoreInfo(node);
                 }}
               >
@@ -164,30 +135,14 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
           ))}
         </div>
 
-        {/* Search input at the bottom, sticky */}
-        <div
-          style={{
-            position: "sticky",
-            bottom: 0,
-            padding: "10px",
-            backgroundColor: "#333",
-          }}
-        >
+        {/* Search input */}
+        <div className="search-input-container">
           <input
             type="text"
             className="sidebar-input"
             placeholder="Search for a Loobricate, venue, gear, artist..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "8px",
-              backgroundColor: "#222",
-              color: "#fff",
-              border: "1px solid #555",
-              borderRadius: "4px",
-              outline: "none",
-            }}
           />
         </div>
       </div>

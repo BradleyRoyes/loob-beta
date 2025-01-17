@@ -1,40 +1,51 @@
 {
   "compilerOptions": {
+    // Target modern JavaScript features for browser compatibility
+    "target": "esnext",
+    // Include browser and ESNext features
     "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": false, // Set to true for stricter type checking
-    "noEmit": true,
-    "incremental": true,
-    "esModuleInterop": true,
-    "module": "esnext",
+    // Use Node.js-style module resolution
     "moduleResolution": "node",
+    // Use ESNext modules for modern development
+    "module": "esnext",
+    // Enable JSX for React
+    "jsx": "react-jsx",
+    // Allow importing JSON files
     "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve", // Use "react-jsx" if needed
-    "plugins": [{ "name": "next" }],
-    "strictNullChecks": true,
-    "target": "ESNext", // Updated from ES2017
+    // Allow JavaScript files alongside TypeScript files
+    "allowJs": true,
+    // Skip type checking for libraries in node_modules
+    "skipLibCheck": true,
+    // Base URL for resolving imports
     "baseUrl": ".",
+    // Enable ES module compatibility
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    // Prevent emitting compiled files (Next.js handles this)
+    "noEmit": true,
+    // Include all TypeScript strict settings but make them beginner-friendly
+    "strict": false,
+    "forceConsistentCasingInFileNames": true,
+    // Paths for easy imports
     "paths": {
-      "@components/*": ["components/*"]
+      "@components/*": ["components/*"],
+      "@utils/*": ["utils/*"]
     }
   },
   "include": [
+    // Include all TypeScript and JSX/TSX files
     "next-env.d.ts",
-    ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx",
+    // Include specific components if needed
     "components/**/*.ts",
-    "components/**/*.tsx"
-, "components/TorusSphere.jsx", "components/ChatModal.tsx"  ],
-  "ts-node": {
-    "compilerOptions": {
-      "module": "commonjs"
-    }
-  },
-  "exclude": ["node_modules"]
+    "components/**/*.tsx",
+    "components/TorusSphere.jsx",
+    "components/ChatModal.tsx"
+  ],
+  "exclude": [
+    // Ignore build output and unnecessary folders
+    ".next",
+    "out"
+  ]
 }
-
-
-

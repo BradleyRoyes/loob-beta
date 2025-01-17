@@ -150,7 +150,10 @@ useEffect(() => {
     },
     center: DEFAULT_LOCATION,
     zoom: 12,
+    pitch: 45, // Adjust this for tilt (higher is more tilted)
+    bearing: -20, // Adjust this for rotation
   });
+  
 
   mapInstanceRef.current = map;
 
@@ -243,17 +246,19 @@ useEffect(() => {
       speed: 0.8,
       curve: 1,
     });
-
+  
     map.once("moveend", () => {
       setPreviewNode(node);
       setShowPreviewPopup(true);
-
+  
       const screenPos = map.project([node.lon, node.lat]);
-      const popupPos = adjustPopupPositionToScreen(screenPos, map);
-      setPopupPosition(popupPos);
+      setPopupPosition({
+        x: screenPos.x, // Align popup directly over the node
+        y: screenPos.y,
+      });
     });
   }, []);
-
+  
   function adjustPopupPositionToScreen(
     screenPos: maplibregl.PointLike,
     map: maplibregl.Map
