@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
 import React, { useState } from 'react';
-import { useGlobalState } from '../components/GlobalStateContext';
+import { useGlobalState } from './GlobalStateContext';
 
 interface LoobrarySignUpProps {
   onBack: () => void;
@@ -9,43 +9,35 @@ interface LoobrarySignUpProps {
 }
 
 const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) => {
-  const { setUserId, setUserEmail, setUserPhone } = useGlobalState();
-  const [currentPhase, setCurrentPhase] = useState(1);
+  const { setUserId, setPseudonym, setUserEmail, setUserPhone } = useGlobalState();
+  const [currentPhase, setCurrentPhase] = useState(1); // Tracks current phase of the form
   const [formData, setFormData] = useState({
-    pseudonym: '',
-    email: '',
-    phone: '',
-    title: '',
-    offeringType: '',
-    description: '',
-    location: '',
-    password: '',
+    pseudonym: '', // User's pseudonym
+    password: '', // User's password
+    email: '', // User's email
+    phone: '', // User's phone number
   });
-  const [error, setError] = useState<string>('');
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [submissionSuccess, setSubmissionSuccess] = useState<boolean>(false);
+  const [error, setError] = useState<string>(''); // Stores error messages
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false); // Tracks submission state
+  const [submissionSuccess, setSubmissionSuccess] = useState<boolean>(false); // Tracks successful submission
 
-  // Validate Phase 1 Fields
+  // Validate Phase 1 Fields: Pseudonym and Password
   const validatePhase1 = () => {
     if (!formData.pseudonym) {
       setError('Pseudonym is required.');
       return false;
     }
-    if (!formData.email) {
-      setError('Email is required.');
-      return false;
-    }
-    if (!formData.password) {
-      setError('Password is required.');
+    if (!formData.password || formData.password.length < 6) {
+      setError('Password must be at least 6 characters.');
       return false;
     }
     return true;
   };
 
-  // Validate Phase 2 Fields
+  // Validate Phase 2 Fields: Email (required) and Phone (optional)
   const validatePhase2 = () => {
-    if (!formData.title || !formData.offeringType || !formData.description || !formData.location) {
-      setError('All fields in this step are required.');
+    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setError('A valid email is required.');
       return false;
     }
     return true;
@@ -53,40 +45,42 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
 
   // Handle Input Changes
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle Phase Navigation
+  // Navigate to Next Phase
   const handleNext = () => {
     if (currentPhase === 1 && validatePhase1()) {
       setError('');
       setCurrentPhase(2);
+    } else if (currentPhase === 2 && validatePhase2()) {
+      setError('');
+      handleSubmit();
     }
   };
 
+  // Navigate to Previous Phase
   const handlePreviousPhase = () => {
     setError('');
-    setCurrentPhase(1);
+    setCurrentPhase(currentPhase - 1);
   };
 
   // Handle Form Submission
   const handleSubmit = async () => {
-    if (!validatePhase2()) return;
-
     setError('');
     setIsSubmitting(true);
 
     try {
       const payload = {
         ...formData,
-        dataType: 'userEntry',
+        dataType: 'userAccount',
         createdAt: new Date().toISOString(),
       };
 
-      const response = await fetch('/api/loobrary-signup', {
+      const response = await fetch('/api/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -95,6 +89,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
       if (response.ok) {
         setSubmissionSuccess(true);
         setUserId(formData.pseudonym);
+        setPseudonym(formData.pseudonym);
         setUserEmail(formData.email);
         setUserPhone(formData.phone);
         setCurrentPhase(3);
@@ -110,53 +105,30 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
     }
   };
 
-  // Render Phase 1
+  // Render Phase 1: Create Pseudonym and Password
   const renderPhase1 = () => (
     <>
-      <h2 className="title">Get your Loobrary card</h2>
-      <p className="description">
-        While still in alpha, we ask everyone who signs up to offer something to the
-        Loobrary. Prefer not to? Check back in beta!
-      </p>
+      <h2 className="title">Create a Loob Account</h2>
       <form>
         <input
           type="text"
           name="pseudonym"
-          placeholder="Enter your pseudonym"
+          placeholder="Enter a pseudonym"
           aria-label="Pseudonym"
           value={formData.pseudonym}
           onChange={handleInputChange}
           required
-          className="pseudonymInput"
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Enter your email"
-          aria-label="Email"
-          value={formData.email}
-          onChange={handleInputChange}
-          required
-          className="pseudonymInput"
-        />
-        <input
-          type="tel"
-          name="phone"
-          placeholder="Enter your phone number (optional)"
-          aria-label="Phone"
-          value={formData.phone}
-          onChange={handleInputChange}
-          className="pseudonymInput"
+          className="inputField"
         />
         <input
           type="password"
           name="password"
-          placeholder="Enter your password"
+          placeholder="Enter a password"
           aria-label="Password"
           value={formData.password}
           onChange={handleInputChange}
           required
-          className="pseudonymInput"
+          className="inputField"
         />
         {error && <p className="error">{error}</p>}
         <button type="button" onClick={handleNext} className="actionButton">
@@ -166,55 +138,30 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
     </>
   );
 
-  // Render Phase 2
+  // Render Phase 2: Email and Phone Number
   const renderPhase2 = () => (
     <>
-      <h2 className="title">Contribute to the Loobrary</h2>
-      <p className="description">
-        Please fill out all fields to successfully log your entry. Be descriptive, it will help our AI!
-      </p>
+      <h2 className="title">Contact Information</h2>
+      <p className="description">Email so we can contact you about your Loobrary card. Phone number if you want to join our Telegram group.</p>
       <form>
         <input
-          type="text"
-          name="title"
-          placeholder="Enter a title"
-          aria-label="Title"
-          value={formData.title}
+          type="email"
+          name="email"
+          placeholder="Enter an email"
+          aria-label="Email"
+          value={formData.email}
           onChange={handleInputChange}
           required
-          className="pseudonymInput"
-        />
-        <select
-          name="offeringType"
-          aria-label="Offering Type"
-          value={formData.offeringType}
-          onChange={handleInputChange}
-          required
-          className="pseudonymInput"
-        >
-          <option value="">Select type</option>
-          <option value="venue">Venue</option>
-          <option value="talent">Talent</option>
-          <option value="gear">Gear</option>
-        </select>
-        <textarea
-          name="description"
-          placeholder="Provide a description"
-          aria-label="Description"
-          value={formData.description}
-          onChange={handleInputChange}
-          required
-          className="pseudonymInput"
+          className="inputField"
         />
         <input
-          type="text"
-          name="location"
-          placeholder="Enter a location"
-          aria-label="Location"
-          value={formData.location}
+          type="tel"
+          name="phone"
+          placeholder="Enter your phone number (optional)"
+          aria-label="Phone"
+          value={formData.phone}
           onChange={handleInputChange}
-          required
-          className="pseudonymInput"
+          className="inputField"
         />
         {error && <p className="error">{error}</p>}
         <div className="buttonGroup">
@@ -227,7 +174,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
           </button>
           <button
             type="button"
-            onClick={handleSubmit}
+            onClick={handleNext}
             disabled={isSubmitting}
             className="actionButton"
           >
@@ -238,11 +185,11 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
     </>
   );
 
-  // Render Phase 3
+  // Render Phase 3: Thank You Page
   const renderPhase3 = () => (
     <div className="finalPhase">
-      <h2 className="mainTitle">Thanks for signing up!</h2>
-      <p className="superSubtitle">We’ll contact you about your Loobrary card.</p>
+      <h2 className="mainTitle">Thanks.</h2>
+      <p className="superSubtitle">Welcome to Loob. Take a look around.</p>
       <button onClick={onExplore} className="actionButton">
         Explore Loob
       </button>

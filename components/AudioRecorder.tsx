@@ -28,7 +28,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
       recorderRef.current = recorder;
       audioContextRef.current = audioContext;
       setRecording(true);
-      setStatusMessage("Recording... Click me again to stop");
+      setStatusMessage("Recording... Click to stop");
 
       startRecording();
       analyzeAudio(audioContext, stream);
@@ -76,13 +76,10 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
       }
 
       setTimeout(() => {
-        setStatusMessage("Still processing...");
-        setTimeout(() => {
-          setStatusMessage("Click me and speak");
-          setProcessing(false);
-          onRecordingComplete(blob);
-        }, 6000); // Additional delay for the "still processing" phase
-      }, 2000); // Initial delay before showing "still processing"
+        setStatusMessage("Click me and speak");
+        setProcessing(false);
+        onRecordingComplete(blob);
+      }, 2000);
     } catch (error) {
       console.error("Error stopping recording:", error);
     }
@@ -117,7 +114,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        flexDirection: "column",
+        flexDirection: "row",
         gap: "20px",
       }}
     >
@@ -125,8 +122,8 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
         {`
           /* Main Button Style */
           .microphone-icon {
-            width: 100px;
-            height: 100px;
+            width: 70px;
+            height: 70px;
             background: radial-gradient(circle at center, rgba(255, 182, 193, 0.9), rgba(255, 218, 185, 0.6));
             border-radius: 50%;
             position: relative;
@@ -174,8 +171,8 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
             position: absolute;
             top: 50%;
             left: 50%;
-            width: ${150 + audioLevel * 1.5}px;
-            height: ${150 + audioLevel * 1.5}px;
+            width: ${100 + audioLevel * 1.5}px;
+            height: ${100 + audioLevel * 1.5}px;
             background: radial-gradient(circle, rgba(255, 145, 135, 0.4), transparent);
             border-radius: 50%;
             transform: translate(-50%, -50%);
@@ -193,10 +190,15 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
           }
 
           .cyber-text {
-            font-size: 18px;
+            font-size: 16px;
             font-family: 'Courier New', Courier, monospace;
-            color: darkorange;
+            color: #FFFDD0;
             text-shadow: 0 0 10px #ff8e88, 0 0 15px darkorange;
+            min-width: 160px;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
           }
         `}
       </style>
@@ -224,7 +226,9 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
         </div>
       </button>
 
-      <div className="cyber-text">{statusMessage}</div>
+      <div className="cyber-text">
+        <span>{statusMessage}</span>
+      </div>
     </div>
   );
 };

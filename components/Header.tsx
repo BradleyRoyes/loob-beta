@@ -46,30 +46,29 @@ const Header: React.FC<HeaderProps> = ({
         </button>
       </div>
 
-      {/* Center Slider */}
       <div className="slider-container">
-        <div
-          className={`slider-pill ${
-            activeView === "Chat" ? "active-chat" : "active-discover"
-          }`}
-        ></div>
-        <button
-          className={`slider-button ${
-            activeView === "Chat" ? "active" : ""
-          }`}
-          onClick={() => toggleView("Chat")}
-        >
-          Loob
-        </button>
-        <button
-          className={`slider-button ${
-            activeView === "Map" ? "active" : ""
-          }`}
-          onClick={() => toggleView("Map")}
-        >
-          Discover
-        </button>
-      </div>
+  <div
+    className={`slider-pill ${
+      activeView === "Chat" ? "active-chat" : "active-discover"
+    }`}
+  ></div>
+  <button
+    className={`slider-button ${
+      activeView === "Chat" ? "active" : ""
+    }`}
+    onClick={() => toggleView("Chat")}
+  >
+    Loob
+  </button>
+  <button
+    className={`slider-button ${
+      activeView === "Map" ? "active" : ""
+    }`}
+    onClick={() => toggleView("Map")}
+  >
+    Discover
+  </button>
+</div>
 
       {/* Right Section */}
       <div className="right-icons">

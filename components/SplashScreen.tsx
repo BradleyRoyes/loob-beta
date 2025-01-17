@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGlobalState } from "./GlobalStateContext"; // Adjust path if needed
-import LoobrarySignUp from "./LoobrarySignUp"; // Adjust path if needed
+import LoobrarySignUp from "./SignUp"; // Adjust path if needed
 import "./SplashScreen.css";
 
 const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
@@ -31,59 +31,57 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
    *  (2) Then attempt server auth. If it fails, you can revert userId or keep it.
    */
   const handleLogin = async () => {
-    setLoginError("");
-    setLoading(true);
-
-    // 1) Basic input checks
+    setLoginError(""); // Clear previous errors
+    setLoading(true); // Set loading state to true
+  
+    // Validate input
     if (!username.trim() || !password.trim()) {
       setLoginError("Please enter both a pseudonym and a password.");
       setLoading(false);
       return;
     }
-
-    // 2) Immediately set userId in the global state
-    setUserId(username.trim());
-
+  
     try {
-      // 3) Attempt server authentication
+      // Send login request to server
       const response = await fetch("/api/auth/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pseudonym: username.trim(), password }),
       });
-
-      setLoading(false);
-
+  
       if (!response.ok) {
+        // Handle error response from server
         const errorData = await response.json();
         setLoginError(errorData.error || "Login failed. Check your credentials.");
-        // Optionally revert userId if you don't want the pseudonym set on failure
-        // setUserId(null);
+        setLoading(false);
         return;
       }
-
-      // 4) On success, parse the pseudonym from server
-      const { pseudonym } = await response.json();
-      console.log("Server says login successful. Confirming userId:", pseudonym);
-
-      // 5) Optionally: re-set userId to what server says
-      //    If you trust the user typed the correct one, skip this if you want.
-      setUserId(pseudonym);
-
-      // 6) Set session ID, do fade-out
+  
+      // Parse the response JSON
+      const { user } = await response.json();
+  
+      if (!user || !user.pseudonym) {
+        setLoginError("Unexpected error: User data missing in server response.");
+        setLoading(false);
+        return;
+      }
+  
+      // Update global state with pseudonym and generate session ID
+      setUserId(user.pseudonym);
       setSessionId(generateSessionId());
+  
+      // Transition to fade-out and close the splash screen
       setPhase("fadeOut");
       setTimeout(() => onClose(), 1000);
     } catch (error) {
+      // Catch unexpected errors and display message
       console.error("Error logging in:", error);
-      setLoginError("An unexpected error occurred.");
-      setLoading(false);
-
-      // If you want to revert userId on fatal error:
-      // setUserId(null);
+      setLoginError("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false); // Reset loading state
     }
   };
-
+  
   // Stay anonymous => set userId to random + session ID
   const handleStayAnonymous = () => {
     const anonId = `anon-${Math.random().toString(36).substr(2, 9)}`;

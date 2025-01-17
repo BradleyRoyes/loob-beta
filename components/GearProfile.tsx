@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from "react";
-import "./GearProfile.css";
 import TorusSphere from "./TorusSphere";
 import TorusSphereWeek from "./TorusSphereWeek";
 import TorusSphereAll from "./TorusSphereAll";
@@ -21,9 +20,10 @@ interface GearProfileProps {
     history: HistoryEntry[];
   };
   onClose: () => void;
+  onAddToMap: () => void;
 }
 
-const GearProfile: React.FC<GearProfileProps> = ({ gear, onClose }) => {
+const GearProfile: React.FC<GearProfileProps> = ({ gear, onClose, onAddToMap }) => {
   const [sliderValue, setSliderValue] = useState(0);
   const [fadeVisual, setFadeVisual] = useState<JSX.Element>(<TorusSphere />);
   const [nextVisual, setNextVisual] = useState<JSX.Element | null>(null);
@@ -35,20 +35,19 @@ const GearProfile: React.FC<GearProfileProps> = ({ gear, onClose }) => {
     if (newValue === 0) setNextVisual(<TorusSphere />);
     else if (newValue === 1) setNextVisual(<TorusSphereWeek />);
     else if (newValue === 2) setNextVisual(<TorusSphereAll />);
-    
+
     setSliderValue(newValue);
   };
 
   useEffect(() => {
     if (nextVisual) {
-      // Begin the fade transition
       setIsTransitioning(true);
 
       const timer = setTimeout(() => {
-        setFadeVisual(nextVisual); // Update the main visual
-        setIsTransitioning(false); // End the transition
-        setNextVisual(null); // Clear next visual
-      }, 8000); // Match fade duration
+        setFadeVisual(nextVisual);
+        setIsTransitioning(false);
+        setNextVisual(null);
+      }, 800);
 
       return () => clearTimeout(timer);
     }
@@ -62,15 +61,14 @@ const GearProfile: React.FC<GearProfileProps> = ({ gear, onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur z-50"
+      className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm z-50"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
         }
       }}
     >
-      <div className="bg-gray-800 text-white rounded-lg w-full max-w-lg md:max-w-2xl p-6 relative overflow-y-auto max-h-[80vh] md:max-h-[90vh]">
-        {/* Close Button */}
+      <div className="bg-gray-900 text-white rounded-lg w-full max-w-lg p-6 relative overflow-y-auto max-h-[80vh]">
         <button
           className="absolute top-4 right-4 text-xl text-gray-400 hover:text-white"
           onClick={onClose}
@@ -78,14 +76,11 @@ const GearProfile: React.FC<GearProfileProps> = ({ gear, onClose }) => {
           &times;
         </button>
 
-        {/* Gear Information */}
         <h2 className="text-2xl font-bold mb-2 text-center">{gear.name}</h2>
         <p className="text-gray-400 mb-4 text-center">{gear.description}</p>
 
-        {/* Visuals and Slider */}
         <div className="mb-4">
           <div className="relative h-48 flex justify-center items-center">
-            {/* Current Visual */}
             <div
               className={`absolute transition-opacity duration-300 ${
                 isTransitioning ? "opacity-0" : "opacity-100"
@@ -93,7 +88,6 @@ const GearProfile: React.FC<GearProfileProps> = ({ gear, onClose }) => {
             >
               {fadeVisual}
             </div>
-            {/* Next Visual */}
             {nextVisual && (
               <div
                 className={`absolute transition-opacity duration-300 ${
@@ -117,17 +111,15 @@ const GearProfile: React.FC<GearProfileProps> = ({ gear, onClose }) => {
             onChange={handleSliderChange}
             className="w-full appearance-none h-2 bg-gray-700 rounded-lg"
             style={{
-              backgroundImage: "linear-gradient(to right, #fed7aa, #fcd1d1)", // Pastel orange gradient
+              backgroundImage: "linear-gradient(to right, #fed7aa, #fcd1d1)",
             }}
           />
         </div>
 
-        {/* Status */}
         <div className="mb-4">
           <strong>Status:</strong> {gear.status}
         </div>
 
-        {/* Check In / Check Out Buttons */}
         <div className="flex justify-center space-x-4 mb-6">
           <button
             onClick={() => alert("Item Checked In")}
@@ -143,12 +135,20 @@ const GearProfile: React.FC<GearProfileProps> = ({ gear, onClose }) => {
           </button>
         </div>
 
-        {/* History Section */}
+        <div className="flex flex-col mb-6">
+          <button
+            onClick={onAddToMap}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+          >
+            Add to Map
+          </button>
+        </div>
+
         <div>
           <h3 className="text-lg font-bold mb-2">History</h3>
           <ul className="space-y-2">
             {gear.history.map((entry, index) => (
-              <li key={index} className="bg-gray-700 p-2 rounded">
+              <li key={index} className="bg-gray-800 p-2 rounded">
                 <strong>{entry.action}</strong> - {entry.date} at {entry.location}
               </li>
             ))}

@@ -5,10 +5,38 @@ import { FaMapMarkerAlt, FaUser, FaTools, FaUsers } from 'react-icons/fa';
 import './AddEntry.css';
 import { useGlobalState } from '../components/GlobalStateContext';
 
-const AddEntry = () => {
+// Define a type for the "Tag" structure
+type Tag = {
+  category: string; // The category of the tag, e.g., 'Capacity'
+  value: string; // The value associated with the tag, e.g., 'Fits 300 people'
+};
+
+// Define the overall structure of the formData state
+interface FormData {
+  pseudonym: string;
+  email: string;
+  phone: string;
+  password: string;
+  title: string;
+  offeringType: string;
+  description: string;
+  location: string;
+  name: string;
+  address: string;
+  adminUsername: string;
+  adminPassword: string;
+  tags: Tag[]; // An array of tags
+}
+
+const AddEntry: React.FC = () => {
+  // Pull initial values from global state
   const { pseudonym, email, phone } = useGlobalState();
-  const [selectedType, setSelectedType] = useState<string>('Loobricate'); // Default open form
-  const [formData, setFormData] = useState<Record<string, any>>({
+
+  // Default form type is set to "Location"
+  const [selectedType, setSelectedType] = useState<string>('Location');
+
+  // Initialize the form data state with default values
+  const [formData, setFormData] = useState<FormData>({
     pseudonym: pseudonym || 'Anonymously Contributed',
     email: email || 'Anonymously Contributed',
     phone: phone || 'N/A',
@@ -23,20 +51,29 @@ const AddEntry = () => {
     adminPassword: '',
     tags: [],
   });
-  const [currentTag, setCurrentTag] = useState({ category: '', value: '', isCustom: false });
+
+  // State to manage the currently entered tag
+  const [currentTag, setCurrentTag] = useState<Tag & { isCustom: boolean }>({
+    category: '',
+    value: '',
+    isCustom: false,
+  });
+
+  // State to handle errors and submission states
   const [error, setError] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submissionSuccess, setSubmissionSuccess] = useState<boolean>(false);
 
+  // Predefined tag categories
   const predefinedCategories = ['Select a category', 'Capacity', 'Cost', 'Specs', 'Availability', 'Add Your Own'];
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  // Update form data state when an input changes
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Add a new tag to the tags array
   const handleAddTag = () => {
     if (formData.tags.length >= 5) {
       setError('You can add up to 5 tags only.');
@@ -50,23 +87,27 @@ const AddEntry = () => {
       ...prev,
       tags: [...prev.tags, { category: currentTag.category, value: currentTag.value }],
     }));
-    setCurrentTag({ category: '', value: '', isCustom: false });
-    setError('');
+    setCurrentTag({ category: '', value: '', isCustom: false }); // Reset the current tag input
+    setError(''); // Clear errors
   };
 
+  // Remove a tag by its index
   const handleTagRemove = (index: number) => {
     setFormData((prev) => ({
       ...prev,
-      tags: prev.tags.filter((_, i) => i !== index),
+      tags: prev.tags.filter((_, i) => i !== index), // Filter out the tag at the given index
     }));
   };
 
+  // Update the selected form type
   const handleTypeSelection = (type: string) => {
     setSelectedType(type);
     setFormData((prev) => ({ ...prev, offeringType: type.toLowerCase() }));
   };
 
+  // Submit the form data
   const handleSubmit = async () => {
+    // Validate fields based on the selected type
     if (selectedType === 'Loobricate') {
       if (!formData.name || !formData.description || !formData.address || !formData.adminUsername || !formData.adminPassword) {
         setError('Please fill in all required fields for Loobricate.');
@@ -77,13 +118,12 @@ const AddEntry = () => {
       return;
     }
 
-    setError('');
-    setIsSubmitting(true);
+    setError(''); // Clear errors
+    setIsSubmitting(true); // Start submission process
 
     try {
-      const payload = { ...formData, dataType: selectedType };
-      const endpoint =
-        selectedType === 'Loobricate' ? '/api/loobricates' : '/api/loobrary-signup';
+      const payload = { ...formData, dataType: selectedType }; // Prepare payload
+      const endpoint = selectedType === 'Loobricate' ? '/api/loobricates' : '/api/loobrary-signup';
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -94,7 +134,7 @@ const AddEntry = () => {
       const result = await response.json();
 
       if (response.ok) {
-        setSubmissionSuccess(true);
+        setSubmissionSuccess(true); // Mark success
         setFormData({
           pseudonym: pseudonym || 'Anonymously Contributed',
           email: email || 'Anonymously Contributed',
@@ -109,18 +149,19 @@ const AddEntry = () => {
           adminUsername: '',
           adminPassword: '',
           tags: [],
-        });
+        }); // Reset form
       } else {
-        setError(result.error || 'An error occurred.');
+        setError(result.error || 'An error occurred.'); // Handle error
       }
     } catch (err) {
       console.error('Error submitting form:', err);
       setError('An unexpected error occurred.');
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false); // End submission process
     }
   };
 
+  // Render the appropriate form fields based on the selected type
   const renderFormFields = () => {
     switch (selectedType) {
       case 'Location':
@@ -232,13 +273,6 @@ const AddEntry = () => {
           <div className="form-container">
             {renderFormFields()}
             <h3>Tags</h3>
-            <div className="tag-description">
-              <p>Tags help categorize and provide detailed information about your entry. For example:</p>
-              <ul>
-                <li><strong>Category:</strong> Capacity</li>
-                <li><strong>Value:</strong> 200 seats with comfortable spacing</li>
-              </ul>
-            </div>
             <div className="tag-section">
               <select
                 value={currentTag.isCustom ? 'Add Your Own' : currentTag.category}
@@ -252,6 +286,9 @@ const AddEntry = () => {
                 }}
                 className="form-input tag-category-selector"
               >
+                <option value="" disabled>
+                  Select a category
+                </option>
                 {predefinedCategories.map((category, index) => (
                   <option key={index} value={category}>
                     {category}
@@ -268,23 +305,29 @@ const AddEntry = () => {
                 />
               )}
               <textarea
-                placeholder="Enter detailed value for the tag (e.g., 'Fits 300 people with extra amenities')"
+                placeholder="Enter value for the tag"
                 value={currentTag.value}
                 onChange={(e) => setCurrentTag((prev) => ({ ...prev, value: e.target.value }))}
-                className="form-input tag-value-input"
+                className="form-input"
               />
-              <button onClick={handleAddTag} className="small-plus">+</button>
+              <button onClick={handleAddTag} className="small-plus">
+                +
+              </button>
             </div>
-            {formData.tags.map((tag, index) => (
-              <div key={index} className="tag-item">
-                <span className="tag-label">
-                  {tag.category}: {tag.value}
-                </span>
-                <button className="remove-tag" onClick={() => handleTagRemove(index)}>
-                  Remove
-                </button>
+            {formData.tags.length > 0 && (
+              <div className="tag-list">
+                {formData.tags.map((tag: Tag, index: number) => (
+                  <div key={index} className="tag-item">
+                    <span className="tag-label">
+                      <strong>{tag.category}:</strong> {tag.value}
+                    </span>
+                    <button className="remove-tag" onClick={() => handleTagRemove(index)}>
+                      Remove
+                    </button>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
             {error && <p className="error-message">{error}</p>}
             <button className="actionButton" onClick={handleSubmit} disabled={isSubmitting}>
               {isSubmitting ? 'Submitting...' : 'Submit'}

@@ -142,3 +142,26 @@ button.active {
     padding: 0 2rem; /* Add extra padding for large screens */
   }
 }
+
+/* Log Out Button */
+.logout-button {
+  background-color: #e53e3e; /* Red background for visibility */
+  color: #fff; /* White text for contrast */
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.logout-button:hover {
+  background-color: #c53030; /* Darker red on hover */
+  transform: scale(1.05); /* Slightly enlarge on hover */
+}
+
+.logout-button:active {
+  background-color: #9b2c2c; /* Even darker red when pressed */
+  transform: scale(0.95); /* Slightly shrink when clicked */
+}

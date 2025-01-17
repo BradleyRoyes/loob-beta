@@ -5,7 +5,7 @@
     justify-content: center;
     padding: 20px;
     font-family: 'Inter', sans-serif;
-    background-color: black;
+    background-color: rgba(0, 0, 0, 0);
     color: #f3f3f3;
   }
   
@@ -27,7 +27,7 @@
   }
   
   .icon {
-    font-size: 4rem;
+    font-size: 3rem;
     cursor: pointer;
     transition: transform 0.2s ease, color 0.3s ease;
   }
@@ -47,7 +47,7 @@
   .form-container {
     width: 90%;
     max-width: 600px;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(38, 38, 38, 0);
     border-radius: 12px;
     padding: 20px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
@@ -267,5 +267,40 @@
     margin-bottom: 10px;
     text-align: left;
   }
+
+  /* Container for textarea input */
+.tag-value-container {
+  display: flex;
+  flex-direction: column; /* Stack elements vertically */
+  width: 100%; /* Full width of form container */
+  margin-top: 10px;
+}
+
+/* Textarea styling */
+.tag-value-input {
+  width: 100%; /* Ensure it spans full container width */
+  padding: 10px; /* Padding for better usability */
+  font-size: 1rem; /* Readable font size */
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: #222;
+  color: #f3f3f3;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box; /* Include padding in width calculations */
+}
+
+.tag-value-input:focus {
+  border-color: #ffb48f; /* Highlight border on focus */
+  outline: none; /* Remove default browser outline */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tag-value-input {
+    font-size: 1rem; /* Adjust font size for small screens */
+    padding: 12px; /* Larger padding for mobile usability */
+  }
+}
+
   
   

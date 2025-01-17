@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useGlobalState } from "./GlobalStateContext"; // Adjust path if needed
-import TorusSphere from "./TorusSphere"; 
+import TorusSphere from "./TorusSphere";
 import TorusSphereWeek from "./TorusSphereWeek";
 import TorusSphereAll from "./TorusSphereAll";
 import VenueProfile from "./VenueProfile";
@@ -11,11 +11,23 @@ import "./Profile.css"; // Keep your existing styling
 type VisualView = "Today" | "ThisWeek" | "AllTime";
 
 // Represents one doc fetched from your DB
-interface Venue {
+interface Entry {
   id: string;
   label: string;
   details: string;
-  visualType: VisualView;
+}
+
+interface Loobricate {
+  id: string;
+  name: string;
+  description: string;
+}
+
+interface RecentDiscovery {
+  id: string;
+  type: "content" | "loobricate" | "location";
+  title: string;
+  dateVisited: string;
 }
 
 export default function Profile() {
@@ -24,21 +36,18 @@ export default function Profile() {
   // For selecting which sphere to show
   const [visualView, setVisualView] = useState<VisualView>("Today");
 
-  // The entries/venues from the DB
-  const [venues, setVenues] = useState<Venue[]>([]);
-  // If the route returns a "message" (e.g. "anonymous user" or "no entries"), store it
+  // Data states
+  const [loobricates, setLoobricates] = useState<Loobricate[]>([]);
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const [recentDiscoveries, setRecentDiscoveries] = useState<RecentDiscovery[]>([]);
   const [routeMessage, setRouteMessage] = useState<string>("");
 
-  // For the venue detail modal
-  const [activeVenue, setActiveVenue] = useState<Venue | null>(null);
-  const [showVenueProfile, setShowVenueProfile] = useState(false);
-
-  // On mount or when userId changes, fetch from /api/profile
   useEffect(() => {
     if (!userId) {
-      // If userId is null, skip fetching
       setRouteMessage("No pseudonym set. Please log in or stay anonymous.");
-      setVenues([]);
+      setLoobricates([]);
+      setEntries([]);
+      setRecentDiscoveries([]);
       return;
     }
 
@@ -49,24 +58,17 @@ export default function Profile() {
           throw new Error(`Failed to fetch profile data. Status: ${res.status}`);
         }
         const data = await res.json();
-        // Expecting something like { user: {...} or null, entries: [...], message?: string }
 
-        // If the server gave a "message," store it
-        if (data.message) {
-          setRouteMessage(data.message);
-        } else {
-          setRouteMessage("");
-        }
-
-        if (data.entries && Array.isArray(data.entries)) {
-          setVenues(data.entries);
-        } else {
-          setVenues([]);
-        }
+        setRouteMessage(data.message || "");
+        setLoobricates(data.loobricates || []);
+        setEntries(data.entries || []);
+        setRecentDiscoveries(data.recentDiscoveries || []);
       } catch (err) {
         console.error("Error fetching profile data:", err);
         setRouteMessage("Error fetching entries from server.");
-        setVenues([]);
+        setLoobricates([]);
+        setEntries([]);
+        setRecentDiscoveries([]);
       }
     };
 
@@ -85,22 +87,10 @@ export default function Profile() {
     }
   };
 
-  // Open/close the venue modal
-  const openVenueProfile = (venue: Venue) => {
-    setActiveVenue(venue);
-    setShowVenueProfile(true);
-  };
-  const closeVenueProfile = () => {
-    setActiveVenue(null);
-    setShowVenueProfile(false);
-  };
-
   // For logging out, we clear the global user
   const handleLogout = () => {
     setUserId(null);
     setSessionId(null);
-    // Possibly remove local/session storage if you used it
-    // e.g. localStorage.removeItem("userId");
     window.location.reload();
   };
 
@@ -108,11 +98,10 @@ export default function Profile() {
     <div className="profile-container">
       <main className="profile-main">
         <div className="profile-content-wrapper">
-          {/* Show user pseudonym or fallback */}
+          {/* User Pseudonym */}
           <section className="pseudonym-section">
             <p className="pseudonym-label">Pseudonym:</p>
             <p className="pseudonym-value">{userId ?? "No pseudonym set"}</p>
-            {/* If route returned a special message (e.g. "You are anonymous..."), show it */}
             {routeMessage && (
               <p className="route-message" style={{ marginTop: "0.5rem", color: "#888" }}>
                 {routeMessage}
@@ -138,18 +127,53 @@ export default function Profile() {
             {renderSphereForView()}
           </section>
 
-          {/* Venues/Entries */}
-          <section className="your-venues-section">
-            <h2 className="venues-heading">Your Venues</h2>
-            <ul className="venues-list">
-              {venues.map((v) => (
-                <li key={v.id} className="venue-item">
-                  <span className="venue-label">{v.label}</span>
-                  <button onClick={() => openVenueProfile(v)}>Open</button>
-                </li>
-              ))}
-              {venues.length === 0 && (
-                <p className="no-venues">You have no venues yet.</p>
+          {/* Loobricates */}
+          <section className="your-loobricates-section">
+            <h2 className="section-heading">Your Loobricates</h2>
+            <ul className="list">
+              {loobricates.length > 0 ? (
+                loobricates.map((l) => (
+                  <li key={l.id} className="list-item">
+                    <span>{l.name}</span>
+                    <p>{l.description}</p>
+                  </li>
+                ))
+              ) : (
+                <p className="empty-message">You are not part of any Loobricates yet.</p>
+              )}
+            </ul>
+          </section>
+
+          {/* Loobrary Entries */}
+          <section className="your-loobrary-entries-section">
+            <h2 className="section-heading">Your Loobrary Entries</h2>
+            <ul className="list">
+              {entries.length > 0 ? (
+                entries.map((e) => (
+                  <li key={e.id} className="list-item">
+                    <span>{e.label}</span>
+                    <p>{e.details}</p>
+                  </li>
+                ))
+              ) : (
+                <p className="empty-message">You have not added any entries to the Loobrary yet.</p>
+              )}
+            </ul>
+          </section>
+
+          {/* Recent Discoveries */}
+          <section className="recent-discoveries-section">
+            <h2 className="section-heading">Recent Discoveries</h2>
+            <ul className="list">
+              {recentDiscoveries.length > 0 ? (
+                recentDiscoveries.map((r) => (
+                  <li key={r.id} className="list-item">
+                    <span>{r.title}</span>
+                    <p>Visited on: {new Date(r.dateVisited).toLocaleDateString()}</p>
+                  </li>
+                ))
+              ) : (
+                <p className="empty-message">You have no recent discoveries yet.</p>
               )}
             </ul>
           </section>
@@ -160,11 +184,6 @@ export default function Profile() {
           </button>
         </div>
       </main>
-
-      {/* Venue Profile Modal */}
-      {showVenueProfile && activeVenue && (
-        <VenueProfile venue={activeVenue} onClose={closeVenueProfile} />
-      )}
     </div>
   );
 }
