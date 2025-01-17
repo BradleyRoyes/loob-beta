@@ -3,13 +3,17 @@
     // Target modern JavaScript features for browser compatibility
     "target": "esnext",
     // Include browser and ESNext features
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     // Use Node.js-style module resolution
     "moduleResolution": "node",
     // Use ESNext modules for modern development
     "module": "esnext",
     // Enable JSX for React
-    "jsx": "react-jsx",
+    "jsx": "preserve",
     // Allow importing JSON files
     "resolveJsonModule": true,
     // Allow JavaScript files alongside TypeScript files
@@ -28,20 +32,33 @@
     "forceConsistentCasingInFileNames": true,
     // Paths for easy imports
     "paths": {
-      "@components/*": ["components/*"],
-      "@utils/*": ["utils/*"]
-    }
+      "@components/*": [
+        "components/*"
+      ],
+      "@utils/*": [
+        "utils/*"
+      ]
+    },
+    "incremental": true,
+    "isolatedModules": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "strictNullChecks": true
   },
   "include": [
     // Include all TypeScript and JSX/TSX files
-    "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    // Include specific components if needed
     "components/**/*.ts",
+    // Include specific components if needed
     "components/**/*.tsx",
+    "components/ChatModal.tsx",
     "components/TorusSphere.jsx",
-    "components/ChatModal.tsx"
+    "next-env.d.ts",
+    ".next/types/**/*.ts"
   ],
   "exclude": [
     // Ignore build output and unnecessary folders
