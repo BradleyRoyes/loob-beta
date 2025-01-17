@@ -1,68 +1,40 @@
 {
   "compilerOptions": {
-    // Target modern JavaScript features for browser compatibility
-    "target": "esnext",
-    // Include browser and ESNext features
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    // Use Node.js-style module resolution
-    "moduleResolution": "node",
-    // Use ESNext modules for modern development
-    "module": "esnext",
-    // Enable JSX for React
-    "jsx": "preserve",
-    // Allow importing JSON files
-    "resolveJsonModule": true,
-    // Allow JavaScript files alongside TypeScript files
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
-    // Skip type checking for libraries in node_modules
     "skipLibCheck": true,
-    // Base URL for resolving imports
-    "baseUrl": ".",
-    // Enable ES module compatibility
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    // Prevent emitting compiled files (Next.js handles this)
+    "strict": false, // Set to true for stricter type checking
     "noEmit": true,
-    // Include all TypeScript strict settings but make them beginner-friendly
-    "strict": false,
-    "forceConsistentCasingInFileNames": true,
-    // Paths for easy imports
-    "paths": {
-      "@components/*": [
-        "components/*"
-      ],
-      "@utils/*": [
-        "utils/*"
-      ]
-    },
     "incremental": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
     "isolatedModules": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "strictNullChecks": true
+    "jsx": "preserve", // Use "react-jsx" if needed
+    "plugins": [{ "name": "next" }],
+    "strictNullChecks": true,
+    "target": "ESNext", // Updated from ES2017
+    "baseUrl": ".",
+    "paths": {
+      "@components/*": ["components/*"]
+    }
   },
   "include": [
-    // Include all TypeScript and JSX/TSX files
+    "next-env.d.ts",
+    ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx",
     "components/**/*.ts",
-    // Include specific components if needed
-    "components/**/*.tsx",
-    "components/ChatModal.tsx",
-    "components/TorusSphere.jsx",
-    "next-env.d.ts",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": [
-    // Ignore build output and unnecessary folders
-    ".next",
-    "out"
-  ]
+    "components/**/*.tsx"
+, "components/TorusSphere.jsx", "components/ChatModal.tsx"  ],
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  },
+  "exclude": ["node_modules"]
 }
+
+
+
