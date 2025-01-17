@@ -1,11 +1,13 @@
 import OpenAI from 'openai';
-import formidable from 'formidable';
-import fs from 'fs/promises';
+import formidable from 'formidable-serverless';
+import fs from 'fs';
+import ffmpeg from 'fluent-ffmpeg';
+import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import { v4 as uuidv4 } from 'uuid';
-const { createFFmpeg, fetchFile } = await import('@ffmpeg/ffmpeg');
 import { NextResponse } from 'next/server';
 
-const ffmpeg = createFFmpeg({ log: true });
+// Set the ffmpeg path
+ffmpeg.setFfmpegPath(ffmpegPath.path);
 
 // Disable body parsing for file uploads
 export const config = {
@@ -15,36 +17,38 @@ export const config = {
 };
 
 // Helper function to transcode audio to WAV
-const transcodeToWav = async (inputPath: string, outputPath: string) => {
-  if (!ffmpeg.isLoaded()) {
-    await ffmpeg.load();
-  }
-  const inputFile = await fetchFile(inputPath);
-
-  ffmpeg.FS('writeFile', 'input', inputFile);
-  await ffmpeg.run('-i', 'input', 'output.wav');
-  const output = ffmpeg.FS('readFile', 'output.wav');
-  await fs.writeFile(outputPath, Buffer.from(output));
+const transcodeToWav = (inputPath, outputPath) => {
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+      .toFormat('wav')
+      .on('end', () => resolve(outputPath))
+      .on('error', reject)
+      .save(outputPath);
+  });
 };
 
 // Helper function to parse form data
-const parseForm = (req: any) =>
-  new Promise((resolve, reject) => {
-    const form = formidable({ uploadDir: '/tmp', keepExtensions: true });
+const parseForm = (req): Promise<{ fields: any; files: any }> => {
+  return new Promise((resolve, reject) => {
+    const form = new formidable.IncomingForm({
+      uploadDir: '/tmp',
+      keepExtensions: true,
+    });
     form.parse(req, (err, fields, files) => {
       if (err) reject(err);
       else resolve({ fields, files });
     });
   });
+};
 
 // Handle POST requests
-export async function POST(req: any) {
+export async function POST(req) {
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });
 
   try {
-    const { files } = await parseForm(req);
+    const { fields, files }: { fields: any; files: any } = await parseForm(req);
     const audioFile = files.audio;
 
     if (!audioFile) {
@@ -55,7 +59,7 @@ export async function POST(req: any) {
     }
 
     const uniqueId = uuidv4();
-    const inputPath = audioFile.filepath;
+    const inputPath = audioFile.filepath || audioFile.path; // Ensure compatibility with both file systems
     const outputPath = `/tmp/audio_${uniqueId}.wav`;
 
     try {
@@ -63,7 +67,7 @@ export async function POST(req: any) {
       await transcodeToWav(inputPath, outputPath);
 
       // Read the WAV file as a stream
-      const fileStream = await fs.readFile(outputPath);
+      const fileStream = fs.createReadStream(outputPath);
 
       // Send the file to Whisper API
       const response = await openai.audio.transcriptions.create({
@@ -72,8 +76,8 @@ export async function POST(req: any) {
       });
 
       // Clean up temporary files
-      await fs.unlink(inputPath);
-      await fs.unlink(outputPath);
+      fs.unlinkSync(inputPath);
+      fs.unlinkSync(outputPath);
 
       return NextResponse.json({ transcription: response.text });
     } catch (error) {
