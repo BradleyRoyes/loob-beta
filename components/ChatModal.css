@@ -1,5 +1,5 @@
 /* ==========================================================
-   ChatModal CSS - Comprehensive Dark-Themed Styles
+   ChatModal CSS - Comprehensive Dark-Themed Styles with Gradient Colors
    ========================================================== */
 
 /* ============= Import Fonts ============= */
@@ -39,8 +39,8 @@ html, body {
   --background-secondary: #232323;
   --background-soft: #1e1e1e;
   --border-primary: #3a3a3a;
-  --gradient-primary: linear-gradient(to left, #d66d75, #e29587);
-  --gradient-user: linear-gradient(to right, pink, #fba779);
+  --gradient-primary: linear-gradient(to right, #fed7aa, #fcd1d1); /* Pastel orange to pink */
+  --gradient-user: linear-gradient(to right, #fcd1d1, #fed7aa); /* Reverse pastel pink to orange */
   --shadow-primary: 0px 6px 16px 0px #00000050, 0px 4px 14px 0px #00000040, 0px 8px 10px 0px #00000030;
   --border-radius-default: 4px;
   --padding-default: 0.5rem;
@@ -60,6 +60,7 @@ html, body {
   box-shadow: var(--shadow-primary);
   padding: 1rem;
   overflow: hidden;
+  position: relative; /* Ensures child elements like buttons stay inside */
 }
 
 .chatbot-header {
@@ -70,49 +71,21 @@ html, body {
 
 .chatbot-header h1 {
   font-size: 1.5rem;
-  font-weight: var(--font-weight-bold);
-  color: var(--text-primary);
-}
-
-.chatbot-input {
-  color: var(--text-primary);
-  border: 1px solid var(--border-primary);
-  background-color: var(--background-soft);
-  font-size: var(--font-size-default);
-  padding: var(--padding-default);
-  border-radius: var(--border-radius-default);
-  outline: none;
-}
-
-.chatbot-input::placeholder {
-  color: var(--text-secondary);
-}
-
-/* Prompt Suggestions */
-.prompt-suggestion-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-}
-
-.prompt-button {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  border: 1px solid var(--border-primary);
-  border-radius: var(--border-radius-default);
-  background-color: var(--background-soft);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.prompt-button:hover {
-  background-color: var(--background-secondary);
-  color: var(--text-secondary);
+  font-weight: 600;
+  color: var(--gradient-primary);
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 /* Chat Messages */
+.chat-messages-container {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+  padding-right: 0.5rem;
+}
+
 .talk-bubble {
   display: inline-block;
   position: relative;
@@ -136,11 +109,63 @@ html, body {
   float: right;
 }
 
-/* Buttons */
-.base-button {
-  display: inline-flex;
-  justify-content: center;
+/* Input and Controls */
+.chatbot-input-container {
+  display: flex;
   align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: var(--background-soft);
+  border-radius: var(--border-radius-default);
+  position: absolute;
+  bottom: 0; /* Anchored at the bottom inside the modal */
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+}
+
+.chatbot-input {
+  flex: 1;
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+  background-color: var(--background-secondary);
+  font-size: var(--font-size-default);
+  padding: var(--padding-default);
+  border-radius: var(--border-radius-default);
+  outline: none;
+}
+
+.chatbot-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.audio-recorder-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.audio-recorder-container button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--gradient-primary);
+  box-shadow: var(--shadow-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  border: none;
+  cursor: pointer;
+  transition: transform 0.3s, background 0.3s;
+}
+
+.audio-recorder-container button:hover {
+  transform: scale(1.1);
+  background: var(--gradient-user);
+}
+
+.base-button {
   padding: 0.5rem 1rem;
   font-size: var(--font-size-default);
   font-weight: 600;
@@ -157,17 +182,31 @@ html, body {
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
 }
 
-.base-button:disabled {
-  background-color: #777;
-  color: #ccc;
-  cursor: not-allowed;
+/* Prompt Suggestions */
+.prompt-suggestion-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  overflow-x: auto;
+  gap: 0.5rem;
 }
 
-/* Audio Recorder */
-.audio-recorder-container {
-  margin: 1rem 0;
-  display: flex;
-  justify-content: center;
+.prompt-button {
+  flex: 0 0 auto;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--border-radius-default);
+  background-color: var(--background-soft);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.prompt-button:hover {
+  background: var(--gradient-primary);
+  color: var(--background-primary);
 }
 
 /* Animations */
@@ -200,6 +239,10 @@ html, body {
     padding: 0.4rem 0.8rem;
     font-size: 0.75rem;
   }
+
+  .chatbot-input-container {
+    padding: 0.5rem;
+  }
 }
 
 @media (max-width: 640px) {
@@ -210,5 +253,19 @@ html, body {
 
   .chatbot-header h1 {
     font-size: 1.25rem;
+  }
+
+  .chatbot-input-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .chatbot-input {
+    margin-right: 0;
+  }
+
+  .audio-recorder-container {
+    position: static;
   }
 }
