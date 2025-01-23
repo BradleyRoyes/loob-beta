@@ -1,22 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCollection } from '../../../../lib/astraDb';
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-  searchParams: { [key: string]: string | string[] | undefined };
-}
-
 export async function GET(
   request: NextRequest,
-  context: RouteParams
+  { params }: { params: { id: string } }
 ) {
   try {
     const collection = await getCollection('usersandloobricates');
     
     const venue = await collection.findOne({
-      _id: context.params.id,
+      _id: params.id,
       $or: [
         { dataType: 'location' },
         { offeringType: 'location' }
