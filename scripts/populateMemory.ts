@@ -68,22 +68,17 @@ const insertEntry = async (entry: LibraryEntry): Promise<void> => {
   }
 
   try {
-    let embedding: number[] | null = null; // Allow both null and number[] types
+    console.log(`Generating embedding for title: "${entry.title}"`);
+    const response = await openai.embeddings.create({
+      input: entry.dataType === 'memory' ? entry.content : entry.description,
+      model: 'text-embedding-ada-002',
+    });
 
-    if (entry.dataType === 'memory' || entry.dataType === 'userEntry') {
-      console.log(`Generating embedding for title: "${entry.title}"`);
-      const response = await openai.embeddings.create({
-        input: entry.dataType === 'memory' ? entry.content : entry.chunk,
-        model: 'text-embedding-ada-002',
-      });
-    
-      embedding = response.data[0]?.embedding || null; // Assign embedding or keep it as null
-      if (!embedding) {
-        console.error(`Failed to generate embedding for title: "${entry.title}"`);
-        return;
-      }
+    const embedding = response.data[0]?.embedding || null;
+    if (!embedding) {
+      console.error(`Failed to generate embedding for title: "${entry.title}"`);
+      return;
     }
-    
 
     const document = {
       document_id: `${entry.title}-${Date.now()}`,
@@ -101,27 +96,27 @@ const insertEntry = async (entry: LibraryEntry): Promise<void> => {
 
 const populateLibrary = async (): Promise<void> => {
   console.log('Starting library population...');
-  await createLibraryCollection();
+  const collection = await astraDb.collection('library');
 
   for (const entry of entries) {
+    const existingEntry = await collection.findOne({ title: entry.title });
+    if (existingEntry) {
+      console.log(`Duplicate entry found for title: "${entry.title}". Skipping.`);
+      continue;
+    }
     await insertEntry(entry);
   }
 
   console.log('Library population complete.');
 };
 
-// Run the script only if not already populated
 const initializeLibrary = async (): Promise<void> => {
-  const collection = await astraDb.collection('library');
-  const count = await collection.countDocuments();
-  if (count > 0) {
-    console.log('Library already populated. Skipping initialization.');
-    return;
-  }
-
+  console.log('Initializing library...');
+  await createLibraryCollection();
   await populateLibrary();
 };
 
+// Run the script
 initializeLibrary().catch((error) => {
   console.error('Error initializing library:', error);
 });
