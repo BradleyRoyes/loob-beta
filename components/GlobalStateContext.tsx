@@ -1,50 +1,97 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-interface GlobalState {
-  sessionId: string | null;
+interface UserState {
   userId: string | null;
   pseudonym: string | null;
   email: string | null;
   phone: string | null;
+  isAnonymous: boolean;
+}
+
+interface GlobalState extends UserState {
+  sessionId: string | null;
   setSessionId: (id: string | null) => void;
-  setUserId: (id: string | null) => void;
-  setPseudonym: (pseudonym: string | null) => void;
-  setUserEmail: (email: string | null) => void; // Ensure this exists
-  setUserPhone: (phone: string | null) => void; // Ensure this exists
+  setUserState: (state: Partial<UserState>) => void;
+  clearUserState: () => void;
 }
 
 const GlobalStateContext = createContext<GlobalState | undefined>(undefined);
 
-export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [sessionId, setSessionIdState] = useState<string | null>(
-    `session-${Math.random().toString(36).substr(2, 12)}`
-  );
-  const [userId, setUserIdState] = useState<string | null>(null);
-  const [pseudonym, setPseudonymState] = useState<string | null>(null);
-  const [email, setEmailState] = useState<string | null>(null);
-  const [phone, setPhoneState] = useState<string | null>(null);
+const ANONYMOUS_PREFIX = 'anon-';
 
-  const setSessionId = (id: string | null) => setSessionIdState(id);
-  const setUserId = (id: string | null) => setUserIdState(id);
-  const setPseudonym = (pseudonym: string | null) => setPseudonymState(pseudonym);
-  const setUserEmail = (email: string | null) => setEmailState(email); // Fix for email
-  const setUserPhone = (phone: string | null) => setPhoneState(phone); // Fix for phone
+export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [sessionId, setSessionIdState] = useState<string | null>(null);
+  const [userState, setUserStateData] = useState<UserState>({
+    userId: null,
+    pseudonym: null,
+    email: null,
+    phone: null,
+    isAnonymous: true
+  });
+
+  // Move localStorage initialization to useEffect
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedSession = localStorage.getItem('sessionId');
+      setSessionIdState(storedSession || `session-${Math.random().toString(36).substr(2, 12)}`);
+
+      const storedState = localStorage.getItem('userState');
+      if (storedState) {
+        setUserStateData(JSON.parse(storedState));
+      }
+    }
+  }, []);
+
+  // Update localStorage when state changes
+  useEffect(() => {
+    if (sessionId) {
+      localStorage.setItem('sessionId', sessionId);
+    }
+  }, [sessionId]);
+
+  useEffect(() => {
+    localStorage.setItem('userState', JSON.stringify(userState));
+  }, [userState]);
+
+  const setSessionId = (id: string | null) => {
+    setSessionIdState(id);
+    if (id) {
+      localStorage.setItem('sessionId', id);
+    } else {
+      localStorage.removeItem('sessionId');
+    }
+  };
+
+  const setUserState = (newState: Partial<UserState>) => {
+    setUserStateData(prev => {
+      const updated = { ...prev, ...newState };
+      // Update isAnonymous based on userId
+      updated.isAnonymous = !updated.userId || updated.userId.startsWith(ANONYMOUS_PREFIX);
+      return updated;
+    });
+  };
+
+  const clearUserState = () => {
+    setUserStateData({
+      userId: null,
+      pseudonym: null,
+      email: null,
+      phone: null,
+      isAnonymous: true
+    });
+    localStorage.removeItem('userState');
+  };
 
   return (
     <GlobalStateContext.Provider
       value={{
+        ...userState,
         sessionId,
-        userId,
-        pseudonym,
-        email,
-        phone,
         setSessionId,
-        setUserId,
-        setPseudonym,
-        setUserEmail, // Ensure this is provided
-        setUserPhone, // Ensure this is provided
+        setUserState,
+        clearUserState
       }}
     >
       {children}

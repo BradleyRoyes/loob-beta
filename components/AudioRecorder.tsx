@@ -1,41 +1,22 @@
 import React, { useState, useRef, useEffect } from "react";
-import Recorder from "recorder-js";
+import styles from "./AudioRecorder.module.css";
 
 interface AudioRecorderProps {
   onRecordingComplete: (audioData: Blob) => void;
   startRecording: () => void;
+  stopRecording: () => void;
 }
 
-const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, startRecording }) => {
-  const [recording, setRecording] = useState(false);
-  const [processing, setProcessing] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<string>("Click me and speak");
-  const recorderRef = useRef<Recorder | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const [audioLevel, setAudioLevel] = useState<number>(0);
-
-  const startAudioRecording = async () => {
-    if (recording || processing) return;
-
-    try {
-      const audioContext = new ((window as any).AudioContext || (window as any).webkitAudioContext)();
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new Recorder(audioContext);
-
-      await recorder.init(stream);
-      recorder.start();
-
-      recorderRef.current = recorder;
-      audioContextRef.current = audioContext;
-      setRecording(true);
-      setStatusMessage("Recording... Click to stop");
-
-      startRecording();
-      analyzeAudio(audioContext, stream);
-    } catch (error) {
-      console.error("Error starting recording:", error);
-    }
-  };
+const AudioRecorder: React.FC<AudioRecorderProps> = ({
+  onRecordingComplete,
+  startRecording,
+  stopRecording,
+}) => {
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioLevel, setAudioLevel] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const analyserRef = useRef<AnalyserNode | null>(null);
 
   const analyzeAudio = (audioContext: AudioContext, stream: MediaStream) => {
     const analyser = audioContext.createAnalyser();
@@ -52,185 +33,111 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, star
     scriptProcessor.onaudioprocess = () => {
       const array = new Uint8Array(analyser.frequencyBinCount);
       analyser.getByteFrequencyData(array);
-
       const volume = array.reduce((a, b) => a + b, 0) / array.length;
       setAudioLevel(volume);
     };
   };
 
-  const stopAudioRecording = async () => {
-    if (!recording || !recorderRef.current) return;
-
+  const handleStartRecording = async () => {
     try {
-      const recorder = recorderRef.current;
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        }
+      });
+      
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      analyzeAudio(audioContext, stream);
 
-      const { blob } = await recorder.stop();
-      setRecording(false);
-      setProcessing(true);
-      setStatusMessage("Processing...");
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
 
-      recorderRef.current = null;
-      if (audioContextRef.current) {
-        await audioContextRef.current.close();
-        audioContextRef.current = null;
-      }
+      chunksRef.current = [];
+      
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
 
-      setTimeout(() => {
-        setStatusMessage("Click me and speak");
-        setProcessing(false);
-        onRecordingComplete(blob);
-      }, 2000);
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        onRecordingComplete(audioBlob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start(100);
+      setIsRecording(true);
+      startRecording();
     } catch (error) {
-      console.error("Error stopping recording:", error);
+      console.error("Error accessing microphone:", error);
     }
+  };
+
+  const handleStopRecording = () => {
+    if (!mediaRecorderRef.current) return;
+    
+    mediaRecorderRef.current.stop();
+    setIsRecording(false);
+    stopRecording();
   };
 
   useEffect(() => {
     return () => {
-      if (recorderRef.current) recorderRef.current.stop();
-      if (audioContextRef.current) audioContextRef.current.close();
+      if (mediaRecorderRef.current && isRecording) {
+        mediaRecorderRef.current.stop();
+      }
     };
-  }, []);
-
-  const handleClick = () => {
-    if (recording) {
-      stopAudioRecording();
-    } else {
-      startAudioRecording();
-    }
-  };
-
-  const buttonStyle: React.CSSProperties = {
-    border: "none",
-    background: "transparent",
-    cursor: "pointer",
-    padding: 0,
-    margin: 0,
-  };
+  }, [isRecording]);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "row",
-        gap: "20px",
-      }}
-    >
-      <style>
-        {`
-          /* Main Button Style */
-          .microphone-icon {
-            width: 70px;
-            height: 70px;
-            background: radial-gradient(circle at center, rgba(255, 182, 193, 0.9), rgba(255, 218, 185, 0.6));
-            border-radius: 50%;
-            position: relative;
-            box-shadow: 0 0 ${10 + audioLevel * 0.5}px rgba(255, 145, 135, 0.8);
-            transform: scale(${1 + audioLevel / 300});
-            transition: transform 0.1s ease, box-shadow 0.1s ease;
-          }
-
-          /* Outer Ripple Effect */
-          .ripple-container {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 400%;
-            height: 400%;
-            pointer-events: none;
-          }
-
-          .ripple {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 20px;
-            height: 20px;
-            background: radial-gradient(circle, rgba(255, 180, 120, 0.5), transparent);
-            border-radius: 50%;
-            transform: translate(-50%, -50%) scale(1);
-            animation: rippleEffect 2.5s ease-out infinite;
-          }
-
-          @keyframes rippleEffect {
-            0% {
-              opacity: 1;
-              transform: translate(-50%, -50%) scale(1);
-            }
-            100% {
-              opacity: 0;
-              transform: translate(-50%, -50%) scale(10);
-            }
-          }
-
-          /* Glow Ripple for Button */
-          .glow-ripple {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: ${100 + audioLevel * 1.5}px;
-            height: ${100 + audioLevel * 1.5}px;
-            background: radial-gradient(circle, rgba(255, 145, 135, 0.4), transparent);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            animation: glowEffect 1.5s ease-out infinite;
-            opacity: ${Math.min(audioLevel / 50, 1)};
-          }
-
-          @keyframes glowEffect {
-            0%, 100% {
-              transform: translate(-50%, -50%) scale(1);
-            }
-            50% {
-              transform: translate(-50%, -50%) scale(1.2);
-            }
-          }
-
-          .cyber-text {
-            font-size: 16px;
-            font-family: 'Courier New', Courier, monospace;
-            color: #FFFDD0;
-            text-shadow: 0 0 10px #ff8e88, 0 0 15px darkorange;
-            min-width: 160px;
-            text-align: left;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-          }
-        `}
-      </style>
-
+    <div className={styles.container}>
       <button
-        className="recordButton"
-        onClick={handleClick}
-        style={buttonStyle}
-        disabled={processing}
+        onClick={isRecording ? handleStopRecording : handleStartRecording}
+        className={styles.recorderButton}
+        aria-label={isRecording ? "Stop recording" : "Start recording"}
       >
-        <div className="microphone-icon">
-          <div className="ripple-container">
+        <div className={styles.microphoneIcon}>
+          {isRecording ? <StopIcon /> : <MicIcon />}
+          <div className={styles.rippleContainer}>
             {Array.from({ length: Math.min(8, Math.ceil(audioLevel / 20)) }).map((_, i) => (
               <div
                 key={i}
-                className="ripple"
+                className={styles.ripple}
                 style={{
                   animationDelay: `${i * (0.2 / Math.max(audioLevel / 50, 1))}s`,
                   animationDuration: `${2.5 - Math.min(audioLevel / 50, 1.5)}s`,
                 }}
-              ></div>
+              />
             ))}
           </div>
-          <div className="glow-ripple"></div>
+          <div 
+            className={styles.glowRipple}
+            style={{
+              width: `${100 + audioLevel * 1.5}px`,
+              height: `${100 + audioLevel * 1.5}px`,
+              opacity: Math.min(audioLevel / 50, 1)
+            }}
+          />
         </div>
       </button>
-
-      <div className="cyber-text">
-        <span>{statusMessage}</span>
-      </div>
     </div>
   );
 };
+
+const MicIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+  </svg>
+);
+
+const StopIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M6 6h12v12H6z" />
+  </svg>
+);
 
 export default AudioRecorder;

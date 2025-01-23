@@ -81,32 +81,217 @@
 }
 
 /* Buttons */
-.inline-button {
-  background: #ff7e79;
-  color: #fff;
-  padding: 0.4rem 0.8rem;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  cursor: pointer;
+.buttons-container {
+  margin-top: 2rem;
+  padding: 1rem;
+  border-top: 1px solid var(--border-primary);
 }
 
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.logout-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(to right, #ff6b6b, #ff8e8e);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 2rem;
+}
+
+.logout-button:hover {
+  background: linear-gradient(to right, #ff5252, #ff7676);
+  transform: translateY(-1px);
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.loobricate-login-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(to right, #ffb48f, #ff9f7f);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.loobricate-login-button:hover {
+  background: linear-gradient(to right, #ff9f7f, #ff8b6b);
+  transform: translateY(-1px);
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.action-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--gradient-primary);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.action-button:hover {
+  background: var(--gradient-user);
+  transform: translateY(-1px);
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Update list item styles to better align buttons */
 .list-item {
   display: flex;
   justify-content: space-between;
-  align-items: center; /* Ensures vertical alignment */
-  background: #333;
+  align-items: center;
+  background: var(--background-secondary);
   margin-bottom: 1rem;
-  padding: 1rem;
+  padding: 1.2rem;
   border-radius: 8px;
+  transition: transform 0.2s ease;
+}
+
+.list-item:hover {
+  transform: translateX(4px);
 }
 
 .list-item-content {
-  display: flex; /* Ensures the text and button stay on the same line */
-  align-items: center; /* Aligns text and button vertically */
-  gap: 1rem; /* Optional: Adds spacing between text and the button */
+  flex: 1;
+  margin-right: 1rem;
 }
 
-.inline-button {
-  margin-left: right; /* Pushes the button to the far-right if needed */
+.list-item-content span {
+  font-weight: 600;
+  color: var(--text-primary);
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.list-item-content p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  z-index: 1000;
+}
+
+.login-form {
+  background: #222;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.form-header h2 {
+  color: #ffb48f;
+  margin: 0;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.8rem;
+  margin-bottom: 1rem;
+  background: #333;
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: #f3f3f3;
+}
+
+.form-input.error {
+  border-color: #ff6b6b !important;
+}
+
+.error-message {
+  color: #ff6b6b;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.submit-button {
+  width: 100%;
+  padding: 0.8rem;
+  background: #ffb48f;
+  color: #222;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.submit-button:hover {
+  background: #ff9f7f;
+}
+
+.submit-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.anonymous-message {
+  background: var(--background-secondary);
+  padding: 2rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.anonymous-message p {
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.anonymous-message ul {
+  list-style: none;
+  padding: 0;
+}
+
+.anonymous-message li {
+  color: var(--text-secondary);
+  padding: 0.5rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+.anonymous-message li:before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--text-primary);
 }

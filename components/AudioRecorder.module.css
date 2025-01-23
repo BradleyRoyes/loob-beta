@@ -17,3 +17,115 @@
 .audioButton:active {
   background-color: #674265;
 }
+
+.container {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.recorderButton {
+  width: 60px;
+  height: 60px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.microphoneIcon {
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(circle at center, rgba(255, 182, 193, 0.9), rgba(255, 218, 185, 0.6));
+  border-radius: 50%;
+  position: relative;
+  box-shadow: 0 0 10px rgba(255, 145, 135, 0.8);
+  transform: scale(1);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Make the SVG icons smaller */
+.microphoneIcon svg {
+  width: 24px;
+  height: 24px;
+  color: var(--text-primary);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .container,
+  .recorderButton,
+  .microphoneIcon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .microphoneIcon svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.rippleContainer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400%;
+  height: 400%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle, rgba(255, 180, 120, 0.5), transparent);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  animation: rippleEffect 2.5s ease-out infinite;
+}
+
+.glowRipple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background: radial-gradient(circle, rgba(255, 145, 135, 0.4), transparent);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: glowEffect 1.5s ease-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes rippleEffect {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(10);
+  }
+}
+
+@keyframes glowEffect {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+}

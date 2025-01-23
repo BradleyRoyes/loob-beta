@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { GlobalStateProvider } from "../components/GlobalStateContext";
+import React, { useState, useEffect } from "react";
+import { GlobalStateProvider, useGlobalState } from "../components/GlobalStateContext";
 import SplashScreen from "../components/SplashScreen";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -14,9 +14,7 @@ import AddEntry from "../components/AddEntry"; // Import AddEntry
 import "./globals.css";
 
 const RootLayout: React.FC = () => {
-  const [view, setView] = useState<
-    "Chat" | "Profile" | "Map" | "NFCReader" | "AddEntry"
-  >("Chat");
+  const [view, setView] = useState<"Chat" | "Profile" | "Map" | "NFCReader" | "AddEntry">("Chat");
   const [configureOpen, setConfigureOpen] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
 
@@ -60,20 +58,15 @@ const RootLayout: React.FC = () => {
             <SplashScreen onClose={handleSplashComplete} />
           ) : (
             <>
-              {/* Sticky Header */}
-              <div className="sticky top-0 z-50 w-full bg-white shadow-md">
-                <Header
-                  toggleView={handleToggleView}
-                  onConfigureClick={handleConfigureClick}
-                  activeView={view}
-                />
-              </div>
-              {/* Main Content */}
+              <Header
+                toggleView={handleToggleView}
+                onConfigureClick={handleConfigureClick}
+                activeView={view}
+              />
               <main className="flex flex-1 flex-col items-center justify-between w-full pt-[4rem] px-4 md:px-6 overflow-y-auto">
                 {renderAppContent()}
                 {configureOpen && <ConfigureModal onClose={handleCloseConfigure} />}
               </main>
-              {/* Footer */}
               <Footer />
             </>
           )}

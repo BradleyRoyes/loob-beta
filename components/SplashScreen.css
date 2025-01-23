@@ -12,6 +12,7 @@
   font-family: 'Inter', sans-serif; /* Modern, clean font */
   overflow: hidden; /* Prevent scrollbars */
   z-index: 1000; /* Ensure it stays on top */
+  transition: opacity 0.3s ease;
 }
 
 /* Content Styling */
@@ -27,7 +28,7 @@
 .splashScreen .logoText {
   font-size: 4rem; /* Large size for emphasis */
   font-weight: 900;
-  background: linear-gradient(90deg, #f3f3f3, #ffb48f, #f3f3f3);
+  background: linear-gradient(90deg, #f3f3f3, #ffb48f, #ff9f7f);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: textGlow 2s infinite alternate ease-in-out; /* Subtle glowing effect */
@@ -48,7 +49,7 @@
 .splashScreen .mainTitle {
   font-size: 3rem; /* Adjust for better responsiveness */
   font-weight: 800;
-  background: linear-gradient(90deg, #f3f3f3, #ffb48f, #f3f3f3);
+  background: linear-gradient(90deg, #f3f3f3, #ffb48f, #ff9f7f);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: 1px;
@@ -100,7 +101,7 @@
   padding: 12px;
   font-size: 1rem;
   font-weight: 600;
-  background: linear-gradient(45deg, #ff7e79, #ffb48f);
+  background: linear-gradient(45deg, #ff9f7f, #ff7e79);
   color: white;
   border: none;
   border-radius: 8px;
@@ -109,7 +110,7 @@
 }
 
 .splashScreen .actionButton:hover {
-  background: linear-gradient(45deg, #ffb48f, #ff7e79);
+  background: linear-gradient(45deg, #ff8b6b, #ff6b66);
   transform: translateY(-2px);
   box-shadow: 0px 4px 10px rgba(255, 120, 120, 0.3);
 }
@@ -140,7 +141,7 @@
 .splashScreen .gridBackground {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle, rgba(255, 165, 0, 0.3) 0%, rgba(0, 0, 0, 0.6) 60%, transparent 100%);
+  background: radial-gradient(circle, rgba(255, 159, 127, 0.3) 0%, rgba(0, 0, 0, 0.6) 60%, transparent 100%);
   z-index: -1;
   animation: intenseBreath 4s infinite ease-in-out;
 }
@@ -279,7 +280,7 @@
   font-size: 2.5rem !important; /* Very prominent */
   font-weight: 900 !important;
   text-align: center !important;
-  background: linear-gradient(90deg, #f3f3f3, #ff7e79, #ffb48f) !important;
+  background: linear-gradient(90deg, #f3f3f3, #ffb48f, #ff9f7f) !important;
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
   letter-spacing: 2px !important;
@@ -317,4 +318,30 @@
   margin-right: auto; /* Automatically adjusts right margin */
   filter: brightness(0.8); /* Slightly dim the logo */
 
+}
+
+/* Update the gradient colors to pastel flesh tones */
+.gradientText {
+  background: linear-gradient(45deg, #FFE4E1, #FFD5C8); /* Pastel flesh tones */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.splashScreen button {
+  background: linear-gradient(45deg, #FFE4E1, #FFD5C8); /* Matching flesh tones */
+}
+
+/* Update the wave animation color */
+.waveLine {
+  background: #FFD5C8; /* Pastel flesh tone */
+  opacity: 0.6;
+}
+
+/* Update other color references */
+.newPromptButton {
+  background-color: #FFD5C8; /* Pastel flesh tone */
+}
+
+.newPromptButton:hover {
+  background-color: #FFE4E1; /* Lighter flesh tone on hover */
 }

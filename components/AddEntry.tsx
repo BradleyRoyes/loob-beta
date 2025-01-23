@@ -1,15 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaMapMarkerAlt, FaUser, FaTools, FaUsers } from 'react-icons/fa';
 import './AddEntry.css';
 import { useGlobalState } from '../components/GlobalStateContext';
 
-// Define a type for the "Tag" structure
-type Tag = {
-  category: string; // The category of the tag, e.g., 'Capacity'
-  value: string; // The value associated with the tag, e.g., 'Fits 300 people'
-};
+// Add this new type for tag keywords
+type TagKeyword = string;
 
 // Define the overall structure of the formData state
 interface FormData {
@@ -25,7 +22,10 @@ interface FormData {
   address: string;
   adminUsername: string;
   adminPassword: string;
-  tags: Tag[]; // An array of tags
+  tags: TagKeyword[]; // Changed from Tag[] to TagKeyword[]
+  addressLine1: string;
+  city: string;
+  loobricateId: string; // Add this field for associating entries with a Loobricate
 }
 
 const AddEntry: React.FC = () => {
@@ -50,14 +50,14 @@ const AddEntry: React.FC = () => {
     adminUsername: '',
     adminPassword: '',
     tags: [],
+    addressLine1: '',
+    city: '',
+    loobricateId: '',
   });
 
-  // State to manage the currently entered tag
-  const [currentTag, setCurrentTag] = useState<Tag & { isCustom: boolean }>({
-    category: '',
-    value: '',
-    isCustom: false,
-  });
+  // Replace the currentTag state with a simpler keyword input
+  const [tagInput, setTagInput] = useState<string>('');
+  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
 
   // State to handle errors and submission states
   const [error, setError] = useState<string>('');
@@ -67,28 +67,61 @@ const AddEntry: React.FC = () => {
   // Predefined tag categories
   const predefinedCategories = ['Select a category', 'Capacity', 'Cost', 'Specs', 'Availability', 'Add Your Own'];
 
+  // Add state for available Loobricates
+  const [availableLoobricates, setAvailableLoobricates] = useState<Array<{id: string, name: string}>>([]);
+
+  // Fetch available Loobricates on component mount
+  useEffect(() => {
+    const fetchLoobricates = async () => {
+      try {
+        const response = await fetch('/api/loobricates');
+        const data = await response.json();
+        setAvailableLoobricates(data);
+      } catch (error) {
+        console.error('Error fetching Loobricates:', error);
+      }
+    };
+    fetchLoobricates();
+  }, []);
+
   // Update form data state when an input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Add a new tag to the tags array
+  // Add this function to handle tag suggestions
+  const handleTagInputChange = async (value: string) => {
+    setTagInput(value);
+    if (value.length >= 2) {
+      try {
+        const response = await fetch(`/api/tag-suggestions?query=${value}`);
+        const suggestions = await response.json();
+        setSuggestedTags(suggestions);
+      } catch (error) {
+        console.error('Error fetching tag suggestions:', error);
+      }
+    } else {
+      setSuggestedTags([]);
+    }
+  };
+
+  // Update the handleAddTag function
   const handleAddTag = () => {
     if (formData.tags.length >= 5) {
       setError('You can add up to 5 tags only.');
       return;
     }
-    if (!currentTag.category || !currentTag.value || currentTag.category === 'Select a category') {
-      setError('Please select a valid category and provide a value for the tag.');
+    if (!tagInput.trim()) {
+      setError('Please enter a tag keyword.');
       return;
     }
     setFormData((prev) => ({
       ...prev,
-      tags: [...prev.tags, { category: currentTag.category, value: currentTag.value }],
+      tags: [...prev.tags, tagInput.trim()],
     }));
-    setCurrentTag({ category: '', value: '', isCustom: false }); // Reset the current tag input
-    setError(''); // Clear errors
+    setTagInput(''); // Reset input
+    setError('');
   };
 
   // Remove a tag by its index
@@ -107,61 +140,63 @@ const AddEntry: React.FC = () => {
 
   // Submit the form data
   const handleSubmit = async () => {
-    // Validate fields based on the selected type
-    if (selectedType === 'Loobricate') {
-      if (!formData.name || !formData.description || !formData.address || !formData.adminUsername || !formData.adminPassword) {
-        setError('Please fill in all required fields for Loobricate.');
-        return;
-      }
-    } else if (!formData.title || !formData.description || !formData.location) {
-      setError('Please fill in all required fields for this entry.');
-      return;
-    }
-
-    setError(''); // Clear errors
-    setIsSubmitting(true); // Start submission process
-
     try {
-      const payload = { ...formData, dataType: selectedType }; // Prepare payload
-      const endpoint = selectedType === 'Loobricate' ? '/api/loobricates' : '/api/loobrary-signup';
+      setIsSubmitting(true);
+      setError('');
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        setSubmissionSuccess(true); // Mark success
-        setFormData({
+      // Prepare the submission data
+      const submissionData = {
+        ...formData,
+        dataType: selectedType === 'Loobricate' ? 'loobricate' : 'userEntry',
+        offeringType: selectedType.toLowerCase(),
+        // Add these for non-Loobricate entries
+        ...(selectedType !== 'Loobricate' && {
+          loobricates: [formData.loobricateId],
           pseudonym: pseudonym || 'Anonymously Contributed',
           email: email || 'Anonymously Contributed',
           phone: phone || 'N/A',
-          password: 'default-password',
-          title: '',
-          offeringType: '',
-          description: '',
-          location: '',
-          name: '',
-          address: '',
-          adminUsername: '',
-          adminPassword: '',
-          tags: [],
-        }); // Reset form
-      } else {
-        setError(result.error || 'An error occurred.'); // Handle error
+        })
+      };
+
+      const response = await fetch('/api/loobrary-signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submissionData),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to submit entry');
       }
-    } catch (err) {
-      console.error('Error submitting form:', err);
-      setError('An unexpected error occurred.');
+
+      setSubmissionSuccess(true);
+      // Reset form
+      setFormData({
+        pseudonym: pseudonym || 'Anonymously Contributed',
+        email: email || 'Anonymously Contributed',
+        phone: phone || 'N/A',
+        password: 'default-password',
+        title: '',
+        offeringType: '',
+        description: '',
+        location: '',
+        name: '',
+        address: '',
+        adminUsername: '',
+        adminPassword: '',
+        tags: [],
+        addressLine1: '',
+        city: '',
+        loobricateId: '',
+      });
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
-      setIsSubmitting(false); // End submission process
+      setIsSubmitting(false);
     }
   };
 
-  // Render the appropriate form fields based on the selected type
+  // Update renderFormFields to use the address autocomplete
   const renderFormFields = () => {
     switch (selectedType) {
       case 'Location':
@@ -216,9 +251,17 @@ const AddEntry: React.FC = () => {
             />
             <input
               type="text"
-              name="address"
-              placeholder="Loobricate Address"
-              value={formData.address || ''}
+              name="addressLine1"
+              placeholder="Street Address (e.g., 123 Main St)"
+              value={formData.addressLine1 || ''}
+              onChange={handleInputChange}
+              className="form-input"
+            />
+            <input
+              type="text"
+              name="city"
+              placeholder="City, State, ZIP"
+              value={formData.city || ''}
               onChange={handleInputChange}
               className="form-input"
             />
@@ -248,86 +291,116 @@ const AddEntry: React.FC = () => {
   return (
     <div className="add-entry-container">
       <h1 className="mainTitle">Add to Loob</h1>
-      <div className="entry-type-icons">
-        <FaMapMarkerAlt
-          className={`icon ${selectedType === 'Location' ? 'active' : ''}`}
-          onClick={() => handleTypeSelection('Location')}
-        />
-        <FaUser
-          className={`icon ${selectedType === 'Talent' ? 'active' : ''}`}
-          onClick={() => handleTypeSelection('Talent')}
-        />
-        <FaTools
-          className={`icon ${selectedType === 'Gear' ? 'active' : ''}`}
-          onClick={() => handleTypeSelection('Gear')}
-        />
-        <FaUsers
-          className={`icon ${selectedType === 'Loobricate' ? 'active' : ''}`}
-          onClick={() => handleTypeSelection('Loobricate')}
-        />
+      
+      <div className="entry-type-sections">
+        <div className="loobricate-section">
+          <h2 className="section-title">Create a Loobricate</h2>
+          <div className="entry-type-icons">
+            <FaUsers
+              className={`icon loobricate-icon ${selectedType === 'Loobricate' ? 'active' : ''}`}
+              onClick={() => handleTypeSelection('Loobricate')}
+            />
+          </div>
+          <p className="loobricate-description">
+            Create a dedicated space for your community to share and collaborate
+          </p>
+        </div>
+
+        <div className="loobrary-section">
+          <h2 className="section-title">Add to Loobrary</h2>
+          <p className="section-description">
+            Add resources to an existing Loobricate community
+          </p>
+          <div className="entry-type-icons">
+            <FaMapMarkerAlt
+              className={`icon ${selectedType === 'Location' ? 'active' : ''}`}
+              onClick={() => handleTypeSelection('Location')}
+            />
+            <FaUser
+              className={`icon ${selectedType === 'Talent' ? 'active' : ''}`}
+              onClick={() => handleTypeSelection('Talent')}
+            />
+            <FaTools
+              className={`icon ${selectedType === 'Gear' ? 'active' : ''}`}
+              onClick={() => handleTypeSelection('Gear')}
+            />
+          </div>
+        </div>
       </div>
 
       {selectedType && (
         <>
           <h2 className="subtitle">{selectedType === 'Loobricate' ? 'Spawn Loobricate' : `Add ${selectedType}`}</h2>
           <div className="form-container">
-            {renderFormFields()}
-            <h3>Tags</h3>
-            <div className="tag-section">
-              <select
-                value={currentTag.isCustom ? 'Add Your Own' : currentTag.category}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === 'Add Your Own') {
-                    setCurrentTag({ category: '', value: '', isCustom: true });
-                  } else {
-                    setCurrentTag({ category: value, value: '', isCustom: false });
-                  }
-                }}
-                className="form-input tag-category-selector"
-              >
-                <option value="" disabled>
-                  Select a category
-                </option>
-                {predefinedCategories.map((category, index) => (
-                  <option key={index} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-              {currentTag.isCustom && (
-                <input
-                  type="text"
-                  placeholder="Enter your custom category"
-                  value={currentTag.category}
-                  onChange={(e) => setCurrentTag((prev) => ({ ...prev, category: e.target.value }))}
+            {selectedType !== 'Loobricate' && (
+              <div className="loobricate-select-container">
+                <label htmlFor="loobricateId">Select Loobricate Community *</label>
+                <select
+                  id="loobricateId"
+                  name="loobricateId"
+                  value={formData.loobricateId}
+                  onChange={handleInputChange}
                   className="form-input"
-                />
-              )}
-              <textarea
-                placeholder="Enter value for the tag"
-                value={currentTag.value}
-                onChange={(e) => setCurrentTag((prev) => ({ ...prev, value: e.target.value }))}
-                className="form-input"
-              />
-              <button onClick={handleAddTag} className="small-plus">
-                +
-              </button>
-            </div>
-            {formData.tags.length > 0 && (
-              <div className="tag-list">
-                {formData.tags.map((tag: Tag, index: number) => (
-                  <div key={index} className="tag-item">
-                    <span className="tag-label">
-                      <strong>{tag.category}:</strong> {tag.value}
-                    </span>
-                    <button className="remove-tag" onClick={() => handleTagRemove(index)}>
-                      Remove
-                    </button>
-                  </div>
-                ))}
+                  required
+                >
+                  <option value="">Select a Loobricate...</option>
+                  {availableLoobricates.map(loobricate => (
+                    <option key={loobricate.id} value={loobricate.id}>
+                      {loobricate.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="field-description">
+                  All entries must be associated with a Loobricate community
+                </p>
               </div>
             )}
+            {renderFormFields()}
+            <div className="tag-section">
+              <h3>Tags</h3>
+              <div className="tag-input-container">
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => handleTagInputChange(e.target.value)}
+                  placeholder="Add keyword tags..."
+                  className="form-input tag-input"
+                />
+                <button onClick={handleAddTag} className="small-plus">
+                  +
+                </button>
+              </div>
+              
+              {suggestedTags.length > 0 && (
+                <div className="tag-suggestions">
+                  {suggestedTags.map((tag, index) => (
+                    <div
+                      key={index}
+                      className="tag-suggestion"
+                      onClick={() => {
+                        setTagInput(tag);
+                        setSuggestedTags([]);
+                      }}
+                    >
+                      {tag}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {formData.tags.length > 0 && (
+                <div className="tag-list">
+                  {formData.tags.map((tag: string, index: number) => (
+                    <div key={index} className="tag-item">
+                      <span className="tag-label">{tag}</span>
+                      <button className="remove-tag" onClick={() => handleTagRemove(index)}>
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             {error && <p className="error-message">{error}</p>}
             <button className="actionButton" onClick={handleSubmit} disabled={isSubmitting}>
               {isSubmitting ? 'Submitting...' : 'Submit'}

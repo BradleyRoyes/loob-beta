@@ -51,16 +51,17 @@ html, body {
 .chatbot-section {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  max-width: 768px;
-  height: 100vh;
-  margin: 0 auto;
-  background-color: var(--background-secondary);
-  border-radius: var(--border-radius-default);
-  box-shadow: var(--shadow-primary);
+  gap: 1rem;
   padding: 1rem;
-  overflow: hidden;
-  position: relative; /* Ensures child elements like buttons stay inside */
+  height: 100vh;
+  max-height: 100vh;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
 }
 
 .chatbot-header {
@@ -231,8 +232,15 @@ html, body {
 /* Responsive Adjustments */
 @media (max-width: 768px) {
   .chatbot-section {
-    height: calc(100vh - 8rem);
-    padding: 1rem;
+    padding: 0.5rem;
+    height: 100vh;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .base-button {
+    padding: 0.5rem 1rem;
+    min-width: 60px;
   }
 
   .prompt-button {
@@ -267,5 +275,123 @@ html, body {
 
   .audio-recorder-container {
     position: static;
+  }
+}
+
+.chatbot-controls {
+  position: sticky;
+  bottom: 0;
+  background-color: var(--background-soft);
+  padding: 1rem;
+  border-top: 1px solid var(--border-primary);
+}
+
+.input-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.button-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.send-button {
+  padding: 0.5rem 1rem;
+  background: var(--gradient-primary);
+  border: none;
+  border-radius: var(--border-radius-default);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.send-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-primary);
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .chatbot-section {
+    height: 100vh;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .chat-messages-container {
+    height: calc(100vh - 180px);
+  }
+
+  .button-group {
+    padding: 0.5rem 0;
+  }
+}
+
+.audio-recorder-compact {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px;
+  padding: 8px;
+  border-radius: 50%;
+  background: var(--gradient-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.audio-recorder-compact:hover {
+  transform: scale(1.05);
+  background: var(--gradient-user);
+}
+
+.audio-recorder-compact svg {
+  width: 20px;
+  height: 20px;
+  fill: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+  .waveformContainer {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    margin: 0;
+    border-radius: 0;
+  }
+}
+
+/* Smooth scrolling for chat container */
+.scroll-smooth {
+  scroll-behavior: smooth;
+}
+
+/* Improved focus states */
+.chatbot-input:focus {
+  box-shadow: 0 0 0 2px var(--gradient-primary);
+  outline: none;
+}
+
+/* Transition states */
+.chatbot-input, .base-button {
+  transition: all 0.2s ease;
+}
+
+/* Disable selection during processing */
+.processing {
+  user-select: none;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .chatbot-section {
+    touch-action: manipulation; /* Better touch handling */
+    -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
   }
 }

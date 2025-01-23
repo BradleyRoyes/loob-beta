@@ -1,0 +1,231 @@
+.loobricate-profile {
+  background: #222;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 2rem;
+  color: #f3f3f3;
+  position: relative;
+}
+
+/* Header Section */
+.loobricate-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.loobricate-header h2 {
+  font-size: 2rem;
+  color: #ffb48f;
+  margin: 0;
+}
+
+/* Visualization Section */
+.visualization-section {
+  background: #1a1a1a;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.visual-toggles {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.visual-toggles button {
+  padding: 0.5rem 1rem;
+  background: #333;
+  border: none;
+  border-radius: 6px;
+  color: #f3f3f3;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.visual-toggles button.active {
+  background: linear-gradient(to right, #ffb48f, #ff9f7f);
+  color: #222;
+}
+
+.visualization-container {
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Edit Form */
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-input {
+  padding: 0.8rem;
+  background: #333;
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: #f3f3f3;
+  font-size: 1rem;
+}
+
+textarea.form-input {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* Tags Section */
+.tags-section {
+  margin: 1rem 0;
+}
+
+.tag-input-group {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.add-tag-button {
+  padding: 0.8rem 1.5rem;
+  background: linear-gradient(to right, #ffb48f, #ff9f7f);
+  border: none;
+  border-radius: 6px;
+  color: #222;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tags-list, .tags-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  background: #333;
+  border-radius: 20px;
+  color: #ffb48f;
+  font-size: 0.9rem;
+}
+
+.tag button {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+/* Loobricate Info Display */
+.loobricate-info {
+  padding: 1rem;
+  background: #1a1a1a;
+  border-radius: 8px;
+}
+
+.description {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+  color: #f3f3f3;
+}
+
+.address {
+  color: #aaa;
+  margin-bottom: 1.5rem;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.stat {
+  background: #333;
+  padding: 1rem;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.stat .label {
+  display: block;
+  color: #aaa;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.stat .value {
+  font-size: 1.2rem;
+  color: #ffb48f;
+  font-weight: 600;
+}
+
+/* Buttons */
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.edit-button, .save-button {
+  padding: 0.8rem 1.5rem;
+  background: linear-gradient(to right, #ffb48f, #ff9f7f);
+  border: none;
+  border-radius: 6px;
+  color: #222;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancel-button {
+  padding: 0.8rem 1.5rem;
+  background: #333;
+  border: none;
+  border-radius: 6px;
+  color: #f3f3f3;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Messages */
+.error-message {
+  color: #ff6b6b;
+  margin-top: 1rem;
+}
+
+.success-message {
+  color: #51cf66;
+  margin-top: 1rem;
+}
+
+/* Close Button */
+.close-button {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: color 0.3s ease;
+}
+
+.close-button:hover {
+  color: #f3f3f3;
+} 
