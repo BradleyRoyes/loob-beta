@@ -152,36 +152,6 @@
   }
 }
 
-.toggle-sidebar {
-  position: absolute;
-  bottom: 80px; /* Keeps it above the footer */
-  left: 10px; /* Fixed distance from the left */
-  width: 40px; /* Circular button */
-  height: 40px;
-  background: linear-gradient(to right, #fed7aa, #fcd1d1); /* Gradient styling */
-  border: none;
-  border-radius: 50%; /* Makes it circular */
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
-  color: #333;
-  z-index: 1100;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow */
-  transition: transform 0.3s ease-in-out;
-}
-
-.toggle-sidebar:hover {
-  transform: scale(1.1); /* Slight hover effect */
-}
-
-.toggle-sidebar.attached {
-  left: 270px; /* Adjust when the sidebar is open */
-}
-
-
-
 .search-by-icons {
   display: flex;
   justify-content: space-between;

@@ -7,16 +7,17 @@ export async function GET() {
     
     // Fetch all documents where dataType is 'loobricate'
     const loobricates = await collection.find({
-      dataType: 'loobricate',
-      status: 'active' // Optional: only get active loobricates
+      dataType: 'loobricate'
     }).toArray();
 
     // Map to return only necessary fields
     const formattedLoobricates = loobricates.map(loobricate => ({
       id: loobricate._id,
-      name: loobricate.name,
+      name: loobricate.name || loobricate.title,
       description: loobricate.description,
-      address: loobricate.address
+      address: `${loobricate.addressLine1}, ${loobricate.city}`,
+      adminUsername: loobricate.adminUsername,
+      tags: loobricate.tags || []
     }));
 
     return NextResponse.json(formattedLoobricates);

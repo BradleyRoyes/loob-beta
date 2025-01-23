@@ -7,6 +7,7 @@ import ConfigureModal from "../components/ConfigureModal";
 import Profile from "../components/Profile";
 import Map from "../components/Map";
 import NFCReader from "../components/NFCReader";
+import LoobricatesList from '../components/LoobricatesList';
 
 export default function Page() {
   const [view, setView] = useState<"Chat" | "Profile" | "Map" | "NFCReader">(
@@ -43,6 +44,8 @@ export default function Page() {
 
         {/* Configure Modal */}
         {configureOpen && <ConfigureModal onClose={() => setConfigureOpen(false)} />}
+
+        <LoobricatesList />
       </main>
 
       {/* Footer */}
