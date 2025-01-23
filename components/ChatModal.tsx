@@ -14,23 +14,40 @@ interface ChatModalProps {
 
 export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps) {
   const { append, messages, input, handleInputChange, handleSubmit } = useChat();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const latestMessageRef = useRef<HTMLDivElement>(null);
   const [showIntroMessage, setShowIntroMessage] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [showScrollButton, setShowScrollButton] = useState(false);
 
   const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ 
-        behavior: "smooth",
-        block: "end"
-      });
+    if (messagesContainerRef.current) {
+      const container = messagesContainerRef.current;
+      container.scrollTop = container.scrollHeight;
+      setShowScrollButton(false);
+    }
+  };
+
+  const handleScroll = () => {
+    if (messagesContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+      const isScrolledUp = scrollHeight - scrollTop - clientHeight > 100;
+      setShowScrollButton(isScrolledUp);
     }
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isProcessing]);
+    if (messages.length > 0) {
+      setTimeout(scrollToBottom, 100);
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    if (isProcessing) {
+      setTimeout(scrollToBottom, 100);
+    }
+  }, [isProcessing]);
 
   useEffect(() => {
     if (isProcessing) {
@@ -43,6 +60,14 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
     };
   }, [isProcessing]);
 
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
+
   const inputDisabled = isProcessing || isRecording;
 
   const handleSend = (e: React.FormEvent<HTMLFormElement>) => {
@@ -50,11 +75,13 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
     handleSubmit(e);
     handleInputChange({ target: { value: "" } } as React.ChangeEvent<HTMLInputElement>);
     setShowIntroMessage(false);
+    setTimeout(scrollToBottom, 100);
   };
 
   const handlePrompt = (text: string) => {
     append({ id: crypto.randomUUID(), content: text, role: "user" });
     setShowIntroMessage(false);
+    setTimeout(scrollToBottom, 100);
   };
 
   const handleAudioUpload = async (audioBlob: Blob) => {
@@ -92,30 +119,63 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
       */}
 
       {/* Chat Messages Section */}
-      <div className="flex-1 overflow-y-auto mb-4 scroll-smooth">
+      <div 
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto mb-4 relative"
+        onScroll={handleScroll}
+      >
         <div className="w-full">
           {showIntroMessage && (
-            <Bubble
-              key="intro-message"
-              content={{
-                role: "system",
-                content: "Hi there! I'm Loob. Ask me about planning your event—gear, venues, talent, and more!",
-              }}
-            />
+            <div ref={latestMessageRef}>
+              <Bubble
+                key="intro-message"
+                content={{
+                  role: "system",
+                  content: "Hi there! I'm Loob. Ask me about planning your event—gear, venues, talent, and more!",
+                }}
+              />
+            </div>
           )}
           {messages.map((message, index) => (
-            <Bubble key={`message-${index}`} content={message} />
+            <div 
+              key={`message-${index}`}
+              ref={index === messages.length - 1 ? latestMessageRef : undefined}
+            >
+              <Bubble content={message} />
+            </div>
           ))}
           {isProcessing && (
-            <Bubble
-              content={{
-                role: "user",
-                content: "Processing your voice message...",
-              }}
-            />
+            <div ref={latestMessageRef}>
+              <Bubble
+                content={{
+                  role: "user",
+                  content: "Processing your voice message...",
+                }}
+              />
+            </div>
           )}
-          <div ref={messagesEndRef} className="h-4" />
         </div>
+
+        {/* Scroll to bottom button */}
+        {showScrollButton && (
+          <button
+            onClick={scrollToBottom}
+            className="absolute bottom-4 right-4 bg-white dark:bg-gray-800 shadow-lg rounded-full p-2 
+              hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 
+              flex items-center justify-center"
+            aria-label="Scroll to bottom"
+          >
+            <svg 
+              className="w-5 h-5 text-gray-600 dark:text-gray-300" 
+              fill="none" 
+              strokeWidth="2" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Prompt Suggestions */}

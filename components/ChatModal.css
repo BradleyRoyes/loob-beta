@@ -395,3 +395,26 @@ html, body {
     -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
   }
 }
+
+/* Add to your existing ChatModal.css */
+.scroll-button-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.scroll-button-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 200ms, transform 200ms;
+}
+
+.scroll-button-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.scroll-button-exit-active {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 200ms, transform 200ms;
+}
