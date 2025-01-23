@@ -27,7 +27,7 @@ export default async function generateDocContext(
           sort: {
             $vector: userEmbedding, // Vector similarity sort
           },
-          limit: 5, // Limit the number of retrieved documents
+          limit: 4, // Limit the number of retrieved documents
         }
       );
   

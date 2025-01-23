@@ -13,6 +13,9 @@ interface Venue {
   label: string;
   details: string;  // Use 'details' instead of 'vibe'
   visualType: VisualView;
+  createdAt: string;
+  updatedAt: string;
+  // Add any other fields you need
 }
 
 interface VenueProfileProps {
@@ -21,8 +24,30 @@ interface VenueProfileProps {
 }
 
 const VenueProfile: React.FC<VenueProfileProps> = ({ venue, onClose }) => {
+  const [venueData, setVenueData] = useState<Venue | null>(null);
+  const [loading, setLoading] = useState(true);
   const [visualView, setVisualView] = useState<VisualView>('Today');
   const chartRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const fetchVenueData = async () => {
+      try {
+        const response = await fetch(`/api/venues/${venue.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setVenueData(data);
+        } else {
+          console.error('Failed to fetch venue data');
+        }
+      } catch (error) {
+        console.error('Error fetching venue data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVenueData();
+  }, [venue.id]);
 
   // Effect to handle visual representation (canvas chart)
   useEffect(() => {
@@ -33,7 +58,7 @@ const VenueProfile: React.FC<VenueProfileProps> = ({ venue, onClose }) => {
         ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         ctx.fillStyle = '#fff';
         ctx.font = '14px sans-serif';
-        ctx.fillText('Mocked “Vibe Over Time” Chart', 10, 20);  // A placeholder for actual chart
+        ctx.fillText('Mocked "Vibe Over Time" Chart', 10, 20);  // A placeholder for actual chart
       }
     }
   }, []);
@@ -66,8 +91,8 @@ const VenueProfile: React.FC<VenueProfileProps> = ({ venue, onClose }) => {
         </button>
 
         {/* Venue Title and Details */}
-        <h2 className="venue-title">{venue.label}</h2>
-        <p className="venue-description">{venue.details}</p> {/* Using 'details' directly */}
+        <h2 className="venue-title">{venueData?.label || venue.label}</h2>
+        <p className="venue-description">{venueData?.details || venue.details}</p> {/* Using 'details' directly */}
 
         {/* Visual Representation */}
         <section className="visual-section">

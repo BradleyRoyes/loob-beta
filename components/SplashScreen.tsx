@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useGlobalState } from "./GlobalStateContext"; // Adjust path if needed
 import LoobrarySignUp from "./SignUp"; // Adjust path if needed
 import "./SplashScreen.css";
+import Image from 'next/image';
 
 const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { setUserState, setSessionId } = useGlobalState();
@@ -120,10 +121,11 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     exit={{ opacity: 0 }}
     transition={{ duration: 1 }}
   >
-    <img
+    <Image 
       src="/favicon.ico"
       alt="Loob Logo"
-      className="logoImage"
+      width={500}
+      height={300}
     />
   </motion.div>
 )}

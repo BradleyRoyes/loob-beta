@@ -31,6 +31,8 @@ export interface Node {
   details: string;   // e.g. description or details
   contact: string;   // e.g. "mailto:someone@example.com"
   visualType: VisualView; // "Today", "ThisWeek", "AllTime"
+  createdAt?: string;  // Add these as optional
+  updatedAt?: string;  // Add these as optional
 }
 
 // Berlin center (longitude, latitude)
@@ -331,6 +333,18 @@ useEffect(() => {
    */
   const toggleSidebar = () => setSidebarActive((prev) => !prev);
 
+  useEffect(() => {
+    if (mapInstanceRef.current) {
+      getUserLocation(mapInstanceRef.current);
+    }
+  }, [getUserLocation]);
+
+  useEffect(() => {
+    if (mapInstanceRef.current && activeNode) {
+      selectNode(mapInstanceRef.current, activeNode);
+    }
+  }, [activeNode, selectNode]);
+
   return (
     <div className="map-container">
       <div ref={mapContainerRef} className="map-layer" />
@@ -416,7 +430,11 @@ useEffect(() => {
         >
           <div className="venue-profile-modal">
             <VenueProfile
-              venue={activeNode}
+              venue={{
+                ...activeNode,
+                createdAt: activeNode.createdAt || new Date().toISOString(),
+                updatedAt: activeNode.updatedAt || new Date().toISOString()
+              }}
               onClose={() => setShowVenueProfile(false)}
             />
           </div>

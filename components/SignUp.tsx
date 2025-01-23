@@ -9,7 +9,7 @@ interface LoobrarySignUpProps {
 }
 
 const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) => {
-  const { setUserId, setPseudonym, setUserEmail, setUserPhone } = useGlobalState();
+  const { setUserState } = useGlobalState();
   const [currentPhase, setCurrentPhase] = useState(1); // Tracks current phase of the form
   const [formData, setFormData] = useState({
     pseudonym: '', // User's pseudonym
@@ -88,10 +88,11 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
 
       if (response.ok) {
         setSubmissionSuccess(true);
-        setUserId(formData.pseudonym);
-        setPseudonym(formData.pseudonym);
-        setUserEmail(formData.email);
-        setUserPhone(formData.phone);
+        setUserState({
+          pseudonym: formData.pseudonym,
+          email: formData.email,
+          phone: formData.phone
+        });
         setCurrentPhase(3);
       } else {
         const errorData = await response.json();

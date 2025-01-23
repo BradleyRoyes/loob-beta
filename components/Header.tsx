@@ -9,6 +9,7 @@ import {
   PlusCircleIcon,
 } from "@heroicons/react/24/outline";
 import "./Header.css";
+import Image from 'next/image';
 
 interface HeaderProps {
   toggleView: (view: "Chat" | "Profile" | "Map" | "NFCReader" | "AddEntry") => void;
@@ -58,9 +59,11 @@ const Header: React.FC<HeaderProps> = ({
   }`}
   onClick={() => toggleView("Chat")}
 >
-  <img
+  <Image 
     src="/favicon.ico"
     alt="Favicon"
+    width={500}
+    height={300}
     className="h-6 w-6 mr-2"
   />
   Loob

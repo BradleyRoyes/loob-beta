@@ -35,8 +35,16 @@ export async function POST(req: NextRequest) {
     const requiredFields = ['dataType'];
     if (body.dataType === 'loobricate') {
       requiredFields.push('name', 'description', 'addressLine1', 'city', 'adminUsername');
+    } else if (body.dataType === 'location' || body.offeringType === 'location') {
+      // Add specific validation for venues/locations
+      requiredFields.push('title', 'description', 'location', 'loobricateId');
+      
+      // Prepare venue-specific data
+      body.details = body.description; // Map description to details for VenueProfile
+      body.label = body.title; // Map title to label for VenueProfile
+      body.visualType = 'Today'; // Default visual type
     } else {
-      requiredFields.push('title', 'description', 'location', 'loobricates');
+      requiredFields.push('title', 'description', 'location', 'loobricateId');
     }
 
     const missingFields = requiredFields.filter(field => !body[field]);
@@ -68,30 +76,22 @@ export async function POST(req: NextRequest) {
     // Get collection
     const collection = await getCollection('usersandloobricates');
 
-    // Add timestamp
+    // Add timestamp and metadata
     body.createdAt = new Date();
+    body.updatedAt = new Date();
+    body.status = 'active';
 
     // Insert document
     const result = await collection.insertOne(body);
 
-    // If this is a loobricate creation, update the user's document to include this loobricate
-    if (body.dataType === 'loobricate' && body.creatorId) {
-      await collection.updateOne(
-        { _id: body.creatorId },
-        { 
-          $push: { 
-            loobricates: {
-              id: result.insertedId,
-              name: body.name,
-              role: 'admin'
-            }
-          }
-        }
-      );
+    // If this is a location/venue, we might want to create additional metadata
+    if (body.dataType === 'location' || body.offeringType === 'location') {
+      // You could add additional venue-specific processing here
+      // For example, initializing analytics data, etc.
     }
 
     return NextResponse.json({
-      message: `${body.dataType === 'loobricate' ? 'Loobricate' : 'Entry'} created successfully`,
+      message: `${body.dataType} created successfully`,
       id: result.insertedId
     }, { status: 201 });
 

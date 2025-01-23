@@ -91,7 +91,7 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
         sessionId,
         setSessionId,
         setUserState,
-        clearUserState
+        clearUserState,
       }}
     >
       {children}
