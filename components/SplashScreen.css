@@ -26,7 +26,7 @@
 
 /* Logo Text with Gradient and Animation */
 .splashScreen .logoText {
-  font-size: 4rem; /* Large size for emphasis */
+  font-size: 3rem; /* Reduced size for emphasis */
   font-weight: 900;
   background: linear-gradient(90deg, #f3f3f3, #ffb48f, #ff9f7f);
   -webkit-background-clip: text;
@@ -71,7 +71,7 @@
   padding: 12px;
   font-size: 1rem;
   border-radius: 8px;
-  border: 1px solid #351010;
+  border: 1px solid #ccc !important;
   background: #222;
   color: #f3f3f3;
   text-align: center;
@@ -81,7 +81,7 @@
 }
 
 .splashScreen .pseudonymInput:focus {
-  border-color: #ffb48f; /* Highlight on focus */
+  border-color: #ffb48f !important;
 }
 
 .splashScreen .pseudonymInput::placeholder {
@@ -94,19 +94,22 @@
   flex-direction: column;
   gap: 15px;
   margin-bottom: 15px;
+  align-items: center; /* Center align buttons */
 }
 
 /* Primary Button Styling */
 .splashScreen .actionButton {
   padding: 12px;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1rem; /* Standardized font size */
+  font-weight: 600; /* Standardized font weight */
   background: linear-gradient(45deg, #ff9f7f, #ff7e79);
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: transform 0.2s ease, background 0.3s ease, box-shadow 0.3s ease;
+  max-width: 200px; /* Set a maximum width for the buttons */
+  width: 100%; /* Allow buttons to take full width up to max-width */
 }
 
 .splashScreen .actionButton:hover {
@@ -122,14 +125,16 @@
 /* Secondary Button */
 .splashScreen .actionButton.secondary {
   padding: 12px;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1rem; /* Standardized font size */
+  font-weight: 600; /* Standardized font weight */
   color: #ccc;
   border: 1px solid #444;
   background: transparent;
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.3s ease, color 0.3s ease;
+  max-width: 200px; /* Set a maximum width for the secondary button */
+  width: 100%; /* Allow button to take full width up to max-width */
 }
 
 .splashScreen .actionButton.secondary:hover {
@@ -359,6 +364,8 @@
 .introLogo {
   opacity: 0.7;
   filter: brightness(0.85);
+  width: 80px; /* Adjusted width */
+  height: 80px; /* Adjusted height */
 }
 
 .content.intro {

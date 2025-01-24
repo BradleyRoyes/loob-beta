@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FaMapMarkerAlt, FaUser, FaTools, FaUsers } from 'react-icons/fa';
 import './AddEntry.css';
 import { useGlobalState } from '../components/GlobalStateContext';
@@ -17,15 +17,31 @@ interface FormData {
   title: string;
   offeringType: string;
   description: string;
-  location: string;
+  location: string; // This will be our single address field
   name: string;
-  address: string;
   adminUsername: string;
   adminPassword: string;
-  tags: TagKeyword[]; // Changed from Tag[] to TagKeyword[]
-  addressLine1: string;
-  city: string;
-  loobricateId: string; // Add this field for associating entries with a Loobricate
+  tags: TagKeyword[];
+  loobricateId: string;
+  latitude: number | null;
+  longitude: number | null;
+}
+
+// Add this after your FormData interface
+interface PlaceResult {
+  description: string;
+  place_id: string;
+  structured_formatting: {
+    main_text: string;
+    secondary_text: string;
+  };
+}
+
+// Add this interface for address suggestions
+interface AddressSuggestion {
+  display_name: string;
+  lat: string;
+  lon: string;
 }
 
 const AddEntry: React.FC = () => {
@@ -46,13 +62,12 @@ const AddEntry: React.FC = () => {
     description: '',
     location: '',
     name: '',
-    address: '',
     adminUsername: '',
     adminPassword: '',
     tags: [],
-    addressLine1: '',
-    city: '',
     loobricateId: '',
+    latitude: null,
+    longitude: null,
   });
 
   // Replace the currentTag state with a simpler keyword input
@@ -70,6 +85,13 @@ const AddEntry: React.FC = () => {
   // Add state for available Loobricates
   const [availableLoobricates, setAvailableLoobricates] = useState<Array<{id: string, name: string}>>([]);
 
+  // Add state for address suggestions
+  const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Add state for success message
+  const [successMessage, setSuccessMessage] = useState<string>('');
+
   // Fetch available Loobricates on component mount
   useEffect(() => {
     const fetchLoobricates = async () => {
@@ -83,6 +105,94 @@ const AddEntry: React.FC = () => {
     };
     fetchLoobricates();
   }, []);
+
+  // Update the geocodeAddress function to use Nominatim
+  const geocodeAddress = async (address: string): Promise<[number, number] | null> => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
+        {
+          headers: {
+            'Accept-Language': 'de', // Prioritize German results
+            'User-Agent': 'Loob App (your@email.com)' // Replace with your contact
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to geocode address');
+      }
+      
+      const data = await response.json();
+      if (data && data[0]) {
+        return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+      }
+      return null;
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      return null;
+    }
+  };
+
+  // Update searchAddresses to be non-blocking
+  const searchAddresses = async (query: string) => {
+    if (query.length < 3) {
+      setAddressSuggestions([]);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=de&limit=5`,
+        {
+          headers: {
+            'Accept-Language': 'de',
+            'User-Agent': 'Loob App (contact@loob.com)'
+          }
+        }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        setAddressSuggestions(data);
+      }
+    } catch (error) {
+      console.error('Error fetching address suggestions:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Create a debounced version of searchAddresses
+  const debouncedSearch = useCallback(
+    debounce((query: string) => searchAddresses(query), 300),
+    []
+  );
+
+  // Update handleAddressChange to be more responsive
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFormData(prev => ({ ...prev, location: value }));
+    
+    // Don't block the input, just trigger the search
+    if (value.length >= 3) {
+      setIsSearching(true);
+      debouncedSearch(value);
+    } else {
+      setAddressSuggestions([]);
+    }
+  };
+
+  // Update the handleSuggestionClick function
+  const handleSuggestionClick = async (suggestion: AddressSuggestion) => {
+    setFormData(prev => ({
+      ...prev,
+      location: suggestion.display_name,
+      latitude: parseFloat(suggestion.lat),
+      longitude: parseFloat(suggestion.lon)
+    }));
+    setAddressSuggestions([]);
+  };
 
   // Update form data state when an input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -138,65 +248,44 @@ const AddEntry: React.FC = () => {
     setFormData((prev) => ({ ...prev, offeringType: type.toLowerCase() }));
   };
 
-  // Submit the form data
-  const handleSubmit = async () => {
-    try {
-      setIsSubmitting(true);
-      setError('');
+  // Define AddressInput as a nested component
+  const AddressInput = () => (
+    <div className="address-input-container">
+      <input
+        type="text"
+        name="location"
+        placeholder="Start typing an address..."
+        value={formData.location}
+        onChange={handleAddressChange}
+        className="form-input"
+        required
+      />
+      {isSearching && (
+        <div className="search-indicator">Searching...</div>
+      )}
+      {addressSuggestions.length > 0 && (
+        <ul className="suggestions-list">
+          {addressSuggestions.map((suggestion, index) => (
+            <li
+              key={index}
+              className="suggestion-item"
+              onClick={() => handleSuggestionClick(suggestion)}
+            >
+              {suggestion.display_name}
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="field-helper">
+        Enter a complete address for accurate mapping
+      </p>
+      {formData.latitude && formData.longitude && (
+        <p className="location-confirmation">✓ Location confirmed on map</p>
+      )}
+    </div>
+  );
 
-      // Prepare the submission data
-      const submissionData = {
-        ...formData,
-        dataType: selectedType === 'Loobricate' ? 'loobricate' : 'userEntry',
-        offeringType: selectedType.toLowerCase(),
-        // Add these for non-Loobricate entries
-        ...(selectedType !== 'Loobricate' && {
-          loobricates: [formData.loobricateId],
-          pseudonym: pseudonym || 'Anonymously Contributed',
-          email: email || 'Anonymously Contributed',
-          phone: phone || 'N/A',
-        })
-      };
-
-      const response = await fetch('/api/loobrary-signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submissionData),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to submit entry');
-      }
-
-      setSubmissionSuccess(true);
-      // Reset form
-      setFormData({
-        pseudonym: pseudonym || 'Anonymously Contributed',
-        email: email || 'Anonymously Contributed',
-        phone: phone || 'N/A',
-        password: 'default-password',
-        title: '',
-        offeringType: '',
-        description: '',
-        location: '',
-        name: '',
-        address: '',
-        adminUsername: '',
-        adminPassword: '',
-        tags: [],
-        addressLine1: '',
-        city: '',
-        loobricateId: '',
-      });
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'An error occurred');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Update renderFormFields to use the address autocomplete
+  // Update the renderFormFields function
   const renderFormFields = () => {
     switch (selectedType) {
       case 'Location':
@@ -220,14 +309,7 @@ const AddEntry: React.FC = () => {
               onChange={handleInputChange}
               className="form-input"
             />
-            <input
-              type="text"
-              name="location"
-              placeholder={`Location of the ${selectedType.toLowerCase()}`}
-              value={formData.location || ''}
-              onChange={handleInputChange}
-              className="form-input"
-            />
+            <AddressInput />
           </>
         );
       case 'Loobricate':
@@ -249,22 +331,7 @@ const AddEntry: React.FC = () => {
               onChange={handleInputChange}
               className="form-input"
             />
-            <input
-              type="text"
-              name="addressLine1"
-              placeholder="Street Address (e.g., 123 Main St)"
-              value={formData.addressLine1 || ''}
-              onChange={handleInputChange}
-              className="form-input"
-            />
-            <input
-              type="text"
-              name="city"
-              placeholder="City, State, ZIP"
-              value={formData.city || ''}
-              onChange={handleInputChange}
-              className="form-input"
-            />
+            <AddressInput />
             <input
               type="text"
               name="adminUsername"
@@ -286,6 +353,157 @@ const AddEntry: React.FC = () => {
       default:
         return null;
     }
+  };
+
+  // Add these validation functions
+  const validateForm = (): string[] => {
+    const errors: string[] = [];
+
+    if (!formData.location || (!formData.latitude && !formData.longitude)) {
+      errors.push('Please select a valid address from the suggestions');
+    }
+
+    if (selectedType === 'Loobricate') {
+      if (!formData.name?.trim()) errors.push('Loobricate name is required');
+      if (!formData.adminUsername?.trim()) errors.push('Admin username is required');
+      if (!formData.adminPassword?.trim()) errors.push('Admin password is required');
+      if (formData.adminPassword?.length < 8) {
+        errors.push('Password must be at least 8 characters long');
+      }
+    } else {
+      if (!formData.loobricateId) errors.push('Please select a Loobricate community');
+      if (!formData.title?.trim()) errors.push(`${selectedType} name is required`);
+    }
+
+    if (!formData.description?.trim()) {
+      errors.push('Description is required');
+    }
+
+    return errors;
+  };
+
+  // Update handleSubmit with better error/success handling
+  const handleSubmit = async () => {
+    try {
+      setError('');
+      setSuccessMessage('');
+      
+      const validationErrors = validateForm();
+      if (validationErrors.length > 0) {
+        setError(validationErrors.join('\n'));
+        return;
+      }
+
+      setIsSubmitting(true);
+
+      // Prepare the base submission data
+      const baseData = {
+        location: formData.location,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+        description: formData.description,
+        tags: formData.tags,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        status: 'active'
+      };
+
+      // Prepare type-specific data
+      const submissionData = selectedType === 'Loobricate' 
+        ? {
+            ...baseData,
+            dataType: 'loobricate',
+            name: formData.name,
+            adminUsername: formData.adminUsername,
+            adminPassword: formData.adminPassword,
+            members: [],
+            admins: []
+          }
+        : {
+            ...baseData,
+            dataType: 'userEntry',
+            offeringType: selectedType.toLowerCase(),
+            title: formData.title,
+            loobricateId: formData.loobricateId,
+            pseudonym: pseudonym || 'Anonymously Contributed',
+            email: email || 'Anonymously Contributed',
+            phone: phone || 'N/A'
+          };
+
+      const response = await fetch('/api/loobrary-signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submissionData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit entry');
+      }
+
+      // Set success message based on type
+      const successMsg = selectedType === 'Loobricate'
+        ? `🎉 Successfully created new Loobricate: "${formData.name}"`
+        : `✨ Successfully added ${selectedType.toLowerCase()} "${formData.title}" to ${
+            availableLoobricates.find(l => l.id === formData.loobricateId)?.name || 'Loobricate'
+          }`;
+
+      setSuccessMessage(successMsg);
+      setSubmissionSuccess(true);
+      resetForm();
+
+    } catch (error) {
+      let errorMsg = '';
+      if (error instanceof Error) {
+        // Friendly error messages
+        switch (true) {
+          case error.message.includes('duplicate'):
+            errorMsg = selectedType === 'Loobricate'
+              ? '⚠️ This Loobricate name is already taken. Please choose another name.'
+              : '⚠️ This entry already exists in the selected Loobricate.';
+            break;
+          case error.message.includes('validation'):
+            errorMsg = '⚠️ Please check all required fields and try again.';
+            break;
+          case error.message.includes('coordinates'):
+            errorMsg = '⚠️ Please select a valid address from the suggestions.';
+            break;
+          default:
+            errorMsg = '⚠️ ' + error.message;
+        }
+      } else {
+        errorMsg = '⚠️ An unexpected error occurred. Please try again.';
+      }
+      setError(errorMsg);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Reset the form
+  const resetForm = () => {
+    setFormData({
+      pseudonym: pseudonym || 'Anonymously Contributed',
+      email: email || 'Anonymously Contributed',
+      phone: phone || 'N/A',
+      password: 'default-password',
+      title: '',
+      offeringType: '',
+      description: '',
+      location: '',
+      name: '',
+      adminUsername: '',
+      adminPassword: '',
+      tags: [],
+      loobricateId: '',
+      latitude: null,
+      longitude: null,
+    });
+    setTagInput('');
+    setSuggestedTags([]);
+    setError('');
+    setSubmissionSuccess(false);
   };
 
   return (
@@ -401,7 +619,31 @@ const AddEntry: React.FC = () => {
                 </div>
               )}
             </div>
-            {error && <p className="error-message">{error}</p>}
+            {error && (
+              <div className="message error-container">
+                <p className="error-message">{error}</p>
+                <div className="error-help">
+                  <p>Please check:</p>
+                  <ul>
+                    {selectedType === 'Loobricate' ? (
+                      <>
+                        <li>Loobricate name is unique and filled</li>
+                        <li>Admin username and password are set</li>
+                        <li>Location is selected from suggestions</li>
+                        <li>Description explains the purpose of your Loobricate</li>
+                      </>
+                    ) : (
+                      <>
+                        <li>A Loobricate community is selected</li>
+                        <li>Title and description are filled</li>
+                        <li>Location is selected from suggestions</li>
+                        <li>All required fields are complete</li>
+                      </>
+                    )}
+                  </ul>
+                </div>
+              </div>
+            )}
             <button className="actionButton" onClick={handleSubmit} disabled={isSubmitting}>
               {isSubmitting ? 'Submitting...' : 'Submit'}
             </button>
@@ -409,9 +651,31 @@ const AddEntry: React.FC = () => {
         </>
       )}
 
-      {submissionSuccess && <p className="success-message">Your entry was successfully added!</p>}
+      {successMessage && (
+        <div className="message success-container">
+          <p className="success-message">{successMessage}</p>
+          <p className="success-help">
+            {selectedType === 'Loobricate'
+              ? 'Your Loobricate is ready! You can now start adding entries to your community.'
+              : 'Your entry has been added successfully! Add more or explore the Loobrary.'}
+          </p>
+        </div>
+      )}
     </div>
   );
 };
+
+// Simple debounce utility function
+function debounce(func: Function, wait: number) {
+  let timeout: NodeJS.Timeout;
+  return function executedFunction(...args: any[]) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
 
 export default AddEntry;

@@ -5,6 +5,8 @@ import "./MapSidebar.css";
 /**
  * Interface representing a node item in the map.
  */
+export type VisualView = "Today";
+
 export interface Node {
   id: string;
   lat: number;
@@ -13,7 +15,7 @@ export interface Node {
   type: string;
   details: string;
   contact: string;
-  visualType: "Today" | "ThisWeek" | "AllTime";
+  visualType: VisualView;
   loobricate?: string;
 }
 

@@ -339,8 +339,14 @@
 }
 
 .loobricate-icon {
-  font-size: 4rem;
-  color: #ffb48f;
+  color: white;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.loobricate-icon.active {
+  color: #007bff;
+  opacity: 1;
 }
 
 .tag-input-container {
@@ -444,6 +450,159 @@
   color: #aaa;
   margin: 10px 0;
   font-size: 0.9rem;
+}
+
+.input-group {
+  margin-bottom: 1.5rem;
+}
+
+.field-helper {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0.25rem 0;
+  padding-left: 0.5rem;
+}
+
+.location-confirmation {
+  color: #4CAF50;
+  font-size: 0.9rem;
+  margin: 0.25rem 0;
+  padding-left: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.location-confirmation::before {
+  content: "✓";
+  font-weight: bold;
+}
+
+.suggestions-list {
+  position: absolute;
+  z-index: 1000;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.suggestion-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.suggestion-item:hover {
+  background-color: #f5f5f5;
+}
+
+.suggestion-item strong {
+  font-size: 14px;
+}
+
+.suggestion-item small {
+  font-size: 12px;
+  color: #666;
+}
+  
+.address-input-container {
+  position: relative;
+  width: 100%;
+}
+
+.search-indicator {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.suggestions-list {
+  position: absolute;
+  z-index: 1000;
+  background: #333;
+  border: 1px solid #444;
+  border-radius: 8px;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 4px;
+}
+
+.suggestion-item {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #444;
+  color: #f3f3f3;
+}
+
+.suggestion-item:hover {
+  background: #444;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+  
+.message {
+  margin: 1rem 0;
+  padding: 1rem;
+  border-radius: 8px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.error-container {
+  background: rgba(255, 0, 0, 0.1);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+}
+
+.success-container {
+  background: rgba(0, 255, 0, 0.1);
+  border: 1px solid rgba(0, 255, 0, 0.3);
+}
+
+.error-message {
+  color: #ff6b6b;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.success-message {
+  color: #51cf66;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.error-help, .success-help {
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+.error-help ul {
+  margin-top: 0.5rem;
+  padding-left: 1.5rem;
+}
+
+.error-help li {
+  margin: 0.25rem 0;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
   
   

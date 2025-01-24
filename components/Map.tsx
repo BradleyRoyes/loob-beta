@@ -13,14 +13,12 @@ import "./Map.css";
 
 // Child components with their prop types
 import TorusSphere, { TorusSphereProps } from "./TorusSphere";
-import TorusSphereWeek from "./TorusSphereWeek";
-import TorusSphereAll from "./TorusSphereAll";
 import VenueProfile from "./VenueProfile";
 import MapSidebar from "./MapSidebar";
 import AddVenueModal from "./AddVenueModal";
 
 // Types
-export type VisualView = "Today" | "ThisWeek" | "AllTime";
+export type VisualView = "Today";
 
 export interface Node {
   id: string;
@@ -30,7 +28,7 @@ export interface Node {
   type: string;      // e.g. "Venue", "Gear", etc.
   details: string;   // e.g. description or details
   contact: string;   // e.g. "mailto:someone@example.com"
-  visualType: VisualView; // "Today", "ThisWeek", "AllTime"
+  visualType: VisualView; // "Today"
   createdAt?: string;  // Add these as optional
   updatedAt?: string;  // Add these as optional
 }
@@ -280,14 +278,7 @@ useEffect(() => {
    * 7) Render sphere by visualType
    */
   const renderSphereForNode = (node: Node) => {
-    switch (node.visualType) {
-      case "ThisWeek":
-        return <TorusSphereWeek loobricate_id={node.id} />;
-      case "AllTime":
-        return <TorusSphereAll loobricate_id={node.id} />;
-      default:
-        return <TorusSphere loobricate_id={node.id} />;
-    }
+    return <TorusSphere loobricateId={node.id} />;
   };
 
   /**

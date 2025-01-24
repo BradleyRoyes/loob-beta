@@ -85,76 +85,48 @@
   margin-top: 2rem;
   padding: 1rem;
   border-top: 1px solid var(--border-primary);
+  display: flex;
+  justify-content: space-between;
 }
 
 .button-group {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
-.logout-button {
+.logout-button, .loobricate-login-button, .daily-dump-button {
+  flex: 1;
+  min-width: 150px;
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  padding: 0.8rem 1.5rem;
-  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: var(--font-size-default);
   font-weight: 600;
-  color: #fff;
-  background: linear-gradient(to right, #ff6b6b, #ff8e8e);
+  color: var(--text-primary);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--border-radius-default);
   cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 2rem;
+  transition: background 0.3s, transform 0.2s;
+}
+
+/* Adjusted Background Colors */
+.logout-button {
+  background: linear-gradient(to right, #ff6b6b, #ff8e8e); /* Red gradient */
 }
 
 .logout-button:hover {
-  background: linear-gradient(to right, #ff5252, #ff7676);
-  transform: translateY(-1px);
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(to right, #ff5252, #ff7676); /* Darker red on hover */
 }
 
 .loobricate-login-button {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0.8rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #fff;
-  background: linear-gradient(to right, #ffb48f, #ff9f7f);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  background: linear-gradient(to right, #ffb48f, #ff9f7f); /* Orange gradient */
 }
 
 .loobricate-login-button:hover {
-  background: linear-gradient(to right, #ff9f7f, #ff8b6b);
-  transform: translateY(-1px);
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
-}
-
-.action-button {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0.8rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  background: var(--gradient-primary);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.action-button:hover {
-  background: var(--gradient-user);
-  transform: translateY(-1px);
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(to right, #ff9f7f, #ff8b6b); /* Darker orange on hover */
 }
 
 /* Update list item styles to better align buttons */
@@ -294,4 +266,50 @@
   position: absolute;
   left: 0;
   color: var(--text-primary);
+}
+
+.daily-buttons-container {
+  display: flex;
+  justify-content: space-between; /* Space between buttons */
+  margin-top: 2rem; /* Increased space above the buttons */
+  margin-bottom: 2rem; /* Added space below the buttons */
+  gap: 1.5rem; /* Added gap between buttons */
+}
+
+.daily-dump-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  font-size: var(--font-size-default);
+  font-weight: 600;
+  color: #ffffff; /* Ensure text is white */
+  background: linear-gradient(to right, #ff9f7f, #ffb48f); /* Darker fleshy gradient */
+  border: none;
+  border-radius: var(--border-radius-default);
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.daily-dump-button:hover {
+  background: linear-gradient(to right, #ff8f6f, #ff9f7f); /* Slightly darker fleshy gradient on hover */
+}
+
+.daily-challenge-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  font-size: var(--font-size-default);
+  font-weight: 600;
+  color: #ffffff; /* Ensure text is white */
+  background: linear-gradient(to right, #ff9f7f, #ffb48f); /* Darker fleshy gradient */
+  border: none;
+  border-radius: var(--border-radius-default);
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.daily-challenge-button:hover {
+  background: linear-gradient(to right, #ff8f6f, #ff9f7f); /* Slightly darker fleshy gradient on hover */
 }

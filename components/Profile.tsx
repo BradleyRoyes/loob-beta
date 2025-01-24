@@ -2,18 +2,13 @@
 
 import React, { useEffect, useState } from 'react';
 import TorusSphere from './TorusSphere';
-import TorusSphereWeek from './TorusSphereWeek';
-import TorusSphereAll from './TorusSphereAll';
 import './Profile.css';
 import LoobricateProfile from './LoobricateProfile';
 import { useGlobalState } from './GlobalStateContext';
+import DailyDump from './DailyDump';
 
 const Profile: React.FC = () => {
   const { userId, pseudonym, isAnonymous, clearUserState } = useGlobalState();
-  const [sliderValue, setSliderValue] = useState(0); // 0: Today, 1: This Week, 2: All Time
-  const [fadeVisual, setFadeVisual] = useState<JSX.Element>(<TorusSphere />);
-  const [nextVisual, setNextVisual] = useState<JSX.Element | null>(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
   const [loobricates, setLoobricates] = useState<any[]>([]);
   const [entries, setEntries] = useState<any[]>([]);
   const [recentDiscoveries, setRecentDiscoveries] = useState<any[]>([]);
@@ -24,6 +19,7 @@ const Profile: React.FC = () => {
   const [showLoginForm, setShowLoginForm] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [showDailyDump, setShowDailyDump] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -47,29 +43,6 @@ const Profile: React.FC = () => {
 
     fetchUserData();
   }, [userId, isAnonymous]);
-
-  // Handle slider changes
-  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = Number(e.target.value);
-    setSliderValue(newValue);
-
-    if (newValue === 0) setNextVisual(<TorusSphere />);
-    if (newValue === 1) setNextVisual(<TorusSphereWeek />);
-    if (newValue === 2) setNextVisual(<TorusSphereAll />);
-  };
-
-  // Smooth transition animations for the slider
-  useEffect(() => {
-    if (nextVisual) {
-      setIsTransitioning(true);
-      const timer = setTimeout(() => {
-        setFadeVisual(nextVisual);
-        setIsTransitioning(false);
-        setNextVisual(null);
-      }, 500); // Smooth transition duration
-      return () => clearTimeout(timer);
-    }
-  }, [nextVisual]);
 
   // Log Out Button Handler
   const handleLogOut = () => {
@@ -137,21 +110,25 @@ const Profile: React.FC = () => {
           {routeMessage && <p className="route-message">{routeMessage}</p>}
         </div>
 
-        {/* Sphere Visualization and Slider */}
+        {/* Sphere Visualization */}
         <div className="visualization-container">
-          <div className={`fade-visual ${isTransitioning ? 'fade-out' : 'fade-in'}`}>{fadeVisual}</div>
-          {nextVisual && (
-            <div className={`fade-visual ${isTransitioning ? 'fade-in' : 'fade-out'}`}>{nextVisual}</div>
-          )}
-          <input
-            type="range"
-            min="0"
-            max="2"
-            step="1"
-            value={sliderValue}
-            onChange={handleSliderChange}
-            className="visual-slider"
-          />
+          <TorusSphere loobricateId={userId || 'default'} />
+        </div>
+
+        {/* Daily Dump and Daily Challenge Buttons */}
+        <div className="daily-buttons-container">
+          <button 
+            className="daily-dump-button"
+            onClick={() => setShowDailyDump(true)}
+          >
+            Daily Dump
+          </button>
+          <button 
+            className="daily-challenge-button"
+            onClick={() => alert('Feature coming soon!')}
+          >
+            Daily Challenge
+          </button>
         </div>
 
         {/* Only show these sections if not anonymous */}
@@ -296,6 +273,10 @@ const Profile: React.FC = () => {
             onClose={() => setSelectedLoobricate(null)}
           />
         </div>
+      )}
+
+      {showDailyDump && (
+        <DailyDump onClose={() => setShowDailyDump(false)} />
       )}
     </div>
   );

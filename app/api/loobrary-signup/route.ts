@@ -27,79 +27,67 @@ const validateTags = (tags: string[]) => {
   return tags.every(tag => typeof tag === 'string' && tag.trim().length > 0);
 };
 
+// Update the validation in POST handler
+const validateEntry = (body: any) => {
+  const errors: string[] = [];
+  
+  if (!body.location || !body.latitude || !body.longitude) {
+    errors.push('Valid location with coordinates is required');
+  }
+
+  if (body.dataType === 'loobricate') {
+    if (!body.name?.trim()) errors.push('Loobricate name is required');
+    if (!body.adminUsername?.trim()) errors.push('Admin username is required');
+    if (!body.adminPassword?.trim()) errors.push('Admin password is required');
+  } else {
+    if (!body.loobricateId) errors.push('Loobricate ID is required');
+    if (!body.title?.trim()) errors.push('Title is required');
+  }
+
+  if (!body.description?.trim()) errors.push('Description is required');
+  
+  return errors;
+};
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     
-    // Validate required fields based on type
-    const requiredFields = ['dataType'];
-    if (body.dataType === 'loobricate') {
-      requiredFields.push('name', 'description', 'addressLine1', 'city', 'adminUsername');
-    } else if (body.dataType === 'location' || body.offeringType === 'location') {
-      // Add specific validation for venues/locations
-      requiredFields.push('title', 'description', 'location', 'loobricateId');
-      
-      // Prepare venue-specific data
-      body.details = body.description; // Map description to details for VenueProfile
-      body.label = body.title; // Map title to label for VenueProfile
-      body.visualType = 'Today'; // Default visual type
-    } else {
-      requiredFields.push('title', 'description', 'location', 'loobricateId');
+    // Validate the entry
+    const validationErrors = validateEntry(body);
+    if (validationErrors.length > 0) {
+      return handleError(
+        'Validation failed',
+        400,
+        'validation_error',
+        validationErrors
+      );
     }
 
-    const missingFields = requiredFields.filter(field => !body[field]);
-    if (missingFields.length > 0) {
-      return NextResponse.json({
-        error: `Missing required fields: ${missingFields.join(', ')}`,
-        missingFields
-      }, { status: 400 });
-    }
+    // Get the appropriate collection based on data type
+    const collection = await getCollection(
+      body.dataType === 'loobricate' ? 'usersandloobricates' : 'library'
+    );
 
-    // Validate tags for all entries
-    if (!validateTags(body.tags)) {
-      return handleError('Invalid tags. Each tag must have a category and value.', 400, 'invalid_tags');
-    }
-
-    // Hash password if present
-    if (body.adminPassword) {
+    // Hash password if it's a Loobricate entry
+    if (body.dataType === 'loobricate' && body.adminPassword) {
       body.adminPassword = await bcrypt.hash(body.adminPassword, 10);
     }
-
-    // Combine address fields for Loobricate
-    if (body.dataType === 'loobricate') {
-      body.address = `${body.addressLine1}, ${body.city}`;
-      // Add creator as first admin and member
-      body.admins = [body.creatorId];
-      body.members = [body.creatorId];
-    }
-
-    // Get collection
-    const collection = await getCollection('usersandloobricates');
-
-    // Add timestamp and metadata
-    body.createdAt = new Date();
-    body.updatedAt = new Date();
-    body.status = 'active';
 
     // Insert document
     const result = await collection.insertOne(body);
 
-    // If this is a location/venue, we might want to create additional metadata
-    if (body.dataType === 'location' || body.offeringType === 'location') {
-      // You could add additional venue-specific processing here
-      // For example, initializing analytics data, etc.
-    }
-
     return NextResponse.json({
-      message: `${body.dataType} created successfully`,
+      message: `${body.dataType === 'loobricate' ? 'Loobricate' : 'Entry'} created successfully`,
       id: result.insertedId
     }, { status: 201 });
 
   } catch (error) {
     console.error('Error processing request:', error);
-    return NextResponse.json({
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    return handleError(
+      error instanceof Error ? error.message : 'Internal server error',
+      500,
+      'internal_error'
+    );
   }
 }

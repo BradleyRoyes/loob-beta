@@ -26,7 +26,7 @@
   {
     "url": "https://www.seks.design/loob/",
     "title": "Loob App Information",
-    "content": "Loob is an innovative collective journaling app developed by LoobLabs & seks, designed to revolutionize the integration of transformative and psychedelic experiences. With an emphasis on collective healing and community-driven engagement, Loob offers a unique platform for users to share, reflect, and visualize their personal journeys and those of their community in real-time. By leveraging state-of-the-art AI technology, Loob enables individuals to not only track their growth over time but also connect with the broader community, uncovering shared experiences and trends. At the heart of LoobLabs’ mission is a commitment to communal well-being, challenging the prevailing notion that healing is a solitary journey. Loob introduces a groundbreaking approach to collecting anonymous feedback for event and venue partners, enabling them to iterate positively based on real, actionable insights from their community.",
+    "content": "Loob is an innovative collective journaling app developed by LoobLabs & seks, designed to revolutionize the integration of transformative and psychedelic experiences. With an emphasis on collective healing and community-driven engagement, Loob offers a unique platform for users to share, reflect, and visualize their personal journeys and those of their community in real-time. By leveraging state-of-the-art AI technology, Loob enables individuals to not only track their growth over time but also connect with the broader community, uncovering shared experiences and trends. At the heart of LoobLabs' mission is a commitment to communal well-being, challenging the prevailing notion that healing is a solitary journey. Loob introduces a groundbreaking approach to collecting anonymous feedback for event and venue partners, enabling them to iterate positively based on real, actionable insights from their community.",
     "dataType": "memory"
   },
   {
@@ -40,137 +40,205 @@
     "title": "viscereality experiment",
     "content": "The Viscereality Project innovatively combines breathwork and virtual reality to induce altered states of consciousness. At its core is a bio-responsive VR application that dynamically adapts to users' breathing patterns. This approach aims to couple interoception (internal bodily awareness) with exteroception (perception of the external world) by synchronizing immersive virtual environments with breathing techniques such as circular breathing and hyperventilation. By blurring the boundaries between internal physiological states and external virtual contexts, the project seeks to facilitate a dissolution of the sense of self - a key characteristic of altered states. This novel method explores how the interplay of bodily sensations and responsive digital environments can influence consciousness, potentially offering new insights into subjective experiences and opening avenues for therapeutic applications in mental health.",
     "dataType": "memory"
-},
-{
-  "title": "DJ Mixer: Allen & Heath Xone 43",
-  "offeringType": "gear",
-  "description": "High-performance analog DJ mixer with intuitive controls and excellent sound quality, ideal for professional and club settings.",
-  "location": "K33, 10963 Berlin",
-  "pseudonym": "Brad",
-  "email": "quocheiser@gmail.com",
-  "phone": "+4915733324887",
-  "loobricates": ["dasYRadio"],
-  "dataType": "userEntry"
-},
-{
-  "title": "Digital Player: Pioneer XDJ-1000 mk1",
-  "offeringType": "gear",
-  "description": "Digital DJ player with touch-screen navigation and robust performance, suitable for all music formats except FLAC.",
-  "location": "K33, 10963 Berlin",
-  "pseudonym": "Brad",
-  "email": "quocheiser@gmail.com",
-  "phone": "+4915733324887",
-  "loobricates": ["dasYRadio"],
-  "dataType": "userEntry"
-},
-{
-  "title": "Digital Player: Pioneer XDJ-1000 mk2",
-  "offeringType": "gear",
-  "description": "Upgraded digital DJ player supporting FLAC playback, with advanced features for seamless mixing.",
-  "location": "K33, 10963 Berlin",
-  "pseudonym": "Brad",
-  "email": "quocheiser@gmail.com",
-  "phone": "+4915733324887",
-  "loobricates": ["dasYRadio"],
-  "dataType": "userEntry"
-},
-{
-  "title": "2ch 600w D-Class Audiophile Amplifier",
-  "offeringType": "gear",
-  "description": "Compact and powerful amplifier delivering clean, high-fidelity sound for small to medium venues.",
-  "location": "K33, 10963 Berlin",
-  "pseudonym": "Brad",
-  "email": "quocheiser@gmail.com",
-  "phone": "+4915733324887",
-  "loobricates": ["dasYRadio"],
-  "dataType": "userEntry"
-},
-{
-  "title": "Klipsch RB81 II Speakers",
-  "offeringType": "gear",
-  "description": "Premium bookshelf speakers featuring 8-inch woofers and titanium tweeters for exceptional sound clarity.",
-  "location": "K33, 10963 Berlin",
-  "pseudonym": "Brad",
-  "email": "quocheiser@gmail.com",
-  "phone": "+4915733324887",
-  "loobricates": ["dasYRadio"],
-  "dataType": "userEntry"
-},
-{
-  "title": "Zoom L-12 Mixer/Interface",
-  "offeringType": "gear",
-  "description": "Versatile 12-channel mixer and audio interface designed for live sound recording and podcast production.",
-  "location": "K33, 10963 Berlin",
-  "pseudonym": "Brad",
-  "email": "quocheiser@gmail.com",
-  "phone": "+4915733324887",
-  "loobricates": ["dasYRadio"],
-  "dataType": "userEntry"
-},
-{
-  "title": "Tascam DR-40 Recorder",
-  "offeringType": "gear",
-  "description": "Portable 4-channel audio recorder with adjustable microphones and professional-grade sound capture.",
-  "location": "K33, 10963 Berlin",
-  "pseudonym": "Brad",
-  "email": "quocheiser@gmail.com",
-  "phone": "+4915733324887",
-  "loobricates": ["dasYRadio"],
-  "dataType": "userEntry"
-},
-{
-  "title": "EV PL 84 Microphone",
-  "offeringType": "gear",
-  "description": "High-quality handheld condenser microphone for detailed vocal reproduction.",
-  "location": "K33, 10963 Berlin",
-  "pseudonym": "Brad",
-  "email": "quocheiser@gmail.com",
-  "phone": "+4915733324887",
-  "loobricates": ["dasYRadio"],
-  "dataType": "userEntry"
-},
-{
-  "title": "Rode NTG-2 Microphone",
-  "offeringType": "gear",
-  "description": "Directional condenser microphone ideal for film, video, and voiceover recording.",
-  "location": "K33, 10963 Berlin",
-  "pseudonym": "Brad",
-  "email": "quocheiser@gmail.com",
-  "phone": "+4915733324887",
-  "loobricates": ["dasYRadio"],
-  "dataType": "userEntry"
-},
-{
-  "title": "AKG G-100 Microphone",
-  "offeringType": "gear",
-  "description": "Versatile dynamic microphone suitable for a variety of live and studio applications.",
-  "location": "K33, 10963 Berlin",
-  "pseudonym": "Brad",
-  "email": "quocheiser@gmail.com",
-  "phone": "+4915733324887",
-  "loobricates": ["dasYRadio"],
-  "dataType": "userEntry"
-},
-{
-  "title": "Rode Wireless Lavalier Microphone",
-  "offeringType": "gear",
-  "description": "Compact and reliable wireless lavalier microphone system for interviews and presentations.",
-  "location": "K33, 10963 Berlin",
-  "pseudonym": "Brad",
-  "email": "quocheiser@gmail.com",
-  "phone": "+4915733324887",
-  "loobricates": ["dasYRadio"],
-  "dataType": "userEntry"
-},
-{
-  "title": "Shure PG88 Wireless System",
-  "offeringType": "gear",
-  "description": "Dual wireless handheld microphone system delivering clear audio for performances and events.",
-  "location": "K33, 10963 Berlin",
-  "pseudonym": "Brad",
-  "email": "quocheiser@gmail.com",
-  "phone": "+4915733324887",
-  "loobricates": ["dasYRadio"],
-  "dataType": "userEntry"
-}
+  },
+  {
+    "title": "Cyberdelic Society Berlin",
+    "name": "Cyberdelic Society Berlin",
+    "dataType": "loobricate",
+    "description": "A cultural and creative organization exploring the transformative interplay between technology, altered states of consciousness, and art in Berlin. Through events, workshops, and collaborative projects, we foster a deeper understanding of reality and consciousness using modern tools and ancient wisdom.",
+    "location": "Ritterstraße 12-14, 10969 Berlin",
+    "adminUsername": "cyberdelicadmin",
+    "adminPassword": "$2a$10$randomhash",
+    "tags": ["technology", "consciousness", "art", "events", "community"],
+    "visual_state": {
+      "complexity": 1.5,
+      "energy": 0.7,
+      "harmony": 0.6,
+      "mutations": [],
+      "quaternion": { "x": 0, "y": 0, "z": 0, "w": 1 },
+      "material_state": {
+        "specularPower": 256,
+        "swirlSpeed": 2.0,
+        "persistence": 0.7
+      }
+    }
+  },
+  {
+    "title": "Seks Collective",
+    "name": "Seks Collective",
+    "dataType": "loobricate",
+    "description": "An international collective of experience designers dedicated to building narrative design tools for equitable, phygital (physical + digital) futures. Their mission is to create a 'narrative commons,' a local-first design tool to align personal stories with communal ones, creating a shared memory for communities.",
+    "location": "Weserstraße 50, 12045 Berlin",
+    "adminUsername": "seksadmin",
+    "adminPassword": "$2a$10$randomhash",
+    "tags": ["design", "narrative", "community", "phygital", "experience"],
+    "visual_state": {
+      "complexity": 1.8,
+      "energy": 0.75,
+      "harmony": 0.7,
+      "mutations": [],
+      "quaternion": { "x": 0, "y": 0.1, "z": 0, "w": 1 },
+      "material_state": {
+        "specularPower": 280,
+        "swirlSpeed": 2.2,
+        "persistence": 0.75
+      }
+    }
+  },
+  {
+    "title": "Mars the DJ",
+    "offeringType": "talent",
+    "description": "Experimental electronic music artist and DJ specializing in psychedelic soundscapes and immersive audio experiences. Combines traditional DJ techniques with live electronic instruments and generative sound design.",
+    "location": "Ritterstraße 12-14, 10969 Berlin",
+    "pseudonym": "Mars",
+    "email": "mars@example.com",
+    "phone": "+49123456789",
+    "loobricates": ["Cyberdelic Society Berlin"],
+    "tags": ["music", "electronic", "psychedelic", "DJ", "live"],
+    "dataType": "userEntry"
+  },
+  {
+    "title": "Luize's Aromatherapy",
+    "offeringType": "talent",
+    "description": "Holistic aromatherapist specializing in custom botanical blends and sensory experiences. Creates immersive scent installations for events and offers workshops on natural perfumery and plant medicine.",
+    "location": "Weserstraße 50, 12045 Berlin",
+    "pseudonym": "Luize",
+    "email": "luize@example.com",
+    "phone": "+49987654321",
+    "loobricates": ["Seks Collective"],
+    "tags": ["aromatherapy", "wellness", "botanical", "workshops", "events"],
+    "dataType": "userEntry"
+  },
+  {
+    "title": "DJ Mixer: Allen & Heath Xone 43",
+    "offeringType": "gear",
+    "description": "High-performance analog DJ mixer with intuitive controls and excellent sound quality, ideal for professional and club settings.",
+    "location": "Kröthener Straße 33, 10963 Berlin",
+    "pseudonym": "Brad",
+    "email": "quocheiser@gmail.com",
+    "phone": "+4915733324887",
+    "loobricates": ["dasYRadio"],
+    "dataType": "userEntry"
+  },
+  {
+    "title": "Digital Player: Pioneer XDJ-1000 mk1",
+    "offeringType": "gear",
+    "description": "Digital DJ player with touch-screen navigation and robust performance, suitable for all music formats except FLAC.",
+    "location": "Kröthener Straße 33, 10963 Berlin",
+    "pseudonym": "Brad",
+    "email": "quocheiser@gmail.com",
+    "phone": "+4915733324887",
+    "loobricates": ["dasYRadio"],
+    "dataType": "userEntry"
+  },
+  {
+    "title": "Digital Player: Pioneer XDJ-1000 mk2",
+    "offeringType": "gear",
+    "description": "Upgraded digital DJ player supporting FLAC playback, with advanced features for seamless mixing.",
+    "location": "Kröthener Straße 33, 10963 Berlin",
+    "pseudonym": "Brad",
+    "email": "quocheiser@gmail.com",
+    "phone": "+4915733324887",
+    "loobricates": ["dasYRadio"],
+    "dataType": "userEntry"
+  },
+  {
+    "title": "2ch 600w D-Class Audiophile Amplifier",
+    "offeringType": "gear",
+    "description": "Compact and powerful amplifier delivering clean, high-fidelity sound for small to medium venues.",
+    "location": "Kröthener Straße 33, 10963 Berlin",
+    "pseudonym": "Brad",
+    "email": "quocheiser@gmail.com",
+    "phone": "+4915733324887",
+    "loobricates": ["dasYRadio"],
+    "dataType": "userEntry"
+  },
+  {
+    "title": "Klipsch RB81 II Speakers",
+    "offeringType": "gear",
+    "description": "Premium bookshelf speakers featuring 8-inch woofers and titanium tweeters for exceptional sound clarity.",
+    "location": "Kröthener Straße 33, 10963 Berlin",
+    "pseudonym": "Brad",
+    "email": "quocheiser@gmail.com",
+    "phone": "+4915733324887",
+    "loobricates": ["dasYRadio"],
+    "dataType": "userEntry"
+  },
+  {
+    "title": "Zoom L-12 Mixer/Interface",
+    "offeringType": "gear",
+    "description": "Versatile 12-channel mixer and audio interface designed for live sound recording and podcast production.",
+    "location": "Kröthener Straße 33, 10963 Berlin",
+    "pseudonym": "Brad",
+    "email": "quocheiser@gmail.com",
+    "phone": "+4915733324887",
+    "loobricates": ["dasYRadio"],
+    "dataType": "userEntry"
+  },
+  {
+    "title": "Tascam DR-40 Recorder",
+    "offeringType": "gear",
+    "description": "Portable 4-channel audio recorder with adjustable microphones and professional-grade sound capture.",
+    "location": "Kröthener Straße 33, 10963 Berlin",
+    "pseudonym": "Brad",
+    "email": "quocheiser@gmail.com",
+    "phone": "+4915733324887",
+    "loobricates": ["dasYRadio"],
+    "dataType": "userEntry"
+  },
+  {
+    "title": "EV PL 84 Microphone",
+    "offeringType": "gear",
+    "description": "High-quality handheld condenser microphone for detailed vocal reproduction.",
+    "location": "Kröthener Straße 33, 10963 Berlin",
+    "pseudonym": "Brad",
+    "email": "quocheiser@gmail.com",
+    "phone": "+4915733324887",
+    "loobricates": ["dasYRadio"],
+    "dataType": "userEntry"
+  },
+  {
+    "title": "Rode NTG-2 Microphone",
+    "offeringType": "gear",
+    "description": "Directional condenser microphone ideal for film, video, and voiceover recording.",
+    "location": "Kröthener Straße 33, 10963 Berlin",
+    "pseudonym": "Brad",
+    "email": "quocheiser@gmail.com",
+    "phone": "+4915733324887",
+    "loobricates": ["dasYRadio"],
+    "dataType": "userEntry"
+  },
+  {
+    "title": "AKG G-100 Microphone",
+    "offeringType": "gear",
+    "description": "Versatile dynamic microphone suitable for a variety of live and studio applications.",
+    "location": "Kröthener Straße 33, 10963 Berlin",
+    "pseudonym": "Brad",
+    "email": "quocheiser@gmail.com",
+    "phone": "+4915733324887",
+    "loobricates": ["dasYRadio"],
+    "dataType": "userEntry"
+  },
+  {
+    "title": "Rode Wireless Lavalier Microphone",
+    "offeringType": "gear",
+    "description": "Compact and reliable wireless lavalier microphone system for interviews and presentations.",
+    "location": "Kröthener Straße 33, 10963 Berlin",
+    "pseudonym": "Brad",
+    "email": "quocheiser@gmail.com",
+    "phone": "+4915733324887",
+    "loobricates": ["dasYRadio"],
+    "dataType": "userEntry"
+  },
+  {
+    "title": "Shure PG88 Wireless System",
+    "offeringType": "gear",
+    "description": "Dual wireless handheld microphone system delivering clear audio for performances and events.",
+    "location": "Kröthener Straße 33, 10963 Berlin",
+    "pseudonym": "Brad",
+    "email": "quocheiser@gmail.com",
+    "phone": "+4915733324887",
+    "loobricates": ["dasYRadio"],
+    "dataType": "userEntry"
+  }
 ]

@@ -119,8 +119,8 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               <Image 
                 src="/favicon.ico"
                 alt="Loob Logo"
-                width={96}
-                height={96}
+                width={80}
+                height={80}
                 className="introLogo"
                 priority
               />

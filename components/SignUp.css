@@ -1,0 +1,86 @@
+/* SignUp Component CSS */
+
+/* General Styles */
+.signupScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: transparent; /* Set to transparent */
+}
+
+/* Form Container */
+.formContainer {
+  background-color: transparent; /* Set to transparent */
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: none; /* Remove shadow for full transparency */
+}
+
+/* Input Fields */
+.signupScreen .inputField {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #ffb48f; /* Thin border color */
+  border-radius: 8px;
+  background: transparent; /* Keep background transparent */
+  color: #f3f3f3;
+  transition: border-color 0.3s ease;
+}
+
+.signupScreen .inputField:focus {
+  border-color: #ff9f7f; /* Focus color */
+}
+
+/* Button Group */
+.buttonGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Action Button */
+.actionButton {
+  padding: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  background: linear-gradient(45deg, #ff9f7f, #ff7e79);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.actionButton:hover {
+  background: linear-gradient(45deg, #ff8b6b, #ff6b66);
+  transform: translateY(-2px);
+  box-shadow: 0px 4px 10px rgba(255, 120, 120, 0.3);
+}
+
+/* Secondary Button */
+.actionButton.secondary {
+  background: transparent;
+  color: #ccc;
+  border: 1px solid #444;
+}
+
+.actionButton.secondary:hover {
+  background: #444;
+  color: white;
+}
+
+/* Back Button */
+.topBackButton {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: none !important; /* No background */
+  border: none !important; /* No border */
+  color: white !important; /* White color for the arrow */
+  font-size: 1.5rem !important; /* Ensure the size is consistent */
+  cursor: pointer !important; /* Pointer cursor */
+  transition: none !important; /* No transition effects */
+} 

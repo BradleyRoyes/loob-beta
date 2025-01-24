@@ -14,6 +14,10 @@ interface Loobricate {
   address: string;
   adminUsername: string;
   tags: string[];
+  email?: string;
+  location?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface ChatModalProps {

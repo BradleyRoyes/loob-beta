@@ -3,16 +3,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './VenueProfile.css'; // Ensure you have appropriate CSS
 import TorusSphere from './TorusSphere';
-import TorusSphereWeek from './TorusSphereWeek';
-import TorusSphereAll from './TorusSphereAll';
-
-type VisualView = 'Today' | 'ThisWeek' | 'AllTime';
 
 interface Venue {
   id: string;
   label: string;
   details: string;
-  visualType: VisualView;
   createdAt: string;
   updatedAt: string;
 }
@@ -23,20 +18,7 @@ interface VenueProfileProps {
 }
 
 const VenueProfile: React.FC<VenueProfileProps> = ({ venue, onClose }) => {
-  const [visualView, setVisualView] = useState<VisualView>('Today');
   const chartRef = useRef<HTMLCanvasElement | null>(null);
-
-  // Add the missing function
-  const renderSphereForView = () => {
-    switch (visualView) {
-      case 'ThisWeek':
-        return <TorusSphereWeek loobricate_id={venue.id} />;
-      case 'AllTime':
-        return <TorusSphereAll loobricate_id={venue.id} />;
-      default:
-        return <TorusSphere loobricate_id={venue.id} />;
-    }
-  };
 
   return (
     <div className="venue-profile-overlay" onClick={(e) => {
@@ -50,18 +32,9 @@ const VenueProfile: React.FC<VenueProfileProps> = ({ venue, onClose }) => {
 
         {/* Visual Representation */}
         <section className="visual-section">
-          <div className="visual-toggles">
-            {(['Today', 'ThisWeek', 'AllTime'] as VisualView[]).map((view) => (
-              <button
-                key={view}
-                onClick={() => setVisualView(view)}
-                className={visualView === view ? 'active' : ''}
-              >
-                {view}
-              </button>
-            ))}
+          <div className="visualization-section">
+            <TorusSphere loobricateId={venue.id} />
           </div>
-          <div className="visualization-section">{renderSphereForView()}</div>
         </section>
 
         {/* Scrollable content section */}

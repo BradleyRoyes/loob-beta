@@ -17,14 +17,32 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  const cleanupRecording = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (mediaRecorderRef.current) {
+      try {
+        mediaRecorderRef.current.stop();
+      } catch (e) {
+        console.log('MediaRecorder was already stopped');
+      }
+      mediaRecorderRef.current = null;
+    }
+    setIsRecording(false);
+    setAudioLevel(0);
+  };
 
   const analyzeAudio = (audioContext: AudioContext, stream: MediaStream) => {
     const analyser = audioContext.createAnalyser();
     const microphone = audioContext.createMediaStreamSource(stream);
     const scriptProcessor = audioContext.createScriptProcessor(2048, 1, 1);
 
-    analyser.smoothingTimeConstant = 0.8;
-    analyser.fftSize = 1024;
+    analyser.smoothingTimeConstant = 0.3; // Reduced for more responsive animation
+    analyser.fftSize = 512; // Reduced for better performance
 
     microphone.connect(analyser);
     analyser.connect(scriptProcessor);
@@ -34,12 +52,25 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       const array = new Uint8Array(analyser.frequencyBinCount);
       analyser.getByteFrequencyData(array);
       const volume = array.reduce((a, b) => a + b, 0) / array.length;
-      setAudioLevel(volume);
+      // Use requestAnimationFrame for smoother updates
+      requestAnimationFrame(() => setAudioLevel(volume));
+    };
+
+    analyserRef.current = analyser;
+    return () => {
+      scriptProcessor.disconnect();
+      analyser.disconnect();
+      microphone.disconnect();
     };
   };
 
   const handleStartRecording = async () => {
     try {
+      if (isRecording) {
+        handleStopRecording();
+        return;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
@@ -48,8 +79,9 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
         }
       });
       
+      streamRef.current = stream;
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      analyzeAudio(audioContext, stream);
+      const cleanup = analyzeAudio(audioContext, stream);
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm;codecs=opus'
@@ -62,9 +94,10 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       };
 
       mediaRecorder.onstop = () => {
+        cleanup();
         const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
         onRecordingComplete(audioBlob);
-        stream.getTracks().forEach(track => track.stop());
+        cleanupRecording();
       };
 
       mediaRecorderRef.current = mediaRecorder;
@@ -73,54 +106,61 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       startRecording();
     } catch (error) {
       console.error("Error accessing microphone:", error);
+      cleanupRecording();
     }
   };
 
   const handleStopRecording = () => {
-    if (!mediaRecorderRef.current) return;
+    if (!mediaRecorderRef.current || !isRecording) return;
     
-    mediaRecorderRef.current.stop();
-    setIsRecording(false);
     stopRecording();
+    cleanupRecording();
   };
 
   useEffect(() => {
     return () => {
-      if (mediaRecorderRef.current && isRecording) {
-        mediaRecorderRef.current.stop();
-      }
+      cleanupRecording();
     };
-  }, [isRecording]);
+  }, []);
 
   return (
     <div className={styles.container}>
       <button
-        onClick={isRecording ? handleStopRecording : handleStartRecording}
+        onClick={handleStartRecording}
+        onTouchEnd={(e) => {
+          e.preventDefault();
+          if (isRecording) {
+            handleStopRecording();
+          }
+        }}
         className={styles.recorderButton}
         aria-label={isRecording ? "Stop recording" : "Start recording"}
       >
         <div className={styles.microphoneIcon}>
           {isRecording ? <StopIcon /> : <MicIcon />}
           <div className={styles.rippleContainer}>
-            {Array.from({ length: Math.min(8, Math.ceil(audioLevel / 20)) }).map((_, i) => (
+            {isRecording && Array.from({ length: Math.min(5, Math.ceil(audioLevel / 25)) }).map((_, i) => (
               <div
                 key={i}
                 className={styles.ripple}
                 style={{
-                  animationDelay: `${i * (0.2 / Math.max(audioLevel / 50, 1))}s`,
-                  animationDuration: `${2.5 - Math.min(audioLevel / 50, 1.5)}s`,
+                  animationDelay: `${i * 0.15}s`,
+                  animationDuration: '1.5s',
+                  opacity: Math.max(0.2, Math.min(audioLevel / 100, 0.8))
                 }}
               />
             ))}
           </div>
-          <div 
-            className={styles.glowRipple}
-            style={{
-              width: `${100 + audioLevel * 1.5}px`,
-              height: `${100 + audioLevel * 1.5}px`,
-              opacity: Math.min(audioLevel / 50, 1)
-            }}
-          />
+          {isRecording && (
+            <div 
+              className={styles.glowRipple}
+              style={{
+                width: `${80 + audioLevel}px`,
+                height: `${80 + audioLevel}px`,
+                opacity: Math.min(audioLevel / 100, 0.6)
+              }}
+            />
+          )}
         </div>
       </button>
     </div>

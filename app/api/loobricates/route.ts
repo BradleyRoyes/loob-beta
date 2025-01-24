@@ -1,23 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCollection } from '../../../lib/astraDb';
+import { AstraDB } from "@datastax/astra-db-ts";
+
+// Initialize AstraDB
+const astraDb = new AstraDB(
+  process.env.ASTRA_DB_APPLICATION_TOKEN!,
+  process.env.ASTRA_DB_ENDPOINT!,
+  process.env.ASTRA_DB_NAMESPACE!
+);
 
 export async function GET() {
   try {
-    const collection = await getCollection('usersandloobricates');
+    const collection = await astraDb.collection('usersandloobricates');
     
     // Fetch all documents where dataType is 'loobricate'
     const loobricates = await collection.find({
       dataType: 'loobricate'
     }).toArray();
 
-    // Map to return only necessary fields
+    // Map to return fields needed by both ChatModal and Map components
     const formattedLoobricates = loobricates.map(loobricate => ({
       id: loobricate._id,
-      name: loobricate.name || loobricate.title,
-      description: loobricate.description,
-      address: `${loobricate.addressLine1}, ${loobricate.city}`,
+      name: loobricate.name || loobricate.title || "Unnamed Loobricate",
+      description: loobricate.description || "",
+      address: loobricate.address || `${loobricate.addressLine1}, ${loobricate.city}`,
       adminUsername: loobricate.adminUsername,
-      tags: loobricate.tags || []
+      tags: loobricate.tags || [],
+      email: loobricate.email,
+      location: loobricate.location || loobricate.address || `${loobricate.addressLine1}, ${loobricate.city}`,
+      createdAt: loobricate.createdAt,
+      updatedAt: loobricate.updatedAt
     }));
 
     return NextResponse.json(formattedLoobricates);

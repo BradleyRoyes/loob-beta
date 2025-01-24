@@ -1,11 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './LoobricateProfile.css';
 import { useGlobalState } from './GlobalStateContext';
 import TorusSphere from './TorusSphere';
-import TorusSphereWeek from './TorusSphereWeek';
-import TorusSphereAll from './TorusSphereAll';
 
 interface LoobricateData {
   _id: string;
@@ -30,7 +28,6 @@ const LoobricateProfile: React.FC<Props> = ({ loobricate, onClose }) => {
   const { userId } = useGlobalState();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [visualView, setVisualView] = useState<'Today' | 'ThisWeek' | 'AllTime'>('Today');
   const [formData, setFormData] = useState({
     name: loobricate.name,
     description: loobricate.description,
@@ -102,17 +99,6 @@ const LoobricateProfile: React.FC<Props> = ({ loobricate, onClose }) => {
     }
   };
 
-  const renderVisualization = () => {
-    switch (visualView) {
-      case 'ThisWeek':
-        return <TorusSphereWeek loobricate_id={loobricate._id} />;
-      case 'AllTime':
-        return <TorusSphereAll loobricate_id={loobricate._id} />;
-      default:
-        return <TorusSphere loobricate_id={loobricate._id} />;
-    }
-  };
-
   return (
     <div className="loobricate-profile">
       <div className="loobricate-header">
@@ -121,20 +107,7 @@ const LoobricateProfile: React.FC<Props> = ({ loobricate, onClose }) => {
       </div>
 
       <div className="visualization-section">
-        <div className="visual-toggles">
-          {['Today', 'ThisWeek', 'AllTime'].map((view) => (
-            <button
-              key={view}
-              onClick={() => setVisualView(view as typeof visualView)}
-              className={visualView === view ? 'active' : ''}
-            >
-              {view}
-            </button>
-          ))}
-        </div>
-        <div className="visualization-container">
-          {renderVisualization()}
-        </div>
+        <TorusSphere loobricateId={loobricate._id} />
       </div>
 
       {isAdmin && !isEditing && (

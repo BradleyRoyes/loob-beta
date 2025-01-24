@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCollection } from '../../../lib/astraDb';
+import { AstraDB } from "@datastax/astra-db-ts";
+
+// Initialize AstraDB
+const astraDb = new AstraDB(
+  process.env.ASTRA_DB_APPLICATION_TOKEN!,
+  process.env.ASTRA_DB_ENDPOINT!,
+  process.env.ASTRA_DB_NAMESPACE!
+);
 
 // Keep track of message counts per loobricate
 const messageCounters: { [key: string]: number } = {};
@@ -14,26 +21,26 @@ const batchBuffer: { [key: string]: MessageBatch } = {};
 
 export async function POST(req: NextRequest) {
   try {
-    const collection = await getCollection('vibe_entities');
+    const collection = await astraDb.collection('usersandloobricates');
     const data = await req.json();
-    const { loobricate_id, message, timestamp } = data;
+    const { loobricateId, message, timestamp } = data;
 
     // Initialize counter and batch if needed
-    if (!messageCounters[loobricate_id]) {
-      messageCounters[loobricate_id] = 0;
+    if (!messageCounters[loobricateId]) {
+      messageCounters[loobricateId] = 0;
     }
-    if (!batchBuffer[loobricate_id]) {
-      batchBuffer[loobricate_id] = { messages: [], timestamps: [] };
+    if (!batchBuffer[loobricateId]) {
+      batchBuffer[loobricateId] = { messages: [], timestamps: [] };
     }
 
     // Add message to batch
-    batchBuffer[loobricate_id].messages.push(message);
-    batchBuffer[loobricate_id].timestamps.push(timestamp);
-    messageCounters[loobricate_id]++;
+    batchBuffer[loobricateId].messages.push(message);
+    batchBuffer[loobricateId].timestamps.push(timestamp);
+    messageCounters[loobricateId]++;
 
     // Only process when we have enough messages
-    if (messageCounters[loobricate_id] >= BATCH_SIZE) {
-      const batch = batchBuffer[loobricate_id];
+    if (messageCounters[loobricateId] >= BATCH_SIZE) {
+      const batch = batchBuffer[loobricateId];
       
       // Analyze all messages in batch
       const baseUrl = process.env.VERCEL_URL 
@@ -53,9 +60,9 @@ export async function POST(req: NextRequest) {
       if (!response.ok) throw new Error('Failed to analyze messages');
       const batchAnalysis = await response.json();
 
-      // Get current state
-      const currentEntity = await collection.findOne({ loobricate_id });
-      const currentState = currentEntity?.visual_state || {
+      // Get current state from loobricate document
+      const currentLoobricate = await collection.findOne({ _id: loobricateId });
+      const currentState = currentLoobricate?.visual_state || {
         complexity: 1,
         energy: 0.5,
         harmony: 0.5,
@@ -80,89 +87,89 @@ export async function POST(req: NextRequest) {
       );
 
       // Create evolved state with fractal-influenced changes
-      const vibeEntity = {
-        loobricate_id,
-        timestamp: batch.timestamps[batch.timestamps.length - 1],
-        visual_state: {
-          // Complexity grows based on unique keywords and conversation depth
-          complexity: Math.min(5, currentState.complexity + (keywordSet.size * 0.05)),
-          
-          // Energy influenced by mood distribution
-          energy: Math.min(1, Math.max(0.1, 
-            currentState.energy + 
+      const newVisualState = {
+        // Complexity grows based on unique keywords and conversation depth
+        complexity: Math.min(5, currentState.complexity + (keywordSet.size * 0.05)),
+        
+        // Energy influenced by mood distribution
+        energy: Math.min(1, Math.max(0.1, 
+          currentState.energy + 
+          ((moodCounts.positive || 0) * 0.1 - 
+           (moodCounts.negative || 0) * 0.05) / BATCH_SIZE
+        )),
+        
+        // Harmony builds up more slowly but persists
+        harmony: Math.min(1, currentState.harmony + 
+          batch.messages.reduce((acc, _, idx) => 
+            acc + (batchAnalysis[idx]?.joinCyberdelicSociety === 'yes' ? 0.1 : 0.01), 0
+          )
+        ),
+        
+        // Accumulate significant mutations
+        mutations: [
+          ...currentState.mutations,
+          ...batch.messages
+            .filter((_, idx) => 
+              batchAnalysis[idx]?.drink || 
+              batchAnalysis[idx]?.joinCyberdelicSociety === 'yes'
+            )
+            .map((_, idx) => ({
+              type: batchAnalysis[idx]?.drink ? 'drink' : 'join',
+              timestamp: batch.timestamps[idx]
+            }))
+        ],
+        
+        // Evolve quaternion based on conversation flow
+        quaternion: {
+          x: currentState.quaternion.x + (Math.random() * 0.1 - 0.05),
+          y: currentState.quaternion.y + (Math.random() * 0.1 - 0.05),
+          z: currentState.quaternion.z + (Math.random() * 0.1 - 0.05),
+          w: Math.max(0, Math.min(1, currentState.quaternion.w + (Math.random() * 0.1 - 0.05)))
+        },
+        
+        // Update material properties based on conversation characteristics
+        material_state: {
+          specularPower: Math.min(512, 
+            currentState.material_state.specularPower + 
+            (keywordSet.size * 16)
+          ),
+          swirlSpeed: Math.max(0.5, Math.min(3.0,
+            currentState.material_state.swirlSpeed +
             ((moodCounts.positive || 0) * 0.1 - 
              (moodCounts.negative || 0) * 0.05) / BATCH_SIZE
           )),
-          
-          // Harmony builds up more slowly but persists
-          harmony: Math.min(1, currentState.harmony + 
-            batch.messages.reduce((acc, _, idx) => 
-              acc + (batchAnalysis[idx]?.joinCyberdelicSociety === 'yes' ? 0.1 : 0.01), 0
-            )
-          ),
-          
-          // Accumulate significant mutations
-          mutations: [
-            ...currentState.mutations,
-            ...batch.messages
-              .filter((_, idx) => 
-                batchAnalysis[idx]?.drink || 
-                batchAnalysis[idx]?.joinCyberdelicSociety === 'yes'
-              )
-              .map((_, idx) => ({
-                type: batchAnalysis[idx]?.drink ? 'drink' : 'join',
-                timestamp: batch.timestamps[idx]
-              }))
-          ],
-          
-          // Evolve quaternion based on conversation flow
-          quaternion: {
-            x: currentState.quaternion.x + (Math.random() * 0.1 - 0.05),
-            y: currentState.quaternion.y + (Math.random() * 0.1 - 0.05),
-            z: currentState.quaternion.z + (Math.random() * 0.1 - 0.05),
-            w: Math.max(0, Math.min(1, currentState.quaternion.w + (Math.random() * 0.1 - 0.05)))
-          },
-          
-          // Update material properties based on conversation characteristics
-          material_state: {
-            specularPower: Math.min(512, 
-              currentState.material_state.specularPower + 
-              (keywordSet.size * 16)
-            ),
-            swirlSpeed: Math.max(0.5, Math.min(3.0,
-              currentState.material_state.swirlSpeed +
-              ((moodCounts.positive || 0) * 0.1 - 
-               (moodCounts.negative || 0) * 0.05) / BATCH_SIZE
-            )),
-            persistence: Math.min(1, 
-              currentState.material_state.persistence +
-              (batch.messages.some(
-                (_, idx) => batchAnalysis[idx]?.joinCyberdelicSociety === 'yes'
-              ) ? 0.1 : 0.02)
-            )
-          }
+          persistence: Math.min(1, 
+            currentState.material_state.persistence +
+            (batch.messages.some(
+              (_, idx) => batchAnalysis[idx]?.joinCyberdelicSociety === 'yes'
+            ) ? 0.1 : 0.02)
+          )
         }
       };
 
-      // Update database
+      // Update loobricate document directly
       await collection.updateOne(
-        { loobricate_id },
-        { $set: vibeEntity },
-        { upsert: true }
+        { _id: loobricateId },
+        { 
+          $set: { 
+            visual_state: newVisualState,
+            last_visual_update: timestamp 
+          }
+        }
       );
 
       // Reset counters and batch
-      messageCounters[loobricate_id] = 0;
-      batchBuffer[loobricate_id] = { messages: [], timestamps: [] };
+      messageCounters[loobricateId] = 0;
+      batchBuffer[loobricateId] = { messages: [], timestamps: [] };
 
       return NextResponse.json({ success: true, processed: true });
     }
 
     return NextResponse.json({ success: true, processed: false });
   } catch (error) {
-    console.error('Error updating vibe entity:', error);
+    console.error('Error updating visual state:', error);
     return NextResponse.json(
-      { error: 'Failed to update vibe entity' },
+      { error: 'Failed to update visual state' },
       { status: 500 }
     );
   }
@@ -170,57 +177,58 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const collection = await getCollection('vibe_entities');
+    const collection = await astraDb.collection('usersandloobricates');
     const url = new URL(req.url);
-    const loobricate_id = url.searchParams.get('loobricate_id');
+    const loobricateId = url.searchParams.get('loobricateId');
 
-    if (!loobricate_id) {
+    if (!loobricateId) {
       return NextResponse.json(
-        { error: 'loobricate_id is required' },
+        { error: 'loobricateId is required' },
         { status: 400 }
       );
     }
 
-    let vibeEntity = await collection.findOne({ loobricate_id });
+    const loobricate = await collection.findOne({ _id: loobricateId });
     
-    // Generate test data if entity doesn't exist
-    if (!vibeEntity) {
-      const testMutations = Array.from({ length: 10 }, (_, i) => ({
-        type: Math.random() > 0.5 ? 'drink' : 'join',
-        timestamp: new Date(Date.now() - (i * 1000 * 60)).toISOString()
-      }));
-
-      vibeEntity = {
-        loobricate_id,
-        timestamp: new Date().toISOString(),
-        visual_state: {
-          complexity: 1 + Math.random(),
-          energy: 0.3 + Math.random() * 0.4,
-          harmony: 0.3 + Math.random() * 0.4,
-          mutations: testMutations,
-          quaternion: {
-            x: Math.random() * 0.2 - 0.1,
-            y: Math.random() * 0.2 - 0.1,
-            z: Math.random() * 0.2 - 0.1,
-            w: 1
-          },
-          material_state: {
-            specularPower: 256 + Math.random() * 128,
-            swirlSpeed: 1.5 + Math.random(),
-            persistence: 0.5 + Math.random() * 0.3
-          }
+    if (!loobricate?.visual_state) {
+      // Generate initial visual state if it doesn't exist
+      const initialState = {
+        complexity: 1 + Math.random(),
+        energy: 0.3 + Math.random() * 0.4,
+        harmony: 0.3 + Math.random() * 0.4,
+        mutations: [],
+        quaternion: {
+          x: Math.random() * 0.2 - 0.1,
+          y: Math.random() * 0.2 - 0.1,
+          z: Math.random() * 0.2 - 0.1,
+          w: 1
+        },
+        material_state: {
+          specularPower: 256 + Math.random() * 128,
+          swirlSpeed: 1.5 + Math.random(),
+          persistence: 0.5 + Math.random() * 0.3
         }
       };
 
-      // Save the test entity
-      await collection.insertOne(vibeEntity);
+      // Update the loobricate with initial visual state
+      await collection.updateOne(
+        { _id: loobricateId },
+        { 
+          $set: { 
+            visual_state: initialState,
+            last_visual_update: new Date().toISOString()
+          }
+        }
+      );
+
+      return NextResponse.json({ visual_state: initialState });
     }
 
-    return NextResponse.json(vibeEntity);
+    return NextResponse.json({ visual_state: loobricate.visual_state });
   } catch (error) {
-    console.error('Error fetching vibe entity:', error);
+    console.error('Error fetching visual state:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch vibe entity' },
+      { error: 'Failed to fetch visual state' },
       { status: 500 }
     );
   }

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useGlobalState } from './GlobalStateContext';
+import './SignUp.css'; // Import the new CSS file
 
 interface LoobrarySignUpProps {
   onBack: () => void;
