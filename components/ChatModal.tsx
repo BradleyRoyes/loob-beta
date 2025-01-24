@@ -7,6 +7,15 @@ import PromptSuggestionRow from "./PromptSuggestions/PromptSuggestionsRow";
 import AudioRecorder from "./AudioRecorder";
 import "./ChatModal.css";
 
+interface Loobricate {
+  id: string;
+  name: string;
+  description: string;
+  address: string;
+  adminUsername: string;
+  tags: string[];
+}
+
 interface ChatModalProps {
   onConfigureOpen?: () => void;
   showModal?: () => void;
@@ -20,6 +29,54 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [loobricates, setLoobricates] = useState<Loobricate[]>([]);
+  const [selectedLoobricate, setSelectedLoobricate] = useState<string | null>(null);
+
+  // Fetch loobricates on component mount
+  useEffect(() => {
+    const fetchLoobricates = async () => {
+      try {
+        const response = await fetch('/api/loobricates');
+        if (!response.ok) throw new Error('Failed to fetch loobricates');
+        const data = await response.json();
+        setLoobricates(data);
+      } catch (error) {
+        console.error('Error fetching loobricates:', error);
+      }
+    };
+    fetchLoobricates();
+  }, []);
+
+  // Update vibe entity when messages change and we have a selected loobricate
+  useEffect(() => {
+    if (!selectedLoobricate || messages.length === 0) return;
+    
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage.role === 'assistant') {
+      // We only want to update on assistant responses
+      updateVibeEntity(selectedLoobricate, lastMessage.content);
+    }
+  }, [messages, selectedLoobricate]);
+
+  const updateVibeEntity = async (loobricate_id: string, message: string) => {
+    try {
+      const response = await fetch('/api/vibe_entities', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          loobricate_id,
+          message,
+          timestamp: new Date().toISOString(),
+        }),
+      });
+      
+      if (!response.ok) throw new Error('Failed to update vibe entity');
+    } catch (error) {
+      console.error('Error updating vibe entity:', error);
+    }
+  };
 
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
@@ -108,6 +165,22 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
 
   return (
     <section className="chatbot-section flex flex-col w-full max-w-md md:max-w-3xl mx-auto h-full md:h-[90vh] rounded-lg shadow-lg p-4 overflow-hidden">
+      {/* Loobricate Selector */}
+      <div className="mb-4">
+        <select
+          className="w-full p-2 rounded-md bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700"
+          value={selectedLoobricate || ""}
+          onChange={(e) => setSelectedLoobricate(e.target.value)}
+        >
+          <option value="">Select a Loobricate to influence...</option>
+          {loobricates.map((loobricate) => (
+            <option key={loobricate.id} value={loobricate.id}>
+              {loobricate.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {/* Carousel temporarily commented out
       {!messages.length && (
         <div className="overlay-carousel flex items-center justify-center mb-4 rounded-lg p-4 bg-gradient-to-r from-orange-300 to-pink-300">

@@ -30,11 +30,11 @@ const VenueProfile: React.FC<VenueProfileProps> = ({ venue, onClose }) => {
   const renderSphereForView = () => {
     switch (visualView) {
       case 'ThisWeek':
-        return <TorusSphereWeek />;
+        return <TorusSphereWeek loobricate_id={venue.id} />;
       case 'AllTime':
-        return <TorusSphereAll />;
+        return <TorusSphereAll loobricate_id={venue.id} />;
       default:
-        return <TorusSphere />;
+        return <TorusSphere loobricate_id={venue.id} />;
     }
   };
 

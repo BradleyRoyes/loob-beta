@@ -28,7 +28,7 @@ interface GearProfileProps {
 const GearProfile: React.FC<GearProfileProps> = ({ gear, onClose }) => {
   // State for slider value and transitioning visuals
   const [sliderValue, setSliderValue] = useState(0);
-  const [fadeVisual, setFadeVisual] = useState<JSX.Element>(<TorusSphere />);
+  const [fadeVisual, setFadeVisual] = useState<JSX.Element>(<TorusSphere loobricate_id={gear.id} />);
   const [nextVisual, setNextVisual] = useState<JSX.Element | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -37,9 +37,9 @@ const GearProfile: React.FC<GearProfileProps> = ({ gear, onClose }) => {
     const newValue = Number(e.target.value);
 
     // Set the next visual based on slider value
-    if (newValue === 0) setNextVisual(<TorusSphere />);
-    else if (newValue === 1) setNextVisual(<TorusSphereWeek />);
-    else if (newValue === 2) setNextVisual(<TorusSphereAll />);
+    if (newValue === 0) setNextVisual(<TorusSphere loobricate_id={gear.id} />);
+    else if (newValue === 1) setNextVisual(<TorusSphereWeek loobricate_id={gear.id} />);
+    else if (newValue === 2) setNextVisual(<TorusSphereAll loobricate_id={gear.id} />);
 
     setSliderValue(newValue);
   };

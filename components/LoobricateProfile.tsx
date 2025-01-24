@@ -105,11 +105,11 @@ const LoobricateProfile: React.FC<Props> = ({ loobricate, onClose }) => {
   const renderVisualization = () => {
     switch (visualView) {
       case 'ThisWeek':
-        return <TorusSphereWeek />;
+        return <TorusSphereWeek loobricate_id={loobricate._id} />;
       case 'AllTime':
-        return <TorusSphereAll />;
+        return <TorusSphereAll loobricate_id={loobricate._id} />;
       default:
-        return <TorusSphere />;
+        return <TorusSphere loobricate_id={loobricate._id} />;
     }
   };
 

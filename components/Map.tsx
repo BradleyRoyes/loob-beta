@@ -11,8 +11,8 @@ import maplibregl, { Marker } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./Map.css";
 
-// Child components (you already have these)
-import TorusSphere from "./TorusSphere";
+// Child components with their prop types
+import TorusSphere, { TorusSphereProps } from "./TorusSphere";
 import TorusSphereWeek from "./TorusSphereWeek";
 import TorusSphereAll from "./TorusSphereAll";
 import VenueProfile from "./VenueProfile";
@@ -255,7 +255,7 @@ useEffect(() => {
   
       const screenPos = map.project([node.lon, node.lat]);
       setPopupPosition({
-        x: screenPos.x, // Align popup directly over the node
+        x: screenPos.x,
         y: screenPos.y,
       });
     });
@@ -282,11 +282,11 @@ useEffect(() => {
   const renderSphereForNode = (node: Node) => {
     switch (node.visualType) {
       case "ThisWeek":
-        return <TorusSphereWeek />;
+        return <TorusSphereWeek loobricate_id={node.id} />;
       case "AllTime":
-        return <TorusSphereAll />;
+        return <TorusSphereAll loobricate_id={node.id} />;
       default:
-        return <TorusSphere />;
+        return <TorusSphere loobricate_id={node.id} />;
     }
   };
 

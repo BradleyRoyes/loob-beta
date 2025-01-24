@@ -106,40 +106,31 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     <AnimatePresence>
       <motion.div
         className={`splashScreen ${phase === "fadeOut" ? "fadeOut" : ""}`}
-        initial={{ opacity: 1 }}
+        initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 1 }}
+        transition={{ duration: 2 }}
       >
         {/* Background grid */}
         <div className="gridBackground"></div>
         {phase === "introPhase" && (
-  <motion.div
-    className="content intro centeredContainer"
-    initial={{ opacity: 1 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    transition={{ duration: 1 }}
-  >
-    <Image 
-      src="/favicon.ico"
-      alt="Loob Logo"
-      width={500}
-      height={300}
-    />
-  </motion.div>
-)}
-
+          <div className="content intro centeredContainer">
+            <div className="logoContainer">
+              <Image 
+                src="/favicon.ico"
+                alt="Loob Logo"
+                width={96}
+                height={96}
+                className="introLogo"
+                priority
+              />
+            </div>
+          </div>
+        )}
 
         {/* Login Phase */}
         {phase === "loginPhase" && (
-          <motion.div
-            className="content login"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1 }}
-          >
+          <div className="content login">
             <h1 className="mainTitle">Loob</h1>
             <h2 className="superSubtitle">Reducing Friction</h2>
             <div className="inputContainer">
@@ -160,15 +151,9 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 disabled={loading}
               />
               {loginError && (
-                <motion.p
-                  className="error"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
+                <p className="error">
                   {loginError}
-                </motion.p>
+                </p>
               )}
               <div className="buttonGroup">
                 <button
@@ -194,23 +179,17 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 Stay Anonymous
               </button>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Sign-Up Phase */}
         {phase === "signupPhase" && (
-          <motion.div
-            className="content signup"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1 }}
-          >
+          <div className="content signup">
             <LoobrarySignUp
               onBack={() => setPhase("loginPhase")}
               onExplore={handleSignUpComplete}
             />
-          </motion.div>
+          </div>
         )}
       </motion.div>
     </AnimatePresence>
