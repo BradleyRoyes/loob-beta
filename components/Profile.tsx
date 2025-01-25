@@ -115,20 +115,33 @@ const Profile: React.FC = () => {
           <TorusSphere loobricateId={userId || 'default'} />
         </div>
 
-        {/* Daily Dump and Daily Challenge Buttons */}
-        <div className="daily-buttons-container">
-          <button 
-            className="daily-dump-button"
-            onClick={() => setShowDailyDump(true)}
-          >
-            Daily Dump
-          </button>
-          <button 
-            className="daily-challenge-button"
-            onClick={() => alert('Feature coming soon!')}
-          >
-            Daily Challenge
-          </button>
+        {/* Daily Section */}
+        <div className="daily-section">
+          <div className="daily-buttons-container">
+            <div className="daily-button">
+              <button 
+                className="daily-button-main"
+                onClick={() => setShowDailyDump(true)}
+              >
+                Daily Dump
+              </button>
+              <div className="daily-description">
+                Share thoughts and goals to help Loob understand you better.
+              </div>
+            </div>
+
+            <div className="daily-button">
+              <button 
+                className="daily-button-main"
+                onClick={() => alert('Feature coming soon!')}
+              >
+                Daily Quest
+              </button>
+              <div className="daily-description">
+                Get personalized daily quests based on your interests and goals.
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Only show these sections if not anonymous */}
@@ -205,7 +218,7 @@ const Profile: React.FC = () => {
           </>
         )}
 
-        {/* Move buttons to bottom */}
+        {/* Bottom buttons */}
         <div className="buttons-container">
           <div className="button-group">
             <button className="logout-button" onClick={handleLogOut}>

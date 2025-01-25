@@ -179,23 +179,3 @@ input::placeholder {
     padding: 3rem 0.5rem;
   }
 }
-
-/* Add this to your globals.css */
-.daily-dump-button {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0.5rem 1rem;
-  font-size: var(--font-size-default);
-  font-weight: 600;
-  color: var(--text-primary);
-  background: linear-gradient(to right, #4f46e5, #6b5bff); /* Blue gradient */
-  border: none;
-  border-radius: var(--border-radius-default);
-  cursor: pointer;
-  transition: background 0.3s, transform 0.2s;
-}
-
-.daily-dump-button:hover {
-  background: linear-gradient(to right, #3b3f9a, #5a5fdb); /* Darker blue on hover */
-}

@@ -81,7 +81,7 @@ const DailyDump: React.FC<DailyDumpProps> = ({ onClose }) => {
           <div className="flex gap-2">
             <button
               onClick={() => setShowArchive(true)}
-              className="px-4 py-2 daily-challenge-button"
+              className="px-4 py-2 bg-gradient-to-r from-[#ffb48f] to-[#ff9f7f] text-white rounded-lg hover:from-[#ff9f7f] hover:to-[#ff8b6b] transition-all"
             >
               View Archive
             </button>
