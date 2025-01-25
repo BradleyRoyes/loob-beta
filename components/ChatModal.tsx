@@ -172,7 +172,7 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
       {/* Loobricate Selector */}
       <div className="mb-0">
         <select
-          className="w-3/4 p-0 rounded-md bg-[#333] text-white border-none"
+          className="loobricate-select w-3/4 p-0 rounded-md bg-[#333] text-white border-none"
           value={selectedLoobricate || ""}
           onChange={(e) => setSelectedLoobricate(e.target.value)}
         >

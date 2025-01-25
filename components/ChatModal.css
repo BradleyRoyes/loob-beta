@@ -284,6 +284,10 @@ html, body {
   .base-button {
     padding: 0.4rem 0.8rem;
   }
+
+  .loobricate-select {
+    width: 40%; /* Set the dropdown width to 40% on mobile */
+  }
 }
 
 .chatbot-controls {
