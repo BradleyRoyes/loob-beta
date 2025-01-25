@@ -30,6 +30,14 @@ interface MapSidebarProps {
   toggleSidebar: () => void;
 }
 
+// Add type constants at the top of the file
+const NODE_TYPES = {
+  VENUE: "Venue",
+  TALENT: "Talent",
+  GEAR: "Gear",
+  LOOBRICATE: "Loobricate"
+} as const;
+
 /**
  * MapSidebar Component
  */
@@ -41,7 +49,8 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
   toggleSidebar,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedType, setSelectedType] = useState<string | "All">("Loobricate");
+  const [selectedLoobricate, setSelectedLoobricate] = useState<string>("");
+  const [selectedType, setSelectedType] = useState<string>("");
   const [loobricates, setLoobricates] = useState<any[]>([]);
 
   // Fetch loobricates when sidebar is active
@@ -58,35 +67,45 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
       }
     };
 
-    if (sidebarActive && selectedType === 'Loobricate') {
+    if (sidebarActive) {
       fetchLoobricates();
     }
-  }, [sidebarActive, selectedType]);
+  }, [sidebarActive]);
 
-  /**
-   * Memoized filtered nodes based on search query and selected type.
-   */
+  // Memoized filtered nodes based on selected loobricate and type
   const filteredNodes = useMemo(() => {
-    if (selectedType === 'Loobricate') {
-      return loobricates.map(loobricate => ({
-        id: loobricate.id,
-        label: loobricate.name,
-        details: loobricate.description,
-        type: 'Loobricate',
-        lat: 52.52, // Default to Berlin center
-        lon: 13.405,
-        contact: loobricate.address || 'No contact info',
-        visualType: 'Today' as const,
-        loobricate: loobricate.name
-      }));
-    }
+    console.log("Current nodes:", nodes);
+    console.log("Selected type:", selectedType);
+    console.log("Selected loobricate:", selectedLoobricate);
 
-    return nodes.filter((node) => {
-      const matchesType = selectedType === "All" || node.type.toLowerCase() === selectedType.toLowerCase();
+    const result = nodes.filter((node) => {
+      // Match Loobricate selection
+      const matchesLoobricate = !selectedLoobricate || 
+        selectedLoobricate === "All" || 
+        node.loobricate === selectedLoobricate;
+
+      // Match type selection - ensure exact match with our constants
+      const matchesType = !selectedType || 
+        node.type.toLowerCase() === selectedType.toLowerCase();
+
+      // Match search query
       const matchesSearch = node.label.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesType && matchesSearch;
+
+      // Debug log for each node
+      console.log("Node:", {
+        id: node.id,
+        type: node.type,
+        matchesType,
+        matchesLoobricate,
+        matchesSearch
+      });
+
+      return matchesLoobricate && matchesType && matchesSearch;
     });
-  }, [nodes, loobricates, searchQuery, selectedType]);
+
+    console.log("Filtered result:", result);
+    return result;
+  }, [nodes, searchQuery, selectedLoobricate, selectedType]);
 
   /**
    * Handles the selection of a node.
@@ -102,7 +121,12 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
    * Toggles the selected type filter.
    */
   const handleTypeSelection = (type: string) => {
-    setSelectedType(type === selectedType ? "All" : type);
+    console.log("Selecting type:", type);
+    setSelectedType(prevType => {
+      const newType = prevType === type ? "" : type;
+      console.log("New selected type:", newType);
+      return newType;
+    });
   };
 
   return (
@@ -124,22 +148,31 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
           </button>
           
           <div className="search-by-container">
-            <h3 className="search-by-title">Search by...</h3>
+            <h3 className="search-by-title">Explore your Loobrary</h3>
+            <select
+              className="explore-dropdown"
+              value={selectedLoobricate}
+              onChange={(e) => setSelectedLoobricate(e.target.value)}
+            >
+              <option value="">Select Loobricate</option>
+              <option value="All">All Loobricates</option>
+              {loobricates.map(loobricate => (
+                <option key={loobricate.id} value={loobricate.name}>
+                  {loobricate.name}
+                </option>
+              ))}
+            </select>
             <div className="search-by-icons">
-              {["Loobricate", "Venue", "Talent", "Gear"].map((type) => (
+              {[NODE_TYPES.VENUE, NODE_TYPES.TALENT, NODE_TYPES.GEAR].map((type) => (
                 <div
                   key={type}
-                  className={`search-icon ${
-                    selectedType === type ? "active" : ""
-                  } ${type === "Loobricate" ? "loobricate" : ""}`}
+                  className={`search-icon ${selectedType === type ? "active" : ""}`}
                   onClick={() => handleTypeSelection(type)}
                   aria-label={type}
                 >
-                  {type === "Loobricate" ? (
-                    <FaUsers className="icon" />
-                  ) : type === "Venue" ? (
+                  {type === NODE_TYPES.VENUE ? (
                     <FaMapMarkerAlt className="icon" />
-                  ) : type === "Talent" ? (
+                  ) : type === NODE_TYPES.TALENT ? (
                     <FaUser className="icon" />
                   ) : (
                     <FaTools className="icon" />
@@ -154,7 +187,7 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
             <input
               type="text"
               className="sidebar-input"
-              placeholder="Search for a Loobricate, venue, gear, artist..."
+              placeholder="Search for a venue, gear, artist..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />

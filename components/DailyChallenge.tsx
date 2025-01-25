@@ -36,7 +36,7 @@ const DailyChallenge: React.FC = () => {
 
   useEffect(() => {
     fetchChallenge();
-  }, []);
+  }, [fetchChallenge]);
 
   const handleRefresh = () => {
     fetchChallenge();
@@ -73,7 +73,7 @@ const DailyChallenge: React.FC = () => {
       {challenge && (
         <div className="space-y-4">
           <p className="text-gray-200 text-lg">
-            If I were you, I'd focus on{' '}
+            If I were you, I&apos;d focus on{' '}
             <span className="font-medium text-purple-400">
               {challenge.text}
             </span>{' '}

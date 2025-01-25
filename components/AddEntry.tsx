@@ -167,10 +167,9 @@ const AddEntry: React.FC = () => {
   };
 
   // Create a debounced version of searchAddresses
-  const debouncedSearch = useCallback(
-    debounce((query: string) => searchAddresses(query), 300),
-    []
-  );
+  const debouncedSearch = useCallback((query: string) => {
+    searchAddresses(query);
+  }, [searchAddresses]);
 
   // Update handleAddressChange to use the ref
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {

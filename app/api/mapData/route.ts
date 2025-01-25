@@ -41,34 +41,58 @@ interface MapDataQuery {
 export async function GET(request: Request) {
   try {
     const libraryCollection = await getLibraryCollection();
-
-    // Parse query parameters
     const url = new URL(request.url);
     const loobricateParam = url.searchParams.get('loobricate');
 
-    // Build the query object
-    let query: MapDataQuery = { dataType: 'userEntry' };
-
+    let query: MapDataQuery = {};
     if (loobricateParam) {
-      // Use the appropriate operator to query array fields.
-      // Depending on AstraDB's query syntax, this might vary.
-      // Assuming it uses MongoDB-like operators:
       query.loobricates = loobricateParam;
     }
 
-    // Fetch documents based on the query
     const documents = await libraryCollection.find(query).toArray();
 
-    // Normalize data: ensure 'loobricates' is always an array
-    const normalizedDocuments = documents.map(doc => ({
-      ...doc,
-      loobricates: Array.isArray(doc.loobricates) ? doc.loobricates : [],
-    }));
+    // Normalize data and ensure proper type assignment
+    const normalizedDocuments = documents.map(doc => {
+      // Ensure the type field is properly capitalized and matches our constants
+      let normalizedType = doc.type || doc.offeringType || "Unknown";
+      if (typeof normalizedType === 'string') {
+        normalizedType = normalizedType.charAt(0).toUpperCase() + normalizedType.slice(1).toLowerCase();
+      }
 
-    // Return the documents
+      // Generate random Berlin coordinates if none exist
+      const coordinates = doc.lat && doc.lon ? { lat: doc.lat, lon: doc.lon } : getRandomBerlinLocation();
+
+      return {
+        ...doc,
+        ...coordinates,
+        type: normalizedType,
+        loobricates: Array.isArray(doc.loobricates) ? doc.loobricates : [],
+        isLoobricate: normalizedType === "Loobricate"
+      };
+    });
+
+    console.log("Normalized documents:", normalizedDocuments);
     return NextResponse.json(normalizedDocuments, { status: 200 });
   } catch (error) {
     console.error('Error in GET /api/mapData:', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
+}
+
+function getRandomBerlinLocation() {
+  return {
+    lat: 52.52 + (Math.random() - 0.5) * 0.1,
+    lon: 13.405 + (Math.random() - 0.5) * 0.1
+  };
+}
+
+function generateClusterPoints(center: { lat: number; lon: number }, count: number): Array<{ lat: number; lon: number }> {
+  const points: Array<{ lat: number; lon: number }> = [];
+  for (let i = 0; i < count; i++) {
+    points.push({
+      lat: center.lat + (Math.random() - 0.5) * 0.01,
+      lon: center.lon + (Math.random() - 0.5) * 0.01
+    });
+  }
+  return points;
 }

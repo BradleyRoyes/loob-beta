@@ -33,6 +33,10 @@ export interface Node {
   updatedAt?: string;  // Add these as optional
 }
 
+interface MapNode extends Node {
+  isLoobricate?: boolean;
+}
+
 // Berlin center (longitude, latitude)
 const DEFAULT_LOCATION: [number, number] = [13.405, 52.52];
 
@@ -44,7 +48,7 @@ const Map: React.FC = () => {
   const markersRef = useRef<Marker[]>([]);
 
   // Our array of nodes from DB
-  const [nodes, setNodes] = useState<Node[]>([]);
+  const [nodes, setNodes] = useState<MapNode[]>([]);
 
   // Current user geolocation
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
@@ -63,6 +67,9 @@ const Map: React.FC = () => {
 
   // Sidebar logic
   const [sidebarActive, setSidebarActive] = useState(() => window.innerWidth > 768);
+
+  // Add new state for loading
+  const [isMapLoading, setIsMapLoading] = useState(true);
 
   /**
    * 1) On mount, fetch data from /api/mapData
@@ -87,7 +94,7 @@ const Map: React.FC = () => {
           return [lon, lat];
         }
 
-        const newNodes: Node[] = data.map((entry: any) => {
+        const newNodes: MapNode[] = data.map((entry: any) => {
           const [lon, lat] = getRandomCoordsNearBerlin();
 
           return {
@@ -99,6 +106,7 @@ const Map: React.FC = () => {
             details: entry.description ?? "No description provided.",
             contact: entry.email ? `mailto:${entry.email}` : "No contact info",
             visualType: "Today",
+            isLoobricate: entry.offeringType === 'Loobricate' // Check if it's a loobricate
           };
         });
 
@@ -126,6 +134,8 @@ const Map: React.FC = () => {
 useEffect(() => {
   if (!mapContainerRef.current || mapInstanceRef.current) return;
 
+  setIsMapLoading(true);
+
   const map = new maplibregl.Map({
     container: mapContainerRef.current,
     style: {
@@ -135,7 +145,9 @@ useEffect(() => {
           type: "raster",
           tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
           tileSize: 256,
-          attribution: 'Map data © <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors.',
+          attribution: '© OpenStreetMap contributors',
+          maxzoom: 19,
+          minzoom: 4,
         },
       },
       layers: [
@@ -150,17 +162,61 @@ useEffect(() => {
     },
     center: DEFAULT_LOCATION,
     zoom: 12,
-    pitch: 45, // Adjust this for tilt (higher is more tilted)
-    bearing: -20, // Adjust this for rotation
+    pitch: 45,
+    bearing: -20,
+    maxBounds: [[-10, 35], [40, 65]], // Restrict to Europe
+    minZoom: 4,
+    maxZoom: 19,
+    fadeDuration: 0, // Prevent fade animation
   });
-  
 
   mapInstanceRef.current = map;
 
-  // Add grayscale effect to the map on load
-  map.on("load", () => {
+  let tilesLoaded = false;
+  let styleLoaded = false;
+
+  const checkIfFullyLoaded = () => {
+    if (tilesLoaded && styleLoaded) {
+      setIsMapLoading(false);
+    }
+  };
+
+  map.on('load', () => {
     map.getCanvas().style.filter = "grayscale(100%)";
+    styleLoaded = true;
+    checkIfFullyLoaded();
   });
+
+  map.on('idle', () => {
+    tilesLoaded = true;
+    checkIfFullyLoaded();
+  });
+
+  map.on('error', () => {
+    console.error('Map loading error');
+    setIsMapLoading(false);
+  });
+
+  // Preload surrounding tiles
+  const preloadTiles = () => {
+    const center = map.getCenter();
+    const zoom = map.getZoom();
+    
+    // Force load surrounding tiles
+    for (let i = -1; i <= 1; i++) {
+      for (let j = -1; j <= 1; j++) {
+        const lat = center.lat + (i * 0.1);
+        const lng = center.lng + (j * 0.1);
+        map.setCenter([lng, lat]);
+      }
+    }
+    
+    // Reset to original position
+    map.setCenter([center.lng, center.lat]);
+    map.setZoom(zoom);
+  };
+
+  map.on('load', preloadTiles);
 
   // Hide the modal when the map moves
   map.on("move", () => {
@@ -171,7 +227,6 @@ useEffect(() => {
   // Attempt to get user location once
   getUserLocation(map);
 
-  // Cleanup if unmounted
   return () => {
     map.remove();
     mapInstanceRef.current = null;
@@ -193,7 +248,7 @@ useEffect(() => {
     // Add new markers
     nodes.forEach((node) => {
       const markerEl = document.createElement("div");
-      markerEl.className = "map-marker";
+      markerEl.className = `map-marker ${node.isLoobricate ? 'loobricate' : ''}`;
 
       const marker = new maplibregl.Marker({ element: markerEl })
         .setLngLat([node.lon, node.lat])
@@ -291,7 +346,7 @@ useEffect(() => {
     }
     const [lon, lat] = currentLocation;
 
-    const newNode: Node = {
+    const newNode: MapNode = {
       id: `Node-${Date.now()}`,
       lat,
       lon,
@@ -339,6 +394,12 @@ useEffect(() => {
   return (
     <div className="map-container">
       <div ref={mapContainerRef} className="map-layer" />
+
+      {isMapLoading && (
+        <div className="map-loading-overlay">
+          <div className="map-spinner" />
+        </div>
+      )}
 
       <MapSidebar
         nodes={nodes}
