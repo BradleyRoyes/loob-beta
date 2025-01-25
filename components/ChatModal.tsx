@@ -169,32 +169,6 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
 
   return (
     <section className="chatbot-section flex flex-col w-full max-w-md md:max-w-3xl mx-auto h-full md:h-[90vh] rounded-lg shadow-lg p-2 overflow-hidden">
-      {/* Loobricate Selector */}
-      <div className="mb-0">
-        <select
-          className="loobricate-select w-3/4 p-0 rounded-md bg-[#333] text-white border-none"
-          value={selectedLoobricate || ""}
-          onChange={(e) => setSelectedLoobricate(e.target.value)}
-        >
-          <option value="" className="p-0">Select a Loobricate to influence...</option>
-          {loobricates.map((loobricate) => (
-            <option key={loobricate.id} value={loobricate.id} className="p-0">
-              {loobricate.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Carousel temporarily commented out
-      {!messages.length && (
-        <div className="overlay-carousel flex items-center justify-center mb-4 rounded-lg p-4 bg-gradient-to-r from-orange-300 to-pink-300">
-          <Carousel>
-            ...
-          </Carousel>
-        </div>
-      )}
-      */}
-
       {/* Chat Messages Section */}
       <div 
         ref={messagesContainerRef}
@@ -208,7 +182,7 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
                 key="intro-message"
                 content={{
                   role: "system",
-                  content: "Hi there! I'm Loob. Ask me about planning your event—gear, venues, talent, and more!",
+                  content: "Hi there! I'm Loob. Ask me about planning an event—gear, venues, or talent.",
                 }}
               />
             </div>
@@ -274,8 +248,8 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
         />
       </div>
 
-      {/* Input and Send Button */}
-      <div className="flex gap-2 mt-auto">
+      {/* Input, Send Button, and Loobricate Selector */}
+      <div className="flex flex-col gap-2 mt-auto">
         <form className="flex w-full gap-2" onSubmit={handleSend}>
           <input
             onChange={handleInputChange}
@@ -294,6 +268,20 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
             Send
           </button>
         </form>
+        
+        {/* Loobricate Selector - Now below input */}
+        <select
+          className="loobricate-select-compact w-full p-1 text-sm rounded-md bg-[#333] text-white border-none"
+          value={selectedLoobricate || ""}
+          onChange={(e) => setSelectedLoobricate(e.target.value)}
+        >
+          <option value=""> - Select Loobricate to influence... </option>
+          {loobricates.map((loobricate) => (
+            <option key={loobricate.id} value={loobricate.id}>
+              {loobricate.name}
+            </option>
+          ))}
+        </select>
       </div>
     </section>
   );

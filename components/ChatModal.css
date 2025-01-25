@@ -285,8 +285,9 @@ html, body {
     padding: 0.4rem 0.8rem;
   }
 
-  .loobricate-select {
-    width: 40%; /* Set the dropdown width to 40% on mobile */
+  .loobricate-select-compact {
+    font-size: 0.75rem;
+    height: 1.75rem;
   }
 }
 
@@ -429,4 +430,19 @@ html, body {
   opacity: 0;
   transform: translateY(10px);
   transition: opacity 200ms, transform 200ms;
+}
+
+/* Add these styles */
+.loobricate-select-compact {
+  font-size: 0.875rem;
+  height: 2rem;
+  background-color: var(--background-secondary);
+  border: 1px solid var(--border-primary);
+  cursor: pointer;
+  padding-left: 10px;
+}
+
+.loobricate-select-compact option {
+  padding: 4px;
+  background-color: var(--background-secondary);
 }
