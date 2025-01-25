@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FaMapMarkerAlt, FaUser, FaTools, FaUsers } from 'react-icons/fa';
 import './AddEntry.css';
 import { useGlobalState } from '../components/GlobalStateContext';
@@ -92,6 +92,9 @@ const AddEntry: React.FC = () => {
   // Add state for success message
   const [successMessage, setSuccessMessage] = useState<string>('');
 
+  // Create a ref for the address input
+  const addressInputRef = useRef<HTMLInputElement | null>(null);
+
   // Fetch available Loobricates on component mount
   useEffect(() => {
     const fetchLoobricates = async () => {
@@ -169,29 +172,39 @@ const AddEntry: React.FC = () => {
     []
   );
 
-  // Update handleAddressChange to be more responsive
+  // Update handleAddressChange to use the ref
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setFormData(prev => ({ ...prev, location: value }));
-    
-    // Don't block the input, just trigger the search
+
     if (value.length >= 3) {
       setIsSearching(true);
       debouncedSearch(value);
     } else {
       setAddressSuggestions([]);
     }
+
+    // Refocus the input to prevent losing focus
+    if (addressInputRef.current) {
+      addressInputRef.current.focus();
+    }
   };
 
   // Update the handleSuggestionClick function
-  const handleSuggestionClick = async (suggestion: AddressSuggestion) => {
+  const handleSuggestionClick = async (suggestion: AddressSuggestion, e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent default behavior
     setFormData(prev => ({
-      ...prev,
-      location: suggestion.display_name,
-      latitude: parseFloat(suggestion.lat),
-      longitude: parseFloat(suggestion.lon)
+        ...prev,
+        location: suggestion.display_name,
+        latitude: parseFloat(suggestion.lat),
+        longitude: parseFloat(suggestion.lon)
     }));
     setAddressSuggestions([]);
+
+    // Refocus the input using the ref
+    if (addressInputRef.current) {
+      addressInputRef.current.focus();
+    }
   };
 
   // Update form data state when an input changes
@@ -248,7 +261,7 @@ const AddEntry: React.FC = () => {
     setFormData((prev) => ({ ...prev, offeringType: type.toLowerCase() }));
   };
 
-  // Define AddressInput as a nested component
+  // Update the AddressInput component to use the ref
   const AddressInput = () => (
     <div className="address-input-container">
       <input
@@ -259,6 +272,7 @@ const AddEntry: React.FC = () => {
         onChange={handleAddressChange}
         className="form-input"
         required
+        ref={addressInputRef}
       />
       {isSearching && (
         <div className="search-indicator">Searching...</div>
@@ -269,7 +283,7 @@ const AddEntry: React.FC = () => {
             <li
               key={index}
               className="suggestion-item"
-              onClick={() => handleSuggestionClick(suggestion)}
+              onClick={(e) => handleSuggestionClick(suggestion, e)}
             >
               {suggestion.display_name}
             </li>

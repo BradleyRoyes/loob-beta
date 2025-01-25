@@ -17,6 +17,7 @@
     "@babylonjs/loaders": "^7.45.0",
     "@babylonjs/materials": "^7.45.0",
     "@babylonjs/procedural-textures": "^7.35.1",
+    "@chainsafe/persistent-merkle-tree": "^1.0.1",
     "@datastax/astra-db-ts": "^0.1.4",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@geist-ui/core": "^2.3.8",
