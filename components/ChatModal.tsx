@@ -168,17 +168,17 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
   };
 
   return (
-    <section className="chatbot-section flex flex-col w-full max-w-md md:max-w-3xl mx-auto h-full md:h-[90vh] rounded-lg shadow-lg p-4 overflow-hidden">
+    <section className="chatbot-section flex flex-col w-full max-w-md md:max-w-3xl mx-auto h-full md:h-[90vh] rounded-lg shadow-lg p-2 overflow-hidden">
       {/* Loobricate Selector */}
-      <div className="mb-4">
+      <div className="mb-0">
         <select
-          className="w-full p-2 rounded-md bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700"
+          className="w-3/4 p-0 rounded-md bg-[#333] text-white border-none"
           value={selectedLoobricate || ""}
           onChange={(e) => setSelectedLoobricate(e.target.value)}
         >
-          <option value="">Select a Loobricate to influence...</option>
+          <option value="" className="p-0">Select a Loobricate to influence...</option>
           {loobricates.map((loobricate) => (
-            <option key={loobricate.id} value={loobricate.id}>
+            <option key={loobricate.id} value={loobricate.id} className="p-0">
               {loobricate.name}
             </option>
           ))}

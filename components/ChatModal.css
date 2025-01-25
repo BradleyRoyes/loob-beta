@@ -255,12 +255,11 @@ html, body {
 
 @media (max-width: 640px) {
   .chatbot-section {
-    margin: 0;
     padding: 0.5rem;
   }
 
   .chatbot-header h1 {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
   }
 
   .chatbot-input-container {
@@ -270,11 +269,20 @@ html, body {
   }
 
   .chatbot-input {
-    margin-right: 0;
+    padding: 0.5rem;
   }
 
   .audio-recorder-container {
     position: static;
+  }
+
+  .chatbot-section select {
+    font-size: 0.75rem;
+    padding: 0;
+  }
+
+  .base-button {
+    padding: 0.4rem 0.8rem;
   }
 }
 
