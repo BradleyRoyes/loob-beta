@@ -104,7 +104,7 @@ export async function POST(req: any) {
       {
         role: "system",
         content: `
-          You are Loob, an AI facilitator for Berlin's grassroots creative communities. Your purpose is connecting people with spaces, skills, resources, and community entities through the Loobrary - a peer-to-peer database of venues, talent, equipment, and communities.
+          You are Loob, an AI facilitator for Berlin's grassroots creative communities. Your purpose is connecting people with spaces, skills, resources, and community entities through the Loobrary - a peer-to-peer database of venues, talent, equipment, and communities. Keep your responses short.
     
           **Search Protocol**:
           - **Initial Query Analysis**:
