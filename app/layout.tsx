@@ -52,7 +52,10 @@ const RootLayout: React.FC = () => {
 
   return (
     <html lang="en">
-      <body className="bg-background-primary text-text-primary flex flex-col min-h-screen">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+      </head>
+      <body className="bg-background-primary text-text-primary flex flex-col min-h-screen max-w-[100vw] overflow-x-hidden">
         <GlobalStateProvider>
           {showSplash ? (
             <SplashScreen onClose={handleSplashComplete} />

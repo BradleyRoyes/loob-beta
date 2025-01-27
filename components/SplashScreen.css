@@ -13,12 +13,14 @@
   overflow: hidden; /* Prevent scrollbars */
   z-index: 1000; /* Ensure it stays on top */
   transition: opacity 0.3s ease;
+  font-size: calc(14px + 0.390625vw); /* Fluid typography */
+  padding: 1rem;
 }
 
 /* Content Styling */
 .splashScreen .content {
   text-align: center;
-  padding: 20px;
+  padding: 1rem;
   max-width: 500px;
   width: 90%;
   animation: fadeIn 1s ease-in-out; /* Smooth fade-in effect */
@@ -246,6 +248,9 @@
   /* Your content styles */
   opacity: 1;
   transition: opacity 1s ease-in-out;
+  width: 90%;
+  max-width: 500px;
+  padding: 1rem;
 }
 
 .content.fadeOut {
@@ -330,10 +335,15 @@
   background: linear-gradient(45deg, #FFE4E1, #FFD5C8); /* Pastel flesh tones */
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  font-size: clamp(1.25rem, 4vw, 1.5rem); /* Responsive font size */
+  line-height: 1.2;
 }
 
 .splashScreen button {
   background: linear-gradient(45deg, #FFE4E1, #FFD5C8); /* Matching flesh tones */
+  padding: 0.75rem 1.25rem;
+  font-size: clamp(0.875rem, 3vw, 1rem);
+  min-height: 44px; /* Touch-friendly */
 }
 
 /* Update the wave animation color */
@@ -372,4 +382,22 @@
   height: 100vh;
   width: 100vw;
   position: relative;
+}
+
+/* Update animations for better performance */
+@media (prefers-reduced-motion: reduce) {
+  .waveLine {
+    animation: none;
+  }
+  
+  .splashScreen button {
+    transition: none;
+  }
+}
+
+/* Optimize touch targets */
+.buttonContainer button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.75rem 1rem;
 }

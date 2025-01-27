@@ -30,6 +30,10 @@ module.exports = {
         xl: '1.5rem',
         '2xl': '2rem',
         header: '4rem', // Custom header height for offset
+        'safe-top': 'env(safe-area-inset-top)',
+        'safe-bottom': 'env(safe-area-inset-bottom)',
+        'safe-left': 'env(safe-area-inset-left)',
+        'safe-right': 'env(safe-area-inset-right)',
       },
       colors: {
         primary: '#2563EB',
@@ -47,7 +51,7 @@ module.exports = {
         },
       },
       screens: {
-        xs: '360px',
+        'xs': '360px',
         sm: '480px',
         md: '768px',
         lg: '1024px',

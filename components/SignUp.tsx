@@ -143,7 +143,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
   // Render Phase 2: Email and Phone Number
   const renderPhase2 = () => (
     <>
-      <h2 className="title">Contact Information</h2>
+      <h2 className="title">Contact Info</h2>
       <p className="description">Email so we can contact you about your Loobrary card. Phone number if you want to join our Telegram group.</p>
       <form>
         <input
