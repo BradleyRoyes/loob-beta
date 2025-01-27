@@ -255,23 +255,26 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
             onChange={handleInputChange}
             value={input}
             disabled={inputDisabled}
-            className={`chatbot-input flex-1 text-sm md:text-base outline-none bg-gray-100 rounded-md p-3 
-              ${inputDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`chatbot-input flex-1 text-base md:text-base outline-none bg-gray-100 rounded-md p-3 
+              ${inputDisabled ? 'opacity-50 cursor-not-allowed' : ''} 
+              no-zoom-fix`}
             placeholder={inputDisabled ? 'Processing...' : 'Send a message...'}
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck="false"
           />
           <button 
             type="submit" 
             disabled={!input.trim() || inputDisabled}
-            className={`base-button primary whitespace-nowrap transition-all
+            className={`base-button primary whitespace-nowrap transition-all touch-target
               ${(!input.trim() || inputDisabled) ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
           >
             Send
           </button>
         </form>
         
-        {/* Loobricate Selector - Now below input */}
         <select
-          className="loobricate-select-compact w-full p-1 text-sm rounded-md bg-[#333] text-white border-none"
+          className="loobricate-select-compact w-full p-1 text-base rounded-md bg-[#333] text-white border-none touch-target"
           value={selectedLoobricate || ""}
           onChange={(e) => setSelectedLoobricate(e.target.value)}
         >

@@ -239,3 +239,95 @@ html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
+
+/* Add these near the top of your CSS file, after the imports */
+html {
+  touch-action: manipulation;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  overscroll-behavior-y: none;
+}
+
+/* Add these new utility classes */
+.no-zoom-fix {
+  font-size: 16px !important; /* Prevents iOS zoom */
+  touch-action: manipulation;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Update your existing input styles */
+input,
+textarea,
+select {
+  font-size: 16px !important; /* Prevents iOS zoom */
+  touch-action: manipulation;
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: transparent;
+  border-radius: 8px;
+  padding: 10px;
+  margin: 0;
+  font-family: inherit;
+}
+
+/* Add touch optimization */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px;
+  touch-action: manipulation;
+}
+
+/* Prevent pull-to-refresh */
+:root {
+  overscroll-behavior-y: none;
+  overflow: hidden;
+}
+
+/* Disable text selection for app-like feel */
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Smooth scrolling */
+.smooth-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Add this to ensure proper sizing on iOS */
+@supports (-webkit-touch-callout: none) {
+  .h-screen {
+    height: -webkit-fill-available;
+  }
+}
+
+/* Update your existing button styles */
+.base-button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  min-height: 44px;
+  padding: 8px 16px;
+}
+
+/* Disable highlight on tap for interactive elements */
+a, button, input, select, textarea {
+  -webkit-tap-highlight-color: transparent;
+}
