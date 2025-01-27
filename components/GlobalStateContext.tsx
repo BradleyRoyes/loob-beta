@@ -2,12 +2,25 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
+interface Loobricate {
+  id: string;
+  name: string;
+  description: string;
+  address: string;
+  adminUsername: string;
+  tags: string[];
+  email?: string;
+  location?: string;
+}
+
 interface UserState {
   userId: string | null;
   pseudonym: string | null;
   email: string | null;
   phone: string | null;
   isAnonymous: boolean;
+  connectedLoobricates: Loobricate[];
+  activeLoobricate: Loobricate | null;
 }
 
 interface GlobalState extends UserState {
@@ -15,6 +28,8 @@ interface GlobalState extends UserState {
   setSessionId: (id: string | null) => void;
   setUserState: (state: Partial<UserState>) => void;
   clearUserState: () => void;
+  setActiveLoobricate: (loobricate: Loobricate | null) => void;
+  setConnectedLoobricates: (loobricates: Loobricate[]) => void;
 }
 
 const GlobalStateContext = createContext<GlobalState | undefined>(undefined);
@@ -28,7 +43,9 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
     pseudonym: null,
     email: null,
     phone: null,
-    isAnonymous: true
+    isAnonymous: true,
+    connectedLoobricates: [],
+    activeLoobricate: null
   });
 
   // Move localStorage initialization to useEffect
@@ -79,9 +96,25 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
       pseudonym: null,
       email: null,
       phone: null,
-      isAnonymous: true
+      isAnonymous: true,
+      connectedLoobricates: [],
+      activeLoobricate: null
     });
     localStorage.removeItem('userState');
+  };
+
+  const setActiveLoobricate = (loobricate: Loobricate | null) => {
+    setUserStateData(prev => ({
+      ...prev,
+      activeLoobricate: loobricate
+    }));
+  };
+
+  const setConnectedLoobricates = (loobricates: Loobricate[]) => {
+    setUserStateData(prev => ({
+      ...prev,
+      connectedLoobricates: loobricates
+    }));
   };
 
   return (
@@ -92,6 +125,8 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
         setSessionId,
         setUserState,
         clearUserState,
+        setActiveLoobricate,
+        setConnectedLoobricates,
       }}
     >
       {children}

@@ -5,6 +5,7 @@ interface AudioRecorderProps {
   onRecordingComplete: (audioData: Blob) => void;
   startRecording: () => void;
   stopRecording: () => void;
+  className?: string;
 }
 
 /**

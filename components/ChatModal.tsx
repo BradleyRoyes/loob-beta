@@ -6,19 +6,7 @@ import { useChat } from "ai/react";
 import PromptSuggestionRow from "./PromptSuggestions/PromptSuggestionsRow";
 import AudioRecorder from "./AudioRecorder";
 import "./ChatModal.css";
-
-interface Loobricate {
-  id: string;
-  name: string;
-  description: string;
-  address: string;
-  adminUsername: string;
-  tags: string[];
-  email?: string;
-  location?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
+import { useGlobalState } from "./GlobalStateContext";
 
 interface ChatModalProps {
   onConfigureOpen?: () => void;
@@ -33,34 +21,18 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const [loobricates, setLoobricates] = useState<Loobricate[]>([]);
-  const [selectedLoobricate, setSelectedLoobricate] = useState<string | null>(null);
-
-  // Fetch loobricates on component mount
-  useEffect(() => {
-    const fetchLoobricates = async () => {
-      try {
-        const response = await fetch('/api/loobricates');
-        if (!response.ok) throw new Error('Failed to fetch loobricates');
-        const data = await response.json();
-        setLoobricates(data);
-      } catch (error) {
-        console.error('Error fetching loobricates:', error);
-      }
-    };
-    fetchLoobricates();
-  }, []);
+  const { activeLoobricate } = useGlobalState();
 
   // Update vibe entity when messages change and we have a selected loobricate
   useEffect(() => {
-    if (!selectedLoobricate || messages.length === 0) return;
+    if (!activeLoobricate || messages.length === 0) return;
     
     const lastMessage = messages[messages.length - 1];
     if (lastMessage.role === 'assistant') {
       // We only want to update on assistant responses
-      updateVibeEntity(selectedLoobricate, lastMessage.content);
+      updateVibeEntity(activeLoobricate.id, lastMessage.content);
     }
-  }, [messages, selectedLoobricate]);
+  }, [messages, activeLoobricate]);
 
   const updateVibeEntity = async (loobricate_id: string, message: string) => {
     try {
@@ -233,7 +205,7 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
       {!messages.length && <PromptSuggestionRow onPromptClick={handlePrompt} />}
 
       {/* Audio Recorder - Centered */}
-      <div className="flex justify-center mb-2">
+      <div className="flex justify-center mb-2 audio-recorder-wrapper">
         <AudioRecorder
           onRecordingComplete={handleAudioUpload}
           startRecording={() => {
@@ -245,11 +217,12 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
             setIsRecording(false);
             setIsProcessing(true);
           }}
+          className="audio-recorder-mobile"
         />
       </div>
 
       {/* Input, Send Button, and Loobricate Selector */}
-      <div className="flex flex-col gap-2 mt-auto">
+      <div className="flex flex-col gap-2 mt-auto pb-2">
         <form className="flex w-full gap-2" onSubmit={handleSend}>
           <input
             onChange={handleInputChange}
@@ -272,19 +245,6 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
             Send
           </button>
         </form>
-        
-        <select
-          className="loobricate-select-compact w-full p-1 text-base rounded-md bg-[#333] text-white border-none touch-target"
-          value={selectedLoobricate || ""}
-          onChange={(e) => setSelectedLoobricate(e.target.value)}
-        >
-          <option value=""> - Select Loobricate to influence... </option>
-          {loobricates.map((loobricate) => (
-            <option key={loobricate.id} value={loobricate.id}>
-              {loobricate.name}
-            </option>
-          ))}
-        </select>
       </div>
     </section>
   );
