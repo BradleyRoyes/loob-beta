@@ -8,12 +8,29 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE!
 );
 
+// Define a type for loobricate
+interface Loobricate {
+  _id: string;
+  name?: string;
+  title?: string;
+  description?: string;
+  address?: string;
+  addressLine1?: string;
+  city?: string;
+  adminUsername?: string;
+  tags?: string[];
+  email?: string;
+  location?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export async function GET() {
   try {
     const collection = await astraDb.collection('usersandloobricates');
     
     // Fetch all documents where dataType is 'loobricate'
-    const loobricates = await collection.find({
+    const loobricates: Loobricate[] = await collection.find({
       dataType: 'loobricate'
     }).toArray();
 

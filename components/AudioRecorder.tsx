@@ -127,6 +127,10 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
     <div className={styles.container}>
       <button
         onClick={handleStartRecording}
+        onTouchStart={(e) => {
+          e.preventDefault();
+          handleStartRecording();
+        }}
         onTouchEnd={(e) => {
           e.preventDefault();
           if (isRecording) {
@@ -139,13 +143,13 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
         <div className={styles.microphoneIcon}>
           {isRecording ? <StopIcon /> : <MicIcon />}
           <div className={styles.rippleContainer}>
-            {isRecording && Array.from({ length: Math.min(5, Math.ceil(audioLevel / 25)) }).map((_, i) => (
+            {isRecording && Array.from({ length: Math.min(5, Math.ceil(audioLevel / 20)) }).map((_, i) => (
               <div
                 key={i}
                 className={styles.ripple}
                 style={{
-                  animationDelay: `${i * 0.15}s`,
-                  animationDuration: '1.5s',
+                  animationDelay: `${i * 0.1}s`,
+                  animationDuration: '1.2s',
                   opacity: Math.max(0.2, Math.min(audioLevel / 100, 0.8))
                 }}
               />
@@ -155,8 +159,8 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
             <div 
               className={styles.glowRipple}
               style={{
-                width: `${80 + audioLevel}px`,
-                height: `${80 + audioLevel}px`,
+                width: `${60 + audioLevel}px`,
+                height: `${60 + audioLevel}px`,
                 opacity: Math.min(audioLevel / 100, 0.6)
               }}
             />

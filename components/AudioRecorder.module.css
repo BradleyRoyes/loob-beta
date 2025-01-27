@@ -73,6 +73,16 @@
     width: 20px;
     height: 20px;
   }
+
+  .ripple {
+    width: 30px;
+    height: 30px;
+  }
+
+  .glowRipple {
+    width: 60px;
+    height: 60px;
+  }
 }
 
 .rippleContainer {
