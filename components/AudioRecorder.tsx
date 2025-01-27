@@ -52,8 +52,8 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
     const analyser = audioContext.createAnalyser();
     const microphone = audioContext.createMediaStreamSource(stream);
 
-    analyser.smoothingTimeConstant = 0.3; // Keep smooth response
-    analyser.fftSize = 256; // Reduced for better performance while maintaining quality
+    analyser.smoothingTimeConstant = 0.3;
+    analyser.fftSize = 512; // Increased for better audio analysis
 
     microphone.connect(analyser);
 
@@ -63,7 +63,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       const array = new Uint8Array(analyser.frequencyBinCount);
       analyser.getByteFrequencyData(array);
       
-      // Optimized volume calculation
       let sum = 0;
       const length = array.length;
       for (let i = 0; i < length; i++) {
@@ -71,19 +70,16 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       }
       const volume = sum / length;
       
-      // Use requestAnimationFrame for smoother updates
-      animationFrameRef.current = requestAnimationFrame(() => {
-        setAudioLevel(Math.min(volume * 1.2, 100)); // Enhanced sensitivity
+      // Enhanced sensitivity for better visual feedback
+      requestAnimationFrame(() => {
+        setAudioLevel(Math.min(volume * 1.5, 100));
       });
     };
 
-    updateAudioLevel();
-    analyserRef.current = analyser;
+    const intervalId = setInterval(updateAudioLevel, 50); // More consistent updates
 
     return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
+      clearInterval(intervalId);
       analyser.disconnect();
       microphone.disconnect();
     };
@@ -101,18 +97,17 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          channelCount: 1, // Mono for better performance
-          sampleRate: 44100,
         }
       });
       
       streamRef.current = stream;
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const cleanup = analyzeAudio(audioContextRef.current, stream);
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioContextRef.current = audioContext;
+      const cleanup = analyzeAudio(audioContext, stream);
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm;codecs=opus',
-        audioBitsPerSecond: 128000 // Optimize for web
+        audioBitsPerSecond: 128000
       });
 
       chunksRef.current = [];
@@ -129,7 +124,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       };
 
       mediaRecorderRef.current = mediaRecorder;
-      mediaRecorder.start(100);
+      mediaRecorder.start(1000); // Increased chunk size for stability
       setIsRecording(true);
       startRecording();
     } catch (error) {
@@ -156,7 +151,9 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
         onClick={handleStartRecording}
         onTouchStart={(e) => {
           e.preventDefault();
-          handleStartRecording();
+          if (!isRecording) {
+            handleStartRecording();
+          }
         }}
         onTouchEnd={(e) => {
           e.preventDefault();
@@ -164,13 +161,18 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
             handleStopRecording();
           }
         }}
-        className={styles.recorderButton}
+        className={`${styles.recorderButton} ${isRecording ? styles.recording : ''}`}
         aria-label={isRecording ? "Stop recording" : "Start recording"}
       >
-        <div className={`${styles.microphoneIcon} ${isRecording ? styles.recording : ''}`}>
+        <div 
+          className={styles.microphoneIcon}
+          style={{
+            transform: isRecording ? `scale(${1 + (audioLevel / 200)})` : 'scale(1)'
+          }}
+        >
           {isRecording ? <StopIcon /> : <MicIcon />}
           <div className={styles.rippleContainer}>
-            {isRecording && Array.from({ length: Math.min(5, Math.ceil(audioLevel / 25)) }).map((_, i) => (
+            {isRecording && Array.from({ length: Math.min(5, Math.ceil(audioLevel / 20)) }).map((_, i) => (
               <div
                 key={i}
                 className={styles.ripple}
@@ -186,9 +188,9 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
             <div 
               className={styles.glowRipple}
               style={{
-                width: `${80 + audioLevel}px`,
-                height: `${80 + audioLevel}px`,
-                opacity: Math.min(audioLevel / 100, 0.6)
+                width: `${60 + audioLevel}px`,
+                height: `${60 + audioLevel}px`,
+                opacity: Math.min(audioLevel / 100, 0.7)
               }}
             />
           )}

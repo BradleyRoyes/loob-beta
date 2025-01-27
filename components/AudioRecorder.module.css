@@ -56,7 +56,7 @@
   align-items: center;
   justify-content: center;
   will-change: transform;
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.1s ease-out;
 }
 
 .recording {
@@ -148,6 +148,7 @@
   .microphoneIcon {
     width: 48px;
     height: 48px;
+    touch-action: manipulation;
   }
 
   .microphoneIcon svg {
@@ -161,6 +162,8 @@
   }
 
   .glowRipple {
+    width: 48px !important;
+    height: 48px !important;
     transform-origin: center center;
   }
 }
@@ -180,6 +183,11 @@
   .recorderButton {
     touch-action: none;
     -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .recorderButton:active {
+    background: transparent;
   }
 }
 
