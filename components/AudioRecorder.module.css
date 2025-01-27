@@ -25,8 +25,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  touch-action: none;
-  -webkit-tap-highlight-color: transparent;
 }
 
 .recorderButton {
@@ -39,10 +37,6 @@
   margin: 0;
   position: relative;
   z-index: 2;
-  touch-action: none;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
 }
 
 .microphoneIcon {
@@ -52,26 +46,33 @@
   border-radius: 50%;
   position: relative;
   box-shadow: 0 0 10px rgba(255, 145, 135, 0.8);
+  transform: scale(1);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  will-change: transform;
-  transition: transform 0.1s ease-out;
 }
 
-.recording {
-  background: radial-gradient(circle at center,
-    rgba(255, 82, 93, 0.9),
-    rgba(255, 118, 85, 0.6)
-  );
-}
-
-.icon {
+/* Make the SVG icons smaller */
+.microphoneIcon svg {
   width: 24px;
   height: 24px;
   color: var(--text-primary);
-  will-change: transform;
-  transform: translateZ(0);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .container,
+  .recorderButton,
+  .microphoneIcon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .microphoneIcon svg {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 .rippleContainer {
@@ -83,16 +84,6 @@
   height: 400%;
   pointer-events: none;
   z-index: 1;
-  will-change: transform, opacity;
-}
-
-.rippleWrapper {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  height: 100%;
 }
 
 .ripple {
@@ -104,8 +95,7 @@
   background: radial-gradient(circle, rgba(255, 180, 120, 0.5), transparent);
   border-radius: 50%;
   transform: translate(-50%, -50%) scale(1);
-  animation: rippleEffect 1.5s ease-out infinite;
-  will-change: transform, opacity;
+  animation: rippleEffect 2.5s ease-out infinite;
 }
 
 .glowRipple {
@@ -118,7 +108,6 @@
   animation: glowEffect 1.5s ease-out infinite;
   pointer-events: none;
   z-index: 1;
-  will-change: transform;
 }
 
 @keyframes rippleEffect {
@@ -141,71 +130,28 @@
   }
 }
 
-/* Mobile optimizations */
-@media (max-width: 768px) {
-  .container,
-  .recorderButton,
-  .microphoneIcon {
-    width: 48px;
-    height: 48px;
-    touch-action: manipulation;
-  }
-
-  .microphoneIcon svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .ripple {
-    width: 16px;
-    height: 16px;
-  }
-
-  .glowRipple {
-    width: 48px !important;
-    height: 48px !important;
-    transform-origin: center center;
-  }
+.errorMessage {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #ff5757;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  max-width: 90vw;
+  text-align: center;
+  animation: fadeIn 0.3s ease-in-out;
 }
 
-/* Performance optimizations */
-@media (prefers-reduced-motion: no-preference) {
-  .ripple,
-  .glowRipple,
-  .microphoneIcon {
-    will-change: transform, opacity;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
   }
-}
-
-/* Touch optimizations */
-@media (hover: none) and (pointer: coarse) {
-  .container,
-  .recorderButton {
-    touch-action: none;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-  }
-
-  .recorderButton:active {
-    background: transparent;
-  }
-}
-
-/* High-performance animations */
-@supports (animation-timeline: scroll()) {
-  .ripple {
-    animation-timeline: auto;
-    animation-range: entry 25% cover 75%;
-  }
-}
-
-/* Reduce motion preferences */
-@media (prefers-reduced-motion: reduce) {
-  .ripple {
-    animation-duration: 0.5s;
-  }
-  
-  .microphoneIcon {
-    transition: none;
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
   }
 }
