@@ -13,7 +13,7 @@ import "./Map.css";
 
 // Child components with their prop types
 import TorusSphere, { TorusSphereProps } from "./TorusSphere";
-import VenueProfile from "./VenueProfile";
+import OfferingProfile from "./OfferingProfile";
 import MapSidebar from "./MapSidebar";
 import AddVenueModal from "./AddVenueModal";
 
@@ -31,6 +31,13 @@ export interface Node {
   visualType: VisualView; // "Today"
   createdAt?: string;  // Add these as optional
   updatedAt?: string;  // Add these as optional
+  location?: string;
+  pseudonym?: string;
+  email?: string;
+  phone?: string;
+  tags?: string[];
+  loobricates?: string[];
+  dataType?: string;
 }
 
 interface MapNode extends Node {
@@ -39,6 +46,86 @@ interface MapNode extends Node {
 
 // Berlin center (longitude, latitude)
 const DEFAULT_LOCATION: [number, number] = [13.405, 52.52];
+const MAP_PITCH = 75;
+const INITIAL_ZOOM = 16;
+
+// Add these constants at the top level
+const GEOLOCATION_OPTIONS = {
+  enableHighAccuracy: true,
+  timeout: 5000,
+  maximumAge: 0, // Always get fresh position
+};
+
+// Add this type
+type GeolocationPermissionState = 'prompt' | 'granted' | 'denied';
+
+// Add this to your Map component's JSX return statement, before the closing div
+const MAP_STYLE: maplibregl.StyleSpecification = {
+  version: 8 as 8,  // Type assertion to literal type '8'
+  sources: {
+    "osm-tiles": {
+      type: "raster",
+      tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+      tileSize: 256,
+      attribution: '© OpenStreetMap contributors',
+    }
+  },
+  layers: [
+    {
+      id: "osm-tiles",
+      type: "raster",
+      source: "osm-tiles",
+      minzoom: 0,
+      maxzoom: 19,
+    }
+  ]
+};
+
+// Add this at the top with other constants
+const INITIAL_MAP_STATE = {
+  center: DEFAULT_LOCATION,
+  zoom: INITIAL_ZOOM,
+  pitch: 0, // Start with top-down view
+  bearing: 0,
+  maxBounds: [[-10, 35], [40, 65]] as [[number, number], [number, number]], // Type assertion for bounds
+  minZoom: 4,
+  maxZoom: 19,
+  fadeDuration: 0
+};
+
+// Add this function to calculate smooth movement
+const smoothlyUpdatePosition = (
+  currentPos: [number, number],
+  newPos: [number, number],
+  map: maplibregl.Map,
+  marker: maplibregl.Marker
+) => {
+  const start = currentPos;
+  const end = newPos;
+  const steps = 60; // 60fps for 1 second
+  let step = 0;
+
+  const animate = () => {
+    step++;
+    
+    const progress = step / steps;
+    const lat = start[1] + (end[1] - start[1]) * progress;
+    const lng = start[0] + (end[0] - start[0]) * progress;
+    
+    marker.setLngLat([lng, lat]);
+    
+    if (map.getCenter().lng.toFixed(6) === lng.toFixed(6) && 
+        map.getCenter().lat.toFixed(6) === lat.toFixed(6)) {
+      map.setCenter([lng, lat]);
+    }
+
+    if (step < steps) {
+      requestAnimationFrame(animate);
+    }
+  };
+
+  animate();
+};
 
 const Map: React.FC = () => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -59,7 +146,7 @@ const Map: React.FC = () => {
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
 
   // Venue profile logic
-  const [showVenueProfile, setShowVenueProfile] = useState(false);
+  const [showOfferingProfile, setShowOfferingProfile] = useState(false);
   const [activeNode, setActiveNode] = useState<Node | null>(null);
 
   // "Add Venue" modal logic
@@ -70,6 +157,15 @@ const Map: React.FC = () => {
 
   // Add new state for loading
   const [isMapLoading, setIsMapLoading] = useState(true);
+
+  const userMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const watchIdRef = useRef<number | null>(null);
+
+  // Add new state for permission
+  const [locationPermission, setLocationPermission] = useState<GeolocationPermissionState>('prompt');
+
+  // Add new state for pitch
+  const [mapPitch, setMapPitch] = useState(0);
 
   /**
    * 1) On mount, fetch data from /api/mapData
@@ -106,7 +202,14 @@ const Map: React.FC = () => {
             details: entry.description ?? "No description provided.",
             contact: entry.email ? `mailto:${entry.email}` : "No contact info",
             visualType: "Today",
-            isLoobricate: entry.offeringType === 'Loobricate' // Check if it's a loobricate
+            isLoobricate: entry.offeringType === 'Loobricate', // Check if it's a loobricate
+            location: entry.location,
+            pseudonym: entry.pseudonym,
+            email: entry.email,
+            phone: entry.phone,
+            tags: entry.tags,
+            loobricates: entry.loobricates,
+            dataType: entry.dataType
           };
         });
 
@@ -138,58 +241,59 @@ useEffect(() => {
 
   const map = new maplibregl.Map({
     container: mapContainerRef.current,
-    style: {
-      version: 8,
-      sources: {
-        "osm-tiles": {
-          type: "raster",
-          tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-          tileSize: 256,
-          attribution: '© OpenStreetMap contributors',
-          maxzoom: 19,
-          minzoom: 4,
-        },
-      },
-      layers: [
-        {
-          id: "osm-tiles",
-          type: "raster",
-          source: "osm-tiles",
-          minzoom: 0,
-          maxzoom: 19,
-        },
-      ],
-    },
-    center: DEFAULT_LOCATION,
-    zoom: 12,
-    pitch: 45,
-    bearing: -20,
-    maxBounds: [[-10, 35], [40, 65]], // Restrict to Europe
-    minZoom: 4,
-    maxZoom: 19,
-    fadeDuration: 0, // Prevent fade animation
+    ...INITIAL_MAP_STATE,
+    style: MAP_STYLE
   });
 
   mapInstanceRef.current = map;
 
-  let tilesLoaded = false;
-  let styleLoaded = false;
+  // Batch map control modifications
+  const disableControls = () => {
+    const controls = [
+      map.dragPan,
+      map.scrollZoom,
+      map.dragRotate,
+      map.touchZoomRotate,
+      map.doubleClickZoom,
+      map.keyboard
+    ];
+    controls.forEach(control => control.disable());
+  };
 
-  const checkIfFullyLoaded = () => {
-    if (tilesLoaded && styleLoaded) {
+  disableControls();
+
+  // Optimize user marker creation
+  const createUserMarker = () => {
+    const userAvatarEl = document.createElement('div');
+    userAvatarEl.className = 'user-arrow';
+    return new maplibregl.Marker({
+      element: userAvatarEl,
+      anchor: 'center',
+      rotationAlignment: 'map',
+      scale: 1.2
+    }).setLngLat(DEFAULT_LOCATION).addTo(map);
+  };
+
+  userMarkerRef.current = createUserMarker();
+
+  // Optimize loading check
+  const loadStates = { tiles: false, style: false };
+  const checkLoading = () => {
+    if (loadStates.tiles && loadStates.style) {
       setIsMapLoading(false);
     }
   };
 
-  map.on('load', () => {
+  map.once('load', () => {
     map.getCanvas().style.filter = "grayscale(100%)";
-    styleLoaded = true;
-    checkIfFullyLoaded();
+    loadStates.style = true;
+    checkLoading();
+    startWatchingLocation(map);
   });
 
-  map.on('idle', () => {
-    tilesLoaded = true;
-    checkIfFullyLoaded();
+  map.once('idle', () => {
+    loadStates.tiles = true;
+    checkLoading();
   });
 
   map.on('error', () => {
@@ -224,10 +328,10 @@ useEffect(() => {
     setPreviewNode(null); // Reset the preview node
   });
 
-  // Attempt to get user location once
-  getUserLocation(map);
-
   return () => {
+    if (watchIdRef.current) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+    }
     map.remove();
     mapInstanceRef.current = null;
   };
@@ -250,46 +354,146 @@ useEffect(() => {
       const markerEl = document.createElement("div");
       markerEl.className = `map-marker ${node.isLoobricate ? 'loobricate' : ''}`;
 
-      const marker = new maplibregl.Marker({ element: markerEl })
+      // Create the marker with a consistent anchor point
+      const marker = new maplibregl.Marker({ element: markerEl, anchor: 'bottom' })
         .setLngLat([node.lon, node.lat])
         .addTo(map);
 
+      // Add click event listener
       marker.getElement().addEventListener("click", () => {
         selectNode(map, node);
       });
 
       markersRef.current.push(marker);
     });
+
+    // Update marker positions on map move and zoom
+    const updateMarkerPositions = () => {
+      markersRef.current.forEach((marker, index) => {
+        const node = nodes[index];
+        if (node) {
+          marker.setLngLat([node.lon, node.lat]);
+        }
+      });
+    };
+
+    map.on('move', updateMarkerPositions);
+    map.on('zoom', updateMarkerPositions);
+
+    return () => {
+      map.off('move', updateMarkerPositions);
+      map.off('zoom', updateMarkerPositions);
+    };
   }, [nodes]);
 
   /**
    * 5) Geolocation logic
    */
-  const fallbackToDefaultLocation = useCallback((map: maplibregl.Map) => {
-    setCurrentLocation(DEFAULT_LOCATION);
-    map.setCenter(DEFAULT_LOCATION);
-    map.flyTo({ center: DEFAULT_LOCATION, zoom: 12 });
-  }, []);
+  const startWatchingLocation = useCallback((map: maplibregl.Map) => {
+    if (!navigator.geolocation) {
+      console.warn('Geolocation is not supported by this browser');
+      return;
+    }
 
-  const getUserLocation = useCallback(
-    (map: maplibregl.Map) => {
-      if (!navigator.geolocation) {
-        fallbackToDefaultLocation(map);
-        return;
+    // First check if we already have permission
+    if ('permissions' in navigator) {
+      navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+        setLocationPermission(result.state);
+        
+        if (result.state === 'granted') {
+          startWatching();
+        } else if (result.state === 'prompt') {
+          // This will trigger the permission prompt
+          startWatching();
+        } else {
+          console.warn('Location access denied');
+          // Default to Berlin if access is denied
+          const fallbackLocation: [number, number] = [13.405, 52.52]; // Berlin
+          setCurrentLocation(fallbackLocation);
+          map.setCenter(fallbackLocation);
+          alert("Unable to access your location. Please enable location services in your browser settings.");
+        }
+        
+        // Listen for permission changes
+        result.addEventListener('change', () => {
+          setLocationPermission(result.state);
+          if (result.state === 'granted') {
+            startWatching();
+          }
+        });
+      });
+    } else {
+      // Fallback for browsers that don't support permissions API
+      startWatching();
+    }
+
+    function startWatching() {
+      if (watchIdRef.current) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
       }
-      navigator.geolocation.getCurrentPosition(
+
+      watchIdRef.current = navigator.geolocation.watchPosition(
         ({ coords }) => {
-          const userLoc: [number, number] = [coords.longitude, coords.latitude];
-          setCurrentLocation(userLoc);
-          map.setCenter(userLoc);
-          map.flyTo({ center: userLoc, zoom: 14 });
+          const { longitude, latitude, heading } = coords;
+          const newPosition: [number, number] = [longitude, latitude];
+          
+          setCurrentLocation(newPosition);
+
+          if (userMarkerRef.current && mapInstanceRef.current) {
+            userMarkerRef.current.setLngLat(newPosition);
+            mapInstanceRef.current.setCenter(newPosition);
+
+            if (typeof heading === 'number' && !isNaN(heading)) {
+              userMarkerRef.current.setRotation(heading);
+              mapInstanceRef.current.setBearing(heading);
+            }
+          }
         },
-        () => fallbackToDefaultLocation(map),
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        (error) => {
+          // More informative error handling
+          switch (error.code) {
+            case GeolocationPositionError.PERMISSION_DENIED:
+              setLocationPermission('denied');
+              console.warn('Location access denied by user');
+              // Default to Berlin if access is denied
+              const fallbackLocation: [number, number] = [13.405, 52.52]; // Berlin
+              setCurrentLocation(fallbackLocation);
+              map.setCenter(fallbackLocation);
+              alert("Unable to access your location. Please enable location services in your browser settings.");
+              break;
+            case GeolocationPositionError.POSITION_UNAVAILABLE:
+              console.warn('Location information unavailable');
+              // Fallback to the user marker's location if available
+              if (userMarkerRef.current) {
+                const userMarkerPosition = userMarkerRef.current.getLngLat();
+                setCurrentLocation([userMarkerPosition.lng, userMarkerPosition.lat]);
+                map.setCenter(userMarkerPosition);
+              } else {
+                // Fallback to Berlin if user marker is not available
+                const fallbackLocation: [number, number] = [13.405, 52.52]; // Berlin
+                setCurrentLocation(fallbackLocation);
+                map.setCenter(fallbackLocation);
+                alert("Unable to determine your location. Defaulting to Berlin.");
+              }
+              break;
+            case GeolocationPositionError.TIMEOUT:
+              console.warn('Location request timed out');
+              break;
+            default:
+              console.warn('Unknown geolocation error');
+          }
+        },
+        GEOLOCATION_OPTIONS
       );
-    },
-    [fallbackToDefaultLocation]
-  );
+    }
+
+    // Cleanup function
+    return () => {
+      if (watchIdRef.current) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+    };
+  }, []);
 
   /**
    * 6) Node selection logic -> popup
@@ -355,6 +559,13 @@ useEffect(() => {
       contact: "mailto:info@usercreated.com",
       visualType: "Today",
       type: "Venue",
+      location: "User-created location",
+      pseudonym: "User-created pseudonym",
+      email: "info@usercreated.com",
+      phone: "123-456-7890",
+      tags: ["User-created tag"],
+      loobricates: ["User-created loobricate"],
+      dataType: "User-created"
     };
 
     setNodes((prev) => [...prev, newNode]);
@@ -369,9 +580,9 @@ useEffect(() => {
   /**
    * 9) Show venue profile
    */
-  const handleShowVenueProfile = (node: Node) => {
+  const handleShowOfferingProfile = (node: Node) => {
     setActiveNode(node);
-    setShowVenueProfile(true);
+    setShowOfferingProfile(true);
   };
 
   /**
@@ -379,21 +590,63 @@ useEffect(() => {
    */
   const toggleSidebar = () => setSidebarActive((prev) => !prev);
 
-  useEffect(() => {
-    if (mapInstanceRef.current) {
-      getUserLocation(mapInstanceRef.current);
+  // Update the recenter button click handler
+  const handleRecenter = () => {
+    if (mapInstanceRef.current && currentLocation) {
+      mapInstanceRef.current.flyTo({
+        center: currentLocation,
+        pitch: MAP_PITCH,
+        bearing: 0,
+        zoom: INITIAL_ZOOM,
+        duration: 1000,
+        essential: true // This makes the animation smoother
+      });
     }
-  }, [getUserLocation]);
-
-  useEffect(() => {
-    if (mapInstanceRef.current && activeNode) {
-      selectNode(mapInstanceRef.current, activeNode);
-    }
-  }, [activeNode, selectNode]);
+  };
 
   return (
     <div className="map-container">
       <div ref={mapContainerRef} className="map-layer" />
+
+      {/* Tilt Controller with Arrow Buttons */}
+      <div className="tilt-controller">
+        <button
+          className="tilt-button"
+          onClick={() => {
+            const newPitch = Math.min(mapPitch + 10, 80); // Increase pitch, max 80
+            setMapPitch(newPitch); // Update the pitch state
+            mapInstanceRef.current?.setPitch(newPitch);
+          }}
+          aria-label="Increase tilt"
+        >
+          ↑
+        </button>
+        <button
+          className="tilt-button"
+          onClick={() => {
+            const newPitch = Math.max(mapPitch - 10, 0); // Decrease pitch, min 0
+            setMapPitch(newPitch); // Update the pitch state
+            mapInstanceRef.current?.setPitch(newPitch);
+          }}
+          aria-label="Decrease tilt"
+        >
+          ↓
+        </button>
+      </div>
+
+      {/* Recenter button */}
+      <button 
+        className={`recenter-button ${
+          currentLocation && 
+          mapInstanceRef.current?.getCenter().toString() !== currentLocation.toString() 
+          ? 'not-centered' 
+          : ''
+        }`}
+        onClick={handleRecenter}
+        aria-label="Center on my location"
+      >
+        <div className="recenter-icon" />
+      </button>
 
       {isMapLoading && (
         <div className="map-loading-overlay">
@@ -411,7 +664,7 @@ useEffect(() => {
             selectNode(map, node);
           }
         }}
-        onMoreInfo={handleShowVenueProfile}
+        onMoreInfo={handleShowOfferingProfile}
       />
 
       <button
@@ -460,7 +713,7 @@ useEffect(() => {
             <button
               className="more-info-btn"
               onClick={() => {
-                handleShowVenueProfile(previewNode);
+                handleShowOfferingProfile(previewNode);
                 setShowPreviewPopup(false);
               }}
               aria-label="Show more info"
@@ -471,26 +724,24 @@ useEffect(() => {
         </div>
       )}
 
-      {showVenueProfile && activeNode && (
-        <div
-          className="venue-profile-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowVenueProfile(false);
-            }
+      {showOfferingProfile && activeNode && (
+        <OfferingProfile
+          offering={{
+            _id: activeNode.id,
+            title: activeNode.label,
+            description: activeNode.details,
+            offeringType: (activeNode.type.toLowerCase() as 'venue' | 'gear' | 'talent'),
+            createdAt: activeNode.createdAt || new Date().toISOString(),
+            location: activeNode.location,
+            pseudonym: activeNode.pseudonym,
+            email: activeNode.email,
+            phone: activeNode.phone,
+            tags: activeNode.tags,
+            loobricates: activeNode.loobricates,
+            dataType: activeNode.dataType
           }}
-        >
-          <div className="venue-profile-modal">
-            <VenueProfile
-              venue={{
-                ...activeNode,
-                createdAt: activeNode.createdAt || new Date().toISOString(),
-                updatedAt: activeNode.updatedAt || new Date().toISOString()
-              }}
-              onClose={() => setShowVenueProfile(false)}
-            />
-          </div>
-        </div>
+          onClose={() => setShowOfferingProfile(false)}
+        />
       )}
 
       {showAddVenueModal && (

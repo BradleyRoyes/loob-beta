@@ -263,9 +263,10 @@
   font-size: 2.0rem !important; /* Larger for prominence */
   font-weight: 900 !important; /* Bold for emphasis */
   text-align: center !important;
-  background: linear-gradient(90deg, #f3f3f3, #ffb48f, #f3f3f3) !important; /* Gradient effect */
+  background: linear-gradient(90deg, #f3f3f3, #ffb48f, #f3f3f3) !important;
   -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important; /* Makes the gradient apply to text only */
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
   letter-spacing: 1.5px !important; /* Subtle letter spacing */
   line-height: 1.3 !important; /* Balanced line height */
   margin-bottom: 5px !important; /* Spacing from subtitle */
@@ -287,16 +288,16 @@
 
 /* Main Title Styling */
 .mainTitle {
-  font-size: 2.5rem !important; /* Very prominent */
-  font-weight: 900 !important;
-  text-align: center !important;
+  margin: 0;
+  font-size: 2.8rem !important;
+  font-weight: 800 !important;
   background: linear-gradient(90deg, #f3f3f3, #ffb48f, #ff9f7f) !important;
   -webkit-background-clip: text !important;
+  background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
-  letter-spacing: 2px !important;
-  line-height: 1.2 !important;
-  margin-bottom: 20px !important;
-  animation: glowText 2s infinite alternate ease-in-out !important;
+  letter-spacing: 1px !important;
+  line-height: 1 !important;
+  text-align: center !important;
 }
 
 /* Glow Animation for Title and Main Title */
@@ -332,8 +333,9 @@
 
 /* Update the gradient colors to pastel flesh tones */
 .gradientText {
-  background: linear-gradient(45deg, #FFE4E1, #FFD5C8); /* Pastel flesh tones */
+  background: linear-gradient(45deg, #FFE4E1, #FFD5C8);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   font-size: clamp(1.25rem, 4vw, 1.5rem); /* Responsive font size */
   line-height: 1.2;
@@ -400,4 +402,135 @@
   min-height: 44px;
   min-width: 44px;
   padding: 0.75rem 1rem;
+}
+
+/* Title Container and Logo Styling */
+.titleContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 0.5rem;
+  width: 100%;
+}
+
+.titleLogo {
+  width: 45px;
+  height: 45px;
+  object-fit: contain;
+  opacity: 0.85;
+  filter: brightness(0.9);
+  transform: translateY(-2px); /* Slight upward adjustment */
+}
+
+/* Main Title Styling */
+.mainTitle {
+  margin: 0;
+  font-size: 2.8rem !important;
+  font-weight: 800 !important;
+  background: linear-gradient(90deg, #f3f3f3, #ffb48f, #ff9f7f) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  letter-spacing: 1px !important;
+  line-height: 1 !important;
+  text-align: center !important;
+}
+
+/* Subtitle Styling */
+.superSubtitle {
+  font-size: 1.2rem !important;
+  color: #c0bebe !important;
+  margin-top: 0 !important;
+  margin-bottom: 3rem !important;
+  font-style: italic !important;
+  text-align: center !important;
+  width: 100% !important;
+}
+
+/* Input Container Styling */
+.inputContainer {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .titleContainer {
+    gap: 12px;
+  }
+
+  .titleLogo {
+    width: 35px;
+    height: 35px;
+  }
+
+  .mainTitle {
+    font-size: 2.3rem !important;
+  }
+
+  .superSubtitle {
+    font-size: 1rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .titleContainer {
+    gap: 10px;
+  }
+
+  .titleLogo {
+    width: 30px;
+    height: 30px;
+  }
+
+  .mainTitle {
+    font-size: 2rem !important;
+  }
+
+  .superSubtitle {
+    font-size: 0.9rem !important;
+  }
+
+  .inputContainer {
+    max-width: 280px;
+  }
+}
+
+/* Update Input Styling */
+.pseudonymInput {
+  background: rgba(34, 34, 34, 0.8) !important;
+  border: 1px solid rgba(204, 204, 204, 0.3) !important;
+  backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+}
+
+.pseudonymInput:focus {
+  border-color: rgba(255, 180, 143, 0.6) !important;
+  box-shadow: 0 0 10px rgba(255, 180, 143, 0.2);
+}
+
+/* Update Button Styling */
+.actionButton {
+  background: linear-gradient(45deg, rgba(255, 159, 127, 0.9), rgba(255, 126, 121, 0.9)) !important;
+  backdrop-filter: blur(5px);
+  border: none !important;
+  transition: all 0.3s ease !important;
+}
+
+.actionButton:hover {
+  background: linear-gradient(45deg, rgba(255, 139, 107, 1), rgba(255, 107, 102, 1)) !important;
+  transform: translateY(-2px) !important;
+}
+
+.actionButton.secondary {
+  background: transparent !important;
+  border: 1px solid rgba(68, 68, 68, 0.5) !important;
+  backdrop-filter: blur(5px);
+}
+
+.actionButton.secondary:hover {
+  background: rgba(68, 68, 68, 0.3) !important;
+  border-color: rgba(68, 68, 68, 0.8) !important;
 }

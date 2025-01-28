@@ -131,7 +131,17 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         {/* Login Phase */}
         {phase === "loginPhase" && (
           <div className="content login">
-            <h1 className="mainTitle">Loob</h1>
+            <div className="titleContainer">
+              <Image 
+                src="/favicon.ico"
+                alt="Loob Logo"
+                width={40}
+                height={40}
+                className="titleLogo"
+                priority
+              />
+              <h1 className="mainTitle">Loob</h1>
+            </div>
             <h2 className="superSubtitle">Reducing Friction</h2>
             <div className="inputContainer">
               <input

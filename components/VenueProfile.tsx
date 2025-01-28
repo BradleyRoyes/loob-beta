@@ -1,78 +1,150 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import './VenueProfile.css'; // Ensure you have appropriate CSS
+import React from 'react';
+import './OfferingProfile.css';
 import TorusSphere from './TorusSphere';
+import {
+  Box,
+  Modal,
+  Typography,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  IconButton,
+  Card,
+  CardContent,
+  Chip,
+  Stack,
+} from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import CloseIcon from '@mui/icons-material/Close';
 
-interface Venue {
-  id: string;
-  label: string;
-  details: string;
+interface Offering {
+  _id: string;
+  title: string;
+  description: string;
+  offeringType: 'venue' | 'gear' | 'talent';
+  location?: string;
+  pseudonym?: string;
+  email?: string;
+  phone?: string;
+  tags?: string[];
   createdAt: string;
-  updatedAt: string;
+  [key: string]: any; // Allow for additional dynamic fields
 }
 
-interface VenueProfileProps {
-  venue: Venue;
+interface OfferingProfileProps {
+  offering: Offering;
   onClose: () => void;
 }
 
-const VenueProfile: React.FC<VenueProfileProps> = ({ venue, onClose }) => {
-  const chartRef = useRef<HTMLCanvasElement | null>(null);
-
+const OfferingProfile: React.FC<OfferingProfileProps> = ({ offering, onClose }) => {
   return (
-    <div className="venue-profile-overlay" onClick={(e) => {
-      if (e.target === e.currentTarget) onClose();
-    }}>
-      <div className="venue-profile-modal">
-        <button className="close-button" onClick={onClose}>&times;</button>
+    <Modal
+      open={true}
+      onClose={onClose}
+      aria-labelledby="offering-profile-modal"
+      className="offering-profile-overlay"
+    >
+      <Box className="offering-profile-modal">
+        <Card sx={{ width: '100%', maxWidth: 800, maxHeight: '90vh', overflow: 'auto' }}>
+          <IconButton
+            onClick={onClose}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+          >
+            <CloseIcon />
+          </IconButton>
 
-        <h2 className="venue-title">{venue.label}</h2>
-        <p className="venue-description">{venue.details}</p>
+          <CardContent>
+            {/* Header Section */}
+            <Typography variant="h4" component="h2" gutterBottom>
+              {offering.title}
+            </Typography>
+            
+            <Chip 
+              label={offering.offeringType.toUpperCase()} 
+              color="primary" 
+              sx={{ mb: 2 }}
+            />
 
-        {/* Visual Representation */}
-        <section className="visual-section">
-          <div className="visualization-section">
-            <TorusSphere loobricateId={venue.id} />
-          </div>
-        </section>
+            {/* Visual Section */}
+            <Box className="visualization-section" sx={{ my: 3 }}>
+              <TorusSphere loobricateId={offering._id} />
+            </Box>
 
-        {/* Scrollable content section */}
-        <section className="scrollable-content">
-          {/* Word Cloud */}
-          <div className="word-cloud-section">
-            <h3 className="section-heading">Word Cloud</h3>
-            <div className="word-cloud">
-              <span>Techno</span>
-              <span>Berlin</span>
-              <span>Industrial</span>
-              <span>Dark</span>
-              <span>Minimal</span>
-              <span>Long Sets</span>
-              <span>Legendary</span>
-              <span>Beats</span>
-              <span>Underground</span>
-            </div>
-          </div>
+            {/* Description */}
+            <Typography variant="body1" paragraph>
+              {offering.description}
+            </Typography>
 
-          {/* Vibe Over Time Chart */}
-          <div className="chart-section">
-            <h3 className="section-heading">Vibe Over Time</h3>
-            <div className="chart-container">
-              <canvas ref={chartRef} width="400" height="150" />
-            </div>
-          </div>
+            {/* Dynamic Accordion Sections */}
+            <Stack spacing={1}>
+              {/* Contact Information */}
+              <Accordion>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography>Contact Information</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Stack spacing={1}>
+                    {offering.pseudonym && (
+                      <Typography>Pseudonym: {offering.pseudonym}</Typography>
+                    )}
+                    {offering.email && (
+                      <Typography>Email: {offering.email}</Typography>
+                    )}
+                    {offering.phone && (
+                      <Typography>Phone: {offering.phone}</Typography>
+                    )}
+                  </Stack>
+                </AccordionDetails>
+              </Accordion>
 
-          {/* Organizer Log In Section */}
-          <div className="organizer-login-section">
-            <button onClick={() => alert('Redirecting to Organizer Dashboard...')}>
-              Organizer Log In
-            </button>
-          </div>
-        </section>
-      </div>
-    </div>
+              {/* Location */}
+              {offering.location && (
+                <Accordion>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Typography>Location</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Typography>{offering.location}</Typography>
+                  </AccordionDetails>
+                </Accordion>
+              )}
+
+              {/* Tags */}
+              {offering.tags && offering.tags.length > 0 && (
+                <Accordion>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Typography>Tags</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
+                      {offering.tags.map((tag, index) => (
+                        <Chip key={index} label={tag} variant="outlined" />
+                      ))}
+                    </Stack>
+                  </AccordionDetails>
+                </Accordion>
+              )}
+
+              {/* Additional Details */}
+              <Accordion>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography>Additional Details</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Typography variant="body2" color="text.secondary">
+                    Created: {new Date(offering.createdAt).toLocaleDateString()}
+                  </Typography>
+                  {/* Additional dynamic fields can be mapped here */}
+                </AccordionDetails>
+              </Accordion>
+            </Stack>
+          </CardContent>
+        </Card>
+      </Box>
+    </Modal>
   );
 };
 
-export default VenueProfile;
+export default OfferingProfile;

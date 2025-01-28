@@ -269,3 +269,279 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* Add these styles to your existing Map.css */
+
+.user-avatar {
+  width: 24px;
+  height: 36px;
+  position: relative;
+  animation: bobbing 1s infinite alternate ease-in-out;
+}
+
+.user-avatar::before {
+  /* Head */
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 12px;
+  background: #4a90e2;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.user-avatar::after {
+  /* Body */
+  content: "";
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 16px;
+  background: white;
+  border-radius: 2px;
+}
+
+@keyframes bobbing {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-4px);
+  }
+}
+
+/* Direction indicator */
+.user-avatar .direction {
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid white;
+}
+
+.user-arrow {
+  width: 36px;
+  height: 36px;
+  position: relative;
+  background: linear-gradient(45deg, #ffb6b9, #fae3d9);
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  border: 2px solid white;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Pulsing effect container */
+.user-arrow::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(45deg, #ffb6b9, #fae3d9);
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  transform: translate(-50%, -50%);
+  opacity: 0.6;
+  animation: pulse 2s ease-out infinite;
+  z-index: -1;
+}
+
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 0;
+  }
+}
+
+.recenter-button {
+  position: absolute;
+  right: 20px;
+  bottom: 100px; /* Position above your existing buttons */
+  width: 45px;
+  height: 45px;
+  background: white;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+}
+
+.recenter-button:hover {
+  transform: scale(1.1);
+}
+
+.recenter-button:active {
+  transform: scale(0.95);
+}
+
+.recenter-icon {
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(45deg, #ffb6b9, #fae3d9);
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  transform: translateY(-2px);
+  position: relative;
+}
+
+.recenter-icon::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  border-radius: 50%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .recenter-button {
+    right: 10px;
+    bottom: 80px; /* Adjust for smaller screens */
+    width: 40px;
+    height: 40px;
+  }
+
+  .recenter-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Add a subtle pulse when we're not centered on user */
+@keyframes subtlePulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.recenter-button.not-centered {
+  animation: subtlePulse 2s infinite;
+}
+
+.tilt-controller {
+  position: absolute;
+  right: 20px;
+  bottom: 160px; /* Adjust position above the recenter button */
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--background-secondary); /* Use theme background */
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.tilt-slider {
+  -webkit-appearance: none; /* Remove default styling */
+  width: 8px; /* Width of the slider */
+  height: 200px; /* Height of the slider */
+  background: #ddd; /* Background color of the slider */
+  border-radius: 5px;
+  outline: none; /* Remove outline */
+  transition: background 0.3s; /* Smooth background transition */
+}
+
+.tilt-slider:hover {
+  background: #ccc; /* Darker background on hover */
+}
+
+.tilt-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; /* Remove default styling */
+  appearance: none;
+  width: 20px; /* Width of the thumb */
+  height: 20px; /* Height of the thumb */
+  border-radius: 50%; /* Round thumb */
+  background: #4a90e2; /* Color of the thumb */
+  cursor: pointer; /* Pointer cursor on hover */
+}
+
+.tilt-slider::-moz-range-thumb {
+  width: 20px; /* Width of the thumb */
+  height: 20px; /* Height of the thumb */
+  border-radius: 50%; /* Round thumb */
+  background: #4a90e2; /* Color of the thumb */
+  cursor: pointer; /* Pointer cursor on hover */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tilt-controller {
+    bottom: 120px; /* Adjust position for smaller screens */
+    right: 10px; /* Adjust right position */
+  }
+
+  .tilt-slider {
+    height: 150px; /* Shorter slider for mobile */
+  }
+}
+
+@media (max-width: 480px) {
+  .tilt-controller {
+    bottom: 100px; /* Further adjust position for very small screens */
+  }
+
+  .tilt-slider {
+    height: 100px; /* Even shorter slider for very small screens */
+  }
+}
+
+.tilt-button {
+  background: transparent; /* Transparent background */
+  border: none; /* No border */
+  color: transparent; /* Hide the text arrow */
+  width: 30px; /* Default width */
+  height: 30px; /* Default height */
+  cursor: pointer; /* Pointer cursor on hover */
+  margin: 2px 0; /* Space between buttons */
+  position: relative;
+  transition: transform 0.2s;
+}
+
+.tilt-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: linear-gradient(45deg, #ffb6b9, #fae3d9); /* Pastel orange/pink gradient */
+}
+
+/* Up arrow */
+.tilt-button:first-child::after {
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+/* Down arrow */
+.tilt-button:last-child::after {
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+.tilt-button:hover {
+  transform: scale(1.1);
+}
+
+.tilt-button:active {
+  transform: scale(0.95);
+}

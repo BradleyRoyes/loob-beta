@@ -1,8 +1,12 @@
-import { useState, useEffect } from "react";
+// settings.tsx
+"use client";
+
+import React, { useState, useEffect } from "react";
 import { useGlobalState } from "./GlobalStateContext";
 import Dropdown from "./Dropdown";
 import Toggle from "./Toggle";
 import { SimilarityMetric } from "../app/hooks/useConfiguration";
+import "./settings.css";
 
 interface Props {
   isOpen: boolean;
@@ -10,23 +14,41 @@ interface Props {
   useRag: boolean;
   llm: string;
   similarityMetric: SimilarityMetric;
-  setConfiguration: (useRag: boolean, llm: string, similarityMetric: SimilarityMetric, location: string) => void;
+  setConfiguration: (
+    useRag: boolean,
+    llm: string,
+    similarityMetric: SimilarityMetric,
+    location: string
+  ) => void;
 }
 
-const Settings = ({ isOpen, onClose, useRag, llm, similarityMetric, setConfiguration }: Props) => {
-  const { 
+const Settings: React.FC<Props> = ({
+  isOpen,
+  onClose,
+  useRag,
+  llm,
+  similarityMetric,
+  setConfiguration,
+}) => {
+  const {
     connectedLoobricates = [],
     activeLoobricate,
     setActiveLoobricate,
     isAnonymous,
-    userId
+    userId,
   } = useGlobalState();
-  
+
   const [rag, setRag] = useState(useRag);
   const [selectedLlm, setSelectedLlm] = useState(llm);
   const [location, setLocation] = useState("");
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen) {
+      setRag(useRag);
+      setSelectedLlm(llm);
+      setLocation("");
+    }
+  }, [isOpen, useRag, llm]);
 
   const llmOptions = [
     { label: "GPT 3.5 Turbo", value: "gpt-3.5-turbo" },
@@ -49,7 +71,6 @@ const Settings = ({ isOpen, onClose, useRag, llm, similarityMetric, setConfigura
           <button
             className="base-button"
             onClick={() => {
-              // Add your sign-in navigation logic here
               console.log("Navigate to sign in");
             }}
           >
@@ -62,9 +83,7 @@ const Settings = ({ isOpen, onClose, useRag, llm, similarityMetric, setConfigura
     if (!userId) {
       return (
         <div className="bg-gray-800 p-4 rounded-md">
-          <p className="text-gray-300">
-            Loading user data...
-          </p>
+          <p className="text-gray-300">Loading user data...</p>
         </div>
       );
     }
@@ -74,7 +93,8 @@ const Settings = ({ isOpen, onClose, useRag, llm, similarityMetric, setConfigura
         <div className="bg-gray-800 p-4 rounded-md">
           <h3 className="text-lg font-medium mb-2">No Loobricates Found</h3>
           <p className="text-gray-300">
-            You aren't connected to any Loobricates yet. Join or create one to start contributing.
+            You aren't connected to any Loobricates yet. Join or create one to
+            start contributing.
           </p>
         </div>
       );
@@ -86,12 +106,12 @@ const Settings = ({ isOpen, onClose, useRag, llm, similarityMetric, setConfigura
           Active Loobricate
         </label>
         <select
-          className="w-full p-2 bg-gray-800 border border-gray-700 rounded-md shadow-sm text-white 
-            focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-            transition-all duration-200"
+          className="w-full p-2 bg-gray-800 border border-gray-700 rounded-md shadow-sm text-white"
           value={activeLoobricate?.id || ""}
           onChange={(e) => {
-            const selected = connectedLoobricates.find(l => l.id === e.target.value);
+            const selected = connectedLoobricates.find(
+              (l) => l.id === e.target.value
+            );
             setActiveLoobricate(selected || null);
           }}
         >
@@ -110,9 +130,8 @@ const Settings = ({ isOpen, onClose, useRag, llm, similarityMetric, setConfigura
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-800 bg-opacity-90 flex items-center justify-center z-50">
-      <div className="w-full max-w-[90%] md:max-w-lg h-auto max-h-[90vh] p-6 rounded-lg shadow-lg overflow-y-auto bg-gray-900 text-white">
-        {/* Modal Header */}
+    <div className={`modal-overlay ${isOpen ? "visible" : "hidden"}`}>
+      <div className="modal-content">
         <div className="flex justify-between items-center pb-4">
           <h1 className="text-xl md:text-2xl font-medium">Settings</h1>
           <button
@@ -123,12 +142,9 @@ const Settings = ({ isOpen, onClose, useRag, llm, similarityMetric, setConfigura
           </button>
         </div>
 
-        {/* Modal Body */}
         <div className="space-y-6">
-          {/* Loobricate Selector Section */}
           {renderLoobricateSection()}
 
-          {/* LLM and RAG Configuration */}
           <div className="flex flex-wrap gap-4">
             <Dropdown
               fieldId="llm"
@@ -137,19 +153,20 @@ const Settings = ({ isOpen, onClose, useRag, llm, similarityMetric, setConfigura
               value={selectedLlm}
               onSelect={setSelectedLlm}
             />
-            <Toggle enabled={rag} label="Enable vector content (RAG)" onChange={() => setRag(!rag)} />
+            <Toggle
+              enabled={rag}
+              label="Enable vector content (RAG)"
+              onChange={() => setRag(!rag)}
+            />
           </div>
 
-          {/* Location Update Section */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Update Location
             </label>
             <input
               type="text"
-              className="w-full p-2 bg-gray-800 border border-gray-700 rounded-md shadow-sm text-white 
-                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                transition-all duration-200"
+              className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-white"
               placeholder="Enter your location"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
@@ -157,18 +174,11 @@ const Settings = ({ isOpen, onClose, useRag, llm, similarityMetric, setConfigura
           </div>
         </div>
 
-        {/* Modal Footer */}
-        <div className="flex justify-end gap-4 mt-6 pt-4 border-t border-gray-700">
-          <button
-            className="base-button"
-            onClick={onClose}
-          >
+        <div className="flex justify-end gap-4 mt-6 pt-4 border-t border-gray-600">
+          <button className="base-button" onClick={onClose}>
             Cancel
           </button>
-          <button
-            className="base-button"
-            onClick={handleSave}
-          >
+          <button className="base-button" onClick={handleSave}>
             Save Settings
           </button>
         </div>
