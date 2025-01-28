@@ -6,7 +6,7 @@ import { useGlobalState } from "./GlobalStateContext";
 import Dropdown from "./Dropdown";
 import Toggle from "./Toggle";
 import { SimilarityMetric } from "../app/hooks/useConfiguration";
-import "./settings.css";
+import "./Settings.css";
 
 interface Props {
   isOpen: boolean;
