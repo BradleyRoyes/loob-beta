@@ -29,6 +29,14 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
   const analyserRef = useRef<AnalyserNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
+  const [browserSupport, setBrowserSupport] = useState<{
+    hasMediaRecorder: boolean;
+    hasAudioSupport: boolean;
+    supportedMimeTypes: string[];
+  }>({ hasMediaRecorder: false, hasAudioSupport: false, supportedMimeTypes: [] });
+
+  const [permissionStatus, setPermissionStatus] = useState<PermissionState | null>(null);
+
   /**
    * Safely cleans up all audio resources and resets state
    * Called during component unmount and after recording stops
@@ -106,6 +114,48 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
     }
   };
 
+  const getSupportedMimeType = (): string | null => {
+    const mimeTypes = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/mp4',
+      'audio/aac',
+      'audio/wav'
+    ];
+    
+    return mimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || null;
+  };
+
+  useEffect(() => {
+    const checkBrowserSupport = async () => {
+      const hasMediaRecorder = typeof MediaRecorder !== 'undefined';
+      const hasAudioSupport = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+      const supportedMimeTypes = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/aac', 'audio/wav']
+        .filter(type => hasMediaRecorder && MediaRecorder.isTypeSupported(type));
+
+      setBrowserSupport({
+        hasMediaRecorder,
+        hasAudioSupport,
+        supportedMimeTypes
+      });
+
+      if (navigator.permissions && navigator.permissions.query) {
+        try {
+          const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+          setPermissionStatus(result.state);
+          
+          result.addEventListener('change', () => {
+            setPermissionStatus(result.state);
+          });
+        } catch (e) {
+          console.debug('Permission query not supported');
+        }
+      }
+    };
+
+    checkBrowserSupport();
+  }, []);
+
   /**
    * Initiates audio recording with error handling for various scenarios
    * Handles mobile-specific permission requests and browser compatibility
@@ -119,41 +169,45 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
         return;
       }
 
-      // Check for browser compatibility
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Audio recording is not supported in this browser');
+      if (!browserSupport.hasAudioSupport || !browserSupport.hasMediaRecorder) {
+        throw new Error(
+          `Your browser doesn't support audio recording. ${
+            !browserSupport.hasMediaRecorder ? 'MediaRecorder API is not available. ' : ''
+          }${!browserSupport.hasAudioSupport ? 'Audio capture is not supported. ' : ''
+          }Please try a different browser like Chrome or Safari.`
+        );
       }
 
-      // Optimized audio constraints for mobile devices
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const mimeType = getSupportedMimeType();
+      if (!mimeType) {
+        throw new Error('No supported audio format found for your browser');
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          // Mobile-specific constraints
-          sampleRate: 44100,
-          channelCount: 1,
         }
       });
       
       streamRef.current = stream;
 
-      // Handle different browser implementations of AudioContext
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioContext) {
         throw new Error('AudioContext is not supported in this browser');
       }
 
       const audioContext = new AudioContext();
+      
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+      
       const cleanup = analyzeAudio(audioContext, stream);
 
-      // Check for MediaRecorder support and preferred codec
-      if (!MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-        throw new Error('Preferred audio codec not supported. Recording quality may be affected.');
-      }
-
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
+        mimeType
       });
 
       chunksRef.current = [];
@@ -174,7 +228,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
           setError('No audio data was captured');
           return;
         }
-        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(chunksRef.current, { type: mimeType });
         onRecordingComplete(audioBlob);
         cleanupRecording();
       };
@@ -212,14 +266,24 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
    * Helper function to provide user-friendly error messages
    */
   const getErrorMessage = (error: any): string => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    
     if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-      return 'Microphone permission was denied. Please allow microphone access to record audio.';
+      return isIOS 
+        ? 'Microphone access denied. On iOS, go to Settings > Safari > Microphone and enable access.'
+        : 'Microphone permission was denied. Please allow microphone access to record audio.';
     } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
       return 'No microphone was found on your device.';
     } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
-      return 'Your microphone is busy or not accessible.';
+      return isIOS
+        ? 'Cannot access microphone. Please close other apps that might be using it.'
+        : 'Your microphone is busy or not accessible.';
     } else if (error.name === 'SecurityError') {
-      return 'Recording audio is not allowed in this context. Please ensure you\'re using HTTPS.';
+      return isIOS
+        ? 'Recording requires a secure connection (HTTPS) and microphone permissions.'
+        : 'Recording audio is not allowed in this context. Please ensure you\'re using HTTPS.';
+    } else if (error.name === 'AbortError') {
+      return 'Recording was interrupted. Please try again.';
     }
     return error.message || 'An unexpected error occurred while accessing the microphone.';
   };
@@ -236,19 +300,30 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       {error && (
         <div className={styles.errorMessage} role="alert">
           {error}
+          {permissionStatus === 'denied' && (
+            <div className={styles.permissionHint}>
+              Please enable microphone access in your browser settings to use this feature.
+            </div>
+          )}
         </div>
       )}
       <button
         onClick={handleStartRecording}
+        onTouchStart={(e) => {
+          e.preventDefault();
+          if (!isRecording) {
+            handleStartRecording();
+          }
+        }}
         onTouchEnd={(e) => {
           e.preventDefault();
           if (isRecording) {
             handleStopRecording();
           }
         }}
-        className={styles.recorderButton}
+        className={`${styles.recorderButton} ${!browserSupport.hasAudioSupport ? styles.disabled : ''}`}
         aria-label={isRecording ? "Stop recording" : "Start recording"}
-        disabled={!!error}
+        disabled={!!error || !browserSupport.hasAudioSupport}
       >
         <div className={styles.microphoneIcon}>
           {isRecording ? <StopIcon /> : <MicIcon />}
@@ -277,6 +352,12 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
           )}
         </div>
       </button>
+      {!browserSupport.hasAudioSupport && (
+        <div className={styles.browserSupport}>
+          Your browser doesn't support audio recording.
+          Please try Chrome, Firefox, or Safari.
+        </div>
+      )}
     </div>
   );
 };
