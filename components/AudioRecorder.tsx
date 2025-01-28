@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import styles from "./AudioRecorder.module.css";
+import { checkPermission, requestMicrophonePermission, getPermissionInstructions } from '../utils/permissions';
 
 interface AudioRecorderProps {
   onRecordingComplete: (audioData: Blob) => void;
@@ -35,7 +36,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
     supportedMimeTypes: string[];
   }>({ hasMediaRecorder: false, hasAudioSupport: false, supportedMimeTypes: [] });
 
-  const [permissionStatus, setPermissionStatus] = useState<PermissionState | null>(null);
+  const [permissionState, setPermissionState] = useState<PermissionState>('prompt');
 
   /**
    * Safely cleans up all audio resources and resets state
@@ -142,10 +143,10 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       if (navigator.permissions && navigator.permissions.query) {
         try {
           const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
-          setPermissionStatus(result.state);
+          setPermissionState(result.state);
           
           result.addEventListener('change', () => {
-            setPermissionStatus(result.state);
+            setPermissionState(result.state);
           });
         } catch (e) {
           console.debug('Permission query not supported');
@@ -154,6 +155,33 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
     };
 
     checkBrowserSupport();
+  }, []);
+
+  // Add this useEffect to check permissions on mount and when component becomes visible
+  useEffect(() => {
+    const checkMicPermission = async () => {
+      const state = await checkPermission('microphone');
+      setPermissionState(state);
+      
+      // If permission is denied, set error with instructions
+      if (state === 'denied') {
+        setError(getPermissionInstructions('microphone'));
+      }
+    };
+
+    checkMicPermission();
+
+    // Check permission when tab becomes visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        checkMicPermission();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   /**
@@ -167,6 +195,15 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       if (isRecording) {
         handleStopRecording();
         return;
+      }
+
+      // Request permission if not granted
+      if (permissionState !== 'granted') {
+        const granted = await requestMicrophonePermission();
+        if (!granted) {
+          throw new Error(getPermissionInstructions('microphone'));
+        }
+        setPermissionState('granted');
       }
 
       if (!browserSupport.hasAudioSupport || !browserSupport.hasMediaRecorder) {
@@ -300,9 +337,9 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       {error && (
         <div className={styles.errorMessage} role="alert">
           {error}
-          {permissionStatus === 'denied' && (
+          {permissionState === 'denied' && (
             <div className={styles.permissionHint}>
-              Please enable microphone access in your browser settings to use this feature.
+              {getPermissionInstructions('microphone')}
             </div>
           )}
         </div>

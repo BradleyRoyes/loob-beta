@@ -10,6 +10,7 @@ import React, {
 import maplibregl, { Marker } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./Map.css";
+import { checkPermission, requestLocationPermission, getPermissionInstructions } from '../utils/permissions';
 
 // Child components with their prop types
 import TorusSphere, { TorusSphereProps } from "./TorusSphere";
@@ -162,10 +163,12 @@ const Map: React.FC = () => {
   const watchIdRef = useRef<number | null>(null);
 
   // Add new state for permission
-  const [locationPermission, setLocationPermission] = useState<GeolocationPermissionState>('prompt');
+  const [locationPermissionState, setLocationPermissionState] = useState<PermissionState>('prompt');
 
   // Add new state for pitch
   const [mapPitch, setMapPitch] = useState(0);
+
+  const deviceOrientationRef = useRef<number | null>(null);
 
   /**
    * 1) On mount, fetch data from /api/mapData
@@ -389,111 +392,66 @@ useEffect(() => {
   /**
    * 5) Geolocation logic
    */
-  const startWatchingLocation = useCallback((map: maplibregl.Map) => {
+  const startWatchingLocation = useCallback(async (map: maplibregl.Map) => {
     if (!navigator.geolocation) {
-      console.warn('Geolocation is not supported by this browser');
+      console.warn('Geolocation is not supported');
       return;
     }
 
-    // First check if we already have permission
-    if ('permissions' in navigator) {
-      navigator.permissions.query({ name: 'geolocation' }).then((result) => {
-        setLocationPermission(result.state);
-        
-        if (result.state === 'granted') {
-          startWatching();
-        } else if (result.state === 'prompt') {
-          // This will trigger the permission prompt
-          startWatching();
-        } else {
-          console.warn('Location access denied');
-          // Default to Berlin if access is denied
-          const fallbackLocation: [number, number] = [13.405, 52.52]; // Berlin
-          setCurrentLocation(fallbackLocation);
-          map.setCenter(fallbackLocation);
-          alert("Unable to access your location. Please enable location services in your browser settings.");
+    try {
+      // Request permission if not granted
+      if (locationPermissionState !== 'granted') {
+        const granted = await requestLocationPermission();
+        if (!granted) {
+          throw new Error(getPermissionInstructions('geolocation'));
         }
-        
-        // Listen for permission changes
-        result.addEventListener('change', () => {
-          setLocationPermission(result.state);
-          if (result.state === 'granted') {
-            startWatching();
-          }
-        });
-      });
-    } else {
-      // Fallback for browsers that don't support permissions API
-      startWatching();
-    }
-
-    function startWatching() {
-      if (watchIdRef.current) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
+        setLocationPermissionState('granted');
       }
+
+      // High accuracy options
+      const options = {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      };
 
       watchIdRef.current = navigator.geolocation.watchPosition(
         ({ coords }) => {
-          const { longitude, latitude, heading } = coords;
+          const { longitude, latitude, heading, accuracy } = coords;
           const newPosition: [number, number] = [longitude, latitude];
           
           setCurrentLocation(newPosition);
 
-          if (userMarkerRef.current && mapInstanceRef.current) {
-            userMarkerRef.current.setLngLat(newPosition);
-            mapInstanceRef.current.setCenter(newPosition);
+          if (userMarkerRef.current) {
+            // Smooth movement
+            const currentPos = userMarkerRef.current.getLngLat();
+            smoothlyUpdatePosition(
+              [currentPos.lng, currentPos.lat],
+              newPosition,
+              map,
+              userMarkerRef.current
+            );
 
-            if (typeof heading === 'number' && !isNaN(heading)) {
+            // Update heading if available
+            if (heading !== null) {
               userMarkerRef.current.setRotation(heading);
-              mapInstanceRef.current.setBearing(heading);
             }
           }
+
+          // Create accuracy circle
+          updateAccuracyCircle(map, [longitude, latitude], accuracy);
         },
         (error) => {
-          // More informative error handling
-          switch (error.code) {
-            case GeolocationPositionError.PERMISSION_DENIED:
-              setLocationPermission('denied');
-              console.warn('Location access denied by user');
-              // Default to Berlin if access is denied
-              const fallbackLocation: [number, number] = [13.405, 52.52]; // Berlin
-              setCurrentLocation(fallbackLocation);
-              map.setCenter(fallbackLocation);
-              alert("Unable to access your location. Please enable location services in your browser settings.");
-              break;
-            case GeolocationPositionError.POSITION_UNAVAILABLE:
-              console.warn('Location information unavailable');
-              // Fallback to the user marker's location if available
-              if (userMarkerRef.current) {
-                const userMarkerPosition = userMarkerRef.current.getLngLat();
-                setCurrentLocation([userMarkerPosition.lng, userMarkerPosition.lat]);
-                map.setCenter(userMarkerPosition);
-              } else {
-                // Fallback to Berlin if user marker is not available
-                const fallbackLocation: [number, number] = [13.405, 52.52]; // Berlin
-                setCurrentLocation(fallbackLocation);
-                map.setCenter(fallbackLocation);
-                alert("Unable to determine your location. Defaulting to Berlin.");
-              }
-              break;
-            case GeolocationPositionError.TIMEOUT:
-              console.warn('Location request timed out');
-              break;
-            default:
-              console.warn('Unknown geolocation error');
-          }
+          console.error('Geolocation error:', error);
+          alert(getPermissionInstructions('geolocation'));
         },
-        GEOLOCATION_OPTIONS
+        options
       );
+    } catch (error) {
+      console.error('Error starting location watch:', error);
+      alert(getPermissionInstructions('geolocation'));
     }
-
-    // Cleanup function
-    return () => {
-      if (watchIdRef.current) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
-      }
-    };
-  }, []);
+  }, [locationPermissionState]);
 
   /**
    * 6) Node selection logic -> popup
@@ -600,6 +558,119 @@ useEffect(() => {
         zoom: INITIAL_ZOOM,
         duration: 1000,
         essential: true // This makes the animation smoother
+      });
+    }
+  };
+
+  // Add this useEffect for permission checking
+  useEffect(() => {
+    const checkLocationPermission = async () => {
+      const state = await checkPermission('geolocation');
+      setLocationPermissionState(state);
+      
+      if (state === 'denied') {
+        alert(getPermissionInstructions('geolocation'));
+      }
+    };
+
+    checkLocationPermission();
+
+    // Check when tab becomes visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        checkLocationPermission();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  // Add device orientation handling
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+
+    const handleDeviceOrientation = (event: DeviceOrientationEvent) => {
+      if ('webkitCompassHeading' in event) {
+        // iOS compass heading
+        deviceOrientationRef.current = (event as any).webkitCompassHeading;
+      } else if (event.alpha) {
+        // Android compass heading
+        deviceOrientationRef.current = 360 - event.alpha;
+      }
+
+      if (deviceOrientationRef.current !== null && mapInstanceRef.current) {
+        mapInstanceRef.current.setBearing(deviceOrientationRef.current);
+      }
+    };
+
+    const requestOrientationPermission = async () => {
+      if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+        try {
+          const permission = await (DeviceOrientationEvent as any).requestPermission();
+          if (permission === 'granted') {
+            window.addEventListener('deviceorientation', handleDeviceOrientation, true);
+          }
+        } catch (e) {
+          console.warn('Device orientation permission denied');
+        }
+      } else {
+        // Non-iOS devices don't need permission
+        window.addEventListener('deviceorientation', handleDeviceOrientation, true);
+      }
+    };
+
+    requestOrientationPermission();
+
+    return () => {
+      window.removeEventListener('deviceorientation', handleDeviceOrientation, true);
+    };
+  }, []);
+
+  // Add this function to show accuracy radius
+  const updateAccuracyCircle = (map: maplibregl.Map, center: [number, number], accuracy: number) => {
+    const circleId = 'accuracy-circle';
+    
+    if (!map.getSource(circleId)) {
+      map.addSource(circleId, {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: center
+          },
+          properties: {
+            accuracy
+          }
+        }
+      });
+
+      map.addLayer({
+        id: circleId,
+        type: 'circle',
+        source: circleId,
+        paint: {
+          'circle-radius': ['get', 'accuracy'],
+          'circle-color': '#4264fb',
+          'circle-opacity': 0.2,
+          'circle-stroke-width': 1,
+          'circle-stroke-color': '#4264fb'
+        }
+      });
+    } else {
+      const source = map.getSource(circleId) as maplibregl.GeoJSONSource;
+      source.setData({
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: center
+        },
+        properties: {
+          accuracy
+        }
       });
     }
   };
