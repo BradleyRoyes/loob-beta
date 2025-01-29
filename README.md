@@ -245,3 +245,7 @@ Currently in active development with focus on:
 <p align="center">
 Built with 💜 for underground communities worldwide
 </p>
+
+## 🛡️ License
+Loob is licensed under the **GNU Affero General Public License (AGPL-3.0)**. Any modifications or forks **must also be open-source** and released under the same license.
+Read the full license [here](LICENSE).
