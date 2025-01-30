@@ -17,6 +17,7 @@ import TorusSphere, { TorusSphereProps } from "./TorusSphere";
 import OfferingProfile from "./OfferingProfile";
 import MapSidebar from "./MapSidebar";
 import AddVenueModal from "./AddVenueModal";
+import LoobCache from './LoobCache';
 
 // Types
 export type VisualView = "Today";
@@ -821,6 +822,15 @@ useEffect(() => {
           onConfirm={handleConfirmAddVenue}
         />
       )}
+
+      <LoobCache 
+        currentLocation={currentLocation}
+        onLoobFound={(amount) => {
+          // Show celebration animation
+          // Update user's LOOB balance
+          console.log(`Found ${amount} LOOB!`);
+        }}
+      />
     </div>
   );
 };

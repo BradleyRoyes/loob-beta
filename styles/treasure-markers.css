@@ -1,0 +1,47 @@
+.treasure-marker {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  cursor: pointer;
+  animation: pulse 2s infinite;
+}
+
+.treasure-marker.easy {
+  background: rgba(76, 175, 80, 0.8);
+  box-shadow: 0 0 10px #4CAF50;
+}
+
+.treasure-marker.medium {
+  background: rgba(255, 152, 0, 0.8);
+  box-shadow: 0 0 10px #FF9800;
+}
+
+.treasure-marker.hard {
+  background: rgba(244, 67, 54, 0.8);
+  box-shadow: 0 0 15px #F44336;
+}
+
+.treasure-marker.nfc::after {
+  content: "NFC";
+  font-size: 8px;
+  color: white;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+} 
