@@ -5,34 +5,38 @@ import React, {
   useRef,
   useState,
   useCallback,
-  MutableRefObject,
+  CSSProperties,
 } from "react";
 import maplibregl, { Marker } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./Map.css";
-import { checkPermission, requestLocationPermission, getPermissionInstructions } from '../utils/permissions';
+import {
+  checkPermission,
+  requestLocationPermission,
+  getPermissionInstructions,
+} from "../utils/permissions";
+import { useGeolocation } from "./hooks/useGeolocation";
+import debounce from "lodash/debounce";
 
-// Child components with their prop types
-import TorusSphere, { TorusSphereProps } from "./TorusSphere";
+import TorusSphere from "./TorusSphere";
 import OfferingProfile from "./OfferingProfile";
 import MapSidebar from "./MapSidebar";
 import AddVenueModal from "./AddVenueModal";
-import LoobCache from './LoobCache';
+import LoobCache from "./LoobCache";
 
-// Types
 export type VisualView = "Today";
 
 export interface Node {
   id: string;
   lat: number;
   lon: number;
-  label: string;     // e.g. "Berghain"
-  type: string;      // e.g. "Venue", "Gear", etc.
-  details: string;   // e.g. description or details
-  contact: string;   // e.g. "mailto:someone@example.com"
-  visualType: VisualView; // "Today"
-  createdAt?: string;  // Add these as optional
-  updatedAt?: string;  // Add these as optional
+  label: string;
+  type: string;
+  details: string;
+  contact: string;
+  visualType: VisualView;
+  createdAt?: string;
+  updatedAt?: string;
   location?: string;
   pseudonym?: string;
   email?: string;
@@ -46,37 +50,32 @@ interface MapNode extends Node {
   isLoobricate?: boolean;
 }
 
-// Berlin center (longitude, latitude)
 const DEFAULT_LOCATION: [number, number] = [13.405, 52.52];
 const MAP_PITCH = 75;
 const INITIAL_ZOOM = 16;
 
-// Add these constants at the top level
 const GEOLOCATION_OPTIONS = {
   enableHighAccuracy: true,
   timeout: 5000,
-  maximumAge: 0, // Always get fresh position
+  maximumAge: 0,
 };
 
-// Add this type
-type GeolocationPermissionState = 'prompt' | 'granted' | 'denied';
+type GeolocationPermissionState = "prompt" | "granted" | "denied";
 
-// Add this type at the top with other interfaces
 interface LocationError {
-  type: 'permission' | 'unavailable' | 'timeout';
+  type: "permission" | "unavailable" | "timeout";
   message: string;
 }
 
-// Add this to your Map component's JSX return statement, before the closing div
 const MAP_STYLE: maplibregl.StyleSpecification = {
-  version: 8 as 8,  // Type assertion to literal type '8'
+  version: 8 as 8,
   sources: {
     "osm-tiles": {
       type: "raster",
       tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
       tileSize: 256,
-      attribution: '© OpenStreetMap contributors',
-    }
+      attribution: "© OpenStreetMap contributors",
+    },
   },
   layers: [
     {
@@ -85,23 +84,29 @@ const MAP_STYLE: maplibregl.StyleSpecification = {
       source: "osm-tiles",
       minzoom: 0,
       maxzoom: 19,
-    }
-  ]
+      paint: {
+        "raster-saturation": -1,
+        "raster-contrast": 0.2,
+        "raster-brightness-min": 0.2
+      }
+    },
+  ],
 };
 
-// Add this at the top with other constants
 const INITIAL_MAP_STATE = {
   center: DEFAULT_LOCATION,
   zoom: INITIAL_ZOOM,
-  pitch: 0, // Start with top-down view
+  pitch: 0,
   bearing: 0,
-  maxBounds: [[-10, 35], [40, 65]] as [[number, number], [number, number]], // Type assertion for bounds
+  maxBounds: [
+    [-10, 35],
+    [40, 65],
+  ] as [[number, number], [number, number]],
   minZoom: 4,
   maxZoom: 19,
-  fadeDuration: 0
+  fadeDuration: 0,
 };
 
-// Add this function to calculate smooth movement
 const smoothlyUpdatePosition = (
   currentPos: [number, number],
   newPos: [number, number],
@@ -110,20 +115,21 @@ const smoothlyUpdatePosition = (
 ) => {
   const start = currentPos;
   const end = newPos;
-  const steps = 60; // 60fps for 1 second
+  const steps = 60;
   let step = 0;
 
   const animate = () => {
     step++;
-    
     const progress = step / steps;
     const lat = start[1] + (end[1] - start[1]) * progress;
     const lng = start[0] + (end[0] - start[0]) * progress;
-    
+
     marker.setLngLat([lng, lat]);
-    
-    if (map.getCenter().lng.toFixed(6) === lng.toFixed(6) && 
-        map.getCenter().lat.toFixed(6) === lat.toFixed(6)) {
+
+    if (
+      map.getCenter().lng.toFixed(6) === lng.toFixed(6) &&
+      map.getCenter().lat.toFixed(6) === lat.toFixed(6)
+    ) {
       map.setCenter([lng, lat]);
     }
 
@@ -135,54 +141,84 @@ const smoothlyUpdatePosition = (
   animate();
 };
 
+const loadingOverlayStyle: CSSProperties = {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: "rgba(255, 255, 255, 0.8)",
+  backdropFilter: "blur(5px)",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  zIndex: 1000,
+};
+
+const mobileOverlayStyle: CSSProperties = {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: "rgba(0, 0, 0, 0.5)",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  zIndex: 1500,
+};
+
+interface DeviceOrientationEventWithWebkit extends DeviceOrientationEvent {
+  webkitCompassHeading?: number;
+}
+
 const Map: React.FC = () => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
-
-  // We'll store references to the markers so we can remove them if needed.
   const markersRef = useRef<Marker[]>([]);
-
-  // Our array of nodes from DB
   const [nodes, setNodes] = useState<MapNode[]>([]);
-
-  // Current user geolocation
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
-
-  // Pop-up / preview logic
   const [previewNode, setPreviewNode] = useState<Node | null>(null);
   const [showPreviewPopup, setShowPreviewPopup] = useState(false);
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
-
-  // Venue profile logic
   const [showOfferingProfile, setShowOfferingProfile] = useState(false);
   const [activeNode, setActiveNode] = useState<Node | null>(null);
-
-  // "Add Venue" modal logic
   const [showAddVenueModal, setShowAddVenueModal] = useState(false);
-
-  // Sidebar logic
   const [sidebarActive, setSidebarActive] = useState(() => window.innerWidth > 768);
-
-  // Add new state for loading
   const [isMapLoading, setIsMapLoading] = useState(true);
-
   const userMarkerRef = useRef<maplibregl.Marker | null>(null);
   const watchIdRef = useRef<number | null>(null);
-
-  // Add new state for permission
-  const [locationPermissionState, setLocationPermissionState] = useState<PermissionState>('prompt');
-
-  // Add new state for pitch
+  const [locationPermissionState, setLocationPermissionState] = useState<PermissionState>("prompt");
   const [mapPitch, setMapPitch] = useState(0);
-
-  const deviceOrientationRef = useRef<number | null>(null);
-
-  // Add state for location error
   const [locationError, setLocationError] = useState<LocationError | null>(null);
+  const isMapMoving = useRef(false);
+  const [deviceOrientation, setDeviceOrientation] = useState<number>(0);
 
-  /**
-   * 1) On mount, fetch data from /api/mapData
-   */
+  // Use the geolocation hook at component level.
+  // Rename error to geoError to avoid naming conflicts.
+  const { location, accuracy, heading, error: geoError } = useGeolocation(
+    mapInstanceRef.current,
+    userMarkerRef.current
+  );
+
+  useEffect(() => {
+    if (location) {
+      setCurrentLocation(location);
+      if (mapInstanceRef.current) {
+        updateAccuracyCircle(mapInstanceRef.current, location, accuracy || 0);
+      }
+    }
+  }, [location, accuracy]);
+
+  useEffect(() => {
+    if (geoError) {
+      setLocationError({
+        type: "unavailable",
+        message: geoError.message,
+      });
+    }
+  }, [geoError]);
+
   useEffect(() => {
     async function fetchUserEntries() {
       try {
@@ -191,21 +227,15 @@ const Map: React.FC = () => {
           throw new Error(`Error fetching map data: ${response.status}`);
         }
         const data = await response.json();
-        /**
-         * data is an array of docs from your library collection
-         * We'll create random coords if we have no lat/lon.
-         * In future, you might store real lat/lon or do geocoding.
-         */
 
         function getRandomCoordsNearBerlin(): [number, number] {
-          const lon = 13.2 + Math.random() * 0.5; // ~13.2 to ~13.7
-          const lat = 52.4 + Math.random() * 0.4; // ~52.4 to ~52.8
+          const lon = 13.2 + Math.random() * 0.5;
+          const lat = 52.4 + Math.random() * 0.4;
           return [lon, lat];
         }
 
         const newNodes: MapNode[] = data.map((entry: any) => {
           const [lon, lat] = getRandomCoordsNearBerlin();
-
           return {
             id: entry.document_id || `temp-${Math.random()}`,
             lat,
@@ -215,14 +245,14 @@ const Map: React.FC = () => {
             details: entry.description ?? "No description provided.",
             contact: entry.email ? `mailto:${entry.email}` : "No contact info",
             visualType: "Today",
-            isLoobricate: entry.offeringType === 'Loobricate', // Check if it's a loobricate
+            isLoobricate: entry.offeringType === "Loobricate",
             location: entry.location,
             pseudonym: entry.pseudonym,
             email: entry.email,
             phone: entry.phone,
             tags: entry.tags,
             loobricates: entry.loobricates,
-            dataType: entry.dataType
+            dataType: entry.dataType,
           };
         });
 
@@ -235,228 +265,243 @@ const Map: React.FC = () => {
     fetchUserEntries();
   }, []);
 
-  /**
-   * 2) Adjust sidebar on window resize
-   */
   useEffect(() => {
     const handleResize = () => setSidebarActive(window.innerWidth > 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
- /**
- * 3) Map initialization — run once
- */
-useEffect(() => {
-  if (!mapContainerRef.current || mapInstanceRef.current) return;
+  const startWatchingLocation = useCallback(
+    async (map: maplibregl.Map) => {
+      if (!navigator.geolocation) {
+        console.warn("Geolocation is not supported by this browser");
+        return;
+      }
 
-  setIsMapLoading(true);
+      const permissionState = await checkPermission("geolocation");
+      setLocationPermissionState(permissionState);
+      if (permissionState === "denied") {
+        return;
+      }
 
-  const map = new maplibregl.Map({
-    container: mapContainerRef.current,
-    ...INITIAL_MAP_STATE,
-    style: MAP_STYLE,
-    interactive: true, // Enable all interactive features
-    dragRotate: true, // Enable rotation
-    pitchWithRotate: true // Enable pitch with rotation
-  });
+      let hasRequestedPermission = false;
+      const options = {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 1000,
+      };
 
-  mapInstanceRef.current = map;
+      const handleSuccess = ({ coords }: GeolocationPosition) => {
+        const { longitude, latitude, heading, accuracy } = coords;
+        const newPosition: [number, number] = [longitude, latitude];
+        setCurrentLocation(newPosition);
 
-  // Enable zoom controls with compass
-  map.addControl(new maplibregl.NavigationControl({
-    visualizePitch: true, // Show pitch control
-    showCompass: true // Show compass
-  }), 'top-right');
+        if (userMarkerRef.current) {
+          if (isMapMoving.current) {
+            userMarkerRef.current.setLngLat(newPosition);
+          } else {
+            const currentPos = userMarkerRef.current.getLngLat();
+            smoothlyUpdatePosition(
+              [currentPos.lng, currentPos.lat],
+              newPosition,
+              map,
+              userMarkerRef.current
+            );
+          }
 
-  // Remove the disableControls function and instead enable the controls we want
-  map.dragRotate.enable(); // Enable drag rotation
-  map.touchZoomRotate.enable(); // Enable touch zoom and rotate
-  map.dragPan.enable(); // Enable drag panning
-  map.scrollZoom.enable(); // Enable scroll zooming
-  map.keyboard.enable(); // Enable keyboard controls
-  
-  // Enable drag with right mouse button only
-  map.dragPan.disable(); // Disable left-click drag
-  map.on('mousedown', (e) => {
-    if (e.originalEvent.button === 2) { // Right mouse button
-      map.dragPan.enable();
-    }
-  });
-  
-  map.on('mouseup', () => {
-    map.dragPan.disable();
-  });
-  
-  // Prevent context menu on right-click
-  map.getCanvas().addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-  });
-
-  // Enhanced touch handling for mobile
-  let startTouchY = 0;
-  map.on('touchstart', (e) => {
-    if (e.points.length === 1) { // Single touch
-      startTouchY = e.points[0].y;
-    }
-  });
-
-  map.on('touchmove', (e) => {
-    if (e.points.length === 1) { // Single touch
-      const deltaY = e.points[0].y - startTouchY;
-      const newPitch = Math.max(0, Math.min(85, map.getPitch() - deltaY * 0.5));
-      map.setPitch(newPitch);
-      startTouchY = e.points[0].y;
-    }
-  });
-
-  // Enhanced device orientation handling
-  const handleDeviceOrientation = (event: DeviceOrientationEvent) => {
-    if (!mapInstanceRef.current) return;
-    
-    let heading: number | null = null;
-    let pitch: number | null = null;
-
-    if ('webkitCompassHeading' in event) {
-      // iOS
-      heading = (event as any).webkitCompassHeading as number;
-      pitch = event.beta as number;
-    } else if (event.alpha !== null) {
-      // Android
-      heading = 360 - event.alpha;
-      pitch = event.beta;
-    }
-
-    if (heading !== null) {
-      mapInstanceRef.current.setBearing(heading);
-    }
-
-    if (pitch !== null) {
-      const mapPitch = Math.max(0, Math.min(85, (pitch - 45) * 1.5));
-      mapInstanceRef.current.setPitch(mapPitch);
-    }
-  };
-
-  // Request device orientation permission and add listener
-  const requestOrientationPermission = async () => {
-    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-      try {
-        const permission = await (DeviceOrientationEvent as any).requestPermission();
-        if (permission === 'granted') {
-          window.addEventListener('deviceorientation', handleDeviceOrientation, true);
+          if (heading !== null) {
+            userMarkerRef.current.setRotation(heading);
+          }
         }
-      } catch (e) {
-        console.warn('Device orientation permission denied');
-      }
-    } else {
-      window.addEventListener('deviceorientation', handleDeviceOrientation, true);
+
+        updateAccuracyCircle(map, [longitude, latitude], accuracy);
+      };
+
+      const handleError = (error: GeolocationPositionError) => {
+        let locError: LocationError;
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            locError = {
+              type: "permission",
+              message: "Location access was denied. You can enable it in your settings.",
+            };
+            break;
+          case error.POSITION_UNAVAILABLE:
+            locError = {
+              type: "unavailable",
+              message: "Location information is unavailable. Please check your device settings.",
+            };
+            break;
+          case error.TIMEOUT:
+            locError = {
+              type: "timeout",
+              message: "Location request timed out. Please try again.",
+            };
+            break;
+          default:
+            locError = {
+              type: "unavailable",
+              message: "An unknown error occurred while getting location.",
+            };
+        }
+
+        if (!hasRequestedPermission) {
+          setLocationError(locError);
+          hasRequestedPermission = true;
+        }
+
+        if (error.code === error.PERMISSION_DENIED && watchIdRef.current) {
+          navigator.geolocation.clearWatch(watchIdRef.current);
+          watchIdRef.current = null;
+        }
+      };
+
+      watchIdRef.current = navigator.geolocation.watchPosition(
+        handleSuccess,
+        handleError,
+        options
+      );
+    },
+    []
+  );
+
+  const handleDeviceOrientation = useCallback((event: DeviceOrientationEventWithWebkit) => {
+    if (event.webkitCompassHeading) {
+      setDeviceOrientation(event.webkitCompassHeading);
+    } else if (event.alpha) {
+      setDeviceOrientation(360 - event.alpha);
     }
-  };
+  }, []);
 
-  // Initialize orientation handling
-  requestOrientationPermission();
+  useEffect(() => {
+    if (window.DeviceOrientationEvent) {
+      if (
+        typeof (DeviceOrientationEvent as any).requestPermission === 'function'
+      ) {
+        // iOS 13+ devices need to request permission
+        document.addEventListener('click', async () => {
+          try {
+            const permission = await (DeviceOrientationEvent as any).requestPermission();
+            if (permission === 'granted') {
+              window.addEventListener('deviceorientation', handleDeviceOrientation);
+            }
+          } catch (error) {
+            console.error('Error requesting device orientation permission:', error);
+          }
+        }, { once: true });
+      } else {
+        // Non-iOS devices
+        window.addEventListener('deviceorientation', handleDeviceOrientation);
+      }
+    }
 
-  // Optimize user marker creation
-  const createUserMarker = () => {
-    const userAvatarEl = document.createElement('div');
-    userAvatarEl.className = 'user-arrow';
-    return new maplibregl.Marker({
-      element: userAvatarEl,
-      anchor: 'center',
-      rotationAlignment: 'map',
-      scale: 1.2
-    }).setLngLat(DEFAULT_LOCATION).addTo(map);
-  };
+    return () => {
+      window.removeEventListener('deviceorientation', handleDeviceOrientation);
+    };
+  }, [handleDeviceOrientation]);
 
-  userMarkerRef.current = createUserMarker();
+  useEffect(() => {
+    if (userMarkerRef.current) {
+      userMarkerRef.current.setRotation(deviceOrientation);
+    }
+  }, [deviceOrientation]);
 
-  // Optimize loading check
-  const loadStates = { tiles: false, style: false };
-  const checkLoading = () => {
-    if (loadStates.tiles && loadStates.style) {
+  useEffect(() => {
+    if (!mapContainerRef.current || mapInstanceRef.current) return;
+
+    const map = new maplibregl.Map({
+      container: mapContainerRef.current,
+      ...INITIAL_MAP_STATE,
+      style: MAP_STYLE,
+      maxZoom: 19,
+      minZoom: 4,
+      trackResize: true,
+      refreshExpiredTiles: false,
+    });
+
+    mapInstanceRef.current = map;
+
+    const createUserMarker = () => {
+      const userAvatarEl = document.createElement("div");
+      userAvatarEl.className = "user-arrow";
+      return new maplibregl.Marker({
+        element: userAvatarEl,
+        anchor: "center",
+        rotationAlignment: "map",
+        pitchAlignment: "map",
+        scale: 1.2,
+      })
+        .setLngLat(DEFAULT_LOCATION)
+        .addTo(map);
+    };
+
+    userMarkerRef.current = createUserMarker();
+
+    const debouncedResize = debounce(() => {
+      map.resize();
+    }, 250);
+
+    window.addEventListener("resize", debouncedResize);
+
+    // When the map is ready, start watching location.
+    map.on("load", () => {
       setIsMapLoading(false);
-    }
-  };
+      startWatchingLocation(map);
+    });
 
-  map.once('load', () => {
-    map.getCanvas().style.filter = "grayscale(100%)";
-    loadStates.style = true;
-    checkLoading();
-    startWatchingLocation(map);
-  });
+    map.on("movestart", () => {
+      isMapMoving.current = true;
+    });
 
-  map.once('idle', () => {
-    loadStates.tiles = true;
-    checkLoading();
-  });
+    map.on("moveend", () => {
+      isMapMoving.current = false;
+    });
 
-  map.on('error', () => {
-    console.error('Map loading error');
-    setIsMapLoading(false);
-  });
-
-  // Preload surrounding tiles
-  const preloadTiles = () => {
-    const center = map.getCenter();
-    const zoom = map.getZoom();
-    
-    // Force load surrounding tiles
-    for (let i = -1; i <= 1; i++) {
-      for (let j = -1; j <= 1; j++) {
-        const lat = center.lat + (i * 0.1);
-        const lng = center.lng + (j * 0.1);
-        map.setCenter([lng, lat]);
+    // Add bearing change handler
+    map.on('rotate', () => {
+      if (!window.DeviceOrientationEvent && userMarkerRef.current) {
+        // Only update rotation based on map bearing for desktop
+        userMarkerRef.current.setRotation(map.getBearing());
       }
-    }
-    
-    // Reset to original position
-    map.setCenter([center.lng, center.lat]);
-    map.setZoom(zoom);
-  };
+    });
 
-  map.on('load', preloadTiles);
+    return () => {
+      window.removeEventListener("resize", debouncedResize);
+      debouncedResize.cancel();
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+      map.off("movestart", () => {
+        isMapMoving.current = true;
+      });
+      map.off("moveend", () => {
+        isMapMoving.current = false;
+      });
+    };
+  }, [startWatchingLocation]);
 
-  // Hide the modal when the map moves
-  map.on("move", () => {
-    setShowPreviewPopup(false); // Hide the mini modal
-    setPreviewNode(null); // Reset the preview node
-  });
-
-  return () => {
-    window.removeEventListener('deviceorientation', handleDeviceOrientation, true);
-    if (watchIdRef.current) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-    }
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.remove();
-      mapInstanceRef.current = null;
-    }
-  };
-}, []);
-
-
-  /**
-   * 4) Whenever `nodes` changes, we remove old markers and add new ones.
-   */
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
 
-    // Remove existing markers from the map
+    // Clear existing markers
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
-    // Add new markers
+    // Add markers
     nodes.forEach((node) => {
       const markerEl = document.createElement("div");
-      markerEl.className = `map-marker ${node.isLoobricate ? 'loobricate' : ''}`;
-
-      // Create the marker with a consistent anchor point
-      const marker = new maplibregl.Marker({ element: markerEl, anchor: 'bottom' })
+      markerEl.className = `map-marker ${node.isLoobricate ? "loobricate" : ""}`;
+      const marker = new maplibregl.Marker({ 
+        element: markerEl, 
+        anchor: "bottom",
+        rotationAlignment: "map",
+        pitchAlignment: "map",
+      })
         .setLngLat([node.lon, node.lat])
         .addTo(map);
 
-      // Add click event listener
       marker.getElement().addEventListener("click", () => {
         selectNode(map, node);
       });
@@ -464,138 +509,38 @@ useEffect(() => {
       markersRef.current.push(marker);
     });
 
-    // Update marker positions on map move and zoom
+    // Only update markers when movement ends
     const updateMarkerPositions = () => {
-      markersRef.current.forEach((marker, index) => {
-        const node = nodes[index];
-        if (node) {
-          marker.setLngLat([node.lon, node.lat]);
-        }
-      });
+      if (!isMapMoving.current) {
+        markersRef.current.forEach((marker, index) => {
+          const node = nodes[index];
+          if (node) {
+            marker.setLngLat([node.lon, node.lat]);
+          }
+        });
+      }
     };
 
-    map.on('move', updateMarkerPositions);
-    map.on('zoom', updateMarkerPositions);
+    map.on("moveend", updateMarkerPositions);
 
     return () => {
-      map.off('move', updateMarkerPositions);
-      map.off('zoom', updateMarkerPositions);
+      map.off("moveend", updateMarkerPositions);
     };
   }, [nodes]);
 
-  /**
-   * 5) Geolocation logic
-   */
-  const startWatchingLocation = useCallback(async (map: maplibregl.Map) => {
-    if (!navigator.geolocation) {
-      console.warn('Geolocation is not supported by this browser');
-      return;
-    }
-
-    // Only request location if we haven't already been denied
-    const permissionState = await checkPermission('geolocation');
-    if (permissionState === 'denied') {
-      return;
-    }
-
-    let hasRequestedPermission = false;
-
-    const options = {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 1000
-    };
-
-    const handleSuccess = ({ coords }: GeolocationPosition) => {
-      const { longitude, latitude, heading, accuracy } = coords;
-      const newPosition: [number, number] = [longitude, latitude];
-      
-      setCurrentLocation(newPosition);
-
-      if (userMarkerRef.current) {
-        const currentPos = userMarkerRef.current.getLngLat();
-        smoothlyUpdatePosition(
-          [currentPos.lng, currentPos.lat],
-          newPosition,
-          map,
-          userMarkerRef.current
-        );
-
-        if (heading !== null) {
-          userMarkerRef.current.setRotation(heading);
-        }
-      }
-
-      // Update accuracy circle
-      updateAccuracyCircle(map, [longitude, latitude], accuracy);
-    };
-
-    const handleError = (error: GeolocationPositionError) => {
-      let locationError: LocationError;
-
-      switch (error.code) {
-        case error.PERMISSION_DENIED:
-          locationError = {
-            type: 'permission',
-            message: 'Location access was denied. You can enable it in your settings.'
-          };
-          break;
-        case error.POSITION_UNAVAILABLE:
-          locationError = {
-            type: 'unavailable',
-            message: 'Location information is unavailable. Please check your device settings.'
-          };
-          break;
-        case error.TIMEOUT:
-          locationError = {
-            type: 'timeout',
-            message: 'Location request timed out. Please try again.'
-          };
-          break;
-        default:
-          locationError = {
-            type: 'unavailable',
-            message: 'An unknown error occurred while getting location.'
-          };
-      }
-
-      // Only show the error message if we haven't already shown one
-      if (!hasRequestedPermission) {
-        setLocationError(locationError);
-        hasRequestedPermission = true;
-      }
-
-      // Clear the watch if we get a permission denied error
-      if (error.code === error.PERMISSION_DENIED && watchIdRef.current) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
-        watchIdRef.current = null;
-      }
-    };
-
-    // Start watching location
-    watchIdRef.current = navigator.geolocation.watchPosition(
-      handleSuccess,
-      handleError,
-      options
-    );
-
-  }, []);
-
-  /**
-   * 6) Node selection logic -> popup
-   */
   const selectNode = useCallback((map: maplibregl.Map, node: Node) => {
+    isMapMoving.current = true;
     map.flyTo({
       center: [node.lon, node.lat],
       zoom: 14,
       speed: 0.8,
       curve: 1,
     });
-  
+
     map.once("moveend", () => {
+      isMapMoving.current = false;
       setPreviewNode(node);
       setShowPreviewPopup(true);
-  
       const screenPos = map.project([node.lon, node.lat]);
       setPopupPosition({
         x: screenPos.x,
@@ -603,7 +548,7 @@ useEffect(() => {
       });
     });
   }, []);
-  
+
   function adjustPopupPositionToScreen(
     screenPos: maplibregl.PointLike,
     map: maplibregl.Map
@@ -619,23 +564,16 @@ useEffect(() => {
     };
   }
 
-  /**
-   * 7) Render sphere by visualType
-   */
   const renderSphereForNode = (node: Node) => {
     return <TorusSphere loobricateId={node.id} />;
   };
 
-  /**
-   * 8) Logic for AddVenueModal
-   */
   const handleConfirmAddVenue = (venueName: string) => {
     if (!currentLocation) {
       setShowAddVenueModal(false);
       return;
     }
     const [lon, lat] = currentLocation;
-
     const newNode: MapNode = {
       id: `Node-${Date.now()}`,
       lat,
@@ -651,119 +589,118 @@ useEffect(() => {
       phone: "123-456-7890",
       tags: ["User-created tag"],
       loobricates: ["User-created loobricate"],
-      dataType: "User-created"
+      dataType: "User-created",
     };
 
     setNodes((prev) => [...prev, newNode]);
     setShowAddVenueModal(false);
 
-    const map = mapInstanceRef.current;
-    if (map) {
-      map.flyTo({ center: [lon, lat], zoom: 14 });
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.flyTo({ center: [lon, lat], zoom: 14 });
     }
   };
 
-  /**
-   * 9) Show venue profile
-   */
   const handleShowOfferingProfile = (node: Node) => {
     setActiveNode(node);
     setShowOfferingProfile(true);
   };
 
-  /**
-   * 10) Sidebar toggle
-   */
   const toggleSidebar = () => setSidebarActive((prev) => !prev);
 
-  // Update the recenter button click handler
   const handleRecenter = () => {
     if (mapInstanceRef.current && currentLocation) {
+      isMapMoving.current = true;
       mapInstanceRef.current.flyTo({
         center: currentLocation,
         pitch: MAP_PITCH,
         bearing: 0,
         zoom: INITIAL_ZOOM,
         duration: 1000,
-        essential: true // This makes the animation smoother
+        essential: true,
+      });
+      mapInstanceRef.current.once("moveend", () => {
+        isMapMoving.current = false;
       });
     }
   };
 
-  // Add this useEffect for permission checking
   useEffect(() => {
     const checkLocationPermission = async () => {
-      const state = await checkPermission('geolocation');
+      const state = await checkPermission("geolocation");
       setLocationPermissionState(state);
-      
-      if (state === 'denied') {
-        alert(getPermissionInstructions('geolocation'));
+      if (state === "denied") {
+        alert(getPermissionInstructions("geolocation"));
       }
     };
 
     checkLocationPermission();
 
-    // Check when tab becomes visible
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         checkLocationPermission();
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
-  // Add this function to show accuracy radius
-  const updateAccuracyCircle = (map: maplibregl.Map, center: [number, number], accuracy: number) => {
-    const circleId = 'accuracy-circle';
-    
+  const updateAccuracyCircle = (
+    map: maplibregl.Map,
+    center: [number, number],
+    accuracy: number
+  ) => {
+    const circleId = "accuracy-circle";
+
     if (!map.getSource(circleId)) {
       map.addSource(circleId, {
-        type: 'geojson',
+        type: "geojson",
         data: {
-          type: 'Feature',
+          type: "Feature",
           geometry: {
-            type: 'Point',
-            coordinates: center
+            type: "Point",
+            coordinates: center,
           },
           properties: {
-            accuracy
-          }
-        }
+            accuracy,
+          },
+        },
       });
 
       map.addLayer({
         id: circleId,
-        type: 'circle',
+        type: "circle",
         source: circleId,
         paint: {
-          'circle-radius': ['get', 'accuracy'],
-          'circle-color': '#4264fb',
-          'circle-opacity': 0.2,
-          'circle-stroke-width': 1,
-          'circle-stroke-color': '#4264fb'
-        }
+          "circle-radius": ["get", "accuracy"],
+          "circle-color": "#4264fb",
+          "circle-opacity": 0.2,
+          "circle-stroke-width": 1,
+          "circle-stroke-color": "#4264fb",
+        },
       });
     } else {
       const source = map.getSource(circleId) as maplibregl.GeoJSONSource;
       source.setData({
-        type: 'Feature',
+        type: "Feature",
         geometry: {
-          type: 'Point',
-          coordinates: center
+          type: "Point",
+          coordinates: center,
         },
         properties: {
-          accuracy
-        }
+          accuracy,
+        },
       });
     }
   };
 
-  // Add this component to show location errors
-  const LocationErrorMessage = ({ error, onRetry, onDismiss }: {
+  const LocationErrorMessage = ({
+    error,
+    onRetry,
+    onDismiss,
+  }: {
     error: LocationError;
     onRetry: () => void;
     onDismiss: () => void;
@@ -772,7 +709,7 @@ useEffect(() => {
       <div className="error-content">
         <span>{error.message}</span>
         <div className="button-group">
-          {error.type !== 'permission' && (
+          {error.type !== "permission" && (
             <button className="retry-button" onClick={onRetry}>
               Try Again
             </button>
@@ -786,16 +723,40 @@ useEffect(() => {
   );
 
   return (
-    <div className="map-container">
+    <div className="map-container" style={{ position: "relative" }}>
       <div ref={mapContainerRef} className="map-layer" />
 
-      {/* Tilt Controller with Arrow Buttons */}
+      {isMapLoading && (
+        <div style={loadingOverlayStyle}>
+          <div className="map-spinner" />
+        </div>
+      )}
+
+      {window.innerWidth < 768 && !currentLocation && (
+        <div style={mobileOverlayStyle}>
+          <button
+            onClick={() => {
+              if (mapInstanceRef.current) {
+                startWatchingLocation(mapInstanceRef.current);
+              }
+            }}
+            style={{
+              padding: "12px 24px",
+              fontSize: "1rem",
+              borderRadius: "4px",
+            }}
+          >
+            Enable Location
+          </button>
+        </div>
+      )}
+
       <div className="tilt-controller">
         <button
           className="tilt-button"
           onClick={() => {
-            const newPitch = Math.min(mapPitch + 10, 80); // Increase pitch, max 80
-            setMapPitch(newPitch); // Update the pitch state
+            const newPitch = Math.min(mapPitch + 10, 80);
+            setMapPitch(newPitch);
             mapInstanceRef.current?.setPitch(newPitch);
           }}
           aria-label="Increase tilt"
@@ -805,8 +766,8 @@ useEffect(() => {
         <button
           className="tilt-button"
           onClick={() => {
-            const newPitch = Math.max(mapPitch - 10, 0); // Decrease pitch, min 0
-            setMapPitch(newPitch); // Update the pitch state
+            const newPitch = Math.max(mapPitch - 10, 0);
+            setMapPitch(newPitch);
             mapInstanceRef.current?.setPitch(newPitch);
           }}
           aria-label="Decrease tilt"
@@ -815,13 +776,12 @@ useEffect(() => {
         </button>
       </div>
 
-      {/* Recenter button */}
-      <button 
+      <button
         className={`recenter-button ${
-          currentLocation && 
-          mapInstanceRef.current?.getCenter().toString() !== currentLocation.toString() 
-          ? 'not-centered' 
-          : ''
+          currentLocation &&
+          mapInstanceRef.current?.getCenter().toString() !== currentLocation.toString()
+            ? "not-centered"
+            : ""
         }`}
         onClick={handleRecenter}
         aria-label="Center on my location"
@@ -829,20 +789,13 @@ useEffect(() => {
         <div className="recenter-icon" />
       </button>
 
-      {isMapLoading && (
-        <div className="map-loading-overlay">
-          <div className="map-spinner" />
-        </div>
-      )}
-
       <MapSidebar
         nodes={nodes}
         sidebarActive={sidebarActive}
         toggleSidebar={toggleSidebar}
         onNodeSelect={(node) => {
-          const map = mapInstanceRef.current;
-          if (map) {
-            selectNode(map, node);
+          if (mapInstanceRef.current) {
+            selectNode(mapInstanceRef.current, node);
           }
         }}
         onMoreInfo={handleShowOfferingProfile}
@@ -890,7 +843,9 @@ useEffect(() => {
                 {previewNode.label}
               </h3>
             </div>
-            <div className="sphere-preview">{renderSphereForNode(previewNode)}</div>
+            <div className="sphere-preview">
+              {renderSphereForNode(previewNode)}
+            </div>
             <button
               className="more-info-btn"
               onClick={() => {
@@ -911,7 +866,7 @@ useEffect(() => {
             _id: activeNode.id,
             title: activeNode.label,
             description: activeNode.details,
-            offeringType: (activeNode.type.toLowerCase() as 'venue' | 'gear' | 'talent'),
+            offeringType: (activeNode.type.toLowerCase() as "venue" | "gear" | "talent"),
             createdAt: activeNode.createdAt || new Date().toISOString(),
             location: activeNode.location,
             pseudonym: activeNode.pseudonym,
@@ -919,7 +874,7 @@ useEffect(() => {
             phone: activeNode.phone,
             tags: activeNode.tags,
             loobricates: activeNode.loobricates,
-            dataType: activeNode.dataType
+            dataType: activeNode.dataType,
           }}
           onClose={() => setShowOfferingProfile(false)}
         />
@@ -932,16 +887,13 @@ useEffect(() => {
         />
       )}
 
-      <LoobCache 
+      <LoobCache
         currentLocation={currentLocation}
         onLoobFound={(amount) => {
-          // Show celebration animation
-          // Update user's LOOB balance
           console.log(`Found ${amount} LOOB!`);
         }}
       />
 
-      {/* Add the location error message */}
       {locationError && (
         <LocationErrorMessage
           error={locationError}

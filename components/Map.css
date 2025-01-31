@@ -30,6 +30,9 @@
   cursor: pointer;
   transition: all 0.3s ease;
   pointer-events: auto;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 .map-marker.loobricate {
@@ -257,11 +260,11 @@
 }
 
 .map-spinner {
-  width: 50px;
-  height: 50px;
-  border: 5px solid #f3f3f3;
-  border-top: 5px solid #fed7aa;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid #3498db; /* Change this color as needed */
   border-radius: 50%;
+  width: 40px;
+  height: 40px;
   animation: spin 1s linear infinite;
 }
 
@@ -336,10 +339,28 @@
   clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
   border: 2px solid rgba(255, 255, 255, 0.8);
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-  transition: transform 0.3s ease;
+  transition: transform 0.2s ease;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  transform-origin: center;
 }
 
-/* Pulsing effect for user marker */
+/* Smooth rotation transition for desktop */
+@media (hover: hover) {
+  .user-arrow {
+    transition: transform 0.3s ease-out;
+  }
+}
+
+/* Remove transition for mobile for instant response */
+@media (hover: none) {
+  .user-arrow {
+    transition: none;
+  }
+}
+
+/* Enhanced pulsing effect */
 .user-arrow::after {
   content: '';
   position: absolute;
@@ -347,12 +368,13 @@
   left: 50%;
   width: 36px;
   height: 36px;
-  background: linear-gradient(45deg, #ffb6b9, #fae3d9);
+  background: inherit;
   clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
   transform: translate(-50%, -50%);
   opacity: 0.6;
   animation: pulse 2s ease-out infinite;
   z-index: -1;
+  transform-origin: center;
 }
 
 @keyframes pulse {
@@ -363,6 +385,16 @@
   100% {
     transform: translate(-50%, -50%) scale(2.5);
     opacity: 0;
+  }
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+  .user-arrow {
+    width: 40px;
+    height: 40px;
+    border-width: 3px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
   }
 }
 
@@ -550,6 +582,8 @@
   border: 2px solid rgba(255, 182, 185, 0.4);
   border-radius: 50%;
   animation: accuracyPulse 2s infinite ease-in-out;
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
 }
 
 @keyframes accuracyPulse {
