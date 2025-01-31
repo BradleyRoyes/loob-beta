@@ -10,7 +10,7 @@ import React, {
 import maplibregl, { Marker } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./Map.css";
-import { checkPermission, requestLocationPermission } from '../utils/permissions';
+import { checkPermission, requestLocationPermission, getPermissionInstructions } from '../utils/permissions';
 
 // Child components with their prop types
 import TorusSphere, { TorusSphereProps } from "./TorusSphere";
@@ -61,14 +61,6 @@ const GEOLOCATION_OPTIONS = {
 // Add this type
 type GeolocationPermissionState = 'prompt' | 'granted' | 'denied';
 
-// Update the error message constants at the top
-const GEOLOCATION_ERRORS = {
-  PERMISSION_DENIED: 'Please enable location services to see your position on the map.',
-  POSITION_UNAVAILABLE: 'Unable to determine your location. Please check your device settings.',
-  TIMEOUT: 'Location request timed out. Please try again.',
-  GENERAL: 'Unable to access location services. Please check your settings and try again.'
-} as const;
-
 // Add this to your Map component's JSX return statement, before the closing div
 const MAP_STYLE: maplibregl.StyleSpecification = {
   version: 8 as 8,  // Type assertion to literal type '8'
@@ -103,7 +95,7 @@ const INITIAL_MAP_STATE = {
   fadeDuration: 0
 };
 
-// Update the smoothlyUpdatePosition function for better performance
+// Add this function to calculate smooth movement
 const smoothlyUpdatePosition = (
   currentPos: [number, number],
   newPos: [number, number],
@@ -112,53 +104,29 @@ const smoothlyUpdatePosition = (
 ) => {
   const start = currentPos;
   const end = newPos;
-  const duration = 1000;
-  const startTime = performance.now();
+  const steps = 60; // 60fps for 1 second
+  let step = 0;
 
-  const animate = (currentTime: number) => {
-    const elapsed = currentTime - startTime;
-    const progress = Math.min(elapsed / duration, 1);
+  const animate = () => {
+    step++;
     
-    // Easing function for smooth movement
-    const easeProgress = progress < 0.5
-      ? 2 * progress * progress
-      : -1 + (4 - 2 * progress) * progress;
-    
-    const lat = start[1] + (end[1] - start[1]) * easeProgress;
-    const lng = start[0] + (end[0] - start[0]) * easeProgress;
+    const progress = step / steps;
+    const lat = start[1] + (end[1] - start[1]) * progress;
+    const lng = start[0] + (end[0] - start[0]) * progress;
     
     marker.setLngLat([lng, lat]);
     
-    if (progress < 1) {
+    if (map.getCenter().lng.toFixed(6) === lng.toFixed(6) && 
+        map.getCenter().lat.toFixed(6) === lat.toFixed(6)) {
+      map.setCenter([lng, lat]);
+    }
+
+    if (step < steps) {
       requestAnimationFrame(animate);
     }
   };
 
-  requestAnimationFrame(animate);
-};
-
-// Add this function to handle device orientation changes
-const handleDeviceOrientation = (
-  event: DeviceOrientationEvent,
-  map: maplibregl.Map,
-  marker: maplibregl.Marker
-) => {
-  let heading: number | null = null;
-
-  if ('webkitCompassHeading' in event) {
-    // iOS compass heading
-    heading = (event as any).webkitCompassHeading;
-  } else if (event.alpha) {
-    // Android compass heading
-    heading = 360 - event.alpha;
-  }
-
-  if (heading !== null) {
-    marker.setRotation(heading);
-    if (map.getPitch() > 0) { // Only rotate map if we're in 3D view
-      map.setBearing(heading);
-    }
-  }
+  animate();
 };
 
 const Map: React.FC = () => {
@@ -202,12 +170,6 @@ const Map: React.FC = () => {
   const [mapPitch, setMapPitch] = useState(0);
 
   const deviceOrientationRef = useRef<number | null>(null);
-
-  // Add new state for orientation permission
-  const [orientationPermissionState, setOrientationPermissionState] = useState<PermissionState>('prompt');
-
-  // Add new state for error message
-  const [locationError, setLocationError] = useState<string | null>(null);
 
   /**
    * 1) On mount, fetch data from /api/mapData
@@ -429,156 +391,68 @@ useEffect(() => {
   }, [nodes]);
 
   /**
-   * Enhanced permission handling
+   * 5) Geolocation logic
    */
-  useEffect(() => {
-    const handlePermissions = async () => {
-      try {
-        const permissionState = await requestLocationPermission();
-        setLocationPermissionState(permissionState);
-
-        if (permissionState === 'granted') {
-          const map = mapInstanceRef.current;
-          if (map) {
-            startWatchingLocation(map);
-          }
-        } else {
-          setLocationError('To see your location, enable location services in your device settings.');
-        }
-      } catch (error) {
-        console.error('Error handling permissions:', error);
-        setLocationError('Unable to access location services. You can still use the map without location.');
-      }
-    };
-
-    handlePermissions();
-  }, []);
-
-  /**
-   * Enhanced location watching with better error handling
-   */
-  const startWatchingLocation = useCallback((map: maplibregl.Map) => {
+  const startWatchingLocation = useCallback(async (map: maplibregl.Map) => {
     if (!navigator.geolocation) {
-      setLocationError('Location services are not supported by your browser.');
+      console.warn('Geolocation is not supported');
       return;
     }
 
-    const options = {
-      enableHighAccuracy: true,
-      timeout: 30000, // Increased timeout for better mobile support
-      maximumAge: 0
-    };
-
-    // Clear any existing watch
-    if (watchIdRef.current) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-    }
-
-    watchIdRef.current = navigator.geolocation.watchPosition(
-      ({ coords }) => {
-        const { longitude, latitude, accuracy } = coords;
-        const newPosition: [number, number] = [longitude, latitude];
-        
-        setCurrentLocation(newPosition);
-        setLocationError(null);
-
-        if (userMarkerRef.current) {
-          const currentPos = userMarkerRef.current.getLngLat();
-          smoothlyUpdatePosition(
-            [currentPos.lng, currentPos.lat],
-            newPosition,
-            map,
-            userMarkerRef.current
-          );
+    try {
+      // Request permission if not granted
+      if (locationPermissionState !== 'granted') {
+        const granted = await requestLocationPermission();
+        if (!granted) {
+          throw new Error(getPermissionInstructions('geolocation'));
         }
-
-        // Update accuracy circle
-        updateAccuracyCircle(map, newPosition, accuracy);
-      },
-      (error) => {
-        console.warn('Geolocation error:', error);
-        let errorMessage: string = GEOLOCATION_ERRORS.GENERAL;
-        
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = 'Location access was denied. You can still use the map without location.';
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Unable to determine your location. Please check your device settings.';
-            break;
-          case error.TIMEOUT:
-            errorMessage = 'Location request timed out. Please try again.';
-            // Retry after timeout
-            setTimeout(() => startWatchingLocation(map), 2000);
-            break;
-        }
-        
-        setLocationError(errorMessage);
-      },
-      options
-    );
-
-    return () => {
-      if (watchIdRef.current !== null) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
-        watchIdRef.current = null;
+        setLocationPermissionState('granted');
       }
-    };
-  }, []);
 
-  /**
-   * Enhanced accuracy circle
-   */
-  const updateAccuracyCircle = useCallback((
-    map: maplibregl.Map,
-    center: [number, number],
-    accuracy: number
-  ) => {
-    const circleId = 'accuracy-circle';
-    const circleColor = '#ffb6b9';
-    
-    if (!map.getSource(circleId)) {
-      map.addSource(circleId, {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: center
-          },
-          properties: {
-            accuracy
+      // High accuracy options
+      const options = {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      };
+
+      watchIdRef.current = navigator.geolocation.watchPosition(
+        ({ coords }) => {
+          const { longitude, latitude, heading, accuracy } = coords;
+          const newPosition: [number, number] = [longitude, latitude];
+          
+          setCurrentLocation(newPosition);
+
+          if (userMarkerRef.current) {
+            // Smooth movement
+            const currentPos = userMarkerRef.current.getLngLat();
+            smoothlyUpdatePosition(
+              [currentPos.lng, currentPos.lat],
+              newPosition,
+              map,
+              userMarkerRef.current
+            );
+
+            // Update heading if available
+            if (heading !== null) {
+              userMarkerRef.current.setRotation(heading);
+            }
           }
-        }
-      });
 
-      map.addLayer({
-        id: circleId,
-        type: 'circle',
-        source: circleId,
-        paint: {
-          'circle-radius': ['get', 'accuracy'],
-          'circle-color': circleColor,
-          'circle-opacity': 0.2,
-          'circle-stroke-width': 2,
-          'circle-stroke-color': circleColor,
-          'circle-stroke-opacity': 0.4
-        }
-      });
-    } else {
-      const source = map.getSource(circleId) as maplibregl.GeoJSONSource;
-      source.setData({
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: center
+          // Create accuracy circle
+          updateAccuracyCircle(map, [longitude, latitude], accuracy);
         },
-        properties: {
-          accuracy
-        }
-      });
+        (error) => {
+          console.error('Geolocation error:', error);
+          alert(getPermissionInstructions('geolocation'));
+        },
+        options
+      );
+    } catch (error) {
+      console.error('Error starting location watch:', error);
+      alert(getPermissionInstructions('geolocation'));
     }
-  }, []);
+  }, [locationPermissionState]);
 
   /**
    * 6) Node selection logic -> popup
@@ -689,75 +563,150 @@ useEffect(() => {
     }
   };
 
-  // Add this button component near your other UI elements
-  const LocationButton = () => (
-    <button 
-      className="location-button"
-      onClick={async () => {
-        const permission = await requestLocationPermission();
-        if (permission === 'granted' && mapInstanceRef.current) {
-          startWatchingLocation(mapInstanceRef.current);
+  // Add this useEffect for permission checking
+  useEffect(() => {
+    const checkLocationPermission = async () => {
+      const state = await checkPermission('geolocation');
+      setLocationPermissionState(state);
+      
+      if (state === 'denied') {
+        alert(getPermissionInstructions('geolocation'));
+      }
+    };
+
+    checkLocationPermission();
+
+    // Check when tab becomes visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        checkLocationPermission();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  // Add device orientation handling
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+
+    const handleDeviceOrientation = (event: DeviceOrientationEvent) => {
+      if ('webkitCompassHeading' in event) {
+        // iOS compass heading
+        deviceOrientationRef.current = (event as any).webkitCompassHeading;
+      } else if (event.alpha) {
+        // Android compass heading
+        deviceOrientationRef.current = 360 - event.alpha;
+      }
+
+      if (deviceOrientationRef.current !== null && mapInstanceRef.current) {
+        mapInstanceRef.current.setBearing(deviceOrientationRef.current);
+      }
+    };
+
+    const requestOrientationPermission = async () => {
+      if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+        try {
+          const permission = await (DeviceOrientationEvent as any).requestPermission();
+          if (permission === 'granted') {
+            window.addEventListener('deviceorientation', handleDeviceOrientation, true);
+          }
+        } catch (e) {
+          console.warn('Device orientation permission denied');
         }
-      }}
-    >
-      Enable Location
-    </button>
-  );
+      } else {
+        // Non-iOS devices don't need permission
+        window.addEventListener('deviceorientation', handleDeviceOrientation, true);
+      }
+    };
+
+    requestOrientationPermission();
+
+    return () => {
+      window.removeEventListener('deviceorientation', handleDeviceOrientation, true);
+    };
+  }, []);
+
+  // Add this function to show accuracy radius
+  const updateAccuracyCircle = (map: maplibregl.Map, center: [number, number], accuracy: number) => {
+    const circleId = 'accuracy-circle';
+    
+    if (!map.getSource(circleId)) {
+      map.addSource(circleId, {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: center
+          },
+          properties: {
+            accuracy
+          }
+        }
+      });
+
+      map.addLayer({
+        id: circleId,
+        type: 'circle',
+        source: circleId,
+        paint: {
+          'circle-radius': ['get', 'accuracy'],
+          'circle-color': '#4264fb',
+          'circle-opacity': 0.2,
+          'circle-stroke-width': 1,
+          'circle-stroke-color': '#4264fb'
+        }
+      });
+    } else {
+      const source = map.getSource(circleId) as maplibregl.GeoJSONSource;
+      source.setData({
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: center
+        },
+        properties: {
+          accuracy
+        }
+      });
+    }
+  };
 
   return (
     <div className="map-container">
       <div ref={mapContainerRef} className="map-layer" />
 
-      {/* Location error message */}
-      {locationError && (
-        <div className="location-error-message">
-          <div className="error-content">
-            <span>{locationError}</span>
-            <button 
-              onClick={() => {
-                setLocationError(null);
-                const map = mapInstanceRef.current;
-                if (map) {
-                  startWatchingLocation(map);
-                }
-              }}
-              className="retry-button"
-            >
-              Retry
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Tilt Controller with Arrow Buttons */}
+      <div className="tilt-controller">
+        <button
+          className="tilt-button"
+          onClick={() => {
+            const newPitch = Math.min(mapPitch + 10, 80); // Increase pitch, max 80
+            setMapPitch(newPitch); // Update the pitch state
+            mapInstanceRef.current?.setPitch(newPitch);
+          }}
+          aria-label="Increase tilt"
+        >
+          ↑
+        </button>
+        <button
+          className="tilt-button"
+          onClick={() => {
+            const newPitch = Math.max(mapPitch - 10, 0); // Decrease pitch, min 0
+            setMapPitch(newPitch); // Update the pitch state
+            mapInstanceRef.current?.setPitch(newPitch);
+          }}
+          aria-label="Decrease tilt"
+        >
+          ↓
+        </button>
+      </div>
 
-      {/* Only show tilt controls on desktop */}
-      {window.innerWidth > 768 && (
-        <div className="tilt-controller">
-          <button
-            className="tilt-button"
-            onClick={() => {
-              const newPitch = Math.min(mapPitch + 10, 80);
-              setMapPitch(newPitch);
-              mapInstanceRef.current?.setPitch(newPitch);
-            }}
-            aria-label="Increase tilt"
-          >
-            ↑
-          </button>
-          <button
-            className="tilt-button"
-            onClick={() => {
-              const newPitch = Math.max(mapPitch - 10, 0);
-              setMapPitch(newPitch);
-              mapInstanceRef.current?.setPitch(newPitch);
-            }}
-            aria-label="Decrease tilt"
-          >
-            ↓
-          </button>
-        </div>
-      )}
-
-      {/* Enhanced recenter button */}
+      {/* Recenter button */}
       <button 
         className={`recenter-button ${
           currentLocation && 
@@ -882,8 +831,6 @@ useEffect(() => {
           console.log(`Found ${amount} LOOB!`);
         }}
       />
-
-      <LocationButton />
     </div>
   );
 };

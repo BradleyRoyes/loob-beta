@@ -722,34 +722,87 @@
   }
 }
 
-.location-button {
+/* Update location status message styling */
+.location-status-message {
   position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 12px;
+  padding: 16px 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  max-width: 90%;
+  width: auto;
+  text-align: center;
+  color: white;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.status-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.button-group {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+/* Add location accuracy indicator */
+.location-accuracy-indicator {
+  position: fixed;
+  top: 20px;
   right: 20px;
-  bottom: 200px;
-  background: linear-gradient(45deg, #ffb6b9, #fae3d9);
-  border: none;
-  padding: 12px 20px;
-  border-radius: 8px;
-  color: #333;
-  font-weight: 600;
-  cursor: pointer;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 20px;
+  padding: 8px 16px;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
   z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s ease;
 }
 
-.location-button:hover {
-  transform: scale(1.05);
+.accuracy-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4CAF50;
+  animation: pulse 2s infinite;
 }
 
-.location-button:active {
-  transform: scale(0.95);
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
+/* Mobile optimizations */
 @media (max-width: 768px) {
-  .location-button {
+  .location-status-message {
+    top: auto;
+    bottom: 90px;
+    padding: 12px 16px;
+  }
+
+  .location-accuracy-indicator {
+    top: auto;
     bottom: 160px;
-    padding: 10px 16px;
-    font-size: 14px;
+    right: 16px;
   }
 }
