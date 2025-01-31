@@ -174,20 +174,16 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                   {loading ? "Logging in..." : "Log In"}
                 </button>
                 <button
-                  className="actionButton"
-                  onClick={() => setPhase("signupPhase")}
+                  className="actionButton secondary"
+                  onClick={handleStayAnonymous}
                   disabled={loading}
                 >
-                  Sign Up
+                  Stay Anonymous
                 </button>
               </div>
-              <button
-                className="actionButton secondary"
-                onClick={handleStayAnonymous}
-                disabled={loading}
-              >
-                Stay Anonymous
-              </button>
+              <p className="createAccountText" onClick={() => setPhase("signupPhase")}>
+                Don't have an account? Sign up
+              </p>
             </div>
           </div>
         )}

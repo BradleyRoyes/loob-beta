@@ -3,23 +3,21 @@ import { FaTimes, FaUserPlus, FaUserMinus } from 'react-icons/fa';
 import './LoobricateAdminPanel.css';
 import type { LoobricateData } from '../types/loobricate';
 
-// Define the props for the LoobricateAdminPanel component
 interface LoobricateAdminPanelProps {
-  loobricateId: string; // Unique identifier for the loobricate
-  onClose: () => void; // Function to call when the panel is closed
-  onUpdate: (updatedLoobricate: LoobricateData) => void; // Function to call when the loobricate is updated
+  loobricateId: string;
+  onClose: () => void;
+  onUpdate: (updatedLoobricate: LoobricateData) => void;
 }
 
-// Main component for managing a loobricate
 const LoobricateAdminPanel: React.FC<LoobricateAdminPanelProps> = ({
   loobricateId,
   onClose,
   onUpdate
 }) => {
-  // State variables to manage the loobricate data and UI states
-  const [loobricate, setLoobricate] = useState<LoobricateData | null>(null); // Holds the current loobricate data
-  const [isLoading, setIsLoading] = useState(true); // Loading state for fetching data
-  const [error, setError] = useState<string>(''); // Error message state
+  const [loobricate, setLoobricate] = useState<LoobricateData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string>('');
+  // Initialize all state upfront, before any conditionals
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -28,61 +26,141 @@ const LoobricateAdminPanel: React.FC<LoobricateAdminPanelProps> = ({
     adminUsername: '',
     adminPassword: '',
     tags: [] as string[],
-    type: 'community' // Default type of loobricate
+    type: 'community'
   });
   const [users, setUsers] = useState({
-    admins: [] as string[], // List of admin usernames
-    members: [] as string[] // List of member usernames
+    admins: [] as string[],
+    members: [] as string[]
   });
-  const [newUser, setNewUser] = useState(''); // New user input state
-  const [userError, setUserError] = useState(''); // Error message for user addition
-  const [isAddingUser, setIsAddingUser] = useState(false); // Loading state for adding a user
-  const [hasChanges, setHasChanges] = useState(false); // Track if there are unsaved changes
-  const [isSaving, setIsSaving] = useState(false); // Loading state for saving changes
+  const [newUser, setNewUser] = useState('');
+  const [userError, setUserError] = useState('');
+  const [isAddingUser, setIsAddingUser] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Fetch the loobricate data when the component mounts or the loobricateId changes
+  // Update formData and users when loobricate data is loaded
+  useEffect(() => {
+    if (loobricate) {
+      setFormData({
+        name: loobricate.name || '',
+        description: loobricate.description || '',
+        addressLine1: loobricate.addressLine1 || '',
+        city: loobricate.city || '',
+        adminUsername: loobricate.adminUsername || '',
+        adminPassword: '',
+        tags: loobricate.tags || [],
+        type: loobricate.type || 'community'
+      });
+      setUsers({
+        admins: loobricate.admins || [],
+        members: loobricate.members || []
+      });
+    }
+  }, [loobricate]);
+
   useEffect(() => {
     const fetchLoobricateData = async () => {
       try {
-        setIsLoading(true); // Set loading state
-        setError(''); // Clear previous errors
-        const response = await fetch(`/api/loobricates/${loobricateId}`); // Fetch the loobricate data
-        const data = await response.json(); // Parse the response data
+        setIsLoading(true);
+        setError('');
+        const response = await fetch(`/api/loobricates/${loobricateId}`);
+        const data = await response.json();
 
-        // Check if the response is not OK and throw an error
         if (!response.ok) {
           throw new Error(data.error || 'Failed to fetch loobricate data');
         }
 
-        setLoobricate(data); // Set the fetched loobricate data
+        setLoobricate(data);
       } catch (error) {
-        console.error('Error fetching loobricate data:', error); // Log the error
-        setError('Failed to load loobricate data. Please try again.'); // Set error message
+        console.error('Error fetching loobricate data:', error);
+        setError('Failed to load loobricate data. Please try again.');
       } finally {
-        setIsLoading(false); // Reset loading state
+        setIsLoading(false);
       }
     };
 
-    fetchLoobricateData(); // Call the fetch function
-  }, [loobricateId]); // Dependency array to re-fetch when loobricateId changes
+    fetchLoobricateData();
+  }, [loobricateId]);
 
   // Handle loading and error states
-  if (isLoading) return <div className="loading">Loading...</div>; // Show loading message
-  if (error) return <div className="error">{error}</div>; // Show error message
-  if (!loobricate) return <div className="error">No loobricate data found</div>; // Show if no data is found
+  if (isLoading) return <div className="loading">Loading...</div>;
+  if (error) return <div className="error">{error}</div>;
+  if (!loobricate) return <div className="error">No loobricate data found</div>;
 
-  // Handle input changes for form fields
+  // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target; // Destructure name and value from the event target
-    setFormData(prev => ({ ...prev, [name]: value })); // Update the form data state
-    setHasChanges(true); // Mark that there are unsaved changes
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setHasChanges(true);
+  };
+
+  // Handle tag changes
+  const handleTagChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const tags = e.target.value.split(',').map(tag => tag.trim());
+    setFormData(prev => ({ ...prev, tags }));
+    setHasChanges(true);
+  };
+
+  // Verify user exists before adding
+  const verifyUser = async (username: string) => {
+    try {
+      const response = await fetch('/api/auth/verify-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })
+      });
+      
+      if (!response.ok) {
+        throw new Error('User not found');
+      }
+      
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  // Add user handler
+  const handleAddUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUserError('');
+    setIsAddingUser(true);
+
+    try {
+      const userExists = await verifyUser(newUser);
+      
+      if (!userExists) {
+        setUserError('User not found');
+        return;
+      }
+
+      setUsers(prev => ({
+        ...prev,
+        members: [...prev.members, newUser]
+      }));
+      
+      setNewUser('');
+      setHasChanges(true);
+    } catch (error) {
+      setUserError('Failed to add user');
+    } finally {
+      setIsAddingUser(false);
+    }
+  };
+
+  // Remove user handler
+  const handleRemoveUser = (username: string, type: 'admin' | 'member') => {
+    setUsers(prev => ({
+      ...prev,
+      [type + 's']: prev[type + 's'].filter(u => u !== username)
+    }));
+    setHasChanges(true);
   };
 
   // Save changes handler
   const handleSave = async () => {
-    setIsSaving(true); // Set saving state
+    setIsSaving(true);
     try {
-      // Prepare the updated data object
       const updatedData = {
         ...loobricate,
         ...formData,
@@ -90,28 +168,26 @@ const LoobricateAdminPanel: React.FC<LoobricateAdminPanelProps> = ({
         members: users.members
       };
 
-      // Send a PUT request to update the loobricate data
       const response = await fetch(`/api/loobricates/${loobricateId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedData) // Convert updated data to JSON
+        body: JSON.stringify(updatedData)
       });
 
-      const data = await response.json(); // Parse the response data
+      const data = await response.json();
 
-      // Check if the response is not OK and throw an error
       if (!response.ok) {
         throw new Error(data.error || 'Failed to update Loobricate');
       }
 
-      setLoobricate(data); // Update the local loobricate state
-      onUpdate(data); // Call the onUpdate function to notify parent component
-      setHasChanges(false); // Reset unsaved changes state
+      setLoobricate(data);
+      onUpdate(data);
+      setHasChanges(false);
     } catch (error) {
-      console.error('Failed to save changes:', error); // Log the error
-      setError('Failed to save changes. Please try again.'); // Set error message
+      console.error('Failed to save changes:', error);
+      setError('Failed to save changes. Please try again.');
     } finally {
-      setIsSaving(false); // Reset saving state
+      setIsSaving(false);
     }
   };
 
@@ -130,6 +206,7 @@ const LoobricateAdminPanel: React.FC<LoobricateAdminPanelProps> = ({
       <div className="admin-content">
         <section className="info-section">
           <h3>Loobricate Information</h3>
+          
           <div className="form-group">
             <label>Name</label>
             <input
@@ -140,6 +217,7 @@ const LoobricateAdminPanel: React.FC<LoobricateAdminPanelProps> = ({
               className="form-input"
             />
           </div>
+
           <div className="form-group">
             <label>Description</label>
             <textarea
@@ -150,6 +228,7 @@ const LoobricateAdminPanel: React.FC<LoobricateAdminPanelProps> = ({
               rows={4}
             />
           </div>
+
           <div className="form-group">
             <label>Address</label>
             <input
@@ -160,6 +239,7 @@ const LoobricateAdminPanel: React.FC<LoobricateAdminPanelProps> = ({
               className="form-input"
             />
           </div>
+
           <div className="form-group">
             <label>City</label>
             <input
@@ -170,16 +250,18 @@ const LoobricateAdminPanel: React.FC<LoobricateAdminPanelProps> = ({
               className="form-input"
             />
           </div>
+
           <div className="form-group">
             <label>Tags (comma-separated)</label>
             <input
               type="text"
               name="tags"
               value={formData.tags.join(', ')}
-              onChange={handleInputChange}
+              onChange={handleTagChange}
               className="form-input"
             />
           </div>
+
           <div className="form-group">
             <label>Admin Username</label>
             <input
@@ -190,6 +272,7 @@ const LoobricateAdminPanel: React.FC<LoobricateAdminPanelProps> = ({
               className="form-input"
             />
           </div>
+
           <div className="form-group">
             <label>Admin Password (leave blank to keep current)</label>
             <input
@@ -202,6 +285,74 @@ const LoobricateAdminPanel: React.FC<LoobricateAdminPanelProps> = ({
             />
           </div>
         </section>
+
+        <section className="users-section">
+          <h3>User Management</h3>
+          
+          <div className="user-lists">
+            <div className="admins-list">
+              <h4>Administrators</h4>
+              <ul>
+                {users.admins.map(admin => (
+                  <li key={admin}>
+                    {admin}
+                    <button 
+                      onClick={() => handleRemoveUser(admin, 'admin')}
+                      className="remove-user"
+                    >
+                      <FaUserMinus />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="members-list">
+              <h4>Members</h4>
+              <ul>
+                {users.members.map(member => (
+                  <li key={member}>
+                    {member}
+                    <button 
+                      onClick={() => handleRemoveUser(member, 'member')}
+                      className="remove-user"
+                    >
+                      <FaUserMinus />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <form onSubmit={handleAddUser} className="add-user-form">
+            <input
+              type="text"
+              value={newUser}
+              onChange={(e) => setNewUser(e.target.value)}
+              placeholder="Enter username to add"
+              className="form-input"
+            />
+            <button 
+              type="submit" 
+              className="add-user-btn"
+              disabled={isAddingUser || !newUser.trim()}
+            >
+              <FaUserPlus /> Add User
+            </button>
+            {userError && <p className="error-message">{userError}</p>}
+          </form>
+        </section>
+      </div>
+
+      <div className="admin-footer">
+        <button
+          className={`save-button ${hasChanges ? 'active' : ''}`}
+          onClick={handleSave}
+          disabled={!hasChanges || isSaving}
+        >
+          {isSaving ? 'Saving...' : 'Save Changes'}
+        </button>
       </div>
     </div>
   );
