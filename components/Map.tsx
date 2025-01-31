@@ -163,8 +163,6 @@ const Map: React.FC = () => {
       if (pulsingMarkerRef.current) {
         pulsingMarkerRef.current.setLngLat(location);
       }
-      // Always keep map centered on the user.
-      mapInstanceRef.current.setCenter(location);
     }
   }, [location, accuracy]);
 
@@ -260,7 +258,6 @@ const Map: React.FC = () => {
         if (pulsingMarkerRef.current) {
           pulsingMarkerRef.current.setLngLat(newPosition);
         }
-        map.setCenter(newPosition);
       };
 
       const handleError = (error: GeolocationPositionError) => {

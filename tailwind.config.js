@@ -34,6 +34,7 @@ module.exports = {
         'safe-bottom': 'env(safe-area-inset-bottom)',
         'safe-left': 'env(safe-area-inset-left)',
         'safe-right': 'env(safe-area-inset-right)',
+        'favicon': '10px', // Custom size for favicon
       },
       colors: {
         primary: '#2563EB',

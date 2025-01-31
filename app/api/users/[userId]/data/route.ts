@@ -11,7 +11,10 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { userId: string } }
 ) {
-  if (!params?.userId) {
+  // Await params to ensure it's resolved
+  const { userId } = await params;
+
+  if (!userId) {
     return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
   }
 
@@ -20,7 +23,7 @@ export async function GET(
     
     // Get user data
     const user = await collection.findOne({
-      _id: params.userId.toString(),
+      _id: userId.toString(),
       dataType: 'userAccount'
     });
 
@@ -32,8 +35,8 @@ export async function GET(
     const connectedLoobricates = await collection.find({
       dataType: 'loobricate',
       $or: [
-        { members: params.userId },
-        { admins: params.userId }
+        { members: userId },
+        { admins: userId }
       ]
     }).toArray();
 

@@ -30,6 +30,9 @@ const Profile: React.FC = () => {
   const [showDailyDump, setShowDailyDump] = useState(false);
   const [showLoobricateProfile, setShowLoobricateProfile] = useState(false);
   const [currentLoobricateId, setCurrentLoobricateId] = useState<string | null>(null);
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchUserData = async () => {
     if (isAnonymous || !userId || userId.startsWith('anon-')) {
@@ -39,29 +42,26 @@ const Profile: React.FC = () => {
 
     try {
       const response = await fetch(`/api/users/${userId}/data`);
-      const text = await response.text();
-      
-      try {
-        const data = JSON.parse(text);
-        if (response.ok) {
-          setEntries(data.entries || []);
-          setRecentDiscoveries(data.discoveries || []);
-          setConnectedLoobricates(data.connectedLoobricates || []);
-        } else {
-          console.error('API error:', data);
-        }
-      } catch (parseError) {
-        console.error('JSON parse error:', parseError);
-        console.error('Raw response:', text);
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
       }
-    } catch (error) {
-      console.error('Fetch error:', error);
+      const data = await response.json();
+      setUserData(data);
+      setEntries(data.entries || []);
+      setRecentDiscoveries(data.discoveries || []);
+      setConnectedLoobricates(data.connectedLoobricates || []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUserData();
-  }, [userId, isAnonymous]);
+    if (userId) {
+      fetchUserData();
+    }
+  }, [userId]);
 
   // Log Out Button Handler
   const handleLogOut = () => {
@@ -146,6 +146,9 @@ const Profile: React.FC = () => {
 
   // Add CSS class for visibility
   const loginModalClass = showLoginForm ? 'modal-overlay visible' : 'modal-overlay';
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="profile-container">
