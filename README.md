@@ -1,6 +1,6 @@
 # Loob - The Post-Digital Lending Library
 
-![Loob Platform](Loob_labs.png)
+![Loob Platform](Looblabs.png)
 
 ## Vision
 
