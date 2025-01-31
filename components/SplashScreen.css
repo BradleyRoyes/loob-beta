@@ -31,7 +31,6 @@
   font-size: 3rem; /* Reduced size for emphasis */
   font-weight: 900;
   background: linear-gradient(90deg, #f3f3f3, #ffb48f, #ff9f7f);
-  -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: textGlow 2s infinite alternate ease-in-out; /* Subtle glowing effect */
   letter-spacing: 2px;

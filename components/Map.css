@@ -459,7 +459,6 @@
 }
 
 .tilt-slider {
-  -webkit-appearance: none; /* Remove default styling */
   width: 8px; /* Width of the slider */
   height: 200px; /* Height of the slider */
   background: #ddd; /* Background color of the slider */
