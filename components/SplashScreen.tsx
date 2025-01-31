@@ -182,7 +182,7 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 </button>
               </div>
               <p className="createAccountText" onClick={() => setPhase("signupPhase")}>
-                Don't have an account? Sign up
+                Don't have an account? <span className="linkText">Sign up</span>
               </p>
             </div>
           </div>

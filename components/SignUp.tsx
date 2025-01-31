@@ -202,7 +202,7 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
     <div className="signupScreen">
       {/* Back Button */}
       <button type="button" className="topBackButton" onClick={onBack}>
-        ←
+        X
       </button>
 
       {/* Form Container */}

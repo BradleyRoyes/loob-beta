@@ -18,11 +18,32 @@
   box-shadow: none; /* Remove shadow for full transparency */
 }
 
+/* Title and Subtitle Styles */
+.titleContainer {
+  margin-bottom: 20px; /* Space below the title container */
+  display: flex; /* Ensure flex display for alignment */
+  flex-direction: column; /* Stack items vertically */
+  align-items: center; /* Center items horizontally */
+}
+
+.titleLogo {
+  margin-bottom: 10px; /* Space below the logo */
+  margin-top: 0; /* Remove top margin */
+}
+
+.mainTitle {
+  margin-bottom: 10px; /* Space below the main title */
+}
+
+.superSubtitle {
+  margin-bottom: 15px; /* Space below the subtitle */
+}
+
 /* Input Fields */
 .signupScreen .inputField {
   width: 100%;
   padding: 12px;
-  margin-bottom: 15px;
+  margin-bottom: 20px; /* Increased space between input fields */
   border: 1px solid #ffb48f; /* Thin border color */
   border-radius: 8px;
   background: transparent; /* Keep background transparent */
@@ -74,13 +95,34 @@
 
 /* Back Button */
 .topBackButton {
-  position: absolute;
+  position: fixed; /* Change from absolute to fixed */
   top: 20px;
-  left: 20px;
+  right: 20px; /* Keep it in the top right corner */
   background: none !important; /* No background */
   border: none !important; /* No border */
-  color: white !important; /* White color for the arrow */
+  color: white !important; /* White color for the X */
   font-size: 1.5rem !important; /* Ensure the size is consistent */
   cursor: pointer !important; /* Pointer cursor */
   transition: none !important; /* No transition effects */
+}
+
+.createAccountText {
+  font-size: 14px; /* Adjust font size */
+  color: #6b6f73; /* Subtle color */
+  cursor: pointer; /* Pointer cursor */
+  text-align: center; /* Center align */
+  margin-top: 15px; /* Space above */
+  text-decoration: none; /* Remove underline */
+  opacity: 0.8; /* Slightly transparent */
+  transition: opacity 0.3s ease; /* Smooth transition */
+}
+
+.createAccountText:hover {
+  opacity: 1; /* Full opacity on hover */
+  color: #ff8c00; /* Highlight color on hover */
+}
+
+.linkText {
+  color: #ff8c00; /* Color for the "Sign up" text */
+  text-decoration: underline; /* Underline to indicate it's a link */
 } 

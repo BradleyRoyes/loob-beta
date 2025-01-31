@@ -10,11 +10,7 @@ import React, {
 import maplibregl, { Marker } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./Map.css";
-import {
-  checkPermission,
-  requestLocationPermission,
-  getPermissionInstructions,
-} from "../utils/permissions";
+import { checkPermission, getPermissionInstructions } from "../utils/permissions";
 import { useGeolocation } from "./hooks/useGeolocation";
 import debounce from "lodash/debounce";
 
@@ -54,21 +50,13 @@ const DEFAULT_LOCATION: [number, number] = [13.405, 52.52];
 const MAP_PITCH = 75;
 const INITIAL_ZOOM = 16;
 
-const GEOLOCATION_OPTIONS = {
-  enableHighAccuracy: true,
-  timeout: 5000,
-  maximumAge: 0,
-};
-
-type GeolocationPermissionState = "prompt" | "granted" | "denied";
-
 interface LocationError {
   type: "permission" | "unavailable" | "timeout";
   message: string;
 }
 
 const MAP_STYLE: maplibregl.StyleSpecification = {
-  version: 8 as 8,
+  version: 8,
   sources: {
     "osm-tiles": {
       type: "raster",
@@ -87,8 +75,8 @@ const MAP_STYLE: maplibregl.StyleSpecification = {
       paint: {
         "raster-saturation": -1,
         "raster-contrast": 0.2,
-        "raster-brightness-min": 0.2
-      }
+        "raster-brightness-min": 0.2,
+      },
     },
   ],
 };
@@ -105,40 +93,6 @@ const INITIAL_MAP_STATE = {
   minZoom: 4,
   maxZoom: 19,
   fadeDuration: 0,
-};
-
-const smoothlyUpdatePosition = (
-  currentPos: [number, number],
-  newPos: [number, number],
-  map: maplibregl.Map,
-  marker: maplibregl.Marker
-) => {
-  const start = currentPos;
-  const end = newPos;
-  const steps = 60;
-  let step = 0;
-
-  const animate = () => {
-    step++;
-    const progress = step / steps;
-    const lat = start[1] + (end[1] - start[1]) * progress;
-    const lng = start[0] + (end[0] - start[0]) * progress;
-
-    marker.setLngLat([lng, lat]);
-
-    if (
-      map.getCenter().lng.toFixed(6) === lng.toFixed(6) &&
-      map.getCenter().lat.toFixed(6) === lat.toFixed(6)
-    ) {
-      map.setCenter([lng, lat]);
-    }
-
-    if (step < steps) {
-      requestAnimationFrame(animate);
-    }
-  };
-
-  animate();
 };
 
 const loadingOverlayStyle: CSSProperties = {
@@ -187,26 +141,30 @@ const Map: React.FC = () => {
   const [sidebarActive, setSidebarActive] = useState(() => window.innerWidth > 768);
   const [isMapLoading, setIsMapLoading] = useState(true);
   const userMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const pulsingMarkerRef = useRef<maplibregl.Marker | null>(null);
   const watchIdRef = useRef<number | null>(null);
   const [locationPermissionState, setLocationPermissionState] = useState<PermissionState>("prompt");
   const [mapPitch, setMapPitch] = useState(0);
   const [locationError, setLocationError] = useState<LocationError | null>(null);
-  const isMapMoving = useRef(false);
   const [deviceOrientation, setDeviceOrientation] = useState<number>(0);
 
-  // Use the geolocation hook at component level.
-  // Rename error to geoError to avoid naming conflicts.
   const { location, accuracy, heading, error: geoError } = useGeolocation(
     mapInstanceRef.current,
     userMarkerRef.current
   );
 
+  // Update user marker and pulsing ring with new location.
   useEffect(() => {
-    if (location) {
+    if (location && mapInstanceRef.current) {
       setCurrentLocation(location);
-      if (mapInstanceRef.current) {
-        updateAccuracyCircle(mapInstanceRef.current, location, accuracy || 0);
+      if (userMarkerRef.current) {
+        userMarkerRef.current.setLngLat(location);
       }
+      if (pulsingMarkerRef.current) {
+        pulsingMarkerRef.current.setLngLat(location);
+      }
+      // Always keep map centered on the user.
+      mapInstanceRef.current.setCenter(location);
     }
   }, [location, accuracy]);
 
@@ -297,24 +255,12 @@ const Map: React.FC = () => {
         setCurrentLocation(newPosition);
 
         if (userMarkerRef.current) {
-          if (isMapMoving.current) {
-            userMarkerRef.current.setLngLat(newPosition);
-          } else {
-            const currentPos = userMarkerRef.current.getLngLat();
-            smoothlyUpdatePosition(
-              [currentPos.lng, currentPos.lat],
-              newPosition,
-              map,
-              userMarkerRef.current
-            );
-          }
-
-          if (heading !== null) {
-            userMarkerRef.current.setRotation(heading);
-          }
+          userMarkerRef.current.setLngLat(newPosition);
         }
-
-        updateAccuracyCircle(map, [longitude, latitude], accuracy);
+        if (pulsingMarkerRef.current) {
+          pulsingMarkerRef.current.setLngLat(newPosition);
+        }
+        map.setCenter(newPosition);
       };
 
       const handleError = (error: GeolocationPositionError) => {
@@ -323,13 +269,15 @@ const Map: React.FC = () => {
           case error.PERMISSION_DENIED:
             locError = {
               type: "permission",
-              message: "Location access was denied. You can enable it in your settings.",
+              message:
+                "Location access was denied. You can enable it in your settings.",
             };
             break;
           case error.POSITION_UNAVAILABLE:
             locError = {
               type: "unavailable",
-              message: "Location information is unavailable. Please check your device settings.",
+              message:
+                "Location information is unavailable. Please check your device settings.",
             };
             break;
           case error.TIMEOUT:
@@ -365,38 +313,43 @@ const Map: React.FC = () => {
     []
   );
 
-  const handleDeviceOrientation = useCallback((event: DeviceOrientationEventWithWebkit) => {
-    if (event.webkitCompassHeading) {
-      setDeviceOrientation(event.webkitCompassHeading);
-    } else if (event.alpha) {
-      setDeviceOrientation(360 - event.alpha);
-    }
-  }, []);
+  const handleDeviceOrientation = useCallback(
+    (event: DeviceOrientationEventWithWebkit) => {
+      if (event.webkitCompassHeading) {
+        setDeviceOrientation(event.webkitCompassHeading);
+      } else if (event.alpha) {
+        setDeviceOrientation(360 - event.alpha);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     if (window.DeviceOrientationEvent) {
       if (
-        typeof (DeviceOrientationEvent as any).requestPermission === 'function'
+        typeof (DeviceOrientationEvent as any).requestPermission === "function"
       ) {
-        // iOS 13+ devices need to request permission
-        document.addEventListener('click', async () => {
-          try {
-            const permission = await (DeviceOrientationEvent as any).requestPermission();
-            if (permission === 'granted') {
-              window.addEventListener('deviceorientation', handleDeviceOrientation);
+        document.addEventListener(
+          "click",
+          async () => {
+            try {
+              const permission = await (DeviceOrientationEvent as any).requestPermission();
+              if (permission === "granted") {
+                window.addEventListener("deviceorientation", handleDeviceOrientation);
+              }
+            } catch (error) {
+              console.error("Error requesting device orientation permission:", error);
             }
-          } catch (error) {
-            console.error('Error requesting device orientation permission:', error);
-          }
-        }, { once: true });
+          },
+          { once: true }
+        );
       } else {
-        // Non-iOS devices
-        window.addEventListener('deviceorientation', handleDeviceOrientation);
+        window.addEventListener("deviceorientation", handleDeviceOrientation);
       }
     }
 
     return () => {
-      window.removeEventListener('deviceorientation', handleDeviceOrientation);
+      window.removeEventListener("deviceorientation", handleDeviceOrientation);
     };
   }, [handleDeviceOrientation]);
 
@@ -419,13 +372,19 @@ const Map: React.FC = () => {
       refreshExpiredTiles: false,
     });
 
+    // Disable default map interactions so the map stays centered on the user.
+    map.dragPan.disable();
+    map.scrollZoom.disable();
+    map.doubleClickZoom.disable();
+    map.keyboard.disable();
+
     mapInstanceRef.current = map;
 
     const createUserMarker = () => {
-      const userAvatarEl = document.createElement("div");
-      userAvatarEl.className = "user-arrow";
+      const userEl = document.createElement("div");
+      userEl.className = "user-arrow";
       return new maplibregl.Marker({
-        element: userAvatarEl,
+        element: userEl,
         anchor: "center",
         rotationAlignment: "map",
         pitchAlignment: "map",
@@ -437,34 +396,32 @@ const Map: React.FC = () => {
 
     userMarkerRef.current = createUserMarker();
 
+    // Create a pulsing ring marker behind the user marker.
+    const createPulsingMarker = () => {
+      const ringEl = document.createElement("div");
+      ringEl.className = "pulsing-ring";
+      return new maplibregl.Marker({
+        element: ringEl,
+        anchor: "center",
+      })
+        .setLngLat(DEFAULT_LOCATION)
+        .addTo(map);
+    };
+
+    pulsingMarkerRef.current = createPulsingMarker();
+
     const debouncedResize = debounce(() => {
       map.resize();
     }, 250);
 
     window.addEventListener("resize", debouncedResize);
 
-    // When the map is ready, start watching location.
     map.on("load", () => {
       setIsMapLoading(false);
       startWatchingLocation(map);
     });
 
-    map.on("movestart", () => {
-      isMapMoving.current = true;
-    });
-
-    map.on("moveend", () => {
-      isMapMoving.current = false;
-    });
-
-    // Add bearing change handler
-    map.on('rotate', () => {
-      if (!window.DeviceOrientationEvent && userMarkerRef.current) {
-        // Only update rotation based on map bearing for desktop
-        userMarkerRef.current.setRotation(map.getBearing());
-      }
-    });
-
+    // Clean up on unmount.
     return () => {
       window.removeEventListener("resize", debouncedResize);
       debouncedResize.cancel();
@@ -472,29 +429,23 @@ const Map: React.FC = () => {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
-      map.off("movestart", () => {
-        isMapMoving.current = true;
-      });
-      map.off("moveend", () => {
-        isMapMoving.current = false;
-      });
     };
   }, [startWatchingLocation]);
 
+  // Create markers for nodes once and update only when nodes change.
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
 
-    // Clear existing markers
+    // Remove old markers.
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
-    // Add markers
     nodes.forEach((node) => {
       const markerEl = document.createElement("div");
       markerEl.className = `map-marker ${node.isLoobricate ? "loobricate" : ""}`;
-      const marker = new maplibregl.Marker({ 
-        element: markerEl, 
+      const marker = new maplibregl.Marker({
+        element: markerEl,
         anchor: "bottom",
         rotationAlignment: "map",
         pitchAlignment: "map",
@@ -508,28 +459,9 @@ const Map: React.FC = () => {
 
       markersRef.current.push(marker);
     });
-
-    // Only update markers when movement ends
-    const updateMarkerPositions = () => {
-      if (!isMapMoving.current) {
-        markersRef.current.forEach((marker, index) => {
-          const node = nodes[index];
-          if (node) {
-            marker.setLngLat([node.lon, node.lat]);
-          }
-        });
-      }
-    };
-
-    map.on("moveend", updateMarkerPositions);
-
-    return () => {
-      map.off("moveend", updateMarkerPositions);
-    };
   }, [nodes]);
 
   const selectNode = useCallback((map: maplibregl.Map, node: Node) => {
-    isMapMoving.current = true;
     map.flyTo({
       center: [node.lon, node.lat],
       zoom: 14,
@@ -538,31 +470,12 @@ const Map: React.FC = () => {
     });
 
     map.once("moveend", () => {
-      isMapMoving.current = false;
       setPreviewNode(node);
       setShowPreviewPopup(true);
       const screenPos = map.project([node.lon, node.lat]);
-      setPopupPosition({
-        x: screenPos.x,
-        y: screenPos.y,
-      });
+      setPopupPosition({ x: screenPos.x, y: screenPos.y });
     });
   }, []);
-
-  function adjustPopupPositionToScreen(
-    screenPos: maplibregl.PointLike,
-    map: maplibregl.Map
-  ): { x: number; y: number } {
-    if (!(screenPos instanceof maplibregl.Point)) {
-      return { x: 0, y: 0 };
-    }
-    const { x, y } = screenPos;
-    const bounds = map.getContainer().getBoundingClientRect();
-    return {
-      x: Math.min(Math.max(x, 50), bounds.width - 50),
-      y: Math.min(Math.max(y - 30, 50), bounds.height - 50),
-    };
-  }
 
   const renderSphereForNode = (node: Node) => {
     return <TorusSphere loobricateId={node.id} />;
@@ -609,7 +522,6 @@ const Map: React.FC = () => {
 
   const handleRecenter = () => {
     if (mapInstanceRef.current && currentLocation) {
-      isMapMoving.current = true;
       mapInstanceRef.current.flyTo({
         center: currentLocation,
         pitch: MAP_PITCH,
@@ -617,9 +529,6 @@ const Map: React.FC = () => {
         zoom: INITIAL_ZOOM,
         duration: 1000,
         essential: true,
-      });
-      mapInstanceRef.current.once("moveend", () => {
-        isMapMoving.current = false;
       });
     }
   };
@@ -646,55 +555,6 @@ const Map: React.FC = () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
-
-  const updateAccuracyCircle = (
-    map: maplibregl.Map,
-    center: [number, number],
-    accuracy: number
-  ) => {
-    const circleId = "accuracy-circle";
-
-    if (!map.getSource(circleId)) {
-      map.addSource(circleId, {
-        type: "geojson",
-        data: {
-          type: "Feature",
-          geometry: {
-            type: "Point",
-            coordinates: center,
-          },
-          properties: {
-            accuracy,
-          },
-        },
-      });
-
-      map.addLayer({
-        id: circleId,
-        type: "circle",
-        source: circleId,
-        paint: {
-          "circle-radius": ["get", "accuracy"],
-          "circle-color": "#4264fb",
-          "circle-opacity": 0.2,
-          "circle-stroke-width": 1,
-          "circle-stroke-color": "#4264fb",
-        },
-      });
-    } else {
-      const source = map.getSource(circleId) as maplibregl.GeoJSONSource;
-      source.setData({
-        type: "Feature",
-        geometry: {
-          type: "Point",
-          coordinates: center,
-        },
-        properties: {
-          accuracy,
-        },
-      });
-    }
-  };
 
   const LocationErrorMessage = ({
     error,
