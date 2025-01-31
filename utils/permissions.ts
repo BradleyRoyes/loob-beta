@@ -60,18 +60,31 @@ export const requestMicrophonePermission = async (): Promise<boolean> => {
   }
 };
 
-export const requestLocationPermission = async (): Promise<boolean> => {
+export type GeolocationPermissionState = 'prompt' | 'granted' | 'denied';
+
+export const requestLocationPermission = async (): Promise<GeolocationPermissionState> => {
   try {
-    await new Promise((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0
-      });
+    if (navigator.permissions) {
+      const result = await navigator.permissions.query({ name: 'geolocation' });
+      return result.state as GeolocationPermissionState;
+    }
+    
+    // Fallback for browsers without Permissions API
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        () => resolve('granted'),
+        (error) => {
+          if (error.code === error.PERMISSION_DENIED) {
+            resolve('denied');
+          } else {
+            resolve('prompt');
+          }
+        }
+      );
     });
-    return true;
-  } catch (e) {
-    return false;
+  } catch (error) {
+    console.error('Error requesting location permission:', error);
+    return 'prompt';
   }
 };
 

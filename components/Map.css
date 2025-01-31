@@ -575,35 +575,44 @@
   left: 50%;
   transform: translateX(-50%);
   z-index: 2000;
-  background: rgba(0, 0, 0, 0.8);
-  border-radius: 8px;
-  padding: 12px 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 12px;
+  padding: 16px 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   max-width: 90%;
   width: auto;
   text-align: center;
   color: white;
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 15px;
+  line-height: 1.4;
 }
 
 .error-content {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 14px;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.error-content span {
+  flex: 1;
+  min-width: 200px;
 }
 
 .retry-button {
   background: linear-gradient(45deg, #ffb6b9, #fae3d9);
   border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
+  padding: 8px 16px;
+  border-radius: 6px;
   color: #333;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
-  transition: transform 0.2s, opacity 0.2s;
+  transition: all 0.2s ease;
+  min-width: 100px;
 }
 
 .retry-button:hover {
@@ -615,23 +624,51 @@
   transform: scale(0.95);
 }
 
-/* Mobile optimizations for error message */
+.dismiss-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  margin-left: 8px;
+}
+
+.dismiss-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Mobile optimizations */
 @media (max-width: 768px) {
   .location-error-message {
     top: auto;
-    bottom: 160px;
-    padding: 10px 16px;
-    font-size: 13px;
+    bottom: 100px;
+    padding: 12px 20px;
+    font-size: 14px;
   }
 
   .error-content {
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
   }
 
-  .retry-button {
+  .error-content span {
+    min-width: unset;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 8px;
     width: 100%;
-    padding: 8px;
+  }
+
+  .retry-button,
+  .dismiss-button {
+    flex: 1;
+    padding: 10px;
+    font-size: 14px;
   }
 }
 
@@ -682,5 +719,37 @@
   100% {
     opacity: 0.5;
     transform: scale(1);
+  }
+}
+
+.location-button {
+  position: fixed;
+  right: 20px;
+  bottom: 200px;
+  background: linear-gradient(45deg, #ffb6b9, #fae3d9);
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  color: #333;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.location-button:hover {
+  transform: scale(1.05);
+}
+
+.location-button:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 768px) {
+  .location-button {
+    bottom: 160px;
+    padding: 10px 16px;
+    font-size: 14px;
   }
 }

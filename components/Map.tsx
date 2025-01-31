@@ -10,7 +10,7 @@ import React, {
 import maplibregl, { Marker } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./Map.css";
-import { checkPermission, requestLocationPermission, getPermissionInstructions } from '../utils/permissions';
+import { checkPermission, requestLocationPermission } from '../utils/permissions';
 
 // Child components with their prop types
 import TorusSphere, { TorusSphereProps } from "./TorusSphere";
@@ -61,7 +61,7 @@ const GEOLOCATION_OPTIONS = {
 // Add this type
 type GeolocationPermissionState = 'prompt' | 'granted' | 'denied';
 
-// Add these error message constants at the top
+// Update the error message constants at the top
 const GEOLOCATION_ERRORS = {
   PERMISSION_DENIED: 'Please enable location services to see your position on the map.',
   POSITION_UNAVAILABLE: 'Unable to determine your location. Please check your device settings.',
@@ -432,35 +432,26 @@ useEffect(() => {
    * Enhanced permission handling
    */
   useEffect(() => {
-    const requestPermissions = async () => {
+    const handlePermissions = async () => {
       try {
-        // Request location permission
-        const locationState = await checkPermission('geolocation');
-        setLocationPermissionState(locationState);
+        const permissionState = await requestLocationPermission();
+        setLocationPermissionState(permissionState);
 
-        if (locationState === 'granted') {
+        if (permissionState === 'granted') {
           const map = mapInstanceRef.current;
           if (map) {
             startWatchingLocation(map);
           }
-        }
-
-        // Request device orientation permission on iOS
-        if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-          try {
-            const permission = await (DeviceOrientationEvent as any).requestPermission();
-            setOrientationPermissionState(permission);
-          } catch (e) {
-            console.warn('Device orientation permission denied');
-            setOrientationPermissionState('denied');
-          }
+        } else {
+          setLocationError('To see your location, enable location services in your device settings.');
         }
       } catch (error) {
-        console.error('Error requesting permissions:', error);
+        console.error('Error handling permissions:', error);
+        setLocationError('Unable to access location services. You can still use the map without location.');
       }
     };
 
-    requestPermissions();
+    handlePermissions();
   }, []);
 
   /**
@@ -468,18 +459,20 @@ useEffect(() => {
    */
   const startWatchingLocation = useCallback((map: maplibregl.Map) => {
     if (!navigator.geolocation) {
-      setLocationError(GEOLOCATION_ERRORS.GENERAL);
+      setLocationError('Location services are not supported by your browser.');
       return;
     }
 
     const options = {
       enableHighAccuracy: true,
-      timeout: 10000, // Increased timeout for better reliability
+      timeout: 30000, // Increased timeout for better mobile support
       maximumAge: 0
     };
 
-    // Clear any existing error when starting to watch
-    setLocationError(null);
+    // Clear any existing watch
+    if (watchIdRef.current) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+    }
 
     watchIdRef.current = navigator.geolocation.watchPosition(
       ({ coords }) => {
@@ -487,7 +480,7 @@ useEffect(() => {
         const newPosition: [number, number] = [longitude, latitude];
         
         setCurrentLocation(newPosition);
-        setLocationError(null); // Clear any existing error on success
+        setLocationError(null);
 
         if (userMarkerRef.current) {
           const currentPos = userMarkerRef.current.getLngLat();
@@ -499,26 +492,28 @@ useEffect(() => {
           );
         }
 
-        // Update accuracy circle with matching color scheme
+        // Update accuracy circle
         updateAccuracyCircle(map, newPosition, accuracy);
       },
       (error) => {
         console.warn('Geolocation error:', error);
+        let errorMessage: string = GEOLOCATION_ERRORS.GENERAL;
+        
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            setLocationError(GEOLOCATION_ERRORS.PERMISSION_DENIED);
+            errorMessage = 'Location access was denied. You can still use the map without location.';
             break;
           case error.POSITION_UNAVAILABLE:
-            setLocationError(GEOLOCATION_ERRORS.POSITION_UNAVAILABLE);
+            errorMessage = 'Unable to determine your location. Please check your device settings.';
             break;
           case error.TIMEOUT:
-            setLocationError(GEOLOCATION_ERRORS.TIMEOUT);
+            errorMessage = 'Location request timed out. Please try again.';
             // Retry after timeout
-            setTimeout(() => startWatchingLocation(map), 1000);
+            setTimeout(() => startWatchingLocation(map), 2000);
             break;
-          default:
-            setLocationError(GEOLOCATION_ERRORS.GENERAL);
         }
+        
+        setLocationError(errorMessage);
       },
       options
     );
@@ -693,6 +688,21 @@ useEffect(() => {
       });
     }
   };
+
+  // Add this button component near your other UI elements
+  const LocationButton = () => (
+    <button 
+      className="location-button"
+      onClick={async () => {
+        const permission = await requestLocationPermission();
+        if (permission === 'granted' && mapInstanceRef.current) {
+          startWatchingLocation(mapInstanceRef.current);
+        }
+      }}
+    >
+      Enable Location
+    </button>
+  );
 
   return (
     <div className="map-container">
@@ -872,6 +882,8 @@ useEffect(() => {
           console.log(`Found ${amount} LOOB!`);
         }}
       />
+
+      <LocationButton />
     </div>
   );
 };
