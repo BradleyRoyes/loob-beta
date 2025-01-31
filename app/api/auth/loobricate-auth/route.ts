@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
 
     const collection = await astraDb.collection('usersandloobricates');
     
+    // Find loobricate by adminUsername and dataType
     const loobricate = await collection.findOne({
       dataType: 'loobricate',
       adminUsername: username
@@ -33,6 +34,7 @@ export async function POST(req: NextRequest) {
       }, { status: 401 });
     }
 
+    // Verify password using bcrypt
     const isValidPassword = await bcrypt.compare(password, loobricate.adminPassword);
     
     if (!isValidPassword) {
@@ -42,6 +44,7 @@ export async function POST(req: NextRequest) {
       }, { status: 401 });
     }
 
+    // Return sanitized loobricate data
     return NextResponse.json({
       loobricate: {
         _id: loobricate._id,
@@ -53,7 +56,8 @@ export async function POST(req: NextRequest) {
         tags: loobricate.tags || [],
         admins: loobricate.admins || [],
         members: loobricate.members || [],
-        createdAt: loobricate.createdAt
+        createdAt: loobricate.createdAt,
+        type: 'community'  // default type
       }
     });
 

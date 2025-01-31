@@ -61,6 +61,12 @@ const GEOLOCATION_OPTIONS = {
 // Add this type
 type GeolocationPermissionState = 'prompt' | 'granted' | 'denied';
 
+// Add this type at the top with other interfaces
+interface LocationError {
+  type: 'permission' | 'unavailable' | 'timeout';
+  message: string;
+}
+
 // Add this to your Map component's JSX return statement, before the closing div
 const MAP_STYLE: maplibregl.StyleSpecification = {
   version: 8 as 8,  // Type assertion to literal type '8'
@@ -171,6 +177,9 @@ const Map: React.FC = () => {
 
   const deviceOrientationRef = useRef<number | null>(null);
 
+  // Add state for location error
+  const [locationError, setLocationError] = useState<LocationError | null>(null);
+
   /**
    * 1) On mount, fetch data from /api/mapData
    */
@@ -246,25 +255,106 @@ useEffect(() => {
   const map = new maplibregl.Map({
     container: mapContainerRef.current,
     ...INITIAL_MAP_STATE,
-    style: MAP_STYLE
+    style: MAP_STYLE,
+    interactive: true, // Enable all interactive features
+    dragRotate: true, // Enable rotation
+    pitchWithRotate: true // Enable pitch with rotation
   });
 
   mapInstanceRef.current = map;
 
-  // Batch map control modifications
-  const disableControls = () => {
-    const controls = [
-      map.dragPan,
-      map.scrollZoom,
-      map.dragRotate,
-      map.touchZoomRotate,
-      map.doubleClickZoom,
-      map.keyboard
-    ];
-    controls.forEach(control => control.disable());
+  // Enable zoom controls with compass
+  map.addControl(new maplibregl.NavigationControl({
+    visualizePitch: true, // Show pitch control
+    showCompass: true // Show compass
+  }), 'top-right');
+
+  // Remove the disableControls function and instead enable the controls we want
+  map.dragRotate.enable(); // Enable drag rotation
+  map.touchZoomRotate.enable(); // Enable touch zoom and rotate
+  map.dragPan.enable(); // Enable drag panning
+  map.scrollZoom.enable(); // Enable scroll zooming
+  map.keyboard.enable(); // Enable keyboard controls
+  
+  // Enable drag with right mouse button only
+  map.dragPan.disable(); // Disable left-click drag
+  map.on('mousedown', (e) => {
+    if (e.originalEvent.button === 2) { // Right mouse button
+      map.dragPan.enable();
+    }
+  });
+  
+  map.on('mouseup', () => {
+    map.dragPan.disable();
+  });
+  
+  // Prevent context menu on right-click
+  map.getCanvas().addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+  });
+
+  // Enhanced touch handling for mobile
+  let startTouchY = 0;
+  map.on('touchstart', (e) => {
+    if (e.points.length === 1) { // Single touch
+      startTouchY = e.points[0].y;
+    }
+  });
+
+  map.on('touchmove', (e) => {
+    if (e.points.length === 1) { // Single touch
+      const deltaY = e.points[0].y - startTouchY;
+      const newPitch = Math.max(0, Math.min(85, map.getPitch() - deltaY * 0.5));
+      map.setPitch(newPitch);
+      startTouchY = e.points[0].y;
+    }
+  });
+
+  // Enhanced device orientation handling
+  const handleDeviceOrientation = (event: DeviceOrientationEvent) => {
+    if (!mapInstanceRef.current) return;
+    
+    let heading: number | null = null;
+    let pitch: number | null = null;
+
+    if ('webkitCompassHeading' in event) {
+      // iOS
+      heading = (event as any).webkitCompassHeading as number;
+      pitch = event.beta as number;
+    } else if (event.alpha !== null) {
+      // Android
+      heading = 360 - event.alpha;
+      pitch = event.beta;
+    }
+
+    if (heading !== null) {
+      mapInstanceRef.current.setBearing(heading);
+    }
+
+    if (pitch !== null) {
+      const mapPitch = Math.max(0, Math.min(85, (pitch - 45) * 1.5));
+      mapInstanceRef.current.setPitch(mapPitch);
+    }
   };
 
-  disableControls();
+  // Request device orientation permission and add listener
+  const requestOrientationPermission = async () => {
+    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+      try {
+        const permission = await (DeviceOrientationEvent as any).requestPermission();
+        if (permission === 'granted') {
+          window.addEventListener('deviceorientation', handleDeviceOrientation, true);
+        }
+      } catch (e) {
+        console.warn('Device orientation permission denied');
+      }
+    } else {
+      window.addEventListener('deviceorientation', handleDeviceOrientation, true);
+    }
+  };
+
+  // Initialize orientation handling
+  requestOrientationPermission();
 
   // Optimize user marker creation
   const createUserMarker = () => {
@@ -333,11 +423,14 @@ useEffect(() => {
   });
 
   return () => {
+    window.removeEventListener('deviceorientation', handleDeviceOrientation, true);
     if (watchIdRef.current) {
       navigator.geolocation.clearWatch(watchIdRef.current);
     }
-    map.remove();
-    mapInstanceRef.current = null;
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.remove();
+      mapInstanceRef.current = null;
+    }
   };
 }, []);
 
@@ -395,64 +488,98 @@ useEffect(() => {
    */
   const startWatchingLocation = useCallback(async (map: maplibregl.Map) => {
     if (!navigator.geolocation) {
-      console.warn('Geolocation is not supported');
+      console.warn('Geolocation is not supported by this browser');
       return;
     }
 
-    try {
-      // Request permission if not granted
-      if (locationPermissionState !== 'granted') {
-        const granted = await requestLocationPermission();
-        if (!granted) {
-          throw new Error(getPermissionInstructions('geolocation'));
+    // Only request location if we haven't already been denied
+    const permissionState = await checkPermission('geolocation');
+    if (permissionState === 'denied') {
+      return;
+    }
+
+    let hasRequestedPermission = false;
+
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 1000
+    };
+
+    const handleSuccess = ({ coords }: GeolocationPosition) => {
+      const { longitude, latitude, heading, accuracy } = coords;
+      const newPosition: [number, number] = [longitude, latitude];
+      
+      setCurrentLocation(newPosition);
+
+      if (userMarkerRef.current) {
+        const currentPos = userMarkerRef.current.getLngLat();
+        smoothlyUpdatePosition(
+          [currentPos.lng, currentPos.lat],
+          newPosition,
+          map,
+          userMarkerRef.current
+        );
+
+        if (heading !== null) {
+          userMarkerRef.current.setRotation(heading);
         }
-        setLocationPermissionState('granted');
       }
 
-      // High accuracy options
-      const options = {
-        enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0
-      };
+      // Update accuracy circle
+      updateAccuracyCircle(map, [longitude, latitude], accuracy);
+    };
 
-      watchIdRef.current = navigator.geolocation.watchPosition(
-        ({ coords }) => {
-          const { longitude, latitude, heading, accuracy } = coords;
-          const newPosition: [number, number] = [longitude, latitude];
-          
-          setCurrentLocation(newPosition);
+    const handleError = (error: GeolocationPositionError) => {
+      let locationError: LocationError;
 
-          if (userMarkerRef.current) {
-            // Smooth movement
-            const currentPos = userMarkerRef.current.getLngLat();
-            smoothlyUpdatePosition(
-              [currentPos.lng, currentPos.lat],
-              newPosition,
-              map,
-              userMarkerRef.current
-            );
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          locationError = {
+            type: 'permission',
+            message: 'Location access was denied. You can enable it in your settings.'
+          };
+          break;
+        case error.POSITION_UNAVAILABLE:
+          locationError = {
+            type: 'unavailable',
+            message: 'Location information is unavailable. Please check your device settings.'
+          };
+          break;
+        case error.TIMEOUT:
+          locationError = {
+            type: 'timeout',
+            message: 'Location request timed out. Please try again.'
+          };
+          break;
+        default:
+          locationError = {
+            type: 'unavailable',
+            message: 'An unknown error occurred while getting location.'
+          };
+      }
 
-            // Update heading if available
-            if (heading !== null) {
-              userMarkerRef.current.setRotation(heading);
-            }
-          }
+      // Only show the error message if we haven't already shown one
+      if (!hasRequestedPermission) {
+        setLocationError(locationError);
+        hasRequestedPermission = true;
+      }
 
-          // Create accuracy circle
-          updateAccuracyCircle(map, [longitude, latitude], accuracy);
-        },
-        (error) => {
-          console.error('Geolocation error:', error);
-          alert(getPermissionInstructions('geolocation'));
-        },
-        options
-      );
-    } catch (error) {
-      console.error('Error starting location watch:', error);
-      alert(getPermissionInstructions('geolocation'));
-    }
-  }, [locationPermissionState]);
+      // Clear the watch if we get a permission denied error
+      if (error.code === error.PERMISSION_DENIED && watchIdRef.current) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+    };
+
+    // Start watching location
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      handleSuccess,
+      handleError,
+      options
+    );
+
+  }, []);
 
   /**
    * 6) Node selection logic -> popup
@@ -589,47 +716,6 @@ useEffect(() => {
     };
   }, []);
 
-  // Add device orientation handling
-  useEffect(() => {
-    if (!mapInstanceRef.current) return;
-
-    const handleDeviceOrientation = (event: DeviceOrientationEvent) => {
-      if ('webkitCompassHeading' in event) {
-        // iOS compass heading
-        deviceOrientationRef.current = (event as any).webkitCompassHeading;
-      } else if (event.alpha) {
-        // Android compass heading
-        deviceOrientationRef.current = 360 - event.alpha;
-      }
-
-      if (deviceOrientationRef.current !== null && mapInstanceRef.current) {
-        mapInstanceRef.current.setBearing(deviceOrientationRef.current);
-      }
-    };
-
-    const requestOrientationPermission = async () => {
-      if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-        try {
-          const permission = await (DeviceOrientationEvent as any).requestPermission();
-          if (permission === 'granted') {
-            window.addEventListener('deviceorientation', handleDeviceOrientation, true);
-          }
-        } catch (e) {
-          console.warn('Device orientation permission denied');
-        }
-      } else {
-        // Non-iOS devices don't need permission
-        window.addEventListener('deviceorientation', handleDeviceOrientation, true);
-      }
-    };
-
-    requestOrientationPermission();
-
-    return () => {
-      window.removeEventListener('deviceorientation', handleDeviceOrientation, true);
-    };
-  }, []);
-
   // Add this function to show accuracy radius
   const updateAccuracyCircle = (map: maplibregl.Map, center: [number, number], accuracy: number) => {
     const circleId = 'accuracy-circle';
@@ -675,6 +761,29 @@ useEffect(() => {
       });
     }
   };
+
+  // Add this component to show location errors
+  const LocationErrorMessage = ({ error, onRetry, onDismiss }: {
+    error: LocationError;
+    onRetry: () => void;
+    onDismiss: () => void;
+  }) => (
+    <div className="location-error-message">
+      <div className="error-content">
+        <span>{error.message}</span>
+        <div className="button-group">
+          {error.type !== 'permission' && (
+            <button className="retry-button" onClick={onRetry}>
+              Try Again
+            </button>
+          )}
+          <button className="dismiss-button" onClick={onDismiss}>
+            Dismiss
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="map-container">
@@ -831,6 +940,20 @@ useEffect(() => {
           console.log(`Found ${amount} LOOB!`);
         }}
       />
+
+      {/* Add the location error message */}
+      {locationError && (
+        <LocationErrorMessage
+          error={locationError}
+          onRetry={() => {
+            setLocationError(null);
+            if (mapInstanceRef.current) {
+              startWatchingLocation(mapInstanceRef.current);
+            }
+          }}
+          onDismiss={() => setLocationError(null)}
+        />
+      )}
     </div>
   );
 };

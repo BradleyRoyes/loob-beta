@@ -17,6 +17,9 @@ export interface Node {
   contact: string;
   visualType: VisualView;
   loobricate?: string;
+  isLoobricate?: boolean;
+  members?: string[];
+  admins?: string[];
 }
 
 /**
@@ -78,11 +81,12 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
     console.log("Selected type:", selectedType);
     console.log("Selected loobricate:", selectedLoobricate);
 
-    const result = nodes.filter((node) => {
+    return nodes.filter((node) => {
       // Match Loobricate selection
       const matchesLoobricate = !selectedLoobricate || 
         selectedLoobricate === "All" || 
-        node.loobricate === selectedLoobricate;
+        node.loobricate === selectedLoobricate ||
+        (node.isLoobricate && node.label === selectedLoobricate);
 
       // Match type selection - ensure exact match with our constants
       const matchesType = !selectedType || 
@@ -95,6 +99,7 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
       console.log("Node:", {
         id: node.id,
         type: node.type,
+        isLoobricate: node.isLoobricate,
         matchesType,
         matchesLoobricate,
         matchesSearch
@@ -102,9 +107,6 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
 
       return matchesLoobricate && matchesType && matchesSearch;
     });
-
-    console.log("Filtered result:", result);
-    return result;
   }, [nodes, searchQuery, selectedLoobricate, selectedType]);
 
   /**

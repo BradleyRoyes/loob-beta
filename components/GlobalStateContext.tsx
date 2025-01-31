@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-interface Loobricate {
+export interface Loobricate {
   id: string;
   name: string;
   description: string;
@@ -11,6 +11,9 @@ interface Loobricate {
   tags: string[];
   email?: string;
   location?: string;
+  type?: string;
+  members?: string[];
+  admins?: string[];
 }
 
 interface UserState {
@@ -35,6 +38,21 @@ interface GlobalState extends UserState {
 const GlobalStateContext = createContext<GlobalState | undefined>(undefined);
 
 const ANONYMOUS_PREFIX = 'anon-';
+
+const fetchConnectedLoobricates = async (userId: string) => {
+  try {
+    const response = await fetch(`/api/users/${userId}/data`);
+    const data = await response.json();
+    
+    if (response.ok && data.connectedLoobricates) {
+      return data.connectedLoobricates;
+    }
+    return [];
+  } catch (error) {
+    console.error('Error fetching connected loobricates:', error);
+    return [];
+  }
+};
 
 export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [sessionId, setSessionIdState] = useState<string | null>(null);
@@ -71,6 +89,18 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
   useEffect(() => {
     localStorage.setItem('userState', JSON.stringify(userState));
   }, [userState]);
+
+  // Update useEffect to fetch connected loobricates when userId changes
+  useEffect(() => {
+    if (userState.userId && !userState.userId.startsWith(ANONYMOUS_PREFIX)) {
+      fetchConnectedLoobricates(userState.userId).then(loobricates => {
+        setUserStateData(prev => ({
+          ...prev,
+          connectedLoobricates: loobricates
+        }));
+      });
+    }
+  }, [userState.userId]);
 
   const setSessionId = (id: string | null) => {
     setSessionIdState(id);

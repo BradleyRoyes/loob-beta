@@ -169,19 +169,40 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.8);
-  display: flex;
+  display: none;
   justify-content: center;
   align-items: center;
   padding: 2rem;
-  z-index: 1000;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease;
 }
 
-.login-form {
+.modal-overlay.visible {
+  display: flex;
+  opacity: 1;
+  visibility: visible;
+}
+
+.login-form, .loobricate-profile, .loobricate-profile.admin-panel {
   background: #222;
   padding: 2rem;
   border-radius: 12px;
   width: 100%;
-  max-width: 400px;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+  position: relative;
+  z-index: 10000;
+}
+
+.modal-overlay.visible .login-form,
+.modal-overlay.visible .loobricate-profile,
+.modal-overlay.visible .loobricate-profile.admin-panel {
+  transform: translateY(0);
 }
 
 .form-header {
@@ -194,6 +215,7 @@
 .form-header h2 {
   color: #ffb48f;
   margin: 0;
+  font-size: 1.5rem;
 }
 
 .form-input {
@@ -204,6 +226,13 @@
   border: 1px solid #444;
   border-radius: 6px;
   color: #f3f3f3;
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.form-input:focus {
+  border-color: #ffb48f;
+  outline: none;
 }
 
 .form-input.error {
@@ -212,28 +241,32 @@
 
 .error-message {
   color: #ff6b6b;
+  margin: 0.5rem 0;
   font-size: 0.9rem;
-  margin-bottom: 1rem;
+  text-align: center;
 }
 
 .submit-button {
   width: 100%;
   padding: 0.8rem;
-  background: #ffb48f;
-  color: #222;
+  background: linear-gradient(to right, #ffb48f, #ff9f7f);
   border: none;
   border-radius: 6px;
+  color: #222;
+  font-weight: 600;
   cursor: pointer;
-  font-weight: bold;
+  transition: all 0.2s ease;
 }
 
 .submit-button:hover {
-  background: #ff9f7f;
+  background: linear-gradient(to right, #ff9f7f, #ff8b6b);
+  transform: translateY(-1px);
 }
 
 .submit-button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+  transform: none;
 }
 
 .anonymous-message {
@@ -462,5 +495,100 @@
   
   .list-item {
     padding: 1rem;
+  }
+}
+
+/* Add these new styles after the profile-header styles */
+
+.loobricate-connections {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.connections-title {
+  color: #ffb48f;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.connections-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.loobricate-badge {
+  background: linear-gradient(145deg, #2a2a2a, #333);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 120px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.loobricate-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 180, 143, 0.1);
+}
+
+.badge-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(to right, #ffb48f, #ff9f7f);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #222;
+  margin-bottom: 0.5rem;
+}
+
+.badge-name {
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 0.2rem;
+  text-align: center;
+}
+
+.badge-type {
+  font-size: 0.8rem;
+  color: #888;
+  text-align: center;
+}
+
+.no-connections {
+  color: #888;
+  text-align: center;
+  font-style: italic;
+  padding: 1rem;
+}
+
+/* Mobile responsiveness for badges */
+@media (max-width: 640px) {
+  .loobricate-connections {
+    padding: 1rem;
+  }
+
+  .connections-container {
+    gap: 0.8rem;
+  }
+
+  .loobricate-badge {
+    min-width: 100px;
+    padding: 0.8rem;
+  }
+
+  .badge-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
   }
 }
