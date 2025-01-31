@@ -334,11 +334,12 @@
   position: relative;
   background: linear-gradient(45deg, #ffb6b9, #fae3d9);
   clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-  border: 2px solid white;
+  border: 2px solid rgba(255, 255, 255, 0.8);
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
 }
 
-/* Pulsing effect container */
+/* Pulsing effect for user marker */
 .user-arrow::after {
   content: '';
   position: absolute;
@@ -366,13 +367,13 @@
 }
 
 .recenter-button {
-  position: absolute;
+  position: fixed;
   right: 20px;
-  bottom: 100px; /* Position above your existing buttons */
+  bottom: 140px; /* Adjusted position */
   width: 45px;
   height: 45px;
-  background: white;
-  border: none;
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: 50%;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   cursor: pointer;
@@ -380,10 +381,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s;
+  transition: all 0.3s ease;
 }
 
 .recenter-button:hover {
+  background: rgba(0, 0, 0, 0.8);
   transform: scale(1.1);
 }
 
@@ -408,22 +410,26 @@
   transform: translateX(-50%);
   width: 6px;
   height: 6px;
-  background: currentColor;
+  background: #ffb6b9;
   border-radius: 50%;
 }
 
-/* Responsive adjustments */
+/* Mobile optimizations */
 @media (max-width: 768px) {
+  .tilt-controller {
+    display: none; /* Hide tilt controls on mobile */
+  }
+
   .recenter-button {
-    right: 10px;
-    bottom: 80px; /* Adjust for smaller screens */
-    width: 40px;
-    height: 40px;
+    right: 16px;
+    bottom: 100px;
+    width: 50px;
+    height: 50px;
   }
 
   .recenter-icon {
-    width: 20px;
-    height: 20px;
+    width: 28px;
+    height: 28px;
   }
 }
 
@@ -439,16 +445,17 @@
 }
 
 .tilt-controller {
-  position: absolute;
+  position: fixed;
   right: 20px;
-  bottom: 160px; /* Adjust position above the recenter button */
+  bottom: 200px; /* Increased spacing from bottom */
   z-index: 1000;
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: var(--background-secondary); /* Use theme background */
+  background: rgba(0, 0, 0, 0.7);
   border-radius: 8px;
-  padding: 4px;
+  padding: 8px;
+  gap: 8px; /* Space between buttons */
 }
 
 .tilt-slider {
@@ -485,36 +492,27 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .tilt-controller {
-    bottom: 120px; /* Adjust position for smaller screens */
-    right: 10px; /* Adjust right position */
-  }
-
   .tilt-slider {
     height: 150px; /* Shorter slider for mobile */
   }
 }
 
 @media (max-width: 480px) {
-  .tilt-controller {
-    bottom: 100px; /* Further adjust position for very small screens */
-  }
-
   .tilt-slider {
     height: 100px; /* Even shorter slider for very small screens */
   }
 }
 
 .tilt-button {
-  background: transparent; /* Transparent background */
-  border: none; /* No border */
-  color: transparent; /* Hide the text arrow */
-  width: 30px; /* Default width */
-  height: 30px; /* Default height */
-  cursor: pointer; /* Pointer cursor on hover */
-  margin: 2px 0; /* Space between buttons */
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: transparent;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
   position: relative;
-  transition: transform 0.2s;
+  transition: transform 0.2s, background-color 0.2s;
+  border-radius: 8px;
 }
 
 .tilt-button::after {
@@ -525,7 +523,7 @@
   width: 12px;
   height: 12px;
   transform: translate(-50%, -50%) rotate(45deg);
-  background: linear-gradient(45deg, #ffb6b9, #fae3d9); /* Pastel orange/pink gradient */
+  background: linear-gradient(45deg, #ffb6b9, #fae3d9);
 }
 
 /* Up arrow */
@@ -539,9 +537,150 @@
 }
 
 .tilt-button:hover {
+  background: rgba(255, 255, 255, 0.2);
   transform: scale(1.1);
 }
 
 .tilt-button:active {
   transform: scale(0.95);
+}
+
+/* Accuracy circle styling */
+.accuracy-circle {
+  background: rgba(255, 182, 185, 0.2);
+  border: 2px solid rgba(255, 182, 185, 0.4);
+  border-radius: 50%;
+  animation: accuracyPulse 2s infinite ease-in-out;
+}
+
+@keyframes accuracyPulse {
+  0% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.2;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+}
+
+/* Location error message styling */
+.location-error-message {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 8px;
+  padding: 12px 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  max-width: 90%;
+  width: auto;
+  text-align: center;
+  color: white;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.error-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.retry-button {
+  background: linear-gradient(45deg, #ffb6b9, #fae3d9);
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  color: #333;
+  cursor: pointer;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.retry-button:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
+}
+
+.retry-button:active {
+  transform: scale(0.95);
+}
+
+/* Mobile optimizations for error message */
+@media (max-width: 768px) {
+  .location-error-message {
+    top: auto;
+    bottom: 160px;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .error-content {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .retry-button {
+    width: 100%;
+    padding: 8px;
+  }
+}
+
+/* Update existing mobile styles */
+@media (max-width: 768px) {
+  .tilt-controller {
+    display: none; /* Hide tilt controls on mobile */
+  }
+
+  .recenter-button {
+    right: 16px;
+    bottom: 100px;
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.8); /* Darker background for better visibility */
+  }
+
+  .recenter-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  /* Ensure user marker is more visible on mobile */
+  .user-arrow {
+    width: 40px; /* Slightly larger on mobile */
+    height: 40px;
+    border-width: 3px; /* Thicker border */
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3); /* Enhanced shadow */
+  }
+
+  /* Enhanced accuracy circle for mobile */
+  .accuracy-circle {
+    border-width: 3px;
+    animation: accuracyPulse 3s infinite ease-in-out;
+  }
+}
+
+/* Update accuracy circle animation for better performance */
+@keyframes accuracyPulse {
+  0% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
 }
