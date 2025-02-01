@@ -12,11 +12,14 @@ import type { LoobricateData } from '../types/loobricate';
 const Profile: React.FC = () => {
   const { 
     userId, 
-    pseudonym, 
+    pseudonym,
+    email,
+    phone, 
     isAnonymous, 
     clearUserState,
     connectedLoobricates,
-    setConnectedLoobricates
+    setConnectedLoobricates,
+    setUserState
   } = useGlobalState();
 
   const [entries, setEntries] = useState<any[]>([]);
@@ -30,38 +33,63 @@ const Profile: React.FC = () => {
   const [showDailyDump, setShowDailyDump] = useState(false);
   const [showLoobricateProfile, setShowLoobricateProfile] = useState(false);
   const [currentLoobricateId, setCurrentLoobricateId] = useState<string | null>(null);
-  const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchUserData = async () => {
-    if (isAnonymous || !userId || userId.startsWith('anon-')) {
-      setRouteMessage('You are browsing anonymously. Sign in to access more features.');
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/users/${userId}/data`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch user data');
-      }
-      const data = await response.json();
-      setUserData(data);
-      setEntries(data.entries || []);
-      setRecentDiscoveries(data.discoveries || []);
-      setConnectedLoobricates(data.connectedLoobricates || []);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [loadingState, setLoadingState] = useState<'idle' | 'loading' | 'error' | 'success'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false);
 
   useEffect(() => {
-    if (userId) {
-      fetchUserData();
-    }
-  }, [userId]);
+    const fetchUserData = async () => {
+      if (hasLoadedInitialData || isAnonymous || !userId || userId.startsWith('anon-')) {
+        setRouteMessage('You are browsing anonymously. Sign in to access more features.');
+        setLoadingState('success');
+        return;
+      }
+
+      try {
+        setLoadingState('loading');
+        console.log('Fetching data for user:', userId);
+        const response = await fetch(`/api/users/${userId}/data`);
+        const data = await response.json();
+        
+        if (response.ok) {
+          console.log('Profile - Received user data:', data);
+          
+          const shouldUpdateGlobal = 
+            data.pseudonym !== pseudonym ||
+            data.email !== email ||
+            data.phone !== phone ||
+            JSON.stringify(data.connectedLoobricates) !== JSON.stringify(connectedLoobricates);
+
+          if (shouldUpdateGlobal) {
+            setUserState({
+              userId: data._id,
+              pseudonym: data.pseudonym,
+              email: data.email,
+              phone: data.phone,
+              isAnonymous: false,
+              connectedLoobricates: data.connectedLoobricates || []
+            });
+          }
+          
+          // Set local state
+          setEntries(data.entries || []);
+          setRecentDiscoveries(data.discoveries || []);
+          setLoadingState('success');
+          setHasLoadedInitialData(true);
+        } else {
+          console.error('Failed to fetch user data:', data.error);
+          setErrorMessage(data.error || 'Failed to fetch user data');
+          setLoadingState('error');
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred');
+        setLoadingState('error');
+      }
+    };
+
+    fetchUserData();
+  }, [userId, isAnonymous, hasLoadedInitialData, pseudonym, email, phone, connectedLoobricates, setUserState]);
 
   // Log Out Button Handler
   const handleLogOut = () => {
@@ -72,11 +100,6 @@ const Profile: React.FC = () => {
   // Placeholder for button clicks
   const handlePlaceholderClick = () => {
     alert('Feature coming soon!');
-  };
-
-  const handleLoobricateLoginClick = () => {
-    console.log('Login button clicked');
-    setShowLoginForm(true);
   };
 
   const handleLoobricateLogin = async (e: React.FormEvent) => {
@@ -115,7 +138,12 @@ const Profile: React.FC = () => {
           admins: data.loobricate.admins || []
         };
         
-        setConnectedLoobricates([...connectedLoobricates, newLoobricate]);
+        // Check if loobricate already exists before adding
+        const exists = connectedLoobricates.some(l => l.id === newLoobricate.id);
+        if (!exists) {
+          setConnectedLoobricates([...connectedLoobricates, newLoobricate]);
+        }
+        
         setCurrentLoobricateId(newLoobricate.id);
         setShowLoobricateProfile(true);
         setShowLoginForm(false);
@@ -147,8 +175,36 @@ const Profile: React.FC = () => {
   // Add CSS class for visibility
   const loginModalClass = showLoginForm ? 'modal-overlay visible' : 'modal-overlay';
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  // Add this function to ensure unique keys
+  const getUniqueKey = (loobricate: Loobricate, index: number) => {
+    return `${loobricate.id}-${index}` || `loobricate-${index}`;
+  };
+
+  // Render loading state
+  if (loadingState === 'loading') {
+    return (
+      <div className="profile-loading">
+        <div className="loading-spinner"></div>
+        <p>Loading your profile...</p>
+      </div>
+    );
+  }
+
+  // Render error state
+  if (loadingState === 'error') {
+    return (
+      <div className="profile-error">
+        <h2>Something went wrong</h2>
+        <p>{errorMessage}</p>
+        <button 
+          className="retry-button"
+          onClick={() => window.location.reload()}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="profile-container">
@@ -162,7 +218,7 @@ const Profile: React.FC = () => {
           onUpdate={(updatedLoobricate) => {
             const updatedLoobricates = connectedLoobricates.map(l => 
               l.id === updatedLoobricate._id ? {
-                id: updatedLoobricate._id,
+                ...l,
                 name: updatedLoobricate.name,
                 description: updatedLoobricate.description,
                 address: `${updatedLoobricate.addressLine1}, ${updatedLoobricate.city}`,
@@ -186,143 +242,87 @@ const Profile: React.FC = () => {
             {routeMessage && <p className="route-message">{routeMessage}</p>}
           </div>
 
-          {/* Add Loobricate Connections Section */}
-          {!isAnonymous && (
-            <div className="loobricate-connections">
-              <h3 className="connections-title">Connected Loobricates</h3>
-              <div className="connections-container">
-                {connectedLoobricates.length > 0 ? (
-                  connectedLoobricates.map((loobricate) => (
-                    <div 
-                      key={loobricate.id} 
-                      className="loobricate-badge"
-                    >
-                      <div className="badge-icon">
-                        {/* You can add an icon or initial here */}
-                        {loobricate.name.charAt(0)}
-                      </div>
-                      <span className="badge-name">{loobricate.name}</span>
-                      <span className="badge-type">{loobricate.type}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="no-connections">
-                    No Loobricate connections yet. Use Loobricate Login to connect!
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Sphere Visualization */}
           <div className="visualization-container">
             <TorusSphere loobricateId={userId || 'default'} />
           </div>
 
-          {/* Daily Section */}
           <div className="daily-section">
-            <div className="daily-buttons-container">
-              <div className="daily-button">
-                <button 
-                  className="daily-button-main"
-                  onClick={() => setShowDailyDump(true)}
-                >
-                  Daily Dump
-                </button>
-                <div className="daily-description">
-                  Share thoughts and goals to help Loob understand you better.
-                </div>
-              </div>
+            <button 
+              className="daily-dump-button"
+              onClick={() => setShowDailyDump(true)}
+            >
+              Daily Dump
+            </button>
+            <p className="helper-text">
+              Share thoughts and goals to help Loob understand you better.
+            </p>
 
-              <div className="daily-button">
-                <button 
-                  className="daily-button-main"
-                  onClick={() => alert('Feature coming soon!')}
-                >
-                  Daily Quest
-                </button>
-                <div className="daily-description">
-                  Get personalized daily quests based on your interests and goals.
-                </div>
-              </div>
-            </div>
+            <button 
+              className="daily-quest-button"
+              onClick={handlePlaceholderClick}
+            >
+              Daily Quest
+            </button>
+            <p className="helper-text">
+              Get personalized daily quests based on your interests.
+            </p>
           </div>
 
-          {/* Only show these sections if not anonymous */}
-          {isAnonymous ? (
-            <>
-              {/* Anonymous User Message */}
-              <div className="profile-section">
-                <h2 className="section-heading">Discoveries & Entries</h2>
-                <div className="anonymous-message">
-                  <p>You are browsing anonymously. Sign in to:</p>
-                  <ul>
-                    <li>Track your discoveries</li>
-                    <li>Create Loobrary entries</li>
-                    <li>Connect with Loobricates</li>
-                  </ul>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Recent Discoveries */}
-              <div className="profile-section">
-                <h2 className="section-heading">Your Recent Discoveries</h2>
-                {recentDiscoveries.length > 0 ? (
-                  <ul className="list">
-                    {recentDiscoveries.map((r) => (
-                      <li key={r.id} className="list-item">
-                        <div className="list-item-content">
-                          <span>{r.title}</span>
-                          <p>Visited on: {new Date(r.dateVisited).toLocaleDateString()}</p>
-                        </div>
-                        <div className="button-group">
-                          <button className="inline-button" onClick={handlePlaceholderClick}>
-                            View on Map
-                          </button>
-                          <button className="inline-button" onClick={handlePlaceholderClick}>
-                            Share
-                          </button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="empty-message">You have no recent discoveries yet.</p>
-                )}
-              </div>
+          {/* Recent Discoveries */}
+          <div className="profile-section">
+            <h2 className="section-heading">Your Recent Discoveries</h2>
+            {recentDiscoveries.length > 0 ? (
+              <ul className="list">
+                {recentDiscoveries.map((r) => (
+                  <li key={r.id} className="list-item">
+                    <div className="list-item-content">
+                      <span>{r.title}</span>
+                      <p>Visited on: {new Date(r.dateVisited).toLocaleDateString()}</p>
+                    </div>
+                    <div className="button-group">
+                      <button className="inline-button" onClick={handlePlaceholderClick}>
+                        View on Map
+                      </button>
+                      <button className="inline-button" onClick={handlePlaceholderClick}>
+                        Share
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="empty-message">You have no recent discoveries yet.</p>
+            )}
+          </div>
 
-              {/* Loobrary Entries */}
-              <div className="profile-section">
-                <h2 className="section-heading">Your Loobrary Entries</h2>
-                {entries.length > 0 ? (
-                  <ul className="list">
-                    {entries.map((e) => (
-                      <li key={e.id} className="list-item">
-                        <div className="list-item-content">
-                          <span>{e.label}</span>
-                          <p>{e.details}</p>
-                        </div>
-                        <div className="button-group">
-                          <button className="inline-button" onClick={handlePlaceholderClick}>
-                            Edit
-                          </button>
-                          <button className="inline-button" onClick={handlePlaceholderClick}>
-                            View Details
-                          </button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="empty-message">You have not added any entries to the Loobrary yet.</p>
-                )}
-              </div>
-            </>
-          )}
+          {/* Loobrary Entries */}
+          <div className="profile-section">
+            <h2 className="section-heading">Your Loobrary Entries</h2>
+            {entries.length > 0 ? (
+              <ul className="list">
+                {entries.map((e) => (
+                  <li key={e.id} className="list-item">
+                    <div className="list-item-content">
+                      <span>{e.label}</span>
+                      <p>{e.details}</p>
+                    </div>
+                    <div className="button-group">
+                      <button className="inline-button" onClick={handlePlaceholderClick}>
+                        Edit
+                      </button>
+                      <button className="inline-button" onClick={handlePlaceholderClick}>
+                        View Details
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="empty-message">You have not added any entries to the Loobrary yet.</p>
+            )}
+          </div>
 
-          {/* Bottom buttons */}
+          {/* Main buttons container at the bottom */}
           <div className="buttons-container">
             <div className="button-group">
               <button className="logout-button" onClick={handleLogOut}>
@@ -330,7 +330,7 @@ const Profile: React.FC = () => {
               </button>
               <button 
                 className="loobricate-login-button"
-                onClick={handleLoobricateLoginClick}
+                onClick={() => setShowLoginForm(true)}
               >
                 Loobricate Login
               </button>

@@ -36,11 +36,6 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     setLoading(true);
 
     try {
-      if (!username.trim() || !password.trim()) {
-        setLoginError("Please enter both a pseudonym and a password.");
-        return;
-      }
-
       const response = await fetch("/api/auth/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -53,21 +48,23 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         throw new Error(data.error || "Login failed");
       }
 
-      // Important: Set all user state at once
-      setUserState({
-        userId: data.user.id || data.user.pseudonym, // Make sure this matches your API response
+      // Set user state
+      const userData = {
+        userId: data.user._id || data.user.id,
         pseudonym: data.user.pseudonym,
         email: data.user.email,
         phone: data.user.phone,
-        isAnonymous: false
-      });
+        isAnonymous: false,
+        connectedLoobricates: data.user.connectedLoobricates || []
+      };
 
-      // Set session after successful login
+      setUserState(userData);
+      
+      // Set session and persist login state
       const newSessionId = generateSessionId();
       setSessionId(newSessionId);
-
-      // Store login state
       localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('userState', JSON.stringify(userData));
 
       setPhase("fadeOut");
       setTimeout(() => onClose(), 1000);

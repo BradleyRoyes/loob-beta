@@ -88,12 +88,29 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
       });
 
       if (response.ok) {
-        setSubmissionSuccess(true);
+        const data = await response.json();
+        // Make sure we're setting the correct user state
         setUserState({
+          userId: data.user.id, // Make sure this matches the API response
           pseudonym: formData.pseudonym,
           email: formData.email,
-          phone: formData.phone
+          phone: formData.phone,
+          isAnonymous: false,
+          connectedLoobricates: []
         });
+        
+        // Store login state
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userState', JSON.stringify({
+          userId: data.user.id,
+          pseudonym: formData.pseudonym,
+          email: formData.email,
+          phone: formData.phone,
+          isAnonymous: false,
+          connectedLoobricates: []
+        }));
+
+        setSubmissionSuccess(true);
         setCurrentPhase(3);
       } else {
         const errorData = await response.json();

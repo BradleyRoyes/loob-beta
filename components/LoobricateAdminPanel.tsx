@@ -1,12 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaTimes, FaUserPlus, FaUserMinus } from 'react-icons/fa';
 import './LoobricateAdminPanel.css';
 import type { LoobricateData } from '../types/loobricate';
+import debounce from 'lodash/debounce';
 
 interface LoobricateAdminPanelProps {
   loobricateId: string;
   onClose: () => void;
   onUpdate: (updatedLoobricate: LoobricateData) => void;
+}
+
+// Add interface for user suggestions
+interface UserSuggestion {
+  id: string;
+  pseudonym: string;
 }
 
 const LoobricateAdminPanel: React.FC<LoobricateAdminPanelProps> = ({
@@ -37,6 +44,104 @@ const LoobricateAdminPanel: React.FC<LoobricateAdminPanelProps> = ({
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [userSuggestions, setUserSuggestions] = useState<UserSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Create debounced search function
+  const debouncedSearch = debounce(async (query: string) => {
+    if (!query.trim()) {
+      setUserSuggestions([]);
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        // Filter out users that are already members or admins
+        const existingUsers = new Set([...users.members, ...users.admins]);
+        setUserSuggestions(
+          data.users.filter((user: UserSuggestion) => !existingUsers.has(user.pseudonym))
+        );
+      } else {
+        console.error('Failed to fetch user suggestions:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching user suggestions:', error);
+    }
+  }, 300);
+
+  // Handle input changes for user search
+  const handleUserSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    setNewUser(value);
+    debouncedSearch(value);
+    setShowSuggestions(true);
+  };
+
+  // Handle suggestion selection
+  const handleSelectUser = async (user: UserSuggestion) => {
+    setNewUser(user.pseudonym);
+    setShowSuggestions(false);
+
+    try {
+      // First, update the loobricate with the new member
+      const updatedLoobricate = {
+        ...loobricate,
+        members: [...users.members, user.pseudonym]
+      };
+
+      const loobricateResponse = await fetch(`/api/loobricates/${loobricateId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedLoobricate)
+      });
+
+      if (!loobricateResponse.ok) {
+        throw new Error('Failed to update loobricate');
+      }
+
+      // Then, update the user's connectedLoobricates
+      const userResponse = await fetch(`/api/users/${user.id}/loobricates`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          loobricateId,
+          action: 'add'
+        })
+      });
+
+      if (!userResponse.ok) {
+        throw new Error('Failed to update user connections');
+      }
+
+      // Update local state
+      setUsers(prev => ({
+        ...prev,
+        members: [...prev.members, user.pseudonym]
+      }));
+      
+      setNewUser('');
+      setHasChanges(true);
+    } catch (error) {
+      console.error('Error adding user:', error);
+      setUserError('Failed to add user to loobricate');
+    }
+  };
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Update formData and users when loobricate data is loaded
   useEffect(() => {
@@ -325,23 +430,31 @@ const LoobricateAdminPanel: React.FC<LoobricateAdminPanelProps> = ({
             </div>
           </div>
 
-          <form onSubmit={handleAddUser} className="add-user-form">
+          <div className="add-user-container" ref={suggestionsRef}>
             <input
               type="text"
               value={newUser}
-              onChange={(e) => setNewUser(e.target.value)}
-              placeholder="Enter username to add"
+              onChange={handleUserSearch}
+              placeholder="Search for users..."
               className="form-input"
             />
-            <button 
-              type="submit" 
-              className="add-user-btn"
-              disabled={isAddingUser || !newUser.trim()}
-            >
-              <FaUserPlus /> Add User
-            </button>
+            
+            {showSuggestions && userSuggestions.length > 0 && (
+              <div className="user-suggestions">
+                {userSuggestions.map(user => (
+                  <div
+                    key={user.id}
+                    className="suggestion-item"
+                    onClick={() => handleSelectUser(user)}
+                  >
+                    {user.pseudonym}
+                  </div>
+                ))}
+              </div>
+            )}
+            
             {userError && <p className="error-message">{userError}</p>}
-          </form>
+          </div>
         </section>
       </div>
 

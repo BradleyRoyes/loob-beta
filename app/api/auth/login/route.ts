@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { AstraDB, Collection } from '@datastax/astra-db-ts';
+import { AstraDB } from '@datastax/astra-db-ts';
 
 const astraDb = new AstraDB(
   process.env.ASTRA_DB_APPLICATION_TOKEN!,
@@ -8,7 +8,7 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE!
 );
 
-async function getLibraryCollection(): Promise<Collection> {
+async function getLibraryCollection() {
   try {
     return await astraDb.collection('usersandloobricates');
   } catch (error) {
@@ -31,7 +31,10 @@ export async function POST(request: NextRequest) {
     }
 
     const libraryCollection = await getLibraryCollection();
-    const userDoc = await libraryCollection.findOne({ pseudonym });
+    const userDoc = await libraryCollection.findOne({ 
+      pseudonym,
+      dataType: 'userAccount'
+    });
 
     if (!userDoc) {
       return handleError('Invalid pseudonym or password.', 401, 'invalid_credentials');
@@ -43,17 +46,21 @@ export async function POST(request: NextRequest) {
       return handleError('Invalid pseudonym or password.', 401, 'invalid_credentials');
     }
 
-    return NextResponse.json(
-      {
-        message: 'Login successful.',
-        user: {
-          pseudonym: userDoc.pseudonym,
-          email: userDoc.email,
-          phone: userDoc.phone,
-        },
-      },
-      { status: 200 }
-    );
+    // Remove sensitive data before sending
+    const { password: _, ...userData } = userDoc;
+
+    console.log('User successfully logged in:', {
+      userId: userData._id,
+      pseudonym: userData.pseudonym
+    });
+
+    // Log full user data for debugging
+    console.log('Full user data loaded into GlobalStateContext:', userData);
+
+    return NextResponse.json({
+      message: 'Login successful.',
+      user: userData
+    });
   } catch (error) {
     console.error('Error in /api/auth/login:', error);
     return handleError('Internal Server Error', 500, 'internal_error');

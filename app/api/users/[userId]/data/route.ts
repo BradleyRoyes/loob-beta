@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AstraDB } from "@datastax/astra-db-ts";
+import { AstraDB } from '@datastax/astra-db-ts';
 
 const astraDb = new AstraDB(
   process.env.ASTRA_DB_APPLICATION_TOKEN!,
@@ -11,45 +11,35 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { userId: string } }
 ) {
-  // Await params to ensure it's resolved
-  const { userId } = await params;
-
-  if (!userId) {
-    return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
-  }
+  // Await params at the start to prevent Next.js warnings
+  const userId = await Promise.resolve(params.userId);
 
   try {
-    const collection = await astraDb.collection('usersandloobricates');
+    console.log('Fetching user data for:', userId);
     
-    // Get user data
-    const user = await collection.findOne({
-      _id: userId.toString(),
+    const libraryCollection = await astraDb.collection('usersandloobricates');
+    
+    // Find the user document
+    const userDoc = await libraryCollection.findOne({ 
+      _id: userId,
       dataType: 'userAccount'
     });
 
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    if (!userDoc) {
+      console.error('User not found:', userId);
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
     }
 
-    // Get user's connected loobricates
-    const connectedLoobricates = await collection.find({
-      dataType: 'loobricate',
-      $or: [
-        { members: userId },
-        { admins: userId }
-      ]
-    }).toArray();
+    // Log the found user data
+    console.log('Found user data:', userDoc);
 
-    return NextResponse.json({
-      user,
-      connectedLoobricates: connectedLoobricates.map(l => ({
-        id: l._id,
-        name: l.name,
-        description: l.description,
-        type: l.type,
-        tags: l.tags
-      }))
-    });
+    // Return all user data except sensitive information
+    const { password, ...userData } = userDoc;
+    
+    return NextResponse.json(userData);
   } catch (error) {
     console.error('Error fetching user data:', error);
     return NextResponse.json(

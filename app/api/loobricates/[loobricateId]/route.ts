@@ -20,14 +20,16 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { loobricateId: string } }
 ) {
-  if (!params?.loobricateId) {
+  const loobricateId = await Promise.resolve(params.loobricateId);
+
+  if (!loobricateId) {
     return NextResponse.json({ error: 'Loobricate ID is required' }, { status: 400 });
   }
 
   try {
     const collection = await getCollection();
     const loobricate = await collection.findOne({
-      _id: params.loobricateId.toString(),
+      _id: loobricateId.toString(),
       dataType: 'loobricate'
     });
 
@@ -49,6 +51,8 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { loobricateId: string } }
 ) {
+  const loobricateId = await Promise.resolve(params.loobricateId);
+
   try {
     const collection = await getCollection();
     const updates = await request.json();
@@ -70,7 +74,7 @@ export async function PUT(
     // Update the loobricate
     const result = await collection.updateOne(
       { 
-        _id: params.loobricateId,
+        _id: loobricateId,
         dataType: 'loobricate'
       },
       { $set: allowedUpdates }
@@ -92,7 +96,7 @@ export async function PUT(
         { 
           $addToSet: { 
             connectedLoobricates: {
-              id: params.loobricateId,
+              id: loobricateId,
               name: updates.name,
               type: updates.type || 'community',
               role: updates.admins.includes(username) ? 'admin' : 'member'
@@ -105,7 +109,7 @@ export async function PUT(
 
     // Fetch and return the updated document
     const updated = await collection.findOne({
-      _id: params.loobricateId,
+      _id: loobricateId,
       dataType: 'loobricate'
     });
 

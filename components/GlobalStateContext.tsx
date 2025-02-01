@@ -66,28 +66,38 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
     activeLoobricate: null
   });
 
-  // Move localStorage initialization to useEffect
+  // Initialize state from localStorage with logging
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedSession = localStorage.getItem('sessionId');
-      setSessionIdState(storedSession || `session-${Math.random().toString(36).substr(2, 12)}`);
-
+    const initializeState = () => {
+      console.log('Initializing GlobalStateContext...');
       const storedState = localStorage.getItem('userState');
-      if (storedState) {
-        setUserStateData(JSON.parse(storedState));
+      const isLoggedIn = localStorage.getItem('isLoggedIn');
+      
+      console.log('Stored login state:', { isLoggedIn, storedState });
+      
+      if (storedState && isLoggedIn === 'true') {
+        try {
+          const parsedState = JSON.parse(storedState);
+          console.log('Found stored user state:', parsedState);
+          setUserStateData(parsedState);
+        } catch (error) {
+          console.error('Error parsing stored state:', error);
+          localStorage.removeItem('userState');
+          localStorage.removeItem('isLoggedIn');
+        }
+      } else {
+        console.log('No stored user state found or user not logged in');
       }
-    }
+    };
+
+    initializeState();
   }, []);
 
-  // Update localStorage when state changes
+  // Persist state changes to localStorage
   useEffect(() => {
-    if (sessionId) {
-      localStorage.setItem('sessionId', sessionId);
+    if (userState.userId) {
+      localStorage.setItem('userState', JSON.stringify(userState));
     }
-  }, [sessionId]);
-
-  useEffect(() => {
-    localStorage.setItem('userState', JSON.stringify(userState));
   }, [userState]);
 
   // Update useEffect to fetch connected loobricates when userId changes
@@ -102,6 +112,11 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
     }
   }, [userState.userId]);
 
+  // Log state changes
+  useEffect(() => {
+    console.log('GlobalStateContext - Current User State:', userState);
+  }, [userState]);
+
   const setSessionId = (id: string | null) => {
     setSessionIdState(id);
     if (id) {
@@ -112,15 +127,23 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
   };
 
   const setUserState = (newState: Partial<UserState>) => {
+    console.log('Setting new user state:', newState);
     setUserStateData(prev => {
       const updated = { ...prev, ...newState };
-      // Update isAnonymous based on userId
       updated.isAnonymous = !updated.userId || updated.userId.startsWith(ANONYMOUS_PREFIX);
+      
+      // Only persist if user is logged in
+      if (!updated.isAnonymous) {
+        localStorage.setItem('userState', JSON.stringify(updated));
+        console.log('Updated GlobalStateContext - Full User State:', updated);
+      }
+      
       return updated;
     });
   };
 
   const clearUserState = () => {
+    console.log('Clearing user state...');
     setUserStateData({
       userId: null,
       pseudonym: null,
@@ -131,6 +154,9 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
       activeLoobricate: null
     });
     localStorage.removeItem('userState');
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('sessionId');
+    console.log('User state cleared');
   };
 
   const setActiveLoobricate = (loobricate: Loobricate | null) => {
