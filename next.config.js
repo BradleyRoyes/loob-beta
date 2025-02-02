@@ -31,6 +31,14 @@ const nextConfig = {
     ]
   },
   reactStrictMode: true,
+  webpack: (config) => {
+    // This will ignore the canvas module on the server
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      canvas: false,
+    };
+    return config;
+  },
 }
 
 module.exports = nextConfig

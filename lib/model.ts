@@ -9,7 +9,7 @@ export const MODEL_CONFIG = {
   inputShape: [224, 224, 3] as [number, number, number],
   outputShape: 2,
   batchSize: 16,
-  epochs: 100,
+  epochs: 50,
   patience: 10,
   learningRate: 0.00005,
   validationSplit: 0.2,
