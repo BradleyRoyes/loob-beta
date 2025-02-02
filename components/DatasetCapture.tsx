@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import sharp from 'sharp';
 
 interface CapturePoint {
   x: number;
@@ -101,33 +102,71 @@ export default function DatasetCapture() {
     // Update UI
     setCapturedFrames(prev => [...prev, capturePoint]);
     setSelectedPoint(null);
+
+    // Add real-time augmentation during capture
+    const augmentedVariations = await Promise.all([
+      augmentFrame(imageBlob, { rotation: 5 }),
+      augmentFrame(imageBlob, { rotation: -5 }),
+      augmentFrame(imageBlob, { zoom: 1.1 }),
+      augmentFrame(imageBlob, { brightness: 0.9 })
+    ]);
+
+    // Save all augmented versions
+    await Promise.all(augmentedVariations.map(async (augmentedBlob) => {
+      const augPoint = {...capturePoint, imageName: `aug_${Date.now()}_${capturePoint.imageName}`};
+      await saveTrainingData(augmentedBlob, augPoint);
+    }));
+  };
+
+  // Helper function for client-side augmentations
+  async function augmentFrame(blob: Blob, opts: {rotation?: number, zoom?: number, brightness?: number}) {
+    const img = await createImageBitmap(blob);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d')!;
+    
+    // Apply transformations
+    canvas.width = img.width;
+    canvas.height = img.height;
+    
+    // Rotation
+    ctx.translate(canvas.width/2, canvas.height/2);
+    ctx.rotate((opts.rotation || 0) * Math.PI/180);
+    ctx.drawImage(img, -img.width/2, -img.height/2);
+    
+    // Zoom (crop and resize)
+    if (opts.zoom) {
+      const scale = 1/opts.zoom;
+      ctx.drawImage(img, 
+        img.width*(1-scale)/2, img.height*(1-scale)/2, 
+        img.width*scale, img.height*scale,
+        0, 0, img.width, img.height
+      );
+    }
+    
+    // Convert to blob
+    return new Promise<Blob>(resolve => 
+      canvas.toBlob(blob => resolve(blob!), 'image/jpeg', 0.9)
+    );
+  }
+
+  const createFormData = (image: Blob, label: string) => {
+    const formData = new FormData();
+    formData.append('image', image, 'frame.jpg');
+    formData.append('label', new Blob([label], { type: 'application/json' }), 'label.json');
+    return formData;
   };
 
   const saveTrainingData = async (imageBlob: Blob, point: CapturePoint) => {
-    try {
-      // Create FormData with the image and label
-      const formData = new FormData();
-      formData.append('image', imageBlob, point.imageName);
-      formData.append('label', JSON.stringify({
-        x: point.x,
-        y: point.y
-      }));
-
-      // Send to server endpoint
-      const response = await fetch('/api/dataset/save', {
-        method: 'POST',
-        body: formData
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save training data');
-      }
-
-      console.log('Saved training data:', point);
-    } catch (error) {
-      console.error('Error saving training data:', error);
-      setErrorMessage('Failed to save training data. Please try again.');
-    }
+    const label = JSON.stringify({
+      x: point.x,  // Normalized x
+      y: point.y   // Normalized y
+    });
+    
+    // Send to server endpoint
+    await fetch('/api/dataset/save', {
+      method: 'POST',
+      body: createFormData(imageBlob, label)
+    });
   };
 
   const exportDataset = async () => {

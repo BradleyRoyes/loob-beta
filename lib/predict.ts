@@ -74,7 +74,7 @@ export async function loadModel(modelFiles?: FileList): Promise<tf.LayersModel> 
       // Warm up the model
       console.log('Warming up model...');
       const dummyInput = tf.zeros([1, 128, 128, 3]);
-      const warmupResult = await model.predict(dummyInput).data();
+      const warmupResult = await (model.predict(dummyInput) as tf.Tensor).data();
       console.log('Warmup prediction:', warmupResult);
       dummyInput.dispose();
 
@@ -93,7 +93,8 @@ export async function loadModel(modelFiles?: FileList): Promise<tf.LayersModel> 
 
 export async function predictImage(imageElement: HTMLImageElement | HTMLVideoElement): Promise<Prediction> {
   try {
-    if (!model) {
+    const localModel = model; // Capture reference first
+    if (!localModel) {
       throw new Error('No model loaded. Please load a model first.');
     }
     
@@ -106,7 +107,7 @@ export async function predictImage(imageElement: HTMLImageElement | HTMLVideoEle
         .expandDims(0);
 
       // Make prediction
-      const prediction = model.predict(imageTensor) as tf.Tensor;
+      const prediction = localModel.predict(imageTensor) as tf.Tensor;
       const result = Array.from(prediction.dataSync()) as Prediction;
       
       if (result.length !== 2) {

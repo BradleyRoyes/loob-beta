@@ -24,7 +24,8 @@ const VideoFrameExtractor: React.FC = () => {
 
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d')!;
-    const frameCount = Math.floor(video.duration * video.frameRate);
+    const frameRate = 30; // Assume standard frame rate or calculate from video metadata
+    const frameCount = Math.floor(video.duration * frameRate);
     const extractedFrames: string[] = [];
 
     video.currentTime = 0;
@@ -34,7 +35,7 @@ const VideoFrameExtractor: React.FC = () => {
     for (let i = 0; i < frameCount; i += 3) { // Extract every 3rd frame
       try {
         await new Promise((resolve) => {
-          video.currentTime = i / video.frameRate;
+          video.currentTime = i / frameRate;
           video.onseeked = () => {
             ctx.drawImage(video, 0, 0);
             extractedFrames.push(canvas.toDataURL('image/jpeg', 0.8));

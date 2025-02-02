@@ -1,12 +1,17 @@
 import * as tf from '@tensorflow/tfjs';
 import { v4 as uuidv4 } from 'uuid';
+import * as cocoSsd from '@tensorflow-models/coco-ssd';
+import * as mediapipe from '@mediapipe/tasks-vision';
+import { Prediction } from '@/types/detection';
 
 // Simple model configuration
 export const MODEL_CONFIG = {
   inputShape: [128, 128, 3] as [number, number, number],
   outputShape: 2,
-  batchSize: 16,
-  epochs: 50
+  batchSize: 32,
+  epochs: 50,
+  patience: 5,
+  learningRate: 0.001
 };
 
 // Create a simple model architecture
@@ -108,11 +113,9 @@ export class ModelManager {
       let model: tf.LayersModel;
       if (weightsFile) {
         // Handle separate model and weights files
-        const modelJson = await modelFile.text();
-        const weightsArrayBuffer = await weightsFile.arrayBuffer();
-        const weights = new Uint8Array(weightsArrayBuffer);
-        
-        model = await tf.loadLayersModel(tf.io.fromMemory(JSON.parse(modelJson), weights));
+        model = await tf.loadLayersModel(
+          tf.io.browserFiles([modelFile, weightsFile])
+        );
       } else {
         // Handle combined model file
         const modelJson = await modelFile.text();
@@ -192,14 +195,6 @@ export class ModelManager {
     return modelArtifacts.modelPath;
   }
 
-  async clearCache(): Promise<void> {
-    if (this.model) {
-      this.model.dispose();
-      this.model = null;
-    }
-    await tf.ready();
-  }
-
   async getModel(): Promise<tf.LayersModel> {
     if (!this.model) {
       try {
@@ -210,7 +205,6 @@ export class ModelManager {
           // Get most recent model
           const mostRecent = models.sort((a, b) => b.createdAt - a.createdAt)[0];
           console.log(`Loading most recent model: ${mostRecent.name}`);
-          // Add indexeddb:// prefix to path
           this.model = await tf.loadLayersModel(`indexeddb://${mostRecent.path}`);
         } else {
           console.log('No saved models found, creating new one');
@@ -218,7 +212,8 @@ export class ModelManager {
         }
       } catch (error) {
         console.error('Failed to load/create model:', error);
-        throw error;
+        // If there's an error, create a fresh model
+        this.model = createModel();
       }
     }
     return this.model;
@@ -263,9 +258,20 @@ export class ModelManager {
 
   disposeModel() {
     if (this.model) {
-      this.model.dispose();
+      try {
+        this.model.dispose();
+      } catch (error) {
+        console.warn('Error disposing model:', error);
+      }
       this.model = null;
     }
+  }
+
+  async clearCache(): Promise<void> {
+    this.disposeModel();
+    await tf.ready();
+    // Clear the backend
+    tf.engine().reset();
   }
 }
 
@@ -278,10 +284,11 @@ export async function trainModel(
   description: string = '',
 ): Promise<tf.LayersModel> {
   try {
-    const model = await modelManager.getModel();
-
-    // Load manifest
-    const manifestResponse = await fetch('/dataset/manifest.json');
+    await modelManager.clearCache();
+    const model = createModel();
+    
+    // Fix the manifest path
+    const manifestResponse = await fetch('/api/dataset/manifest');
     if (!manifestResponse.ok) {
       throw new Error('Failed to load manifest.json');
     }
@@ -289,7 +296,7 @@ export async function trainModel(
 
     // Calculate total steps for progress
     const totalImages = manifest.images.length;
-    const totalBatches = Math.ceil(totalImages / MODEL_CONFIG.batchSize);
+    const totalBatches = Math.ceil((totalImages * 2) / MODEL_CONFIG.batchSize); // Account for augmented data
     const totalSteps = totalBatches * MODEL_CONFIG.epochs;
     let currentStep = 0;
 
@@ -301,13 +308,13 @@ export async function trainModel(
     const imagePromises = manifest.images.map(async (imagePath: string, index) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
+      // Fix the image path
       img.src = `/dataset/images/${imagePath}`;
       await new Promise((resolve, reject) => {
         img.onload = resolve;
         img.onerror = () => reject(new Error(`Failed to load image: ${imagePath}`));
       });
 
-      // Update loading progress (first 20% of total progress)
       if (onProgress) {
         const loadingProgress = (index / totalImages) * 20;
         onProgress(loadingProgress);
@@ -323,11 +330,8 @@ export async function trainModel(
 
     const labelPromises = manifest.labels.map(async (labelPath: string) => {
       const response = await fetch(`/dataset/labels/${labelPath}`);
-      if (!response.ok) {
-        throw new Error(`Failed to load label file: ${labelPath}`);
-      }
       const text = await response.text();
-      const [, x, y] = text.trim().split(' ').map(Number);
+      const [x, y] = text.trim().split(' ').map(Number);
       return [x, y];
     });
 
@@ -335,43 +339,77 @@ export async function trainModel(
     const images = await Promise.all(imagePromises);
     const labels = await Promise.all(labelPromises);
 
-    // Convert to tensors
-    const xs = tf.stack(images);
-    const ys = tf.tensor2d(labels);
+    // Use tf.tidy for tensor operations
+    const { xs, ys, augmentedXs, augmentedYs } = tf.tidy(() => {
+      const xs = tf.stack(images);
+      const ys = tf.tensor2d(labels);
+      
+      // Perform data augmentation
+      const flipped = tf.image.flipLeftRight(xs as tf.Tensor4D);
+      const augmentedXs = tf.concat([xs, flipped], 0);
+      const augmentedYs = tf.concat([ys, ys], 0);
+      
+      return { xs, ys, augmentedXs, augmentedYs };
+    });
+
+    // Add early stopping callback
+    const earlyStopping = {
+      monitor: 'val_loss',
+      minDelta: 0.001,
+      patience: MODEL_CONFIG.patience,
+      verbose: 1,
+      mode: 'min',
+      baseline: null,
+      restoreBestWeights: true
+    };
 
     // Train the model
-    await model.fit(xs, ys, {
+    await model.fit(augmentedXs, augmentedYs, {
       batchSize: MODEL_CONFIG.batchSize,
       epochs: MODEL_CONFIG.epochs,
+      validationSplit: 0.2,
       shuffle: true,
       callbacks: {
         onBatchEnd: async (batch, logs) => {
           currentStep++;
           if (onProgress && logs) {
-            // Training progress (remaining 80% of total progress)
-            const trainingProgress = 20 + ((currentStep / totalSteps) * 80);
-            onProgress(Math.min(trainingProgress, 99)); // Cap at 99% until fully complete
+            const trainingProgress = Math.min(
+              20 + ((currentStep / totalSteps) * 80),
+              100
+            );
+            onProgress(trainingProgress);
+            if (logs.loss < 0.01) { // Add early convergence check
+              model.stopTraining = true;
+            }
             console.log(`Batch ${currentStep}/${totalSteps}, Loss: ${logs.loss.toFixed(4)}`);
           }
-          await tf.nextFrame();
+          // Reduce UI updates frequency
+          if (currentStep % 5 === 0) {
+            await tf.nextFrame();
+          }
         },
         onEpochEnd: async (epoch, logs) => {
-          console.log(`Epoch ${epoch + 1}/${MODEL_CONFIG.epochs} complete. Loss: ${logs?.loss.toFixed(4)}`);
+          console.log(`Epoch ${epoch + 1}/${MODEL_CONFIG.epochs}, Loss: ${logs?.loss?.toFixed(4)}, Val Loss: ${logs?.val_loss?.toFixed(4)}`);
+          // Early stopping logic
+          if (logs && logs.val_loss && logs.val_loss < 0.01) {
+            console.log('Reached target accuracy, stopping training');
+            model.stopTraining = true;
+          }
+        },
+        onTrainEnd: async () => {
+          if (onProgress) {
+            onProgress(100);
+          }
         }
       }
     });
 
-    // Final cleanup
-    xs.dispose();
-    ys.dispose();
+    // Cleanup
+    tf.dispose([xs, ys, augmentedXs, augmentedYs]);
     images.forEach(tensor => tensor.dispose());
 
-    // Save model with metadata after training
+    // Save the trained model
     await modelManager.saveTrainedModel(modelName, description);
-
-    if (onProgress) {
-      onProgress(100);
-    }
 
     return model;
   } catch (error) {
@@ -395,16 +433,93 @@ export async function predictImage(
   });
   
   try {
-    const prediction = model.predict(tensor) as tf.Tensor;
-    const [x, y] = await prediction.data();
+    const prediction = model.predict(tensor) as tf.Tensor<tf.Rank>;
+    const values = await (Array.isArray(prediction) ? prediction[0].data() : prediction.data());
+    const [x, y] = values;
     
     // Cleanup
     tensor.dispose();
-    prediction.dispose();
+    if (Array.isArray(prediction)) {
+      prediction.forEach(p => p.dispose());
+    } else {
+      prediction.dispose();
+    }
     
     return { x, y };
   } catch (error) {
     tensor.dispose();
     throw new Error(`Failed to make prediction: ${error.message}`);
   }
+}
+
+// First, ensure you have this type definition in your types
+type ModelHandler = {
+  init: () => Promise<any>;
+  detect: (input: HTMLImageElement | HTMLVideoElement, context?: any) => Promise<Prediction[]>;
+};
+
+export function createModelHandlers(): Record<string, ModelHandler> {
+  return {
+    'custom': {
+      init: async () => modelManager.getModel(),
+      detect: async (image) => {
+        const result = await predictImage(image);
+        return [{
+          x: result.x,
+          y: result.y,
+          confidence: 1,
+          type: 'custom-target',
+          class: 'custom-target',
+          bbox: [result.x, result.y, 0, 0],
+          coordinates: [result.x, result.y],
+          timestamp: Date.now()
+        }];
+      }
+    },
+    'coco-ssd': {
+      init: async () => cocoSsd.load(),
+      detect: async (image) => {
+        const model = await cocoSsd.load();
+        const detections = await model.detect(image);
+        return detections.map(d => ({
+          x: d.bbox[0] + d.bbox[2]/2,
+          y: d.bbox[1] + d.bbox[3]/2,
+          confidence: d.score,
+          type: d.class,
+          class: d.class,
+          bbox: d.bbox,
+          coordinates: [d.bbox[0] + d.bbox[2]/2, d.bbox[1] + d.bbox[3]/2],
+          timestamp: Date.now()
+        }));
+      }
+    },
+    'mediapipe': {
+      init: async () => {
+        const vision = await mediapipe.FilesetResolver.forVisionTasks(
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+        );
+        return mediapipe.ObjectDetector.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite",
+            delegate: "GPU"
+          },
+          scoreThreshold: 0.5,
+          runningMode: "VIDEO"
+        });
+      },
+      detect: async (image, detector) => {
+        if (!detector) throw new Error('Mediapipe detector not initialized');
+        const result = await detector.detectForVideo(image, Date.now());
+        return result.detections.map(d => ({
+          x: d.boundingBox!.originX + d.boundingBox!.width/2,
+          y: d.boundingBox!.originY + d.boundingBox!.height/2,
+          confidence: d.categories[0].score,
+          type: d.categories[0].categoryName,
+          class: d.categories[0].categoryName,
+          coordinates: [d.boundingBox!.originX + d.boundingBox!.width/2, d.boundingBox!.originY + d.boundingBox!.height/2],
+          timestamp: Date.now()
+        }));
+      }
+    }
+  };
 } 

@@ -79,17 +79,16 @@ const StickDashboard: React.FC<StickDashboardProps> = ({ onClose }) => {
       try {
         console.log('Fetching dataset validation...');
         const response = await fetch('/api/dataset/validate');
-        const data = await response.json();
-        
         if (!response.ok) {
-          console.error('Validation request failed:', response.status, data);
-          throw new Error(`Validation failed: ${response.status} ${response.statusText}`);
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+        const data = await response.json();
         console.log('Validation response:', data);
         setDatasetInfo(data);
       } catch (error) {
         console.error('Dataset validation error:', error);
+        const safeError = error instanceof Error ? error : new Error(String(error));
+        
         setDatasetInfo({
           isValid: false,
           stats: {
@@ -100,15 +99,9 @@ const StickDashboard: React.FC<StickDashboardProps> = ({ onClose }) => {
           },
           errors: [{
             type: 'error',
-            message: error.message,
+            message: safeError.message,
             code: 'FETCH_ERROR'
-          }],
-          debug: {
-            error: {
-              message: error.message,
-              stack: error.stack
-            }
-          }
+          }]
         });
       } finally {
         setIsLoading(false);

@@ -37,7 +37,7 @@ export async function prepareData(): Promise<{ xs: tf.Tensor4D, ys: tf.Tensor2D 
               const tensor = tf.browser.fromPixels(img)
                 .resizeNearestNeighbor([128, 128])
                 .toFloat()
-                .div(tf.scalar(255));
+                .div(tf.scalar(255)) as tf.Tensor3D;
               
               // Verify tensor shape
               if (tensor.shape.length !== 3 || 

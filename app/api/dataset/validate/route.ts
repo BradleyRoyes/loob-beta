@@ -69,7 +69,7 @@ function validateLabel(labelPath: string): { isValid: boolean; error?: string } 
       const values = line.trim().split(' ').map(Number);
       if (values.length !== 5) {
         console.error('Invalid label format (wrong number of values):', labelPath, line);
-        return { isValid: false, error: 'Invalid label format: must have 5 values per line' };
+        return { isValid: false, error: 'Invalid label format: must have 5 values (class x y width height)' };
       }
       if (values.some(v => isNaN(v))) {
         console.error('Invalid label format (non-numeric values):', labelPath, line);
