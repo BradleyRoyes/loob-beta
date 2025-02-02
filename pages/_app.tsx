@@ -1,4 +1,3 @@
-import * as tf from '@tensorflow/tfjs';
-
-// Set backend to WebGL
-tf.setBackend('webgl'); 
+// Remove these lines
+// import * as tf from '@tensorflow/tfjs';
+// tf.setBackend('webgl'); 

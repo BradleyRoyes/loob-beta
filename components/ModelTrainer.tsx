@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { trainModel, modelManager } from '@/lib/model';
-import tf from '@tensorflow/tfjs';
+import * as tf from '@tensorflow/tfjs';
 import * as tfvis from '@tensorflow/tfjs-vis';
 
 export default function ModelTrainer() {
@@ -18,19 +18,26 @@ export default function ModelTrainer() {
     val_loss: []
   });
 
-  // Initialize on mount
+  // Initialize TensorFlow.js
   useEffect(() => {
-    const init = async () => {
+    const initTF = async () => {
       try {
+        // Wait for TF to be ready
+        await tf.ready();
+        // Try to set backend to WebGL
+        if (tf.findBackend('webgl')) {
+          await tf.setBackend('webgl');
+        }
         await modelManager.clearCache();
         setTrainingStatus('idle');
       } catch (error) {
-        console.error('Initialization failed:', error);
+        console.error('TensorFlow initialization failed:', error);
         setErrorMessage('Failed to initialize TensorFlow. Please try refreshing the page.');
         setTrainingStatus('error');
       }
     };
-    init();
+    
+    initTF();
   }, []);
 
   const handleTrain = async () => {
