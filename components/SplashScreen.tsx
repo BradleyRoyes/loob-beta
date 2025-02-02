@@ -2,22 +2,19 @@
 
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useGlobalState } from "./GlobalStateContext"; // Adjust path if needed
-import LoobrarySignUp from "./SignUp"; // Adjust path if needed
+import { useGlobalState } from "./GlobalStateContext";
+import LoobrarySignUp from "./SignUp";
 import "./SplashScreen.css";
 import Image from 'next/image';
 
 const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { setUserState, setSessionId } = useGlobalState();
-  const [phase, setPhase] = useState<"introPhase" | "loginPhase" | "signupPhase" | "fadeOut">(
-    "introPhase"
-  );
+  const [phase, setPhase] = useState<"introPhase" | "loginPhase" | "signupPhase" | "closing">("introPhase");
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [loginError, setLoginError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Fade from intro to login after 2s
   useEffect(() => {
     if (phase === "introPhase") {
       const timer = setTimeout(() => setPhase("loginPhase"), 2000);
@@ -25,12 +22,6 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     }
   }, [phase]);
 
-  /**
-   * Attempt to log in with the typed pseudonym + password.
-   * We do two steps:
-   *  (1) Set userId in global state to what user typed.
-   *  (2) Then attempt server auth. If it fails, you can revert userId or keep it.
-   */
   const handleLogin = async () => {
     setLoginError("");
     setLoading(true);
@@ -48,7 +39,6 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         throw new Error(data.error || "Login failed");
       }
 
-      // Set user state
       const userData = {
         userId: data.user._id || data.user.id,
         pseudonym: data.user.pseudonym,
@@ -60,13 +50,12 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
       setUserState(userData);
       
-      // Set session and persist login state
       const newSessionId = generateSessionId();
       setSessionId(newSessionId);
       localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('userState', JSON.stringify(userData));
 
-      setPhase("fadeOut");
+      setPhase("closing");
       setTimeout(() => onClose(), 1000);
 
     } catch (error) {
@@ -77,7 +66,6 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     }
   };
 
-  // Stay anonymous => set userId to random + session ID
   const handleStayAnonymous = () => {
     const anonId = `anon-${Math.random().toString(36).substr(2, 9)}`;
     setUserState({
@@ -88,52 +76,63 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       isAnonymous: true
     });
     setSessionId(generateSessionId());
-    onClose();
+    setPhase("closing");
+    setTimeout(() => onClose(), 1000);
   };
 
-  // On sign-up complete, close the splash
   const handleSignUpComplete = () => {
-    onClose();
+    setPhase("closing");
+    setTimeout(() => onClose(), 1000);
   };
 
-  // Generates a unique session ID
   const generateSessionId = () => `session-${Math.random().toString(36).substr(2, 12)}`;
 
   return (
-    <AnimatePresence>
-      <motion.div
-        className={`splashScreen ${phase === "fadeOut" ? "fadeOut" : ""}`}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 2 }}
-      >
-        {/* Background grid */}
-        <div className="gridBackground"></div>
+    <motion.div 
+      className={`splashScreen ${phase === "closing" ? "closing" : ""}`}
+      initial={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="gridBackground" />
+      
+      <AnimatePresence mode="wait">
         {phase === "introPhase" && (
-          <div className="content intro centeredContainer">
-            <div className="logoContainer">
+          <motion.div 
+            key="intro"
+            className="content intro"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="centeredLogo">
               <Image 
                 src="/favicon.ico"
                 alt="Loob Logo"
-                width={80}
-                height={80}
+                width={48}
+                height={48}
                 className="introLogo"
                 priority
               />
             </div>
-          </div>
+          </motion.div>
         )}
 
-        {/* Login Phase */}
         {phase === "loginPhase" && (
-          <div className="content login">
+          <motion.div 
+            key="login"
+            className="content login"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
             <div className="titleContainer">
               <Image 
                 src="/favicon.ico"
                 alt="Loob Logo"
-                width={40}
-                height={40}
+                width={32}
+                height={32}
                 className="titleLogo"
                 priority
               />
@@ -182,20 +181,25 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 Don't have an account? <span className="linkText">Sign up</span>
               </p>
             </div>
-          </div>
+          </motion.div>
         )}
 
-        {/* Sign-Up Phase */}
         {phase === "signupPhase" && (
-          <div className="content signup">
+          <motion.div 
+            key="signup"
+            className="content signup"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
             <LoobrarySignUp
               onBack={() => setPhase("loginPhase")}
               onExplore={handleSignUpComplete}
             />
-          </div>
+          </motion.div>
         )}
-      </motion.div>
-    </AnimatePresence>
+      </AnimatePresence>
+    </motion.div>
   );
 };
 

@@ -9,11 +9,10 @@
   inset: 0;
   background-color: black;
   color: #f3f3f3;
-  font-family: 'Inter', sans-serif; /* Modern, clean font */
-  overflow: hidden; /* Prevent scrollbars */
-  z-index: 1000; /* Ensure it stays on top */
-  transition: opacity 0.3s ease;
-  font-size: calc(14px + 0.390625vw); /* Fluid typography */
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+  z-index: 1000;
+  font-size: calc(14px + 0.390625vw);
   padding: 1rem;
 }
 
@@ -23,32 +22,21 @@
   padding: 1rem;
   max-width: 500px;
   width: 90%;
-  animation: fadeIn 1s ease-in-out; /* Smooth fade-in effect */
 }
 
-/* Logo Text with Gradient and Animation */
+/* Logo Text */
 .splashScreen .logoText {
-  font-size: 3rem; /* Reduced size for emphasis */
+  font-size: 3rem;
   font-weight: 900;
   background: linear-gradient(90deg, #f3f3f3, #ffb48f, #ff9f7f);
   -webkit-text-fill-color: transparent;
-  animation: textGlow 2s infinite alternate ease-in-out; /* Subtle glowing effect */
   letter-spacing: 2px;
   line-height: 1.2;
 }
 
-@keyframes textGlow {
-  from {
-    text-shadow: 0 0 5px rgba(243, 243, 243, 0.5), 0 0 15px rgba(243, 243, 243, 0.7);
-  }
-  to {
-    text-shadow: 0 0 10px rgba(243, 243, 243, 0.7), 0 0 20px rgba(243, 243, 243, 0.9);
-  }
-}
-
 /* Secondary Title (Main Title) */
 .splashScreen .mainTitle {
-  font-size: 3rem; /* Adjust for better responsiveness */
+  font-size: 3rem;
   font-weight: 800;
   background: linear-gradient(90deg, #f3f3f3, #ffb48f, #ff9f7f);
   -webkit-background-clip: text;
@@ -60,7 +48,7 @@
 
 /* Subtitle Styling */
 .splashScreen .superSubtitle {
-  font-size: 1.5rem; /* Slightly larger for emphasis */
+  font-size: 1.5rem;
   color: #c0bebe;
   margin-top: 10px;
   font-style: italic;
@@ -95,47 +83,41 @@
   flex-direction: column;
   gap: 15px;
   margin-bottom: 15px;
-  align-items: center; /* Center align buttons */
+  align-items: center;
 }
 
 /* Primary Button Styling */
 .splashScreen .actionButton {
   padding: 12px;
-  font-size: 1rem; /* Standardized font size */
-  font-weight: 600; /* Standardized font weight */
+  font-size: 1rem;
+  font-weight: 600;
   background: linear-gradient(45deg, #ff9f7f, #ff7e79);
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: transform 0.2s ease, background 0.3s ease, box-shadow 0.3s ease;
-  max-width: 200px; /* Set a maximum width for the buttons */
-  width: 100%; /* Allow buttons to take full width up to max-width */
+  transition: background 0.3s ease;
+  max-width: 200px;
+  width: 100%;
 }
 
 .splashScreen .actionButton:hover {
   background: linear-gradient(45deg, #ff8b6b, #ff6b66);
-  transform: translateY(-2px);
-  box-shadow: 0px 4px 10px rgba(255, 120, 120, 0.3);
-}
-
-.splashScreen .actionButton:active {
-  transform: translateY(0);
 }
 
 /* Secondary Button */
 .splashScreen .actionButton.secondary {
   padding: 12px;
-  font-size: 1rem; /* Standardized font size */
-  font-weight: 600; /* Standardized font weight */
+  font-size: 1rem;
+  font-weight: 600;
   color: #ccc;
   border: 1px solid #444;
   background: transparent;
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.3s ease, color 0.3s ease;
-  max-width: 200px; /* Set a maximum width for the secondary button */
-  width: 100%; /* Allow button to take full width up to max-width */
+  max-width: 200px;
+  width: 100%;
 }
 
 .splashScreen .actionButton.secondary:hover {
@@ -143,24 +125,12 @@
   color: white;
 }
 
-/* Background Animation */
+/* Background */
 .splashScreen .gridBackground {
   position: absolute;
   inset: 0;
   background: radial-gradient(circle, rgba(255, 159, 127, 0.3) 0%, rgba(0, 0, 0, 0.6) 60%, transparent 100%);
   z-index: -1;
-  animation: intenseBreath 4s infinite ease-in-out;
-}
-
-@keyframes intenseBreath {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 0.7;
-  }
-  50% {
-    transform: scale(1.15);
-    opacity: 1;
-  }
 }
 
 /* Fade Overlay */
@@ -169,17 +139,7 @@
   inset: 0;
   background: black;
   opacity: 0.8;
-  z-index: 999; /* Above the animation but below content */
-}
-
-/* Fade-in Animation */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  z-index: 999;
 }
 
 /* Responsive Adjustments */
@@ -216,7 +176,6 @@
     font-size: 2rem;
   }
 
-
   .splashScreen .pseudonymInput {
     padding: 8px;
     font-size: 0.8rem;
@@ -228,34 +187,67 @@
   }
 }
 
-.splashScreen {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgb(5, 5, 5);
-  transition: opacity 1s ease-in-out;
+/* Logo Container and Image */
+.logoContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 2rem;
 }
 
-.splashScreen.fadeOut {
-  background-color: black;  /* Dark background during fade-out */
-  opacity: 0;
+.introLogo {
+  width: 80px;
+  height: 80px;
 }
 
-.content {
-  /* Your content styles */
-  opacity: 1;
-  transition: opacity 1s ease-in-out;
-  width: 90%;
-  max-width: 500px;
-  padding: 1rem;
+.content.intro {
+  height: 100vh;
+  width: 100vw;
+  position: relative;
 }
 
-.content.fadeOut {
-  opacity: 0;
+/* Title Container and Logo Styling */
+.titleContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 1rem;
+  width: 100%;
 }
 
+.titleLogo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  opacity: 0.9;
+}
+
+/* Input Container Styling */
+.inputContainer {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+/* Error Message */
+.error {
+  color: #ff6b66;
+  margin: 10px 0;
+  font-size: 0.9rem;
+}
+
+/* Create Account Text */
+.createAccountText {
+  margin-top: 1rem;
+  color: #ccc;
+  cursor: pointer;
+}
+
+.linkText {
+  color: #ff9f7f;
+  text-decoration: underline;
+}
 
 /* Title Styling */
 .title {
@@ -269,7 +261,6 @@
   letter-spacing: 1.5px !important; /* Subtle letter spacing */
   line-height: 1.3 !important; /* Balanced line height */
   margin-bottom: 5px !important; /* Spacing from subtitle */
-  animation: glowText 2s infinite alternate ease-in-out !important; /* Glow animation */
 }
 
 /* Description/Subtitles Styling */
@@ -282,13 +273,12 @@
   line-height: 1.6 !important; /* Comfortable line spacing */
   font-style: italic !important; /* Adds a touch of elegance */
   opacity: 0.9 !important; /* Slightly softer look */
-  animation: fadeInText 1.5s ease-in-out !important; /* Smooth fade-in animation */
 }
 
 /* Main Title Styling */
 .mainTitle {
   margin: 0;
-  font-size: 2.8rem !important;
+  font-size: 2.4rem !important;
   font-weight: 800 !important;
   background: linear-gradient(90deg, #f3f3f3, #ffb48f, #ff9f7f) !important;
   -webkit-background-clip: text !important;
@@ -321,13 +311,11 @@
   }
 }
 
-
 .logoImage {
   display: block; /* Ensures the image behaves like a block-level element */
   margin-left: auto; /* Automatically adjusts left margin */
   margin-right: auto; /* Automatically adjusts right margin */
   filter: brightness(0.8); /* Slightly dim the logo */
-
 }
 
 /* Update the gradient colors to pastel flesh tones */
@@ -362,29 +350,6 @@
   background-color: #FFE4E1; /* Lighter flesh tone on hover */
 }
 
-.logoContainer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.introLogo {
-  opacity: 0.7;
-  filter: brightness(0.85);
-  width: 80px; /* Adjusted width */
-  height: 80px; /* Adjusted height */
-}
-
-.content.intro {
-  height: 100vh;
-  width: 100vw;
-  position: relative;
-}
-
 /* Update animations for better performance */
 @media (prefers-reduced-motion: reduce) {
   .waveLine {
@@ -401,57 +366,6 @@
   min-height: 44px;
   min-width: 44px;
   padding: 0.75rem 1rem;
-}
-
-/* Title Container and Logo Styling */
-.titleContainer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 15px;
-  margin-bottom: 0.5rem;
-  width: 100%;
-}
-
-.titleLogo {
-  width: 45px;
-  height: 45px;
-  object-fit: contain;
-  opacity: 0.85;
-  filter: brightness(0.9);
-  transform: translateY(-2px); /* Slight upward adjustment */
-}
-
-/* Main Title Styling */
-.mainTitle {
-  margin: 0;
-  font-size: 2.8rem !important;
-  font-weight: 800 !important;
-  background: linear-gradient(90deg, #f3f3f3, #ffb48f, #ff9f7f) !important;
-  -webkit-background-clip: text !important;
-  background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  letter-spacing: 1px !important;
-  line-height: 1 !important;
-  text-align: center !important;
-}
-
-/* Subtitle Styling */
-.superSubtitle {
-  font-size: 1.2rem !important;
-  color: #c0bebe !important;
-  margin-top: 0 !important;
-  margin-bottom: 3rem !important;
-  font-style: italic !important;
-  text-align: center !important;
-  width: 100% !important;
-}
-
-/* Input Container Styling */
-.inputContainer {
-  width: 100%;
-  max-width: 320px;
-  margin: 0 auto;
 }
 
 /* Responsive Adjustments */
@@ -532,4 +446,24 @@
 .actionButton.secondary:hover {
   background: rgba(68, 68, 68, 0.3) !important;
   border-color: rgba(68, 68, 68, 0.8) !important;
+}
+
+/* Intro Phase Styling */
+.centeredLogo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.introLogo {
+  opacity: 0.9;
+  filter: brightness(0.9);
+}
+
+/* Closing Animation */
+.splashScreen.closing {
+  background-color: black;
+  transition: opacity 0.5s ease-out;
 }

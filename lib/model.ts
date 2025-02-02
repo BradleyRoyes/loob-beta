@@ -306,6 +306,7 @@ export async function trainModel(
   callbacks?: {
     onEpochEnd?: (epoch: number, logs: any) => void;
     onBatchEnd?: (batch: number, logs: any) => void;
+    onEpochBegin?: (epoch: number, logs: any) => void;
   }
 ): Promise<tf.LayersModel> {
   try {
@@ -439,6 +440,12 @@ export async function trainModel(
           if (onProgress) {
             onProgress(100);
           }
+        },
+        onEpochBegin: async (epoch) => {
+          callbacks?.onEpochBegin?.(epoch, {
+            totalEpochs: MODEL_CONFIG.epochs,
+            totalBatches: totalSteps
+          });
         }
       }
     });

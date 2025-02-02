@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { trainModel, modelManager } from '@/lib/model';
+import { trainModel, modelManager, MODEL_CONFIG } from '@/lib/model';
 import * as tf from '@tensorflow/tfjs';
-import * as tfvis from '@tensorflow/tfjs-vis';
 
 export default function ModelTrainer() {
   const [trainingStatus, setTrainingStatus] = useState<'idle' | 'initializing' | 'training' | 'success' | 'error'>('initializing');
@@ -16,6 +15,27 @@ export default function ModelTrainer() {
   const [metrics, setMetrics] = useState<{loss: number[], val_loss: number[]}>({
     loss: [],
     val_loss: []
+  });
+
+  // Add new states for detailed progress
+  const [trainingDetails, setTrainingDetails] = useState<{
+    currentEpoch: number;
+    totalEpochs: number;
+    batchesComplete: number;
+    totalBatches: number;
+    currentLoss: number | null;
+    bestLoss: number | null;
+    timeElapsed: number;
+    estimatedTimeRemaining: number | null;
+  }>({
+    currentEpoch: 0,
+    totalEpochs: 0,
+    batchesComplete: 0,
+    totalBatches: 0,
+    currentLoss: null,
+    bestLoss: null,
+    timeElapsed: 0,
+    estimatedTimeRemaining: null
   });
 
   // Initialize TensorFlow.js
@@ -42,37 +62,68 @@ export default function ModelTrainer() {
 
   const handleTrain = async () => {
     try {
+      const startTime = Date.now();
       setTrainingStatus('training');
       setErrorMessage(null);
       setProgress(0);
       setMetrics({ loss: [], val_loss: [] });
-
-      // Set up tfvis surface
-      const surface = { name: 'Training Metrics', tab: 'Training' };
       
+      // Reset training details with correct totals from MODEL_CONFIG
+      setTrainingDetails({
+        currentEpoch: 0,
+        totalEpochs: MODEL_CONFIG.epochs,
+        batchesComplete: 0,
+        totalBatches: 0,  // Will be set by onEpochBegin
+        currentLoss: null,
+        bestLoss: null,
+        timeElapsed: 0,
+        estimatedTimeRemaining: null
+      });
+
       await trainModel(
         (progress) => setProgress(progress),
         'Trained Model',
         'Training run with improved architecture',
         {
+          onBatchEnd: async (batch, logs) => {
+            const timeElapsed = (Date.now() - startTime) / 1000;
+            setTrainingDetails(prev => {
+              // Add 1 to batch since it's 0-based
+              const batchesComplete = prev.currentEpoch * prev.totalBatches + (batch + 1);
+              const totalBatchesAllEpochs = prev.totalBatches * prev.totalEpochs;
+              const timePerBatch = timeElapsed / batchesComplete;
+              const remaining = (totalBatchesAllEpochs - batchesComplete) * timePerBatch;
+              
+              return {
+                ...prev,
+                batchesComplete,
+                currentLoss: logs.loss,
+                bestLoss: prev.bestLoss === null ? logs.loss : Math.min(prev.bestLoss, logs.loss),
+                timeElapsed,
+                estimatedTimeRemaining: remaining
+              };
+            });
+          },
+          onEpochBegin: async (epoch, logs) => {
+            setTrainingDetails(prev => ({
+              ...prev,
+              currentEpoch: epoch + 1,
+              totalBatches: logs.totalBatches
+            }));
+            console.log(`Starting epoch ${epoch + 1}/${MODEL_CONFIG.epochs}`);
+            console.log(`Total batches per epoch: ${logs.totalBatches}`);
+          },
           onEpochEnd: async (epoch, logs) => {
             setMetrics(prev => ({
               loss: [...prev.loss, logs.loss],
               val_loss: [...prev.val_loss, logs.val_loss]
             }));
-
-            // Plot metrics
-            tfvis.show.history(surface, {
-              values: [{
-                x: epoch,
-                y: logs.loss,
-                series: 'loss'
-              }, {
-                x: epoch,
-                y: logs.val_loss,
-                series: 'val_loss'
-              }]
-            });
+            
+            console.log(
+              `Epoch ${epoch + 1}:`,
+              `Loss: ${logs.loss.toFixed(6)}`,
+              `Val Loss: ${logs.val_loss.toFixed(6)}`
+            );
           }
         }
       );
@@ -205,6 +256,40 @@ export default function ModelTrainer() {
                 <div className="h-24 bg-gradient-to-b from-green-500 to-yellow-500 opacity-20 rounded" 
                      style={{ height: `${(maxY - minY) * 100}%`, marginTop: `${minY * 100}%` }} />
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Detailed Training Progress */}
+        {trainingStatus === 'training' && (
+          <div className="bg-gray-900/50 p-4 rounded-lg space-y-2">
+            <h3 className="text-sm font-semibold">Training Details</h3>
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              <div>
+                <p>Epoch: {trainingDetails.currentEpoch}/{trainingDetails.totalEpochs}</p>
+                <p>Batches: {trainingDetails.batchesComplete}/{trainingDetails.totalBatches}</p>
+              </div>
+              <div>
+                <p>Current Loss: {trainingDetails.currentLoss?.toFixed(6) ?? 'N/A'}</p>
+                <p>Best Loss: {trainingDetails.bestLoss?.toFixed(6) ?? 'N/A'}</p>
+              </div>
+              <div>
+                <p>Time Elapsed: {Math.round(trainingDetails.timeElapsed)}s</p>
+                {trainingDetails.estimatedTimeRemaining && (
+                  <p>Est. Remaining: {Math.round(trainingDetails.estimatedTimeRemaining)}s</p>
+                )}
+              </div>
+            </div>
+            
+            {/* Progress Bar */}
+            <div className="w-full bg-gray-700 rounded-full h-2.5 mt-2">
+              <div 
+                className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                style={{ 
+                  width: `${(trainingDetails.batchesComplete / 
+                    (trainingDetails.totalBatches * trainingDetails.totalEpochs)) * 100}%` 
+                }}
+              />
             </div>
           </div>
         )}
