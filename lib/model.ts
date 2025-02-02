@@ -8,61 +8,46 @@ import { Prediction } from '@/types/detection';
 export const MODEL_CONFIG = {
   inputShape: [224, 224, 3] as [number, number, number],
   outputShape: 2,
-  batchSize: 16,
+  batchSize: 16,  // Smaller batch size for better gradient updates
   epochs: 50,
-  patience: 10,
-  learningRate: 0.00005,
+  patience: 8,
+  learningRate: 0.0005,  // Increased learning rate to escape local minima
   validationSplit: 0.2,
-  metrics: ['mse', 'mae']
+  metrics: ['mse']
 };
 
 // Create a simple model architecture
 async function createModel(): Promise<tf.LayersModel> {
   const model = tf.sequential();
   
-  // Deeper feature extraction
+  // Simpler but effective architecture
   model.add(tf.layers.conv2d({
     inputShape: MODEL_CONFIG.inputShape,
     filters: 32,
     kernelSize: 3,
     activation: 'relu',
-    padding: 'same'  // Add padding
+    padding: 'same'
   }));
-  model.add(tf.layers.batchNormalization());
   model.add(tf.layers.maxPooling2d({poolSize: 2}));
   
-  // Add more conv layers
   model.add(tf.layers.conv2d({
     filters: 64,
     kernelSize: 3,
     activation: 'relu',
     padding: 'same'
   }));
-  model.add(tf.layers.batchNormalization());
   model.add(tf.layers.maxPooling2d({poolSize: 2}));
   
-  model.add(tf.layers.conv2d({
-    filters: 128,
-    kernelSize: 3,
-    activation: 'relu',
-    padding: 'same'
-  }));
-  model.add(tf.layers.batchNormalization());
-  model.add(tf.layers.maxPooling2d({poolSize: 2}));
-  
-  // Dense layers
   model.add(tf.layers.flatten());
-  model.add(tf.layers.dense({units: 256, activation: 'relu'}));
-  model.add(tf.layers.dropout({rate: 0.5}));
   model.add(tf.layers.dense({units: 128, activation: 'relu'}));
-  model.add(tf.layers.dropout({rate: 0.3}));
+  model.add(tf.layers.dropout({rate: 0.5}));  // More dropout to prevent getting stuck
   model.add(tf.layers.dense({units: MODEL_CONFIG.outputShape, activation: 'sigmoid'}));
   
-  // Use a lower learning rate
+  // Use Adam with custom learning rate
   model.compile({
-    optimizer: tf.train.adam(0.00005),  // Reduced learning rate
+    optimizer: tf.train.adam(MODEL_CONFIG.learningRate),
     loss: 'meanSquaredError',
-    metrics: ['mse', 'mae']
+    metrics: ['mse']
   });
   
   return model;
@@ -88,8 +73,9 @@ export class ModelManager {
   private readonly modelListKey = `${this.storagePrefix}-list`;
 
   constructor() {
-    // Initialize IndexedDB for model storage
-    tf.setBackend('webgl');
+    if (typeof window !== 'undefined') {
+      tf.setBackend('webgl');
+    }
   }
 
   // Add setModel method
@@ -217,7 +203,7 @@ export class ModelManager {
   }
 
   async getModel(): Promise<tf.LayersModel> {
-    if (!this.model) {
+    if (!this.model && typeof window !== 'undefined') {
       try {
         await tf.ready();
         // Try to load most recent model
@@ -237,7 +223,7 @@ export class ModelManager {
         this.model = await createModel();
       }
     }
-    return this.model;
+    return this.model!;
   }
 
   async saveTrainedModel(name: string, description: string = ''): Promise<SavedModel> {
@@ -366,15 +352,42 @@ export async function trainModel(
     const images = await Promise.all(imagePromises);
     const labels = await Promise.all(labelPromises);
 
-    // Use tf.tidy for tensor operations
+    // Add augmentation helper functions
+    function augmentImage(image: tf.Tensor4D): tf.Tensor4D {
+      return tf.tidy(() => {
+        // Random brightness
+        const brightness = image.add(tf.randomUniform([1], -0.1, 0.1)) as tf.Tensor4D;
+        
+        // Random contrast
+        const contrast = brightness.mul(tf.randomUniform([1], 0.9, 1.1)) as tf.Tensor4D;
+        
+        // Random color shift (RGB channels)
+        const colorShift = contrast.add(
+          tf.randomUniform([1, 1, 1, 3], -0.1, 0.1)
+        ) as tf.Tensor4D;
+        
+        return colorShift.clipByValue(0, 1);
+      }) as tf.Tensor4D;
+    }
+
+    // Update the training function's data preparation
     const { xs, ys, augmentedXs, augmentedYs } = tf.tidy(() => {
       const xs = tf.stack(images);
       const ys = tf.tensor2d(labels);
       
-      // Perform data augmentation
-      const flipped = tf.image.flipLeftRight(xs as tf.Tensor4D);
-      const augmentedXs = tf.concat([xs, flipped], 0);
-      const augmentedYs = tf.concat([ys, ys], 0);
+      // Original data
+      const original = xs.div(255); // Normalize to 0-1
+      
+      // Flipped data
+      const flipped = tf.image.flipLeftRight(original as tf.Tensor4D);
+      
+      // Color augmented data
+      const augmented1 = augmentImage(original as tf.Tensor4D);
+      const augmented2 = augmentImage(flipped as tf.Tensor4D);
+      
+      // Combine all augmented data
+      const augmentedXs = tf.concat([original, flipped, augmented1, augmented2], 0);
+      const augmentedYs = tf.concat([ys, ys, ys, ys], 0); // Repeat labels for each augmentation
       
       return { xs, ys, augmentedXs, augmentedYs };
     });
@@ -406,12 +419,12 @@ export async function trainModel(
               100
             );
             onProgress(trainingProgress);
-            if (logs.loss < 0.01) { // Add early convergence check
+            if (logs.loss < 0.01) {
               model.stopTraining = true;
             }
             console.log(`Batch ${currentStep}/${totalSteps}, Loss: ${logs.loss.toFixed(4)}`);
           }
-          // Reduce UI updates frequency
+          
           if (currentStep % 5 === 0) {
             await tf.nextFrame();
           }
@@ -422,7 +435,6 @@ export async function trainModel(
             `Epoch ${epoch + 1}/${MODEL_CONFIG.epochs}`,
             `Loss: ${logs?.loss?.toFixed(4)}`,
             `MSE: ${logs?.mse?.toFixed(4)}`,
-            `MAE: ${logs?.mae?.toFixed(4)}`,
             `Val Loss: ${logs?.val_loss?.toFixed(4)}`
           );
           

@@ -39,6 +39,8 @@ const nextConfig = {
     };
     return config;
   },
+  // Add this to skip generating 404 during build
+  output: 'standalone'
 }
 
 module.exports = nextConfig

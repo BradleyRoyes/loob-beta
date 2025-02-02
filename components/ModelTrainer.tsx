@@ -42,14 +42,16 @@ export default function ModelTrainer() {
   useEffect(() => {
     const initTF = async () => {
       try {
-        // Wait for TF to be ready
         await tf.ready();
-        // Try to set backend to WebGL
         if (tf.findBackend('webgl')) {
           await tf.setBackend('webgl');
         }
         await modelManager.clearCache();
         setTrainingStatus('idle');
+        return () => {
+          tf.disposeVariables();
+          modelManager.disposeModel();
+        };
       } catch (error) {
         console.error('TensorFlow initialization failed:', error);
         setErrorMessage('Failed to initialize TensorFlow. Please try refreshing the page.');
@@ -57,7 +59,9 @@ export default function ModelTrainer() {
       }
     };
     
-    initTF();
+    if (typeof window !== 'undefined') {
+      initTF();
+    }
   }, []);
 
   const handleTrain = async () => {
@@ -299,8 +303,12 @@ export default function ModelTrainer() {
           <div className="bg-gray-900/50 p-4 rounded-lg">
             <h3 className="text-sm font-semibold mb-2">Training Progress</h3>
             <div className="text-xs space-y-1">
-              <div>Latest Loss: {metrics.loss[metrics.loss.length - 1].toFixed(6)}</div>
-              <div>Latest Val Loss: {metrics.val_loss[metrics.val_loss.length - 1].toFixed(6)}</div>
+              <div>Latest Loss: {
+                metrics.loss[metrics.loss.length - 1]?.toFixed(6) ?? 'N/A'
+              }</div>
+              <div>Latest Val Loss: {
+                metrics.val_loss?.[metrics.val_loss.length - 1]?.toFixed(6) ?? 'N/A'
+              }</div>
             </div>
           </div>
         )}

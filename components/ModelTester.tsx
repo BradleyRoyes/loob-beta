@@ -43,7 +43,7 @@ export default function ModelTester() {
       overlayCtx.strokeStyle = '#FF0000';
       overlayCtx.lineWidth = 3;
       const size = 20;
-      
+
       // Draw crosshair
       overlayCtx.beginPath();
       overlayCtx.moveTo(pixelX - size, pixelY);

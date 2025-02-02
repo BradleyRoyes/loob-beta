@@ -44,16 +44,7 @@ type Tab = 'capture' | 'train' | 'test';
 
 // Dynamically import components to avoid circular dependencies
 const ModelTrainer = dynamic(() => import('./ModelTrainer'), {
-  loading: () => (
-    <div className="loading-state">
-      <div className="training-progress">
-        <div className="progress-bar" style={{ width: '100%' }}>
-          <div className="progress-glow" />
-        </div>
-      </div>
-      Loading trainer...
-    </div>
-  ),
+  loading: () => <div>Loading trainer...</div>,
   ssr: false
 });
 
