@@ -10,9 +10,7 @@ import NFCReader from "../components/NFCReader";
 import LoobricatesList from '../components/LoobricatesList';
 
 export default function Page() {
-  const [view, setView] = useState<"Chat" | "Profile" | "Map" | "NFCReader">(
-    "Chat"
-  );
+  const [view, setView] = useState<"Chat" | "Profile" | "Map" | "NFCReader">("Chat");
   const [showModal, setShowModal] = useState(false);
   const [configureOpen, setConfigureOpen] = useState(false);
 

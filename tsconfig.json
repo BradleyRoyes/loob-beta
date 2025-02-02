@@ -17,7 +17,8 @@
     "target": "ESNext", // Updated from ES2017
     "baseUrl": ".",
     "paths": {
-      "@components/*": ["components/*"]
+      "@components/*": ["./components/*"],
+      "@/*": ["./*"]
     }
   },
   "include": [
@@ -26,8 +27,10 @@
     "**/*.ts",
     "**/*.tsx",
     "components/**/*.ts",
-    "components/**/*.tsx"
-, "components/TorusSphere.jsx", "components/ChatModal.tsx"  ],
+    "components/**/*.tsx",
+    "components/TorusSphere.jsx",
+    "components/ChatModal.tsx"
+  ],
   "ts-node": {
     "compilerOptions": {
       "module": "commonjs"

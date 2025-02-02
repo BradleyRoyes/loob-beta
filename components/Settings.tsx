@@ -128,7 +128,6 @@ const Settings: React.FC<Props> = ({
                   Active Loobricate
                 </label>
                 <select
-                  key="loobricate-select"
                   className="w-full p-2 bg-gray-800 border border-gray-700 rounded-md shadow-sm text-white"
                   value={activeLoobricate?.id || ""}
                   onChange={(e) => {
