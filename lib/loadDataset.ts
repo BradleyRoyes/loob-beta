@@ -1,3 +1,5 @@
+import * as tf from "@tensorflow/tfjs";
+
 export async function loadDataset() {
   const images: string[] = [];
   const labels: number[][] = [];
@@ -128,6 +130,16 @@ export async function loadDataset() {
     if (images.length === 0) {
       throw new Error('No valid image/label pairs were loaded');
     }
+
+    console.log('\n📈 Dataset Statistics:');
+    const ysTensor = tf.tensor2d(labels);
+    console.log(`- Average X: ${ysTensor.slice([0, 1], [ysTensor.shape[0], 1]).mean().dataSync()[0].toFixed(3)}`);
+    console.log(`- Average Y: ${ysTensor.slice([0, 2], [ysTensor.shape[0], 1]).mean().dataSync()[0].toFixed(3)}`);
+    console.log(`- X Range: [${ysTensor.slice([0, 1], [ysTensor.shape[0], 1]).min().dataSync()[0].toFixed(3)}, 
+                   ${ysTensor.slice([0, 1], [ysTensor.shape[0], 1]).max().dataSync()[0].toFixed(3)}]`);
+    console.log(`- Y Range: [${ysTensor.slice([0, 2], [ysTensor.shape[0], 1]).min().dataSync()[0].toFixed(3)}, 
+                   ${ysTensor.slice([0, 2], [ysTensor.shape[0], 1]).max().dataSync()[0].toFixed(3)}]`);
+    ysTensor.dispose();
 
     return { images, labels };
 

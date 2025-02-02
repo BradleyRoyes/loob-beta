@@ -1,5 +1,6 @@
 import * as tf from "@tensorflow/tfjs";
 import { loadDataset } from "./loadDataset";
+import { MODEL_CONFIG } from "./model";
 
 export async function prepareData(): Promise<{ xs: tf.Tensor4D, ys: tf.Tensor2D }> {
   try {
@@ -35,14 +36,14 @@ export async function prepareData(): Promise<{ xs: tf.Tensor4D, ys: tf.Tensor2D 
             return tf.tidy(() => {
               // Convert image to tensor and normalize
               const tensor = tf.browser.fromPixels(img)
-                .resizeNearestNeighbor([128, 128])
-                .toFloat()
-                .div(tf.scalar(255)) as tf.Tensor3D;
+                .resizeNearestNeighbor([MODEL_CONFIG.inputShape[0], MODEL_CONFIG.inputShape[1]])
+                .sub(tf.scalar(127.5))  // MobileNet-style normalization
+                .div(tf.scalar(127.5)) as tf.Tensor3D;
               
               // Verify tensor shape
               if (tensor.shape.length !== 3 || 
-                  tensor.shape[0] !== 128 || 
-                  tensor.shape[1] !== 128 || 
+                  tensor.shape[0] !== MODEL_CONFIG.inputShape[0] || 
+                  tensor.shape[1] !== MODEL_CONFIG.inputShape[1] || 
                   tensor.shape[2] !== 3) {
                 throw new Error(`Invalid tensor shape: ${tensor.shape}`);
               }
@@ -63,16 +64,20 @@ export async function prepareData(): Promise<{ xs: tf.Tensor4D, ys: tf.Tensor2D 
     console.log('Processing labels...');
     // Process labels (assuming YOLO format: [class_id, x, y, width, height])
     const coordinates = labels.map((label, index) => {
-      if (!Array.isArray(label) || label.length < 5) {
-        throw new Error(`Invalid label format at index ${index}`);
+      if (!Array.isArray(label) || label.length !== 5) {
+        throw new Error(`Invalid label format at index ${index} - expected 5 values, got ${label.length}`);
       }
       
-      // Extract and validate center coordinates
-      const x = Number(label[1]);
-      const y = Number(label[2]);
+      // Extract and validate all coordinates
+      const [classId, x, y, width, height] = label.map(Number);
       
-      if (isNaN(x) || isNaN(y) || x < 0 || x > 1 || y < 0 || y > 1) {
-        throw new Error(`Invalid coordinates at index ${index}: x=${x}, y=${y}`);
+      if ([x, y, width, height].some(isNaN)) {
+        throw new Error(`Non-numeric values in label at index ${index}`);
+      }
+      
+      if (x < 0 || x > 1 || y < 0 || y > 1 || 
+          width < 0 || width > 1 || height < 0 || height > 1) {
+        throw new Error(`Invalid coordinates at index ${index}: x=${x}, y=${y}, w=${width}, h=${height}`);
       }
       
       return [x, y];
@@ -80,23 +85,10 @@ export async function prepareData(): Promise<{ xs: tf.Tensor4D, ys: tf.Tensor2D 
 
     console.log('Creating final tensors...');
     // Convert to final tensors
-    const xs = tf.stack(imageTensors) as tf.Tensor4D;
-    const ys = tf.tensor2d(coordinates, [coordinates.length, 2]);
-
-    // Verify final tensor shapes
-    console.log('Final tensor shapes:', {
-      xs: xs.shape,
-      ys: ys.shape
-    });
-
-    if (xs.shape[0] !== ys.shape[0]) {
-      throw new Error(`Mismatch between number of images (${xs.shape[0]}) and labels (${ys.shape[0]})`);
-    }
-
-    // Cleanup intermediate tensors
-    imageTensors.forEach(t => t.dispose());
-
-    return { xs, ys };
+    return { 
+      xs: tf.stack(imageTensors).reshape([-1, ...MODEL_CONFIG.inputShape]) as tf.Tensor4D,
+      ys: tf.tensor2d(coordinates, [coordinates.length, 2])
+    };
   } catch (error) {
     console.error('Error preparing data:', error);
     throw error;

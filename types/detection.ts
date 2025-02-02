@@ -1,12 +1,15 @@
 import * as tf from '@tensorflow/tfjs';
 
-export type Prediction = {
-  bbox: [number, number, number, number]; // [x_min, y_min, x_max, y_max]
+export interface Prediction {
+  x: number;
+  y: number;
   confidence: number;
-  class: string;
   type: string;
+  class: string;
+  bbox?: number[];
+  coordinates?: number[];
   timestamp: number;
-};
+}
 
 export type DetectionModel = 'custom' | 'coco-ssd';
 

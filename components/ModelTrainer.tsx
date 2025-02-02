@@ -2,11 +2,21 @@
 
 import React, { useState, useEffect } from 'react';
 import { trainModel, modelManager } from '@/lib/model';
+import tf from '@tensorflow/tfjs';
+import * as tfvis from '@tensorflow/tfjs-vis';
 
 export default function ModelTrainer() {
   const [trainingStatus, setTrainingStatus] = useState<'idle' | 'initializing' | 'training' | 'success' | 'error'>('initializing');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [progress, setProgress] = useState<number>(0);
+  const [maxX, setMaxX] = useState<number>(0);
+  const [minX, setMinX] = useState<number>(1);
+  const [maxY, setMaxY] = useState<number>(0);
+  const [minY, setMinY] = useState<number>(1);
+  const [metrics, setMetrics] = useState<{loss: number[], val_loss: number[]}>({
+    loss: [],
+    val_loss: []
+  });
 
   // Initialize on mount
   useEffect(() => {
@@ -28,10 +38,37 @@ export default function ModelTrainer() {
       setTrainingStatus('training');
       setErrorMessage(null);
       setProgress(0);
+      setMetrics({ loss: [], val_loss: [] });
 
-      await trainModel((progress) => {
-        setProgress(progress);
-      });
+      // Set up tfvis surface
+      const surface = { name: 'Training Metrics', tab: 'Training' };
+      
+      await trainModel(
+        (progress) => setProgress(progress),
+        'Trained Model',
+        'Training run with improved architecture',
+        {
+          onEpochEnd: async (epoch, logs) => {
+            setMetrics(prev => ({
+              loss: [...prev.loss, logs.loss],
+              val_loss: [...prev.val_loss, logs.val_loss]
+            }));
+
+            // Plot metrics
+            tfvis.show.history(surface, {
+              values: [{
+                x: epoch,
+                y: logs.loss,
+                series: 'loss'
+              }, {
+                x: epoch,
+                y: logs.val_loss,
+                series: 'val_loss'
+              }]
+            });
+          }
+        }
+      );
 
       setTrainingStatus('success');
     } catch (error) {
@@ -107,12 +144,25 @@ export default function ModelTrainer() {
             <div className="flex flex-col gap-4">
               <button
                 onClick={async () => {
-                  const model = await modelManager.getModel();
-                  await model.save('downloads://loobricate-model');
+                  try {
+                    const model = await modelManager.getModel();
+                    if (!model) {
+                      throw new Error('No model available to download');
+                    }
+                    // Save model architecture and weights
+                    await model.save('downloads://loobricate-model');
+                    // This will trigger two downloads:
+                    // 1. model.json (architecture)
+                    // 2. weights.bin (weights)
+                  } catch (error) {
+                    console.error('Failed to download model:', error);
+                    setErrorMessage('Failed to download model: ' + error.message);
+                    setTrainingStatus('error');
+                  }
                 }}
                 className="base-button"
               >
-                Download Model
+                Download Model (JSON + Weights)
               </button>
             </div>
           </div>
@@ -130,6 +180,36 @@ export default function ModelTrainer() {
             <p className="text-sm text-red-300">
               Please check the console for detailed error logs.
             </p>
+          </div>
+        )}
+
+        {/* Data Distribution */}
+        {trainingStatus === 'success' && (
+          <div className="bg-gray-900/50 p-4 rounded-lg">
+            <h3 className="text-sm font-semibold mb-2">Data Distribution</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-black/20 p-2 rounded">
+                <p className="text-xs text-gray-400">X Coordinates</p>
+                <div className="h-24 bg-gradient-to-r from-blue-500 to-purple-500 opacity-20 rounded" 
+                     style={{ width: `${(maxX - minX) * 100}%`, marginLeft: `${minX * 100}%` }} />
+              </div>
+              <div className="bg-black/20 p-2 rounded">
+                <p className="text-xs text-gray-400">Y Coordinates</p>
+                <div className="h-24 bg-gradient-to-b from-green-500 to-yellow-500 opacity-20 rounded" 
+                     style={{ height: `${(maxY - minY) * 100}%`, marginTop: `${minY * 100}%` }} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Training Metrics */}
+        {metrics.loss.length > 0 && (
+          <div className="bg-gray-900/50 p-4 rounded-lg">
+            <h3 className="text-sm font-semibold mb-2">Training Progress</h3>
+            <div className="text-xs space-y-1">
+              <div>Latest Loss: {metrics.loss[metrics.loss.length - 1].toFixed(6)}</div>
+              <div>Latest Val Loss: {metrics.val_loss[metrics.val_loss.length - 1].toFixed(6)}</div>
+            </div>
           </div>
         )}
       </div>

@@ -6,47 +6,63 @@ import { Prediction } from '@/types/detection';
 
 // Simple model configuration
 export const MODEL_CONFIG = {
-  inputShape: [128, 128, 3] as [number, number, number],
+  inputShape: [224, 224, 3] as [number, number, number],
   outputShape: 2,
-  batchSize: 32,
-  epochs: 50,
-  patience: 5,
-  learningRate: 0.001
+  batchSize: 16,
+  epochs: 100,
+  patience: 10,
+  learningRate: 0.00005,
+  validationSplit: 0.2,
+  metrics: ['mse', 'mae']
 };
 
 // Create a simple model architecture
-function createModel(): tf.LayersModel {
+async function createModel(): Promise<tf.LayersModel> {
   const model = tf.sequential();
   
-  // Input convolutional layer
+  // Deeper feature extraction
   model.add(tf.layers.conv2d({
     inputShape: MODEL_CONFIG.inputShape,
     filters: 32,
     kernelSize: 3,
     activation: 'relu',
-    padding: 'same'
+    padding: 'same'  // Add padding
   }));
-  model.add(tf.layers.maxPooling2d({ poolSize: 2 }));
+  model.add(tf.layers.batchNormalization());
+  model.add(tf.layers.maxPooling2d({poolSize: 2}));
   
-  // Second convolutional layer
+  // Add more conv layers
   model.add(tf.layers.conv2d({
     filters: 64,
     kernelSize: 3,
     activation: 'relu',
     padding: 'same'
   }));
-  model.add(tf.layers.maxPooling2d({ poolSize: 2 }));
+  model.add(tf.layers.batchNormalization());
+  model.add(tf.layers.maxPooling2d({poolSize: 2}));
   
-  // Flatten and dense layers
+  model.add(tf.layers.conv2d({
+    filters: 128,
+    kernelSize: 3,
+    activation: 'relu',
+    padding: 'same'
+  }));
+  model.add(tf.layers.batchNormalization());
+  model.add(tf.layers.maxPooling2d({poolSize: 2}));
+  
+  // Dense layers
   model.add(tf.layers.flatten());
-  model.add(tf.layers.dense({ units: 128, activation: 'relu' }));
-  model.add(tf.layers.dense({ units: MODEL_CONFIG.outputShape, activation: 'sigmoid' }));
+  model.add(tf.layers.dense({units: 256, activation: 'relu'}));
+  model.add(tf.layers.dropout({rate: 0.5}));
+  model.add(tf.layers.dense({units: 128, activation: 'relu'}));
+  model.add(tf.layers.dropout({rate: 0.3}));
+  model.add(tf.layers.dense({units: MODEL_CONFIG.outputShape, activation: 'sigmoid'}));
   
-  // Compile model
+  // Use a lower learning rate
   model.compile({
-    optimizer: 'adam',
+    optimizer: tf.train.adam(0.00005),  // Reduced learning rate
     loss: 'meanSquaredError',
-    metrics: ['mse']
+    metrics: ['mse', 'mae']
   });
   
   return model;
@@ -74,6 +90,11 @@ export class ModelManager {
   constructor() {
     // Initialize IndexedDB for model storage
     tf.setBackend('webgl');
+  }
+
+  // Add setModel method
+  async setModel(model: tf.LayersModel) {
+    this.model = model;
   }
 
   private async getModelList(): Promise<SavedModel[]> {
@@ -208,12 +229,12 @@ export class ModelManager {
           this.model = await tf.loadLayersModel(`indexeddb://${mostRecent.path}`);
         } else {
           console.log('No saved models found, creating new one');
-          this.model = createModel();
+          this.model = await createModel();
         }
       } catch (error) {
         console.error('Failed to load/create model:', error);
         // If there's an error, create a fresh model
-        this.model = createModel();
+        this.model = await createModel();
       }
     }
     return this.model;
@@ -282,10 +303,15 @@ export async function trainModel(
   onProgress?: (progress: number) => void,
   modelName: string = 'Trained Model',
   description: string = '',
+  callbacks?: {
+    onEpochEnd?: (epoch: number, logs: any) => void;
+    onBatchEnd?: (batch: number, logs: any) => void;
+  }
 ): Promise<tf.LayersModel> {
   try {
     await modelManager.clearCache();
-    const model = createModel();
+    const model = await createModel();
+    await modelManager.setModel(model);  // Use the new setModel method
     
     // Fix the manifest path
     const manifestResponse = await fetch('/api/dataset/manifest');
@@ -367,10 +393,11 @@ export async function trainModel(
     await model.fit(augmentedXs, augmentedYs, {
       batchSize: MODEL_CONFIG.batchSize,
       epochs: MODEL_CONFIG.epochs,
-      validationSplit: 0.2,
+      validationData: [augmentedXs, augmentedYs],
       shuffle: true,
       callbacks: {
         onBatchEnd: async (batch, logs) => {
+          callbacks?.onBatchEnd?.(batch, logs);
           currentStep++;
           if (onProgress && logs) {
             const trainingProgress = Math.min(
@@ -389,11 +416,23 @@ export async function trainModel(
           }
         },
         onEpochEnd: async (epoch, logs) => {
-          console.log(`Epoch ${epoch + 1}/${MODEL_CONFIG.epochs}, Loss: ${logs?.loss?.toFixed(4)}, Val Loss: ${logs?.val_loss?.toFixed(4)}`);
-          // Early stopping logic
-          if (logs && logs.val_loss && logs.val_loss < 0.01) {
-            console.log('Reached target accuracy, stopping training');
-            model.stopTraining = true;
+          callbacks?.onEpochEnd?.(epoch, logs);
+          console.log(
+            `Epoch ${epoch + 1}/${MODEL_CONFIG.epochs}`,
+            `Loss: ${logs?.loss?.toFixed(4)}`,
+            `MSE: ${logs?.mse?.toFixed(4)}`,
+            `MAE: ${logs?.mae?.toFixed(4)}`,
+            `Val Loss: ${logs?.val_loss?.toFixed(4)}`
+          );
+          
+          // Log coordinate predictions for a sample image
+          if (epoch % 5 === 0) {  // Every 5 epochs
+            const samplePrediction = await model.predict(
+              augmentedXs.slice([0, 0], [1, ...MODEL_CONFIG.inputShape])
+            ) as tf.Tensor;
+            const [x, y] = await samplePrediction.data();
+            console.log(`Sample prediction: x=${x.toFixed(3)}, y=${y.toFixed(3)}`);
+            samplePrediction.dispose();
           }
         },
         onTrainEnd: async () => {

@@ -29,25 +29,19 @@ export const useModelManager = (initialModel: DetectionModel) => {
           throw new Error('Model loaded but is null');
         }
 
-        // Log EXACT model structure for debugging
-        const modelSummary = {
-          name: 'Custom Stick Detector',
-          inputShape: customModel.inputs[0].shape,
-          outputShape: customModel.outputs[0].shape,
-          totalLayers: customModel.layers.length,
-          trainableWeights: customModel.trainableWeights.length,
-          nonTrainableWeights: customModel.nonTrainableWeights.length
-        };
-        console.log('Model Summary:', modelSummary);
+        // Verify input shape
+        const inputShape = customModel.inputs[0].shape;
+        console.log('Model input shape:', inputShape);
+        
+        if (inputShape[1] !== 224 || inputShape[2] !== 224) {
+          throw new Error(`Invalid input shape: expected [null,224,224,3] but got [${inputShape}]`);
+        }
 
-        // Test with zeros to verify shape
-        const dummyInput = tf.zeros([1, 128, 128, 3]);
+        // Test with correct shape
+        const dummyInput = tf.zeros([1, 224, 224, 3]);
         const testOutput = customModel.predict(dummyInput) as tf.Tensor;
-        console.log('Test prediction:', {
-          inputShape: dummyInput.shape,
-          outputShape: testOutput.shape,
-          outputValues: Array.from(testOutput.dataSync()).slice(0, 5)
-        });
+        console.log('Test prediction shape:', testOutput.shape);
+        
         dummyInput.dispose();
         testOutput.dispose();
 
@@ -55,7 +49,6 @@ export const useModelManager = (initialModel: DetectionModel) => {
         console.log('✓ Custom model loaded successfully');
       } catch (e) {
         console.error('Custom model load error:', e);
-        console.error('Stack:', e.stack);
         modelStates.custom = false;
       }
 
@@ -102,6 +95,8 @@ export const useModelManager = (initialModel: DetectionModel) => {
             );
             
             return [{
+              x: x,
+              y: y,
               bbox: [x - 0.05, y - 0.05, 0.1, 0.1], // 10% box around point
               confidence: Math.min(Math.max(confidence, 0), 1),
               class: 'ball',
@@ -145,6 +140,8 @@ export const useModelManager = (initialModel: DetectionModel) => {
             return detections
               .filter(d => d.score > 0.2) // Lower threshold to see more objects
               .map(d => ({
+                x: (d.bbox[0] + d.bbox[2]/2) / width,  // center x
+                y: (d.bbox[1] + d.bbox[3]/2) / height, // center y
                 bbox: [
                   d.bbox[0] / width,                    // x_min
                   d.bbox[1] / height,                   // y_min
