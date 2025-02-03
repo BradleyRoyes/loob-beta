@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ValidationResult } from '@/types/dataset';
 import dynamic from 'next/dynamic';
 import './StickDashboard.css';
 
@@ -9,10 +8,23 @@ interface StickDashboardProps {
   onClose: () => void;
 }
 
+interface DatasetStats {
+  totalImages: number;
+  totalLabels: number;
+  imageResolutions: string[];
+  averageFileSize: number;
+}
+
+interface ValidationResult {
+  isValid: boolean;
+  stats: DatasetStats;
+  errors: ValidationError[];
+}
+
 interface ValidationError {
   type: 'error' | 'warning';
   message: string;
-  details?: any;
+  details?: string;
   code?: string;
 }
 
@@ -42,7 +54,7 @@ const MinimalIcons = {
 
 type Tab = 'capture' | 'train' | 'test';
 
-// Dynamically import components to avoid circular dependencies
+// Dynamically import components
 const ModelTrainer = dynamic(() => import('./ModelTrainer'), {
   loading: () => <div>Loading trainer...</div>,
   ssr: false
@@ -62,22 +74,20 @@ const StickDashboard: React.FC<StickDashboardProps> = ({ onClose }) => {
   const [activeTab, setActiveTab] = useState<Tab>('capture');
   const [datasetInfo, setDatasetInfo] = useState<ValidationResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showDebug, setShowDebug] = useState(false);
   const [captureStatus, setCaptureStatus] = useState<'idle' | 'recording' | 'processing'>('idle');
 
   const checkDataset = async () => {
     try {
-      console.log('Fetching dataset validation...');
+      console.log('Checking dataset in public/dataset...');
       const response = await fetch('/api/dataset/validate');
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      console.log('Validation response:', data);
+      console.log('Dataset validation:', data);
       setDatasetInfo(data);
     } catch (error) {
       console.error('Dataset validation error:', error);
-      const safeError = error instanceof Error ? error : new Error(String(error));
       setDatasetInfo({
         isValid: false,
         stats: {
@@ -88,8 +98,8 @@ const StickDashboard: React.FC<StickDashboardProps> = ({ onClose }) => {
         },
         errors: [{
           type: 'error',
-          message: safeError.message,
-          code: 'FETCH_ERROR'
+          message: error instanceof Error ? error.message : String(error),
+          code: 'VALIDATION_ERROR'
         }]
       });
     } finally {
@@ -97,12 +107,10 @@ const StickDashboard: React.FC<StickDashboardProps> = ({ onClose }) => {
     }
   };
 
-  // Use in useEffect
   useEffect(() => {
     checkDataset();
   }, []);
 
-  // Handle ESC key to close
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -115,133 +123,93 @@ const StickDashboard: React.FC<StickDashboardProps> = ({ onClose }) => {
     };
   }, [onClose]);
 
-  // Add status callback for DatasetCapture
   const handleCaptureStatus = (status: 'idle' | 'recording' | 'processing') => {
     setCaptureStatus(status);
+    if (status === 'idle') {
+      checkDataset();
+    }
   };
 
-  const renderDebugInfo = () => {
-    if (!datasetInfo?.debug) return null;
-    
-    return (
-      <div className="debug-info">
-        <h4>Debug Information</h4>
-        {datasetInfo.debug.paths && (
-          <div className="debug-section">
-            <h5>Paths:</h5>
-            <pre>{JSON.stringify(datasetInfo.debug.paths, null, 2)}</pre>
-          </div>
-        )}
-        {datasetInfo.debug.dirExists && (
-          <div className="debug-section">
-            <h5>Directory Status:</h5>
-            <pre>{JSON.stringify(datasetInfo.debug.dirExists, null, 2)}</pre>
-          </div>
-        )}
-        {datasetInfo.debug.error && (
-          <div className="debug-section">
-            <h5>Error Details:</h5>
-            <pre className="error">{JSON.stringify(datasetInfo.debug.error, null, 2)}</pre>
-          </div>
-        )}
-      </div>
-    );
+  const handleSaveComplete = () => {
+    checkDataset();
   };
 
   return (
-    <div className="stick-dashboard-overlay" onClick={(e) => {
-      if (e.target === e.currentTarget) onClose();
-    }}>
-      <div className="stick-dashboard">
-        <div className="dashboard-header">
-          <h2>Stick Tracking System</h2>
-          <button 
-            className="close-button"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            {MinimalIcons.close}
-          </button>
-        </div>
-        
-        <div className="dashboard-tabs">
-          <button 
-            className={`tab-button ${activeTab === 'capture' ? 'active' : ''}`}
-            onClick={() => setActiveTab('capture')}
-          >
-            {MinimalIcons.training}
-            <span>Capture</span>
-          </button>
-          <button 
-            className={`tab-button ${activeTab === 'train' ? 'active' : ''}`}
-            onClick={() => setActiveTab('train')}
-          >
-            {MinimalIcons.training}
-            <span>Train</span>
-          </button>
-          <button 
-            className={`tab-button ${activeTab === 'test' ? 'active' : ''}`}
-            onClick={() => setActiveTab('test')}
-          >
-            {MinimalIcons.test}
-            <span>Detect</span>
-          </button>
+    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-start justify-center overflow-y-auto p-4">
+      <div className="bg-gray-900 rounded-lg shadow-xl w-full max-w-6xl my-4">
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-gray-900 border-b border-gray-800">
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setActiveTab('capture')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                  activeTab === 'capture' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                {MinimalIcons.training} Capture
+              </button>
+              <button
+                onClick={() => setActiveTab('train')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                  activeTab === 'train' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                }`}
+                disabled={!datasetInfo?.isValid}
+              >
+                {MinimalIcons.prediction} Train
+              </button>
+              <button
+                onClick={() => setActiveTab('test')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                  activeTab === 'test' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                {MinimalIcons.test} Test
+              </button>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+            >
+              {MinimalIcons.close}
+            </button>
+          </div>
         </div>
 
-        <div className="dashboard-content">
-          {isLoading ? (
-            <div className="loading-state">
-              <div className="training-progress">
-                <div className="progress-bar" style={{ width: '100%' }}>
-                  <div className="progress-glow" />
-                </div>
-              </div>
-              Validating dataset...
-            </div>
-          ) : (
-            <>
-              {datasetInfo && !datasetInfo.isValid ? (
-                <div className="error-message">
-                  <h4>Dataset Validation Failed</h4>
-                  {datasetInfo.errors.map((error, index) => (
-                    <div key={index} className={`validation-error ${error.type}`}>
-                      <p className="error-message">
-                        <strong>[{error.code}]</strong> {error.message}
+        {/* Content Area */}
+        <div className="p-4">
+          {activeTab === 'capture' && (
+            <DatasetCapture 
+              onStatusChange={handleCaptureStatus}
+              onSaveComplete={handleSaveComplete}
+            />
+          )}
+          {activeTab === 'train' && datasetInfo?.isValid && (
+            <ModelTrainer />
+          )}
+          {activeTab === 'test' && (
+            <ModelTester />
+          )}
+
+          {/* Dataset Status */}
+          {datasetInfo && (
+            <div className="mt-4 p-4 rounded-lg bg-gray-800/50">
+              <h3 className="text-sm font-semibold mb-2">Dataset Status</h3>
+              <div className="space-y-1 text-sm">
+                <p>Total Images: {datasetInfo.stats.totalImages}</p>
+                <p>Total Labels: {datasetInfo.stats.totalLabels}</p>
+                {datasetInfo.errors.length > 0 && (
+                  <div className="text-red-400 mt-2">
+                    {datasetInfo.errors.map((error, i) => (
+                      <p key={i}>
+                        {error.message}
+                        {error.details && `: ${error.details}`}
                       </p>
-                      {error.details && (
-                        <pre className="error-details">
-                          {JSON.stringify(error.details, null, 2)}
-                        </pre>
-                      )}
-                    </div>
-                  ))}
-                  <button 
-                    className="debug-toggle"
-                    onClick={() => setShowDebug(!showDebug)}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                    </svg>
-                    <span>{showDebug ? 'Hide Debug Info' : 'Show Debug Info'}</span>
-                  </button>
-                  {showDebug && renderDebugInfo()}
-                </div>
-              ) : (
-                <>
-                  {activeTab === 'capture' && (
-                    <DatasetCapture 
-                      onStatusChange={handleCaptureStatus}
-                      onSaveComplete={() => {
-                        // Refresh dataset validation
-                        checkDataset();
-                      }}
-                    />
-                  )}
-                  {activeTab === 'train' && <ModelTrainer />}
-                  {activeTab === 'test' && <ModelTester />}
-                </>
-              )}
-            </>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
       </div>

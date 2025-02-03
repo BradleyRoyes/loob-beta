@@ -9,6 +9,12 @@ interface AudioRecorderProps {
   className?: string;
 }
 
+// Constants for audio chunking
+const CHUNK_DURATION = 30000; // 30 seconds per chunk
+const MAX_RECORDING_DURATION = 300000; // 5 minutes
+const CHUNK_INTERVAL = 1000; // Get data every second
+const CHUNK_SIZE = 1024 * 16; // 16KB chunks for better memory management
+
 /**
  * AudioRecorder Component
  * A mobile-friendly audio recording component with visual feedback
@@ -38,16 +44,49 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
 
   const [permissionState, setPermissionState] = useState<PermissionState>('prompt');
 
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const recordingStartTimeRef = useRef<number | null>(null);
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const currentChunkStartTime = useRef<number>(0);
+  const chunkIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const isMobile = () => {
+    return /iPhone|iPad|iPod|Android|Mobile|webOS/i.test(navigator.userAgent);
+  };
+
+  /**
+   * Function to format duration as MM:SS
+   */
+  const formatDuration = (ms: number) => {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
   /**
    * Safely cleans up all audio resources and resets state
    * Called during component unmount and after recording stops
    */
   const cleanupRecording = () => {
     try {
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+        recordingIntervalRef.current = null;
+      }
+
+      if (chunkIntervalRef.current) {
+        clearInterval(chunkIntervalRef.current);
+        chunkIntervalRef.current = null;
+      }
+
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => {
           try {
             track.stop();
+            if (isMobile()) {
+              track.enabled = false;
+            }
           } catch (e) {
             console.warn('Error stopping track:', e);
           }
@@ -55,19 +94,30 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
         streamRef.current = null;
       }
 
+      if (analyserRef.current) {
+        try {
+          analyserRef.current.disconnect();
+          analyserRef.current = null;
+        } catch (e) {
+          console.warn('Error disconnecting analyser:', e);
+        }
+      }
+
       if (mediaRecorderRef.current) {
         try {
           mediaRecorderRef.current.stop();
+          mediaRecorderRef.current = null;
         } catch (e) {
-          // This error is expected if already stopped
           console.debug('MediaRecorder was already stopped');
         }
-        mediaRecorderRef.current = null;
       }
 
       setIsRecording(false);
       setAudioLevel(0);
       setError(null);
+      setRecordingDuration(0);
+      recordingStartTimeRef.current = null;
+      currentChunkStartTime.current = 0;
     } catch (e) {
       console.error('Error during cleanup:', e);
     }
@@ -81,20 +131,42 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
     try {
       const analyser = audioContext.createAnalyser();
       const microphone = audioContext.createMediaStreamSource(stream);
-      const scriptProcessor = audioContext.createScriptProcessor(2048, 1, 1);
+      
+      // Create scriptProcessor with appropriate settings for device type
+      const scriptProcessor = audioContext.createScriptProcessor(
+        isMobile() ? 1024 : 2048,  // Buffer size
+        1,  // Number of input channels
+        1   // Number of output channels
+      );
 
-      // Optimized settings for mobile performance
-      analyser.smoothingTimeConstant = 0.3;
-      analyser.fftSize = 512;
+      // Configure analyser based on device type
+      if (isMobile()) {
+        analyser.fftSize = 256; // Reduced for mobile
+        analyser.smoothingTimeConstant = 0.8;
+      } else {
+        analyser.fftSize = 512; // Original desktop setting
+        analyser.smoothingTimeConstant = 0.3;
+      }
 
       microphone.connect(analyser);
       analyser.connect(scriptProcessor);
       scriptProcessor.connect(audioContext.destination);
 
+      // Throttle updates only on mobile
+      let lastUpdate = 0;
+      const updateInterval = isMobile() ? 100 : 0; // No throttle on desktop
+
       scriptProcessor.onaudioprocess = () => {
+        if (isMobile()) {
+          const now = Date.now();
+          if (now - lastUpdate < updateInterval) return;
+          lastUpdate = now;
+        }
+
         const array = new Uint8Array(analyser.frequencyBinCount);
         analyser.getByteFrequencyData(array);
         const volume = array.reduce((a, b) => a + b, 0) / array.length;
+        
         requestAnimationFrame(() => setAudioLevel(volume));
       };
 
@@ -116,15 +188,33 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
   };
 
   const getSupportedMimeType = (): string | null => {
-    const mimeTypes = [
-      'audio/webm;codecs=opus',
-      'audio/webm',
+    // Keep original desktop priority for non-mobile
+    if (!isMobile()) {
+      const desktopMimeTypes = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4',
+        'audio/aac',
+        'audio/wav'
+      ];
+      return desktopMimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || null;
+    }
+
+    // Mobile-optimized formats
+    const mobileMimeTypes = [
       'audio/mp4',
       'audio/aac',
+      'audio/webm;codecs=opus',
+      'audio/webm',
       'audio/wav'
     ];
     
-    return mimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || null;
+    // Special case for iOS
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+      return 'audio/mp4';
+    }
+    
+    return mobileMimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || null;
   };
 
   useEffect(() => {
@@ -225,10 +315,30 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
+          ...(isMobile() && {
+            channelCount: 1,
+            sampleRate: 44100,
+          })
         }
       });
       
       streamRef.current = stream;
+      recordingStartTimeRef.current = Date.now();
+      currentChunkStartTime.current = Date.now();
+
+      // Start duration tracking
+      recordingIntervalRef.current = setInterval(() => {
+        if (recordingStartTimeRef.current) {
+          const duration = Date.now() - recordingStartTimeRef.current;
+          setRecordingDuration(duration);
+
+          // Check if we've exceeded max duration
+          if (duration >= MAX_RECORDING_DURATION) {
+            handleStopRecording();
+            return;
+          }
+        }
+      }, 100);
 
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioContext) {
@@ -244,13 +354,18 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       const cleanup = analyzeAudio(audioContext, stream);
 
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType
+        mimeType: mimeType || 'audio/webm',
+        ...(isMobile() && {
+          audioBitsPerSecond: 128000,
+        })
       });
 
       chunksRef.current = [];
       
       mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
+        if (e.data.size > 0) {
+          chunksRef.current.push(e.data);
+        }
       };
 
       mediaRecorder.onerror = (event) => {
@@ -265,13 +380,23 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
           setError('No audio data was captured');
           return;
         }
-        const audioBlob = new Blob(chunksRef.current, { type: mimeType });
+
+        // Combine all chunks into a single blob
+        const audioBlob = new Blob(chunksRef.current, { type: mediaRecorder.mimeType });
         onRecordingComplete(audioBlob);
         cleanupRecording();
       };
 
       mediaRecorderRef.current = mediaRecorder;
-      mediaRecorder.start(100);
+      mediaRecorder.start();
+
+      // Set up regular data requests
+      chunkIntervalRef.current = setInterval(() => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+          mediaRecorderRef.current.requestData();
+        }
+      }, CHUNK_INTERVAL);
+
       setIsRecording(true);
       startRecording();
 
@@ -364,6 +489,11 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       >
         <div className={styles.microphoneIcon}>
           {isRecording ? <StopIcon /> : <MicIcon />}
+          {isRecording && (
+            <div className={styles.duration}>
+              {formatDuration(recordingDuration)}
+            </div>
+          )}
           <div className={styles.rippleContainer}>
             {isRecording && Array.from({ length: Math.min(5, Math.ceil(audioLevel / 25)) }).map((_, i) => (
               <div

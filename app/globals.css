@@ -70,11 +70,38 @@ textarea {
 }
 
 input:focus,
-textarea:focus {
-  border: 2px solid transparent;
-  box-shadow: 0 0 0 2px linear-gradient(to right, #d5d5d5, #dedede) border-box;
+textarea:focus,
+select:focus {
+  outline: none !important;
+  border-color: transparent !important;
+  box-shadow: 0 0 0 2px transparent !important;
+  background-image: linear-gradient(to right, #FFB3BA, #FFDAB9) !important;
+  background-origin: border-box !important;
+  background-clip: padding-box, border-box !important;
 }
 
+/* Remove default tap highlight color */
+input,
+textarea,
+select,
+button {
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Add a custom focus ring for accessibility */
+@supports selector(:focus-visible) {
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: none !important;
+    border: double 2px transparent !important;
+    border-radius: 8px !important;
+    background-image: linear-gradient(#222, #222), 
+                     linear-gradient(to right, #FFB3BA, #FFDAB9) !important;
+    background-origin: border-box !important;
+    background-clip: padding-box, border-box !important;
+  }
+}
 
 /* Headers and Containers */
 .header-container {

@@ -26,14 +26,14 @@ export async function POST(req: Request) {
     // Prepare the message document
     const messageData = {
       _id: uuidv4(),
-      sessionId: userId,
+      userId,  // Store userId explicitly
+      sessionId: userId, // Keep sessionId for backward compatibility
       role: "user",
       content,
       length: content.length,
       createdAt: new Date(timestamp),
-      type: "daily_dump",
+      type: "daily_dump", // Explicitly mark as daily dump
       pseudonym,
-      // Save embedding as $vector like in populateMemory.ts
       $vector: embeddingResponse.data[0].embedding,
       analysis: {
         mood: null,
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
 
     // Check for duplicate content
     const existingMessage = await messagesCollection.findOne({ 
-      sessionId: userId,
+      userId,
       content,
       type: "daily_dump"
     });
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
 
     // Save to database
     await messagesCollection.insertOne(messageData);
-    console.log(`Saved daily dump to DB (sessionId: ${userId})`);
+    console.log(`Saved daily dump to DB (userId: ${userId})`);
     
     return NextResponse.json({ 
       success: true,
@@ -93,16 +93,25 @@ export async function GET(req: Request) {
     }
 
     const messagesCollection = await astraDb.collection("messages");
-    const dumps = await messagesCollection
-      .find({
-        sessionId: userId,
-        type: "daily_dump"
-      })
-      .sort({ createdAt: -1 })
-      .toArray();
+    
+    // Use find to get all matching documents
+    const cursor = messagesCollection.find({
+      $and: [
+        { userId }, // Match the specific userId
+        { type: "daily_dump" } // Only get daily dumps
+      ]
+    });
+
+    // Get all documents and sort in memory
+    const dumps = await cursor.toArray();
+    const sortedDumps = dumps.sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return dateB - dateA; // Sort in descending order
+    });
 
     // Format the dumps for display
-    const formattedDumps = dumps.map(dump => ({
+    const formattedDumps = sortedDumps.map(dump => ({
       id: dump._id,
       content: dump.content,
       createdAt: dump.createdAt,

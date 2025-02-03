@@ -49,6 +49,7 @@ interface MapNode extends Node {
 const DEFAULT_LOCATION: [number, number] = [13.405, 52.52];
 const MAP_PITCH = 75;
 const INITIAL_ZOOM = 16;
+const LOCATION_TIMEOUT = 15000; // 15 seconds timeout
 
 interface LocationError {
   type: "permission" | "unavailable" | "timeout";
@@ -147,6 +148,7 @@ const Map: React.FC = () => {
   const [mapPitch, setMapPitch] = useState(0);
   const [locationError, setLocationError] = useState<LocationError | null>(null);
   const [deviceOrientation, setDeviceOrientation] = useState<number>(0);
+  const [isLocating, setIsLocating] = useState(false);
 
   const { location, accuracy, heading, error: geoError } = useGeolocation(
     mapInstanceRef.current,
@@ -227,85 +229,138 @@ const Map: React.FC = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const requestLocationPermission = async (): Promise<boolean> => {
+    // Handle iOS Safari specifically
+    if (typeof navigator.permissions === 'undefined') {
+      return new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          () => resolve(true),
+          () => resolve(false),
+          { timeout: 3000 }
+        );
+      });
+    }
+
+    try {
+      const permission = await navigator.permissions.query({ name: 'geolocation' });
+      return permission.state === 'granted';
+    } catch (e) {
+      console.warn('Permissions API not supported, falling back to geolocation check');
+      return new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          () => resolve(true),
+          () => resolve(false),
+          { timeout: 3000 }
+        );
+      });
+    }
+  };
+
   const startWatchingLocation = useCallback(
     async (map: maplibregl.Map) => {
+      setIsLocating(true);
       if (!navigator.geolocation) {
-        console.warn("Geolocation is not supported by this browser");
+        setLocationError({
+          type: 'unavailable',
+          message: 'Geolocation is not supported by your browser'
+        });
+        setIsLocating(false);
         return;
       }
 
-      const permissionState = await checkPermission("geolocation");
-      setLocationPermissionState(permissionState);
-      if (permissionState === "denied") {
-        return;
-      }
+      try {
+        // First try to get permission
+        const hasPermission = await requestLocationPermission();
+        if (!hasPermission) {
+          setLocationError({
+            type: 'permission',
+            message: 'Location access was denied. Please enable it in your settings.'
+          });
+          setIsLocating(false);
+          return;
+        }
 
-      let hasRequestedPermission = false;
-      const options = {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 1000,
-      };
+        // Get initial position with timeout
+        const initialPosition = await new Promise<GeolocationPosition>((resolve, reject) => {
+          const timeoutId = setTimeout(() => {
+            reject(new Error('Location request timed out'));
+          }, LOCATION_TIMEOUT);
 
-      const handleSuccess = ({ coords }: GeolocationPosition) => {
-        const { longitude, latitude, heading, accuracy } = coords;
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              clearTimeout(timeoutId);
+              resolve(position);
+            },
+            (error) => {
+              clearTimeout(timeoutId);
+              reject(error);
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: LOCATION_TIMEOUT,
+              maximumAge: 0
+            }
+          );
+        });
+
+        // Handle initial position
+        const { longitude, latitude } = initialPosition.coords;
         const newPosition: [number, number] = [longitude, latitude];
         setCurrentLocation(newPosition);
+        
+        // Fly to initial position
+        map.flyTo({
+          center: newPosition,
+          zoom: INITIAL_ZOOM,
+          duration: 1000
+        });
 
+        // Update markers
         if (userMarkerRef.current) {
           userMarkerRef.current.setLngLat(newPosition);
         }
         if (pulsingMarkerRef.current) {
           pulsingMarkerRef.current.setLngLat(newPosition);
         }
-      };
 
-      const handleError = (error: GeolocationPositionError) => {
-        let locError: LocationError;
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            locError = {
-              type: "permission",
-              message:
-                "Location access was denied. You can enable it in your settings.",
-            };
-            break;
-          case error.POSITION_UNAVAILABLE:
-            locError = {
-              type: "unavailable",
-              message:
-                "Location information is unavailable. Please check your device settings.",
-            };
-            break;
-          case error.TIMEOUT:
-            locError = {
-              type: "timeout",
-              message: "Location request timed out. Please try again.",
-            };
-            break;
-          default:
-            locError = {
-              type: "unavailable",
-              message: "An unknown error occurred while getting location.",
-            };
-        }
+        // Start watching position
+        watchIdRef.current = navigator.geolocation.watchPosition(
+          ({ coords }) => {
+            const { longitude, latitude } = coords;
+            const newPosition: [number, number] = [longitude, latitude];
+            setCurrentLocation(newPosition);
 
-        if (!hasRequestedPermission) {
-          setLocationError(locError);
-          hasRequestedPermission = true;
-        }
+            if (userMarkerRef.current) {
+              userMarkerRef.current.setLngLat(newPosition);
+            }
+            if (pulsingMarkerRef.current) {
+              pulsingMarkerRef.current.setLngLat(newPosition);
+            }
+          },
+          (error) => {
+            console.error('Watch position error:', error);
+            if (error.code === error.PERMISSION_DENIED) {
+              setLocationError({
+                type: 'permission',
+                message: 'Location access was denied. Please enable it in your settings.'
+              });
+            }
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 1000
+          }
+        );
 
-        if (error.code === error.PERMISSION_DENIED && watchIdRef.current) {
-          navigator.geolocation.clearWatch(watchIdRef.current);
-          watchIdRef.current = null;
-        }
-      };
-
-      watchIdRef.current = navigator.geolocation.watchPosition(
-        handleSuccess,
-        handleError,
-        options
-      );
+      } catch (error: any) {
+        console.error('Location error:', error);
+        setLocationError({
+          type: error.code === 1 ? 'permission' : 'unavailable',
+          message: error.message || 'Unable to get your location'
+        });
+        setIsLocating(false);
+      }
     },
     []
   );
@@ -589,22 +644,47 @@ const Map: React.FC = () => {
         </div>
       )}
 
-      {window.innerWidth < 768 && !currentLocation && (
+      {!currentLocation && (
         <div style={mobileOverlayStyle}>
-          <button
-            onClick={() => {
-              if (mapInstanceRef.current) {
-                startWatchingLocation(mapInstanceRef.current);
-              }
-            }}
-            style={{
-              padding: "12px 24px",
-              fontSize: "1rem",
-              borderRadius: "4px",
-            }}
-          >
-            Enable Location
-          </button>
+          <div style={{ 
+            backgroundColor: 'rgba(0,0,0,0.8)', 
+            padding: '20px', 
+            borderRadius: '12px',
+            textAlign: 'center' 
+          }}>
+            {isLocating ? (
+              <div>
+                <div className="location-spinner" />
+                <p style={{ color: 'white', marginTop: '10px' }}>
+                  Getting your location...
+                </p>
+              </div>
+            ) : (
+              <>
+                <p style={{ marginBottom: '15px', color: 'white' }}>
+                  Please enable location services to use the map
+                </p>
+                <button
+                  onClick={() => {
+                    if (mapInstanceRef.current) {
+                      startWatchingLocation(mapInstanceRef.current);
+                    }
+                  }}
+                  style={{
+                    padding: '12px 24px',
+                    fontSize: '1rem',
+                    borderRadius: '8px',
+                    backgroundColor: '#FFB3BA',
+                    border: 'none',
+                    color: '#333',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  Enable Location
+                </button>
+              </>
+            )}
+          </div>
         </div>
       )}
 

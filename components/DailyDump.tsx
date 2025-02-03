@@ -16,10 +16,13 @@ const DailyDump: React.FC<DailyDumpProps> = ({ onClose }) => {
   const [dumpText, setDumpText] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   // Handle audio recording completion
   const handleAudioUpload = async (audioBlob: Blob) => {
     setIsProcessing(true);
+    setError(null);
     const formData = new FormData();
     formData.append("audio", audioBlob, "audio.webm");
 
@@ -35,6 +38,7 @@ const DailyDump: React.FC<DailyDumpProps> = ({ onClose }) => {
       setDumpText(prev => prev + " " + data.transcription);
     } catch (error) {
       console.error("Error uploading audio:", error);
+      setError("Failed to process audio. Please try again or type your thoughts instead.");
     } finally {
       setIsProcessing(false);
     }
@@ -42,9 +46,20 @@ const DailyDump: React.FC<DailyDumpProps> = ({ onClose }) => {
 
   // Handle saving the dump
   const handleSave = async () => {
-    if (!dumpText.trim() || !userId) return;
+    if (!dumpText.trim()) {
+      setError("Please enter some text before saving.");
+      return;
+    }
+    
+    if (!userId) {
+      setError("You must be logged in to save your thoughts.");
+      return;
+    }
     
     setIsSaving(true);
+    setError(null);
+    setSaveSuccess(false);
+    
     try {
       const response = await fetch("/api/daily-dumps", {
         method: "POST",
@@ -52,25 +67,44 @@ const DailyDump: React.FC<DailyDumpProps> = ({ onClose }) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          content: dumpText,
+          content: dumpText.trim(),
           timestamp: new Date().toISOString(),
           userId,
-          pseudonym
+          pseudonym,
+          metadata: {
+            source: "daily_dump",
+            version: "1.0",
+            hasEmbedding: true
+          }
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to save dump");
+        throw new Error(data.error || "Failed to save dump");
       }
+
+      // Show success message and clear the form
+      setSaveSuccess(true);
+      setDumpText("");
       
-      onClose();
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSaveSuccess(false);
+      }, 3000);
+      
     } catch (error) {
       console.error("Error saving dump:", error);
+      setError(error instanceof Error ? error.message : "Failed to save your thoughts. Please try again.");
     } finally {
       setIsSaving(false);
     }
   };
+
+  if (showArchive) {
+    return <DailyDumpArchive onClose={() => setShowArchive(false)} />;
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -95,12 +129,29 @@ const DailyDump: React.FC<DailyDumpProps> = ({ onClose }) => {
           </div>
         </div>
 
+        {/* Status Messages */}
+        {error && (
+          <div className="text-center text-red-400 bg-red-900/20 p-3 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        {saveSuccess && (
+          <div className="text-center text-green-400 bg-green-900/20 p-3 rounded-lg flex flex-col gap-2">
+            <div>Successfully saved your thoughts!</div>
+            <div className="text-sm text-green-300">
+              Feel free to record another thought or check your archive.
+            </div>
+          </div>
+        )}
+
         {/* Audio Recording Section */}
         <div className="flex justify-center py-4">
           <AudioRecorder
             onRecordingComplete={handleAudioUpload}
             startRecording={() => {
               setIsRecording(true);
+              setError(null);
             }}
             stopRecording={() => {
               setIsRecording(false);
@@ -109,7 +160,7 @@ const DailyDump: React.FC<DailyDumpProps> = ({ onClose }) => {
           />
         </div>
 
-        {/* Status Messages */}
+        {/* Processing Message */}
         {isProcessing && (
           <div className="text-center text-blue-400">
             Processing your audio...
@@ -124,11 +175,20 @@ const DailyDump: React.FC<DailyDumpProps> = ({ onClose }) => {
           <textarea
             id="dumpText"
             value={dumpText}
-            onChange={(e) => setDumpText(e.target.value)}
+            onChange={(e) => {
+              setDumpText(e.target.value);
+              setError(null);
+              setSaveSuccess(false);
+            }}
             className="w-full h-48 px-3 py-2 text-gray-200 bg-gray-800 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
             placeholder="Start typing or record your thoughts..."
             disabled={isProcessing}
           />
+        </div>
+
+        {/* Character Count */}
+        <div className="text-right text-sm text-gray-400">
+          {dumpText.length} characters
         </div>
 
         {/* Save Button */}
@@ -145,10 +205,6 @@ const DailyDump: React.FC<DailyDumpProps> = ({ onClose }) => {
             {isSaving ? "Saving..." : "Save Dump"}
           </button>
         </div>
-
-        {showArchive && (
-          <DailyDumpArchive onClose={() => setShowArchive(false)} />
-        )}
       </div>
     </div>
   );

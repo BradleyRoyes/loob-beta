@@ -29,9 +29,11 @@ export async function POST(request: Request) {
           const buffer = Buffer.from(await file.arrayBuffer());
           const isImage = name === 'images';
           const dir = isImage ? imagesDir : labelsDir;
+          
           const filename = file instanceof File ? file.name : `${Date.now()}.${isImage ? 'jpg' : 'txt'}`;
           const filePath = path.join(dir, filename);
           
+          // Write file
           await writeFile(filePath, buffer);
           
           return {
@@ -58,11 +60,11 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { 
         status: 'error', 
-        message: error.message,
-        error: {
+        message: error instanceof Error ? error.message : String(error),
+        error: error instanceof Error ? {
           name: error.name,
           stack: error.stack
-        }
+        } : undefined
       },
       { status: 500 }
     );

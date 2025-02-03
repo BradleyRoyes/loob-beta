@@ -70,7 +70,12 @@
 }
 
 .splashScreen .pseudonymInput:focus {
-  border-color: #ffb48f !important;
+  outline: none !important;
+  border-color: transparent !important;
+  box-shadow: 0 0 0 2px transparent !important;
+  background-image: linear-gradient(to right, #FFB3BA, #FFDAB9) !important;
+  background-origin: border-box !important;
+  background-clip: padding-box, border-box !important;
 }
 
 .splashScreen .pseudonymInput::placeholder {
@@ -193,11 +198,18 @@
   justify-content: center;
   align-items: center;
   margin-bottom: 2rem;
+  width: 100%;
 }
 
 .introLogo {
-  width: 80px;
-  height: 80px;
+  width: clamp(48px, 10vw, 64px) !important;
+  height: clamp(48px, 10vw, 64px) !important;
+  object-fit: contain;
+  max-width: 64px !important;
+  max-height: 64px !important;
+  filter: brightness(0.9);
+  transform-origin: center center;
+  animation: zoomInLogo 2.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 .content.intro {
@@ -359,6 +371,12 @@
   .splashScreen button {
     transition: none;
   }
+
+  .introLogo {
+    animation: none;
+    opacity: 0.9;
+    transform: scale(1) !important;
+  }
 }
 
 /* Optimize touch targets */
@@ -386,6 +404,13 @@
   .superSubtitle {
     font-size: 1rem !important;
   }
+
+  .introLogo {
+    width: clamp(40px, 8vw, 56px) !important;
+    height: clamp(40px, 8vw, 56px) !important;
+    max-width: 56px !important;
+    max-height: 56px !important;
+  }
 }
 
 @media (max-width: 480px) {
@@ -409,6 +434,13 @@
   .inputContainer {
     max-width: 280px;
   }
+
+  .introLogo {
+    width: clamp(32px, 7vw, 48px) !important;
+    height: clamp(32px, 7vw, 48px) !important;
+    max-width: 48px !important;
+    max-height: 48px !important;
+  }
 }
 
 /* Update Input Styling */
@@ -420,8 +452,12 @@
 }
 
 .pseudonymInput:focus {
-  border-color: rgba(255, 180, 143, 0.6) !important;
-  box-shadow: 0 0 10px rgba(255, 180, 143, 0.2);
+  outline: none !important;
+  border-color: transparent !important;
+  box-shadow: 0 0 0 2px transparent !important;
+  background-image: linear-gradient(to right, #FFB3BA, #FFDAB9) !important;
+  background-origin: border-box !important;
+  background-clip: padding-box, border-box !important;
 }
 
 /* Update Button Styling */
@@ -455,15 +491,37 @@
   align-items: center;
   min-height: 100vh;
   width: 100%;
-}
-
-.introLogo {
-  opacity: 0.9;
-  filter: brightness(0.9);
+  padding: 1rem;
 }
 
 /* Closing Animation */
 .splashScreen.closing {
   background-color: black;
   transition: opacity 0.5s ease-out;
+}
+
+/* Remove default mobile tap highlight */
+.splashScreen input,
+.splashScreen button {
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Add at the top with other keyframes */
+@keyframes zoomInLogo {
+  0% {
+    transform: scale(0.05);
+    opacity: 0;
+  }
+  40% {
+    transform: scale(0.3);
+    opacity: 0.3;
+  }
+  70% {
+    transform: scale(0.7);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
 }

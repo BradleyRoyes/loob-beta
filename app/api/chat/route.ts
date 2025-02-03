@@ -58,10 +58,15 @@ async function saveMessageToDatabase(sessionId: string, content: string, role: s
     content,
     length: content.length,
     createdAt: new Date(),
+    type: 'chat_message',
     mood: analysis?.mood,
     keywords: analysis?.keywords,
-    drink: analysis?.drink,
-    joinCyberdelicSociety: analysis?.joinCyberdelicSociety,
+    analysis: analysis ? {
+      mood: analysis.mood,
+      keywords: analysis.keywords,
+      // Store other analysis fields that might be useful in the future
+      raw: analysis
+    } : null
   };
   await messagesCollection.insertOne(messageData);
   console.log(`Saved ${role} message to DB (sessionId: ${sessionId})`);
@@ -97,8 +102,10 @@ export async function POST(req: any) {
     console.log("Document context generated:", docContext);
 
     for (const message of messages) {
-      const analysis = message.role === "assistant" ? parseAnalysis(message.content) : null;
-      await saveMessageToDatabase(sessionId, message.content, message.role, analysis);
+      // Only save user messages
+      if (message.role === 'user') {
+        await saveMessageToDatabase(sessionId, message.content, message.role);
+      }
     }
     const systemPrompt = [
       {
@@ -205,7 +212,7 @@ export async function POST(req: any) {
             console.error("Error triggering Pusher event:", err);
           }
         }
-        await saveMessageToDatabase(sessionId, completion, "assistant", analysis);
+        await saveMessageToDatabase(sessionId, completion, "assistant");
       },
     });
 

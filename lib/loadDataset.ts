@@ -77,35 +77,58 @@ export async function loadDataset() {
             return res.text();
           });
 
-        // Remove any trailing % and clean up whitespace
-        const cleanContent = labelContent.replace(/%$/, '').trim();
-        const coordinates = cleanContent.split(/\s+/).map(Number);
+        // Split content into lines and process each line
+        const lines = labelContent.split('\n').filter(line => line.trim());
+        const allCoordinates: number[][] = [];
 
-        if (coordinates.length !== 5 || coordinates.some(isNaN)) {
+        for (const line of lines) {
+          // Remove any trailing % and clean up whitespace
+          const cleanLine = line.replace(/%$/, '').trim();
+          const coordinates = cleanLine.split(/\s+/).map(Number);
+
+          if (coordinates.length !== 5 || coordinates.some(isNaN)) {
+            throw new Error(
+              `Invalid label format in ${labelPath}\n` +
+              `Found: "${cleanLine}"\n` +
+              'Expected format: "class_id x y width height"\n' +
+              'Make sure:\n' +
+              '1. Each line contains exactly five numbers\n' +
+              '2. Numbers are separated by spaces\n' +
+              '3. Coordinates are normalized (0-1)\n' +
+              '4. No extra characters or whitespace'
+            );
+          }
+
+          // Validate coordinate ranges
+          const [classId, x, y, w, h] = coordinates;
+          if (x < 0 || x > 1 || y < 0 || y > 1 || w < 0 || w > 1 || h < 0 || h > 1) {
+            throw new Error(
+              `Invalid coordinates in ${labelPath}\n` +
+              `Found: class=${classId}, x=${x}, y=${y}, w=${w}, h=${h}\n` +
+              'All coordinates must be normalized (between 0 and 1)'
+            );
+          }
+
+          allCoordinates.push(coordinates);
+          console.log(`✅ Label verified: class=${classId}, x=${x}, y=${y}, w=${w}, h=${h}`);
+        }
+
+        // Verify we have exactly two balls (orange and white)
+        if (allCoordinates.length !== 2) {
           throw new Error(
-            `Invalid label format in ${labelPath}\n` +
-            `Found: "${cleanContent}"\n` +
-            'Expected format: "class_id x y width height"\n' +
-            'Make sure:\n' +
-            '1. File contains exactly five numbers\n' +
-            '2. Numbers are separated by spaces\n' +
-            '3. Coordinates are normalized (0-1)\n' +
-            '4. No extra characters or whitespace'
+            `Invalid number of labels in ${labelPath}\n` +
+            `Found ${allCoordinates.length} labels, expected 2 (orange and white ball)\n` +
+            'Make sure each file has exactly two lines:\n' +
+            '1. One line for orange ball (class_id = 0)\n' +
+            '2. One line for white ball (class_id = 1)'
           );
         }
 
-        // Validate coordinate ranges
-        const [classId, x, y, w, h] = coordinates;
-        if (x < 0 || x > 1 || y < 0 || y > 1 || w < 0 || w > 1 || h < 0 || h > 1) {
-          throw new Error(
-            `Invalid coordinates in ${labelPath}\n` +
-            `Found: class=${classId}, x=${x}, y=${y}, w=${w}, h=${h}\n` +
-            'All coordinates must be normalized (between 0 and 1)'
-          );
-        }
+        // Sort by class_id to ensure consistent order (orange first, then white)
+        allCoordinates.sort((a, b) => a[0] - b[0]);
+        labels.push(...allCoordinates);
 
-        labels.push(coordinates);
-        console.log(`✅ Label verified: class=${classId}, x=${x}, y=${y}, w=${w}, h=${h}`);
+        console.log(`✅ Labels verified: ${allCoordinates.length} balls found`);
 
       } catch (error) {
         console.error(`\n❌ Error processing ${imageFile}:`, error);
@@ -135,10 +158,8 @@ export async function loadDataset() {
     const ysTensor = tf.tensor2d(labels);
     console.log(`- Average X: ${ysTensor.slice([0, 1], [ysTensor.shape[0], 1]).mean().dataSync()[0].toFixed(3)}`);
     console.log(`- Average Y: ${ysTensor.slice([0, 2], [ysTensor.shape[0], 1]).mean().dataSync()[0].toFixed(3)}`);
-    console.log(`- X Range: [${ysTensor.slice([0, 1], [ysTensor.shape[0], 1]).min().dataSync()[0].toFixed(3)}, 
-                   ${ysTensor.slice([0, 1], [ysTensor.shape[0], 1]).max().dataSync()[0].toFixed(3)}]`);
-    console.log(`- Y Range: [${ysTensor.slice([0, 2], [ysTensor.shape[0], 1]).min().dataSync()[0].toFixed(3)}, 
-                   ${ysTensor.slice([0, 2], [ysTensor.shape[0], 1]).max().dataSync()[0].toFixed(3)}]`);
+    console.log(`- X Range: [${ysTensor.slice([0, 1], [ysTensor.shape[0], 1]).min().dataSync()[0].toFixed(3)}, ${ysTensor.slice([0, 1], [ysTensor.shape[0], 1]).max().dataSync()[0].toFixed(3)}]`);
+    console.log(`- Y Range: [${ysTensor.slice([0, 2], [ysTensor.shape[0], 1]).min().dataSync()[0].toFixed(3)}, ${ysTensor.slice([0, 2], [ysTensor.shape[0], 1]).max().dataSync()[0].toFixed(3)}]`);
     ysTensor.dispose();
 
     return { images, labels };
@@ -164,4 +185,4 @@ export async function loadDataset() {
     console.error('   - Example: "0 0.5 0.5 0.1 0.2"');
     throw error;
   }
-} 
+}
