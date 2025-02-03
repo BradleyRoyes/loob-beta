@@ -8,6 +8,7 @@ import LoobricateAdminPanel from './LoobricateAdminPanel';
 import { useGlobalState, type Loobricate } from './GlobalStateContext';
 import DailyDump from './DailyDump';
 import type { LoobricateData } from '../types/loobricate';
+import DailyQuest from './DailyQuest';
 
 const Profile: React.FC = () => {
   const { 
@@ -31,6 +32,7 @@ const Profile: React.FC = () => {
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [showDailyDump, setShowDailyDump] = useState(false);
+  const [showDailyQuest, setShowDailyQuest] = useState(false);
   const [showLoobricateProfile, setShowLoobricateProfile] = useState(false);
   const [currentLoobricateId, setCurrentLoobricateId] = useState<string | null>(null);
   const [loadingState, setLoadingState] = useState<'idle' | 'loading' | 'error' | 'success'>('idle');
@@ -259,12 +261,12 @@ const Profile: React.FC = () => {
 
             <button 
               className="daily-quest-button"
-              onClick={handlePlaceholderClick}
+              onClick={() => setShowDailyQuest(true)}
             >
               Daily Quest
             </button>
             <p className="helper-text">
-              Get personalized daily quests based on your interests.
+              Receive a mystical quest based on your journey so far.
             </p>
           </div>
 
@@ -389,6 +391,10 @@ const Profile: React.FC = () => {
 
       {showDailyDump && (
         <DailyDump onClose={() => setShowDailyDump(false)} />
+      )}
+
+      {showDailyQuest && (
+        <DailyQuest onClose={() => setShowDailyQuest(false)} />
       )}
     </div>
   );

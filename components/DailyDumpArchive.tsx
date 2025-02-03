@@ -123,10 +123,10 @@ const DailyDumpArchive: React.FC<DailyDumpArchiveProps> = ({ onClose }) => {
           {dates.length > 0 && (
             <button
               onClick={() => setSelectedDate(null)}
-              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
+              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all ${
                 !selectedDate
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  ? 'bg-gradient-to-r from-pink-200 via-purple-200 to-blue-200 text-gray-800'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gradient-to-r hover:from-pink-200/30 hover:via-purple-200/30 hover:to-blue-200/30'
               }`}
             >
               All Dates
@@ -136,10 +136,10 @@ const DailyDumpArchive: React.FC<DailyDumpArchiveProps> = ({ onClose }) => {
             <button
               key={date}
               onClick={() => setSelectedDate(date)}
-              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
+              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all ${
                 selectedDate === date
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  ? 'bg-gradient-to-r from-pink-200 via-purple-200 to-blue-200 text-gray-800'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gradient-to-r hover:from-pink-200/30 hover:via-purple-200/30 hover:to-blue-200/30'
               }`}
             >
               {date}

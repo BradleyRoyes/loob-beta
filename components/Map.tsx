@@ -56,6 +56,29 @@ interface LocationError {
   message: string;
 }
 
+interface LocationState {
+  status: 'idle' | 'requesting' | 'watching' | 'error';
+  error?: LocationError;
+  retryCount: number;
+  lastUpdate?: number;
+}
+
+const LOCATION_CONFIG = {
+  TIMEOUT: 15000,
+  MAX_RETRIES: 3,
+  RETRY_DELAY: 2000,
+  HIGH_ACCURACY: {
+    enableHighAccuracy: true,
+    timeout: 15000,
+    maximumAge: 0,
+  },
+  LOW_ACCURACY: {
+    enableHighAccuracy: false,
+    timeout: 10000,
+    maximumAge: 30000,
+  },
+};
+
 const MAP_STYLE: maplibregl.StyleSpecification = {
   version: 8,
   sources: {
@@ -149,6 +172,10 @@ const Map: React.FC = () => {
   const [locationError, setLocationError] = useState<LocationError | null>(null);
   const [deviceOrientation, setDeviceOrientation] = useState<number>(0);
   const [isLocating, setIsLocating] = useState(false);
+  const [locationState, setLocationState] = useState<LocationState>({
+    status: 'idle',
+    retryCount: 0,
+  });
 
   const { location, accuracy, heading, error: geoError } = useGeolocation(
     mapInstanceRef.current,
@@ -256,114 +283,181 @@ const Map: React.FC = () => {
     }
   };
 
+  const getLocationWithRetry = useCallback(async (
+    options: PositionOptions,
+    retryCount = 0
+  ): Promise<GeolocationPosition> => {
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+          reject(new Error('Location request timed out'));
+        }, options.timeout || LOCATION_CONFIG.TIMEOUT);
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            clearTimeout(timeoutId);
+            resolve(position);
+          },
+          (error) => {
+            clearTimeout(timeoutId);
+            reject(error);
+          },
+          options
+        );
+      });
+
+      return position;
+    } catch (error) {
+      if (retryCount < LOCATION_CONFIG.MAX_RETRIES) {
+        // Exponential backoff
+        const delay = LOCATION_CONFIG.RETRY_DELAY * Math.pow(2, retryCount);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
+        // If high accuracy failed, try with low accuracy
+        const nextOptions = options.enableHighAccuracy ? 
+          LOCATION_CONFIG.LOW_ACCURACY : 
+          options;
+
+        return getLocationWithRetry(nextOptions, retryCount + 1);
+      }
+      throw error;
+    }
+  }, []);
+
   const startWatchingLocation = useCallback(
     async (map: maplibregl.Map) => {
-      setIsLocating(true);
+      setLocationState(prev => ({ ...prev, status: 'requesting' }));
+
       if (!navigator.geolocation) {
-        setLocationError({
-          type: 'unavailable',
-          message: 'Geolocation is not supported by your browser'
-        });
-        setIsLocating(false);
+        setLocationState(prev => ({
+          ...prev,
+          status: 'error',
+          error: {
+            type: 'unavailable',
+            message: 'Geolocation is not supported by your browser'
+          }
+        }));
         return;
       }
 
       try {
-        // First try to get permission
+        // Check for permission first
         const hasPermission = await requestLocationPermission();
         if (!hasPermission) {
-          setLocationError({
-            type: 'permission',
-            message: 'Location access was denied. Please enable it in your settings.'
-          });
-          setIsLocating(false);
+          setLocationState(prev => ({
+            ...prev,
+            status: 'error',
+            error: {
+              type: 'permission',
+              message: 'Location access was denied. Please enable it in your settings.'
+            }
+          }));
           return;
         }
 
-        // Get initial position with timeout
-        const initialPosition = await new Promise<GeolocationPosition>((resolve, reject) => {
-          const timeoutId = setTimeout(() => {
-            reject(new Error('Location request timed out'));
-          }, LOCATION_TIMEOUT);
-
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              clearTimeout(timeoutId);
-              resolve(position);
-            },
-            (error) => {
-              clearTimeout(timeoutId);
-              reject(error);
-            },
-            {
-              enableHighAccuracy: true,
-              timeout: LOCATION_TIMEOUT,
-              maximumAge: 0
-            }
-          );
-        });
-
-        // Handle initial position
-        const { longitude, latitude } = initialPosition.coords;
-        const newPosition: [number, number] = [longitude, latitude];
-        setCurrentLocation(newPosition);
-        
-        // Fly to initial position
-        map.flyTo({
-          center: newPosition,
-          zoom: INITIAL_ZOOM,
-          duration: 1000
-        });
-
-        // Update markers
-        if (userMarkerRef.current) {
-          userMarkerRef.current.setLngLat(newPosition);
-        }
-        if (pulsingMarkerRef.current) {
-          pulsingMarkerRef.current.setLngLat(newPosition);
+        // Try to get initial position with high accuracy first
+        try {
+          const initialPosition = await getLocationWithRetry(LOCATION_CONFIG.HIGH_ACCURACY);
+          handlePositionUpdate(initialPosition, map);
+        } catch (error: any) {
+          console.warn('High accuracy position failed, falling back to low accuracy');
+          const initialPosition = await getLocationWithRetry(LOCATION_CONFIG.LOW_ACCURACY);
+          handlePositionUpdate(initialPosition, map);
         }
 
         // Start watching position
         watchIdRef.current = navigator.geolocation.watchPosition(
-          ({ coords }) => {
-            const { longitude, latitude } = coords;
-            const newPosition: [number, number] = [longitude, latitude];
-            setCurrentLocation(newPosition);
-
-            if (userMarkerRef.current) {
-              userMarkerRef.current.setLngLat(newPosition);
-            }
-            if (pulsingMarkerRef.current) {
-              pulsingMarkerRef.current.setLngLat(newPosition);
-            }
+          (position) => {
+            handlePositionUpdate(position, map);
+            setLocationState(prev => ({
+              ...prev,
+              status: 'watching',
+              lastUpdate: Date.now(),
+              retryCount: 0,
+            }));
           },
           (error) => {
             console.error('Watch position error:', error);
-            if (error.code === error.PERMISSION_DENIED) {
-              setLocationError({
-                type: 'permission',
-                message: 'Location access was denied. Please enable it in your settings.'
-              });
-            }
+            handleLocationError(error);
           },
-          {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 1000
-          }
+          LOCATION_CONFIG.HIGH_ACCURACY
         );
 
+        // Set up a periodic check for stale location data
+        const staleCheckInterval = setInterval(() => {
+          if (locationState.lastUpdate && 
+              Date.now() - locationState.lastUpdate > LOCATION_CONFIG.TIMEOUT) {
+            restartLocationWatch(map);
+          }
+        }, LOCATION_CONFIG.TIMEOUT);
+
+        return () => {
+          if (watchIdRef.current !== null) {
+            navigator.geolocation.clearWatch(watchIdRef.current);
+          }
+          clearInterval(staleCheckInterval);
+        };
+
       } catch (error: any) {
-        console.error('Location error:', error);
-        setLocationError({
-          type: error.code === 1 ? 'permission' : 'unavailable',
-          message: error.message || 'Unable to get your location'
-        });
-        setIsLocating(false);
+        handleLocationError(error);
       }
     },
-    []
+    [getLocationWithRetry]
   );
+
+  const handlePositionUpdate = useCallback((
+    position: GeolocationPosition,
+    map: maplibregl.Map
+  ) => {
+    const { longitude, latitude } = position.coords;
+    const newPosition: [number, number] = [longitude, latitude];
+    setCurrentLocation(newPosition);
+    
+    // Update markers
+    if (userMarkerRef.current) {
+      userMarkerRef.current.setLngLat(newPosition);
+    }
+    if (pulsingMarkerRef.current) {
+      pulsingMarkerRef.current.setLngLat(newPosition);
+    }
+
+    // Only fly to location if it's the first update or significant change
+    if (!locationState.lastUpdate || 
+        locationState.status === 'requesting') {
+      map.flyTo({
+        center: newPosition,
+        zoom: INITIAL_ZOOM,
+        duration: 1000
+      });
+    }
+  }, [locationState]);
+
+  const handleLocationError = useCallback((error: any) => {
+    const errorMessage = error.code === 1 
+      ? 'Location access was denied. Please enable it in your settings.'
+      : error.code === 2
+      ? 'Location information is unavailable. Please check your device settings.'
+      : error.code === 3
+      ? 'Location request timed out. Please try again.'
+      : 'An unknown error occurred while getting location.';
+
+    setLocationState(prev => ({
+      ...prev,
+      status: 'error',
+      error: {
+        type: error.code === 1 ? 'permission' : 'unavailable',
+        message: errorMessage
+      }
+    }));
+  }, []);
+
+  const restartLocationWatch = useCallback((map: maplibregl.Map) => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    startWatchingLocation(map);
+  }, [startWatchingLocation]);
 
   const handleDeviceOrientation = useCallback(
     (event: DeviceOrientationEventWithWebkit) => {
@@ -621,13 +715,17 @@ const Map: React.FC = () => {
       <div className="error-content">
         <span>{error.message}</span>
         <div className="button-group">
-          {error.type !== "permission" && (
-            <button className="retry-button" onClick={onRetry}>
-              Try Again
+          {error.type !== 'permission' && (
+            <button 
+              className="retry-button" 
+              onClick={onRetry}
+              disabled={locationState.status === 'requesting'}
+            >
+              {locationState.status === 'requesting' ? 'Retrying...' : 'Try Again'}
             </button>
           )}
           <button className="dismiss-button" onClick={onDismiss}>
-            Dismiss
+            {error.type === 'permission' ? 'Open Settings' : 'Dismiss'}
           </button>
         </div>
       </div>
@@ -652,17 +750,19 @@ const Map: React.FC = () => {
             borderRadius: '12px',
             textAlign: 'center' 
           }}>
-            {isLocating ? (
+            {locationState.status === 'requesting' ? (
               <div>
                 <div className="location-spinner" />
                 <p style={{ color: 'white', marginTop: '10px' }}>
-                  Getting your location...
+                  {locationState.retryCount > 0 
+                    ? `Retrying to get your location (Attempt ${locationState.retryCount + 1}/${LOCATION_CONFIG.MAX_RETRIES + 1})...`
+                    : 'Getting your location...'}
                 </p>
               </div>
             ) : (
               <>
                 <p style={{ marginBottom: '15px', color: 'white' }}>
-                  Please enable location services to use the map
+                  {locationState.error?.message || 'Please enable location services to use the map'}
                 </p>
                 <button
                   onClick={() => {
@@ -831,16 +931,16 @@ const Map: React.FC = () => {
         }}
       />
 
-      {locationError && (
+      {locationState.error && (
         <LocationErrorMessage
-          error={locationError}
+          error={locationState.error}
           onRetry={() => {
-            setLocationError(null);
+            setLocationState(prev => ({ ...prev, status: 'idle', error: undefined }));
             if (mapInstanceRef.current) {
               startWatchingLocation(mapInstanceRef.current);
             }
           }}
-          onDismiss={() => setLocationError(null)}
+          onDismiss={() => setLocationState(prev => ({ ...prev, status: 'idle', error: undefined }))}
         />
       )}
     </div>

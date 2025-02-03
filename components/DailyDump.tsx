@@ -115,7 +115,7 @@ const DailyDump: React.FC<DailyDumpProps> = ({ onClose }) => {
           <div className="flex gap-2">
             <button
               onClick={() => setShowArchive(true)}
-              className="px-4 py-2 bg-gradient-to-r from-[#ffb48f] to-[#ff9f7f] text-white rounded-lg hover:from-[#ff9f7f] hover:to-[#ff8b6b] transition-all"
+              className="px-4 py-2 bg-gradient-to-r from-pink-200 via-purple-200 to-blue-200 text-gray-800 rounded-lg hover:from-pink-300 hover:via-purple-300 hover:to-blue-300 transition-all"
             >
               View Archive
             </button>
@@ -199,7 +199,7 @@ const DailyDump: React.FC<DailyDumpProps> = ({ onClose }) => {
             className={`px-6 py-2 rounded-md transition-all ${
               isSaving || isProcessing || !dumpText.trim()
                 ? "bg-gray-600 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
+                : "bg-gradient-to-r from-pink-200 via-purple-200 to-blue-200 text-gray-800 hover:from-pink-300 hover:via-purple-300 hover:to-blue-300"
             }`}
           >
             {isSaving ? "Saving..." : "Save Dump"}

@@ -349,8 +349,8 @@
   padding: 0.6rem 1.2rem;
   font-size: 0.9rem;
   font-weight: 600;
-  color: white;
-  background: linear-gradient(to right, #ffb48f, #ff9f7f);
+  color: #1a1a1a;
+  background: linear-gradient(to right, #ffb4b4, #b4d4ff);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -361,9 +361,21 @@
   display: block;
 }
 
-.daily-dump-button:hover,
+.daily-dump-button {
+  background: linear-gradient(to right, #ffd6e0, #c1efff);
+}
+
+.daily-quest-button {
+  background: linear-gradient(to right, #d4a5ff, #a5c8ff);
+}
+
+.daily-dump-button:hover {
+  background: linear-gradient(to right, #ffc1d1, #a5e0ff);
+  transform: translateY(-1px);
+}
+
 .daily-quest-button:hover {
-  background: linear-gradient(to right, #ff9f7f, #ff8b6b);
+  background: linear-gradient(to right, #c990ff, #90b8ff);
   transform: translateY(-1px);
 }
 
