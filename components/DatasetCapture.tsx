@@ -90,7 +90,7 @@ export default function DatasetCapture({ onStatusChange, onSaveComplete }: Datas
       });
 
       const response = await fetch('/api/dataset/save', {
-        method: 'POST',
+      method: 'POST',
         body: formData
       });
 
@@ -153,7 +153,7 @@ export default function DatasetCapture({ onStatusChange, onSaveComplete }: Datas
           </button>
         )}
 
-        {capturedFrames.length > 0 && (
+              {capturedFrames.length > 0 && (
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-4">
               {capturedFrames.map((frame, index) => (
@@ -170,13 +170,13 @@ export default function DatasetCapture({ onStatusChange, onSaveComplete }: Datas
                   {labels[index] && (
                     <div
                       className="absolute w-4 h-4 bg-red-500 rounded-full border-2 border-white transform -translate-x-1/2 -translate-y-1/2"
-                      style={{
+                style={{ 
                         left: `${labels[index].x * 100}%`,
                         top: `${labels[index].y * 100}%`
-                      }}
-                    />
-                  )}
-                </div>
+                }}
+              />
+            )}
+          </div>
               ))}
             </div>
 

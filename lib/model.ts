@@ -7,62 +7,52 @@ import { prepareData } from './prepareData';
 
 // Update model configuration
 export const MODEL_CONFIG = {
-  inputShape: [224, 224, 3] as [number, number, number],
+  inputShape: [128, 128, 3] as [number, number, number],
   outputShape: 4,  // x, y, width, height
-  batchSize: 16,
-  epochs: 50,
-  learningRate: 0.0001,
-  colorThreshold: 0.8  // For color-based attention
+  batchSize: 32,
+  epochs: 20,
+  learningRate: 0.001,
+  colorThreshold: 0.8
 };
 
 // Create a simple model architecture
 async function createModel(): Promise<tf.LayersModel> {
   const model = tf.sequential();
   
-  // Color-sensitive convolutional layers
+  // Initial feature extraction - color and shape sensitive
   model.add(tf.layers.conv2d({
     inputShape: MODEL_CONFIG.inputShape,
+    filters: 16,
+    kernelSize: 3,
+    activation: 'relu',
+    padding: 'same'
+  }));
+  model.add(tf.layers.maxPooling2d({ poolSize: 2 }));
+  
+  // Global features
+  model.add(tf.layers.conv2d({
     filters: 32,
-    kernelSize: 5,  // Larger kernel for better color blob detection
-    activation: 'relu',
-    padding: 'same'
-  }));
-  model.add(tf.layers.batchNormalization());  // Normalize color features
-  model.add(tf.layers.maxPooling2d({ poolSize: 2 }));
-
-  // Color blob detection layers
-  model.add(tf.layers.conv2d({
-    filters: 64,
     kernelSize: 3,
     activation: 'relu',
     padding: 'same'
   }));
-  model.add(tf.layers.batchNormalization());
   model.add(tf.layers.maxPooling2d({ poolSize: 2 }));
-
-  // Deep feature extraction
-  model.add(tf.layers.conv2d({
-    filters: 128,
-    kernelSize: 3,
-    activation: 'relu',
-    padding: 'same'
-  }));
-  model.add(tf.layers.batchNormalization());
-  model.add(tf.layers.maxPooling2d({ poolSize: 2 }));
-
-  // Dense layers with dropout for robustness
-  model.add(tf.layers.flatten());
-  model.add(tf.layers.dense({ units: 256, activation: 'relu' }));
-  model.add(tf.layers.dropout({ rate: 0.4 }));  // Increased dropout for better generalization
-  model.add(tf.layers.dense({ units: 128, activation: 'relu' }));
-  model.add(tf.layers.dropout({ rate: 0.3 }));
+  
+  // Position-invariant features
+  model.add(tf.layers.globalAveragePooling2d({}));
+  
+  // Dense layers for final prediction
+  model.add(tf.layers.dense({ units: 64, activation: 'relu' }));
+  model.add(tf.layers.dropout({ rate: 0.2 }));
   model.add(tf.layers.dense({ units: MODEL_CONFIG.outputShape, activation: 'sigmoid' }));
 
-  // Use Huber loss for better robustness to outliers
+  // Use Adam optimizer with custom learning rate
+  const optimizer = tf.train.adam(MODEL_CONFIG.learningRate);
+  
   model.compile({
-    optimizer: tf.train.adam(MODEL_CONFIG.learningRate),
-    loss: tf.losses.huberLoss,
-    metrics: ['mse']
+    optimizer,
+    loss: 'meanSquaredError',
+    metrics: ['accuracy']
   });
   
   return model;
@@ -231,7 +221,7 @@ export class ModelManager {
 
   async getModel(): Promise<tf.LayersModel> {
     if (!this.model) {
-      this.model = await createModel();
+        this.model = await createModel();
     }
     return this.model;
   }
@@ -277,7 +267,7 @@ export class ModelManager {
 
   disposeModel() {
     if (this.model) {
-      this.model.dispose();
+        this.model.dispose();
       this.model = null;
     }
   }
@@ -326,38 +316,134 @@ export async function trainModel(
   }
 ): Promise<tf.LayersModel> {
   const model = await modelManager.getModel();
+  if (!model) throw new Error('Model not initialized');
+  
+  let trainXs: tf.Tensor | null = null;
+  let trainYs: tf.Tensor | null = null;
+  let valXs: tf.Tensor | null = null;
+  let valYs: tf.Tensor | null = null;
   
   try {
-    // Load and prepare data
-    const { xs, ys } = await prepareData();
-    
-    // Split into train/validation
-    const splitIdx = Math.floor(xs.shape[0] * 0.8);
-    const [trainXs, valXs] = tf.split(xs, [splitIdx, xs.shape[0] - splitIdx]);
-    const [trainYs, valYs] = tf.split(ys, [splitIdx, ys.shape[0] - splitIdx]);
-
-    // Train the model
-    await model.fit(trainXs, trainYs, {
+    console.log('🚀 Starting model training...');
+    console.log('📊 Model configuration:', {
+      inputShape: MODEL_CONFIG.inputShape,
       batchSize: MODEL_CONFIG.batchSize,
       epochs: MODEL_CONFIG.epochs,
-      validationData: [valXs, valYs],
+      learningRate: MODEL_CONFIG.learningRate
+    });
+
+    const { xs, ys } = await prepareData();
+    console.log('📈 Dataset loaded:', {
+      totalSamples: xs.shape[0],
+      inputShape: xs.shape,
+      outputShape: ys.shape
+    });
+    
+    // Update the data splitting to use integer counts
+    const splitIdx = Math.floor(xs.shape[0] * 0.8);
+    [trainXs, valXs] = tf.split(xs, [splitIdx, xs.shape[0] - splitIdx]);
+    [trainYs, valYs] = tf.split(ys, [splitIdx, ys.shape[0] - splitIdx]);
+
+    console.log('📊 Data split:', {
+      trainingSamples: trainXs.shape[0],
+      validationSamples: valXs.shape[0]
+    });
+
+    // Calculate total batches for progress tracking
+    const totalBatches = Math.ceil(trainXs.shape[0] / MODEL_CONFIG.batchSize);
+    let trainingStartTime = Date.now();
+    let lastBatchTime = Date.now();
+    let bestLoss = Infinity;
+
+    await model.fit(trainXs as tf.Tensor, trainYs as tf.Tensor, {
+      batchSize: MODEL_CONFIG.batchSize,
+      epochs: MODEL_CONFIG.epochs,
+      validationData: [valXs as tf.Tensor, valYs as tf.Tensor],
       shuffle: true,
       callbacks: {
-        onEpochEnd: async (epoch, logs) => {
-          const progress = Math.round((epoch + 1) / MODEL_CONFIG.epochs * 100);
+        onBatchBegin: async (batch) => {
+          const epoch = Math.floor(batch / totalBatches);
+          const batchInEpoch = batch % totalBatches;
+          const progress = (epoch * totalBatches + batchInEpoch) / (MODEL_CONFIG.epochs * totalBatches) * 100;
           onProgress?.(progress);
-          callbacks?.onEpochEnd?.(epoch, logs);
+          await tf.nextFrame();
+        },
+        onBatchEnd: async (batch, logs) => {
+          const now = Date.now();
+          const batchTime = now - lastBatchTime;
+          lastBatchTime = now;
+          
+          if (batch % 5 === 0) { // Log every 5 batches to avoid spam
+            console.log(`🔄 Batch ${batch}:`, {
+              loss: logs?.loss?.toFixed(5) ?? 'N/A',
+              samplesPerSecond: (MODEL_CONFIG.batchSize / (batchTime / 1000)).toFixed(1),
+              memoryUsage: `${(tf.memory().numBytes / 1024 / 1024).toFixed(1)} MB`
+            });
+          }
+          
+          callbacks?.onBatchEnd?.(batch, {
+            ...logs,
+            batchTime,
+            memoryUsage: tf.memory().numBytes
+          });
+          await tf.nextFrame();
+        },
+        onEpochBegin: async (epoch, logs) => {
+          console.log(`\n📈 Starting Epoch ${epoch + 1}/${MODEL_CONFIG.epochs}`);
+          callbacks?.onEpochBegin?.(epoch, { ...logs, totalBatches });
+          await tf.nextFrame();
+        },
+        onEpochEnd: async (epoch, logs) => {
+          // Calculate validation metrics
+          const valPreds = model.predict(valXs!) as tf.Tensor;
+          const valLoss = tf.losses.meanSquaredError(valYs!, valPreds);
+          const valLossValue = await valLoss.data();
+          
+          const epochTime = (Date.now() - trainingStartTime) / 1000;
+          const currentLoss = valLossValue[0];
+          
+          if (currentLoss < bestLoss) {
+            bestLoss = currentLoss;
+            console.log('🌟 New best model!');
+          }
+
+          console.log(`\n✅ Epoch ${epoch + 1} completed:`, {
+            trainingLoss: logs?.loss?.toFixed(5) ?? 'N/A',
+            validationLoss: currentLoss.toFixed(5),
+            bestLoss: bestLoss.toFixed(5),
+            timeElapsed: `${epochTime.toFixed(1)}s`,
+            timePerEpoch: `${(epochTime / (epoch + 1)).toFixed(1)}s`,
+            memoryUsage: `${(tf.memory().numBytes / 1024 / 1024).toFixed(1)} MB`
+          });
+          
+          callbacks?.onEpochEnd?.(epoch, {
+            ...logs,
+            val_loss: currentLoss,
+            bestLoss,
+            epochTime,
+            totalBatches
+          });
+          
+          tf.dispose([valPreds, valLoss]);
           await tf.nextFrame();
         }
       }
     });
 
+    console.log('\n🎉 Training completed!', {
+      finalLoss: bestLoss.toFixed(5),
+      totalTime: `${((Date.now() - trainingStartTime) / 1000).toFixed(1)}s`,
+      memoryUsage: `${(tf.memory().numBytes / 1024 / 1024).toFixed(1)} MB`
+    });
+
     return model;
   } catch (error) {
-    console.error('Training error:', error);
+    console.error('❌ Training error:', error);
     throw error;
   } finally {
-    tf.engine().startScope(); // Clean up tensors
+    // Cleanup only initialized tensors
+    const tensorsToDispose = [trainXs, trainYs, valXs, valYs].filter(t => t !== null) as tf.Tensor[];
+    tf.dispose(tensorsToDispose);
   }
 }
 
@@ -368,23 +454,20 @@ export async function predictImage(
   const model = await modelManager.getModel();
   
   const tensor = tf.tidy(() => {
-    // Enhanced preprocessing for color detection
     const imageTensor = tf.browser.fromPixels(image);
     
-    // Color normalization to make detection more robust
+    // Basic preprocessing - just resize and normalize
     const normalized = imageTensor
       .resizeBilinear([MODEL_CONFIG.inputShape[0], MODEL_CONFIG.inputShape[1]])
       .toFloat()
       .div(255.0);
 
-    // Add batch dimension
-    return normalized.expandDims(0) as tf.Tensor4D;
+    return normalized.expandDims(0);
   });
   
   try {
     const prediction = model.predict(tensor) as tf.Tensor2D;
     const [x, y, width, height] = await prediction.data();
-    
     return { x, y, width, height };
   } finally {
     tf.dispose([tensor]);
