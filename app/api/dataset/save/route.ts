@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { writeFileSync, existsSync, mkdirSync } from 'fs';
+import { writeFile, mkdir } from 'fs/promises';
+import { existsSync } from 'fs';
 import path from 'path';
 
 export async function POST(request: Request) {
@@ -7,31 +8,62 @@ export async function POST(request: Request) {
   const files = Array.from(formData.entries());
 
   try {
-    const publicDir = path.join(process.cwd(), 'public/dataset');
-    const imagesDir = path.join(publicDir, 'images');
-    const labelsDir = path.join(publicDir, 'labels');
+    // Create directory structure
+    const publicDir = path.join(process.cwd(), 'public');
+    const datasetDir = path.join(publicDir, 'dataset');
+    const imagesDir = path.join(datasetDir, 'images');
+    const labelsDir = path.join(datasetDir, 'labels');
 
-    // Create directories if needed
-    [imagesDir, labelsDir].forEach(dir => {
-      if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-    });
-
-    // Process files
-    for (const [name, file] of files) {
-      if (file instanceof Blob) {
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const isImage = name === 'images';
-        const dir = isImage ? imagesDir : labelsDir;
-        const filename = file instanceof File ? file.name : `${Date.now()}.${isImage ? 'jpg' : 'txt'}`;
-        writeFileSync(path.join(dir, filename), buffer);
+    // Ensure directories exist
+    for (const dir of [publicDir, datasetDir, imagesDir, labelsDir]) {
+      if (!existsSync(dir)) {
+        await mkdir(dir, { recursive: true });
+        console.log(`Created directory: ${dir}`);
       }
     }
 
-    return NextResponse.json({ status: 'success' });
+    // Process files
+    const savedFiles = await Promise.all(
+      files.map(async ([name, file]) => {
+        if (file instanceof Blob) {
+          const buffer = Buffer.from(await file.arrayBuffer());
+          const isImage = name === 'images';
+          const dir = isImage ? imagesDir : labelsDir;
+          const filename = file instanceof File ? file.name : `${Date.now()}.${isImage ? 'jpg' : 'txt'}`;
+          const filePath = path.join(dir, filename);
+          
+          await writeFile(filePath, buffer);
+          
+          return {
+            name: filename,
+            type: isImage ? 'image' : 'label',
+            path: filePath
+          };
+        }
+      })
+    );
+
+    return NextResponse.json({ 
+      status: 'success',
+      files: savedFiles,
+      directories: {
+        public: publicDir,
+        dataset: datasetDir,
+        images: imagesDir,
+        labels: labelsDir
+      }
+    });
   } catch (error) {
     console.error('Save error:', error);
     return NextResponse.json(
-      { status: 'error', message: error.message },
+      { 
+        status: 'error', 
+        message: error.message,
+        error: {
+          name: error.name,
+          stack: error.stack
+        }
+      },
       { status: 500 }
     );
   }

@@ -1,0 +1,57 @@
+.step {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.step.active {
+  background-color: rgba(59, 130, 246, 0.2);
+  opacity: 1;
+}
+
+.step-number {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: rgba(59, 130, 246, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.step.active .step-number {
+  background-color: rgb(59, 130, 246);
+}
+
+.step-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 0.5rem;
+}
+
+.metric-label {
+  font-size: 0.75rem;
+  color: rgb(156, 163, 175);
+  margin-bottom: 0.25rem;
+}
+
+.metric-value {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: rgb(229, 231, 235);
+} 

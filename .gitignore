@@ -161,3 +161,18 @@ cython_debug/
 
 node_modules
 .next
+
+# Dataset files
+public/dataset/images/
+public/dataset/labels/
+*.jpg
+*.jpeg
+*.png
+*.txt
+!requirements.txt
+!package.txt
+!README.txt
+*.yaml
+!next.config.js
+!tailwind.config.js
+!postcss.config.js
