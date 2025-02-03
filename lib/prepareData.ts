@@ -37,8 +37,8 @@ export async function prepareData(): Promise<{ xs: tf.Tensor4D, ys: tf.Tensor2D 
               // Convert image to tensor and normalize
               const tensor = tf.browser.fromPixels(img)
                 .resizeNearestNeighbor([MODEL_CONFIG.inputShape[0], MODEL_CONFIG.inputShape[1]])
-                .sub(tf.scalar(127.5))  // MobileNet-style normalization
-                .div(tf.scalar(127.5)) as tf.Tensor3D;
+                .toFloat()
+                .div(255.0) as tf.Tensor3D;  // Explicitly type as Tensor3D
               
               // Verify tensor shape
               if (tensor.shape.length !== 3 || 
@@ -63,31 +63,16 @@ export async function prepareData(): Promise<{ xs: tf.Tensor4D, ys: tf.Tensor2D 
 
     console.log('Processing labels...');
     // Process labels (assuming YOLO format: [class_id, x, y, width, height])
-    const coordinates = labels.map((label, index) => {
-      if (!Array.isArray(label) || label.length !== 5) {
-        throw new Error(`Invalid label format at index ${index} - expected 5 values, got ${label.length}`);
-      }
-      
-      // Extract and validate all coordinates
+    const coordinates = labels.map(label => {
       const [classId, x, y, width, height] = label.map(Number);
-      
-      if ([x, y, width, height].some(isNaN)) {
-        throw new Error(`Non-numeric values in label at index ${index}`);
-      }
-      
-      if (x < 0 || x > 1 || y < 0 || y > 1 || 
-          width < 0 || width > 1 || height < 0 || height > 1) {
-        throw new Error(`Invalid coordinates at index ${index}: x=${x}, y=${y}, w=${width}, h=${height}`);
-      }
-      
-      return [x, y];
+      return [x, y, width, height];
     });
 
     console.log('Creating final tensors...');
     // Convert to final tensors
     return { 
       xs: tf.stack(imageTensors).reshape([-1, ...MODEL_CONFIG.inputShape]) as tf.Tensor4D,
-      ys: tf.tensor2d(coordinates, [coordinates.length, 2])
+      ys: tf.tensor2d(coordinates, [coordinates.length, 4])
     };
   } catch (error) {
     console.error('Error preparing data:', error);

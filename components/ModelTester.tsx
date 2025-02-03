@@ -1,242 +1,217 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
-import * as tf from '@tensorflow/tfjs';
-import { modelManager } from '@/lib/model';
+import React, { useRef, useState, useEffect } from 'react';
+import Webcam from 'react-webcam';
+import * as cocossd from '@tensorflow-models/coco-ssd';
+import { predictImage } from '@/lib/model';
 
-export default function ModelTester() {
-  const [model, setModel] = useState<tf.LayersModel | null>(null);
-  const [testImage, setTestImage] = useState<HTMLImageElement | null>(null);
-  const [prediction, setPrediction] = useState<{x: number, y: number} | null>(null);
-  const imageCanvasRef = useRef<HTMLCanvasElement>(null);
-  const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
-  const [status, setStatus] = useState<string>('Upload a model to begin');
+export default function OrangeDetector() {
+  const webcamRef = useRef<Webcam>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isRunning, setIsRunning] = useState(false);
+  const [orangeObjects, setOrangeObjects] = useState<Array<cocossd.DetectedObject>>([]);
+  const [modelStatus, setModelStatus] = useState('Loading model...');
+  const [cameraStatus, setCameraStatus] = useState('Starting camera...');
 
-  const drawImageAndOverlay = (img: HTMLImageElement, pred?: {x: number, y: number}) => {
-    // Draw original image
-    const imageCanvas = imageCanvasRef.current;
-    const overlayCanvas = overlayCanvasRef.current;
-    if (!imageCanvas || !overlayCanvas) return;
+  // COCO-SSD configuration
+  const modelConfig = {
+    base: 'lite_mobilenet_v2' as const, // Optimized for web
+  };
 
-    // Set both canvases to image dimensions
-    imageCanvas.width = img.width;
-    imageCanvas.height = img.height;
-    overlayCanvas.width = img.width;
-    overlayCanvas.height = img.height;
+  // Orange color thresholds
+  const ORANGE_THRESHOLD = { 
+    minHue: 5, 
+    maxHue: 20,
+    minSat: 40,
+    minVal: 40
+  };
 
-    // Draw image on bottom canvas
-    const imgCtx = imageCanvas.getContext('2d');
-    if (imgCtx) {
-      imgCtx.drawImage(img, 0, 0);
+  const objectDetector = useRef<cocossd.ObjectDetection>();
+
+  // Load model with error handling
+  useEffect(() => {
+    let isMounted = true;
+    const loadModel = async () => {
+      try {
+        setModelStatus('Loading COCO-SSD model...');
+        objectDetector.current = await cocossd.load(modelConfig);
+        if (isMounted) setModelStatus('Model loaded');
+      } catch (error) {
+        console.error('Model load error:', error);
+        if (isMounted) setModelStatus('Error loading model');
+      }
+    };
+    
+    loadModel();
+    return () => { isMounted = false; };
+  }, []);
+
+  // Detection loop with frame skipping
+  useEffect(() => {
+    let frameCount = 0;
+    let rafId: number;
+
+    const detectFrame = async () => {
+      if (!isRunning || !objectDetector.current || !webcamRef.current?.video) return;
+      
+      try {
+      const video = webcamRef.current.video;
+        if (video.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA) return;
+
+        // Process every other frame to reduce load
+        if (frameCount++ % 2 === 0) {
+          const detections = await objectDetector.current.detect(video);
+          const orangeItems = filterOrangeObjects(detections, video);
+          setOrangeObjects(orangeItems);
+          drawDetections(orangeItems, video);
+        }
+        
+        rafId = requestAnimationFrame(detectFrame);
+      } catch (error) {
+        console.error('Detection error:', error);
+        setIsRunning(false);
+      }
+    };
+
+    if (isRunning) {
+      detectFrame();
     }
 
-    // Clear and draw prediction on overlay canvas
-    const overlayCtx = overlayCanvas.getContext('2d');
-    if (overlayCtx && pred) {
-      overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, [isRunning]);
+
+  // Optimized orange filtering
+  const filterOrangeObjects = (detections: cocossd.DetectedObject[], video: HTMLVideoElement) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return [];
+    
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return [];
+
+    // Single capture per detection cycle
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    return detections.filter(detection => {
+      const centerX = Math.floor(detection.bbox[0] + detection.bbox[2]/2);
+      const centerY = Math.floor(detection.bbox[1] + detection.bbox[3]/2);
+      const pixelIndex = (centerY * imageData.width + centerX) * 4;
       
-      // Convert normalized coordinates to pixel coordinates
-      const pixelX = pred.x * overlayCanvas.width;
-      const pixelY = pred.y * overlayCanvas.height;
-
-      // Draw large crosshair
-      overlayCtx.strokeStyle = '#FF0000';
-      overlayCtx.lineWidth = 3;
-      const size = 20;
-
-      // Draw crosshair
-      overlayCtx.beginPath();
-      overlayCtx.moveTo(pixelX - size, pixelY);
-      overlayCtx.lineTo(pixelX + size, pixelY);
-      overlayCtx.moveTo(pixelX, pixelY - size);
-      overlayCtx.lineTo(pixelX, pixelY + size);
-      overlayCtx.stroke();
-
-      // Draw circle
-      overlayCtx.beginPath();
-      overlayCtx.arc(pixelX, pixelY, 5, 0, 2 * Math.PI);
-      overlayCtx.fillStyle = '#FF0000';
-      overlayCtx.fill();
-
-      // Draw coordinates with background
-      overlayCtx.font = 'bold 16px monospace';
-      const text = `(${pred.x.toFixed(3)}, ${pred.y.toFixed(3)})`;
-      
-      // Add background to text for better visibility
-      const metrics = overlayCtx.measureText(text);
-      const padding = 4;
-      overlayCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-      overlayCtx.fillRect(
-        pixelX + 15, 
-        pixelY - 20, 
-        metrics.width + padding * 2, 
-        24
+      const [h, s, v] = rgbToHsv(
+        imageData.data[pixelIndex],
+        imageData.data[pixelIndex + 1],
+        imageData.data[pixelIndex + 2]
       );
-      
-      overlayCtx.fillStyle = '#FFFFFF';
-      overlayCtx.fillText(text, pixelX + 15 + padding, pixelY);
-    }
+
+      return h >= ORANGE_THRESHOLD.minHue && 
+             h <= ORANGE_THRESHOLD.maxHue &&
+             s >= ORANGE_THRESHOLD.minSat &&
+             v >= ORANGE_THRESHOLD.minVal;
+    });
   };
 
-  // Handle model upload
-  const handleModelUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
+  // Drawing optimizations
+  const drawDetections = (detections: cocossd.DetectedObject[], video: HTMLVideoElement) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!ctx || !canvas) return;
 
-    try {
-      setStatus('Loading model...');
+    // Clear and draw video frame
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Draw detections
+    detections.forEach(obj => {
+      ctx.beginPath();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#FFA500';
+      ctx.strokeRect(...obj.bbox);
       
-      const jsonFile = Array.from(files).find(f => f.name.endsWith('.json'));
-      const weightsFile = Array.from(files).find(f => f.name.endsWith('.bin'));
-
-      if (!jsonFile || !weightsFile) {
-        throw new Error('Please select both model.json and weights.bin files');
-      }
-
-      await modelManager.uploadModel(jsonFile, weightsFile, 'Test Model');
-      const loadedModel = await modelManager.getModel();
-      
-      // Verify model shape
-      const inputShape = loadedModel.inputs[0].shape;
-      if (inputShape[1] !== 224 || inputShape[2] !== 224) {
-        throw new Error(`Invalid input shape: expected [null,224,224,3] but got [${inputShape}]`);
-      }
-
-      setModel(loadedModel);
-      setStatus('Model loaded successfully. Upload an image to test.');
-    } catch (err) {
-      setStatus(`Error: ${err.message}`);
-      console.error('Model upload error:', err);
-    }
+      ctx.fillStyle = '#FFA500';
+      ctx.fillText(
+        `${obj.class} (${Math.round(obj.score * 100)}%)`,
+        obj.bbox[0] + 5,
+        obj.bbox[1] > 20 ? obj.bbox[1] - 5 : obj.bbox[1] + 15
+      );
+    });
   };
 
-  // Handle image upload
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  // RGB to HSV conversion
+  const rgbToHsv = (r: number, g: number, b: number): [number, number, number] => {
+    r /= 255, g /= 255, b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0, v = max;
+
+    const d = max - min;
+    s = max === 0 ? 0 : d / max;
+
+    if (max === min) {
+      h = 0; // achromatic
+    } else {
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      h /= 6;
+    }
+
+    return [Math.round(h * 360), Math.round(s * 100), Math.round(v * 100)];
+  };
+
+  // Add a test button that uses your custom model
+  const testCustomModel = async () => {
+    const imgSrc = webcamRef.current?.getScreenshot();
+    if (!imgSrc) return;
 
     const img = new Image();
-    img.onload = () => {
-      setTestImage(img);
-      setStatus('Image loaded. Click "Run Prediction" to test.');
-      drawImageAndOverlay(img);  // Draw image without prediction
-    };
-    img.src = URL.createObjectURL(file);
-  };
-
-  // Run prediction
-  const runPrediction = async () => {
-    if (!model || !testImage) {
-      setStatus('Please upload both model and image first');
-      return;
-    }
-
-    try {
-      setStatus('Running prediction...');
-      
-      // Preprocess image - now using 224x224 consistently
-      const tensor = tf.tidy(() => {
-        return tf.browser.fromPixels(testImage)
-          .resizeNearestNeighbor([224, 224])
-          .sub(tf.scalar(127.5))
-          .div(tf.scalar(127.5))
-          .expandDims(0);
-      });
-
-      // Run prediction
-      const output = await model.predict(tensor) as tf.Tensor;
-      const [x, y] = await output.data();
-      const newPrediction = { x, y };
-      setPrediction(newPrediction);
-
-      // Update visualization
-      drawImageAndOverlay(testImage, newPrediction);
-
-      setStatus('Prediction complete');
-      
-      // Cleanup
-      tensor.dispose();
-      output.dispose();
-    } catch (err) {
-      setStatus(`Error during prediction: ${err.message}`);
-      console.error('Prediction error:', err);
-    }
+    img.src = imgSrc;
+    await new Promise((resolve) => img.onload = resolve);
+    
+    const prediction = await predictImage(img);
+    // Visualize prediction coordinates
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-2xl mx-auto">
-      <h2 className="text-xl font-bold">Model Tester</h2>
+    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+      <h2 className="text-xl font-bold">Orange Object Detector</h2>
       
-      {/* Status Display */}
-      <div className="bg-gray-900/50 p-4 rounded">
-        <p className="text-sm text-cyan-400">{status}</p>
+      {/* Status indicators */}
+      <div className="space-y-2">
+        <p className="text-sm text-gray-400">{modelStatus}</p>
+        <p className="text-sm text-gray-400">{cameraStatus}</p>
       </div>
 
-      {/* Step 1: Model Upload */}
-      <div className="space-y-2">
-        <h3 className="text-lg font-semibold">Step 1: Upload Model</h3>
-        <input
-          type="file"
-          accept=".json,.bin"
-          multiple
-          onChange={handleModelUpload}
-          className="w-full"
-        />
-        <p className="text-xs text-gray-400">
-          Select both model.json and weights.bin files
+        <Webcam
+          ref={webcamRef}
+          className="w-full rounded-lg"
+          audio={false}
+        videoConstraints={{
+          facingMode: 'environment',
+          width: { ideal: 640 },
+          height: { ideal: 360 }, // 16:9 aspect for better performance
+          frameRate: { ideal: 15 }
+        }}
+        onUserMedia={() => setCameraStatus('Camera active')}
+        onUserMediaError={(e) => setCameraStatus(`Camera error: ${e.toString()}`)}
+      />
+
+      <button
+        onClick={() => setIsRunning(!isRunning)}
+        className={`w-full p-4 rounded-lg ${
+          isRunning ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'
+        } text-white`}
+      >
+        {isRunning ? 'Stop Detection' : 'Start Detection'}
+      </button>
+
+      <div className="bg-gray-900 p-4 rounded-lg">
+        <p className="text-2xl font-bold text-center">
+          {orangeObjects.length} Orange Object{orangeObjects.length !== 1 ? 's' : ''} Detected
         </p>
       </div>
-
-      {/* Step 2: Image Upload (only shown after model is loaded) */}
-      {model && (
-        <div className="space-y-2">
-          <h3 className="text-lg font-semibold">Step 2: Upload Test Image</h3>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="w-full"
-          />
-        </div>
-      )}
-
-      {/* Step 3: Run Prediction (only shown after image is loaded) */}
-      {model && testImage && (
-        <div className="space-y-2">
-          <h3 className="text-lg font-semibold">Step 3: Test Model</h3>
-        <button
-            onClick={runPrediction}
-            className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-            Run Prediction
-        </button>
-        </div>
-      )}
-
-      {/* Canvas Container */}
-      <div className="relative mt-4 border border-gray-700 rounded">
-        {/* Bottom canvas for image */}
-        <canvas 
-          ref={imageCanvasRef}
-          className="w-full"
-        />
-        {/* Top canvas for overlay */}
-        <canvas 
-          ref={overlayCanvasRef}
-          className="absolute top-0 left-0 w-full pointer-events-none"
-        />
-      </div>
-
-      {/* Prediction Results */}
-      {prediction && (
-        <div className="bg-gray-900/50 p-4 rounded">
-          <h3 className="text-lg font-semibold mb-2">Prediction Results</h3>
-          <p className="font-mono">
-            X: {prediction.x.toFixed(3)}<br/>
-            Y: {prediction.y.toFixed(3)}
-            </p>
-          </div>
-      )}
     </div>
   );
 }

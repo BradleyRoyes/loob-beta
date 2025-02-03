@@ -53,8 +53,8 @@ const DatasetCapture = dynamic(() => import('./DatasetCapture'), {
   ssr: false
 });
 
-const ModelTester = dynamic(() => import('./ModelTester'), {
-  loading: () => <div>Loading tester...</div>,
+const ModelTester = dynamic(() => import('./WebcamDetector'), {
+  loading: () => <div>Loading detector...</div>,
   ssr: false
 });
 
@@ -63,42 +63,42 @@ const StickDashboard: React.FC<StickDashboardProps> = ({ onClose }) => {
   const [datasetInfo, setDatasetInfo] = useState<ValidationResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showDebug, setShowDebug] = useState(false);
+  const [captureStatus, setCaptureStatus] = useState<'idle' | 'recording' | 'processing'>('idle');
 
-  // Check dataset on mount
-  useEffect(() => {
-    const checkDataset = async () => {
-      try {
-        console.log('Fetching dataset validation...');
-        const response = await fetch('/api/dataset/validate');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        console.log('Validation response:', data);
-        setDatasetInfo(data);
-      } catch (error) {
-        console.error('Dataset validation error:', error);
-        const safeError = error instanceof Error ? error : new Error(String(error));
-        
-        setDatasetInfo({
-          isValid: false,
-          stats: {
-            totalImages: 0,
-            totalLabels: 0,
-            imageResolutions: [],
-            averageFileSize: 0
-          },
-          errors: [{
-            type: 'error',
-            message: safeError.message,
-            code: 'FETCH_ERROR'
-          }]
-        });
-      } finally {
-        setIsLoading(false);
+  const checkDataset = async () => {
+    try {
+      console.log('Fetching dataset validation...');
+      const response = await fetch('/api/dataset/validate');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
+      const data = await response.json();
+      console.log('Validation response:', data);
+      setDatasetInfo(data);
+    } catch (error) {
+      console.error('Dataset validation error:', error);
+      const safeError = error instanceof Error ? error : new Error(String(error));
+      setDatasetInfo({
+        isValid: false,
+        stats: {
+          totalImages: 0,
+          totalLabels: 0,
+          imageResolutions: [],
+          averageFileSize: 0
+        },
+        errors: [{
+          type: 'error',
+          message: safeError.message,
+          code: 'FETCH_ERROR'
+        }]
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  // Use in useEffect
+  useEffect(() => {
     checkDataset();
   }, []);
 
@@ -114,6 +114,11 @@ const StickDashboard: React.FC<StickDashboardProps> = ({ onClose }) => {
       window.removeEventListener('keydown', handleEsc);
     };
   }, [onClose]);
+
+  // Add status callback for DatasetCapture
+  const handleCaptureStatus = (status: 'idle' | 'recording' | 'processing') => {
+    setCaptureStatus(status);
+  };
 
   const renderDebugInfo = () => {
     if (!datasetInfo?.debug) return null;
@@ -179,7 +184,7 @@ const StickDashboard: React.FC<StickDashboardProps> = ({ onClose }) => {
             onClick={() => setActiveTab('test')}
           >
             {MinimalIcons.test}
-            <span>Test</span>
+            <span>Detect</span>
           </button>
         </div>
 
@@ -223,7 +228,15 @@ const StickDashboard: React.FC<StickDashboardProps> = ({ onClose }) => {
                 </div>
               ) : (
                 <>
-                  {activeTab === 'capture' && <DatasetCapture />}
+                  {activeTab === 'capture' && (
+                    <DatasetCapture 
+                      onStatusChange={handleCaptureStatus}
+                      onSaveComplete={() => {
+                        // Refresh dataset validation
+                        checkDataset();
+                      }}
+                    />
+                  )}
                   {activeTab === 'train' && <ModelTrainer />}
                   {activeTab === 'test' && <ModelTester />}
                 </>

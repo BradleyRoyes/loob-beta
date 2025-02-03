@@ -1,0 +1,29 @@
+.webcam-preview {
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 4/3;
+  background: #000;
+}
+
+.recording-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.pulsing-red-dot {
+  width: 12px;
+  height: 12px;
+  background-color: red;
+  border-radius: 50%;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+} 

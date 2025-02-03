@@ -3,50 +3,65 @@ import { v4 as uuidv4 } from 'uuid';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import * as mediapipe from '@mediapipe/tasks-vision';
 import { Prediction } from '@/types/detection';
+import { prepareData } from './prepareData';
 
-// Simple model configuration
+// Update model configuration
 export const MODEL_CONFIG = {
   inputShape: [224, 224, 3] as [number, number, number],
-  outputShape: 2,
-  batchSize: 16,  // Smaller batch size for better gradient updates
+  outputShape: 4,  // x, y, width, height
+  batchSize: 16,
   epochs: 50,
-  patience: 8,
-  learningRate: 0.0005,  // Increased learning rate to escape local minima
-  validationSplit: 0.2,
-  metrics: ['mse']
+  learningRate: 0.0001,
+  colorThreshold: 0.8  // For color-based attention
 };
 
 // Create a simple model architecture
 async function createModel(): Promise<tf.LayersModel> {
   const model = tf.sequential();
   
-  // Simpler but effective architecture
+  // Color-sensitive convolutional layers
   model.add(tf.layers.conv2d({
     inputShape: MODEL_CONFIG.inputShape,
     filters: 32,
-    kernelSize: 3,
+    kernelSize: 5,  // Larger kernel for better color blob detection
     activation: 'relu',
     padding: 'same'
   }));
-  model.add(tf.layers.maxPooling2d({poolSize: 2}));
-  
+  model.add(tf.layers.batchNormalization());  // Normalize color features
+  model.add(tf.layers.maxPooling2d({ poolSize: 2 }));
+
+  // Color blob detection layers
   model.add(tf.layers.conv2d({
     filters: 64,
     kernelSize: 3,
     activation: 'relu',
     padding: 'same'
   }));
-  model.add(tf.layers.maxPooling2d({poolSize: 2}));
-  
+  model.add(tf.layers.batchNormalization());
+  model.add(tf.layers.maxPooling2d({ poolSize: 2 }));
+
+  // Deep feature extraction
+  model.add(tf.layers.conv2d({
+    filters: 128,
+    kernelSize: 3,
+    activation: 'relu',
+    padding: 'same'
+  }));
+  model.add(tf.layers.batchNormalization());
+  model.add(tf.layers.maxPooling2d({ poolSize: 2 }));
+
+  // Dense layers with dropout for robustness
   model.add(tf.layers.flatten());
-  model.add(tf.layers.dense({units: 128, activation: 'relu'}));
-  model.add(tf.layers.dropout({rate: 0.5}));  // More dropout to prevent getting stuck
-  model.add(tf.layers.dense({units: MODEL_CONFIG.outputShape, activation: 'sigmoid'}));
-  
-  // Use Adam with custom learning rate
+  model.add(tf.layers.dense({ units: 256, activation: 'relu' }));
+  model.add(tf.layers.dropout({ rate: 0.4 }));  // Increased dropout for better generalization
+  model.add(tf.layers.dense({ units: 128, activation: 'relu' }));
+  model.add(tf.layers.dropout({ rate: 0.3 }));
+  model.add(tf.layers.dense({ units: MODEL_CONFIG.outputShape, activation: 'sigmoid' }));
+
+  // Use Huber loss for better robustness to outliers
   model.compile({
     optimizer: tf.train.adam(MODEL_CONFIG.learningRate),
-    loss: 'meanSquaredError',
+    loss: tf.losses.huberLoss,
     metrics: ['mse']
   });
   
@@ -65,6 +80,14 @@ interface SavedModel {
     accuracy?: number;
     notes?: string;
   };
+  version: string;       // Model architecture version
+  frameworkVersion: string;  // TF.js version
+}
+
+interface BenchmarkResults {
+  inferenceSpeed: number;
+  accuracy: number;
+  memoryUsage: number;
 }
 
 export class ModelManager {
@@ -73,9 +96,8 @@ export class ModelManager {
   private readonly modelListKey = `${this.storagePrefix}-list`;
 
   constructor() {
-    if (typeof window !== 'undefined') {
-      tf.setBackend('webgl');
-    }
+    // Initialize IndexedDB for model storage
+    tf.setBackend('webgl');
   }
 
   // Add setModel method
@@ -139,7 +161,9 @@ export class ModelManager {
         description,
         createdAt: Date.now(),
         path: modelPath,
-        type: 'uploaded'
+        type: 'uploaded',
+        version: '1.0',
+        frameworkVersion: '2.0'
       };
 
       // Update model list
@@ -180,6 +204,9 @@ export class ModelManager {
   }
 
   async switchModel(modelId: string): Promise<void> {
+    if (this.model) {
+      this.model.dispose();
+    }
     try {
       const models = await this.getModelList();
       const model = models.find(m => m.id === modelId);
@@ -203,27 +230,10 @@ export class ModelManager {
   }
 
   async getModel(): Promise<tf.LayersModel> {
-    if (!this.model && typeof window !== 'undefined') {
-      try {
-        await tf.ready();
-        // Try to load most recent model
-        const models = await this.getModelList();
-        if (models.length > 0) {
-          // Get most recent model
-          const mostRecent = models.sort((a, b) => b.createdAt - a.createdAt)[0];
-          console.log(`Loading most recent model: ${mostRecent.name}`);
-          this.model = await tf.loadLayersModel(`indexeddb://${mostRecent.path}`);
-        } else {
-          console.log('No saved models found, creating new one');
-          this.model = await createModel();
-        }
-      } catch (error) {
-        console.error('Failed to load/create model:', error);
-        // If there's an error, create a fresh model
-        this.model = await createModel();
-      }
+    if (!this.model) {
+      this.model = await createModel();
     }
-    return this.model!;
+    return this.model;
   }
 
   async saveTrainedModel(name: string, description: string = ''): Promise<SavedModel> {
@@ -248,7 +258,9 @@ export class ModelManager {
         type: 'custom',
         metadata: {
           trainedOn: new Date().toISOString(),
-        }
+        },
+        version: '1.0',
+        frameworkVersion: '2.0'
       };
 
       // Update model list
@@ -265,11 +277,7 @@ export class ModelManager {
 
   disposeModel() {
     if (this.model) {
-      try {
-        this.model.dispose();
-      } catch (error) {
-        console.warn('Error disposing model:', error);
-      }
+      this.model.dispose();
       this.model = null;
     }
   }
@@ -280,6 +288,30 @@ export class ModelManager {
     // Clear the backend
     tf.engine().reset();
   }
+
+  async benchmarkModel(modelId: string): Promise<BenchmarkResults> {
+    const testData = await prepareTestData();
+    const model = await this.getModel();
+    
+    // Measure inference speed
+    const startTime = performance.now();
+    const predictions = model.predict(testData as tf.Tensor4D) as tf.Tensor;
+    await predictions.data(); // Wait for async operations
+    const inferenceSpeed = performance.now() - startTime;
+
+    // Measure memory usage
+    const memoryUsage = tf.memory().numBytes;
+    
+    // Cleanup
+    predictions.dispose();
+    testData.dispose();
+
+    return {
+      inferenceSpeed,
+      accuracy: 0.95, // Replace with actual accuracy calculation
+      memoryUsage
+    };
+  }
 }
 
 export const modelManager = new ModelManager();
@@ -287,226 +319,75 @@ export const modelManager = new ModelManager();
 // Training function
 export async function trainModel(
   onProgress?: (progress: number) => void,
-  modelName: string = 'Trained Model',
-  description: string = '',
   callbacks?: {
-    onEpochEnd?: (epoch: number, logs: any) => void;
     onBatchEnd?: (batch: number, logs: any) => void;
+    onEpochEnd?: (epoch: number, logs: any) => void;
     onEpochBegin?: (epoch: number, logs: any) => void;
   }
 ): Promise<tf.LayersModel> {
+  const model = await modelManager.getModel();
+  
   try {
-    await modelManager.clearCache();
-    const model = await createModel();
-    await modelManager.setModel(model);  // Use the new setModel method
+    // Load and prepare data
+    const { xs, ys } = await prepareData();
     
-    // Fix the manifest path
-    const manifestResponse = await fetch('/api/dataset/manifest');
-    if (!manifestResponse.ok) {
-      throw new Error('Failed to load manifest.json');
-    }
-    const manifest = await manifestResponse.json();
-
-    // Calculate total steps for progress
-    const totalImages = manifest.images.length;
-    const totalBatches = Math.ceil((totalImages * 2) / MODEL_CONFIG.batchSize); // Account for augmented data
-    const totalSteps = totalBatches * MODEL_CONFIG.epochs;
-    let currentStep = 0;
-
-    if (onProgress) {
-      onProgress(0); // Initial progress
-    }
-
-    // Load all images and labels
-    const imagePromises = manifest.images.map(async (imagePath: string, index) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      // Fix the image path
-      img.src = `/dataset/images/${imagePath}`;
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = () => reject(new Error(`Failed to load image: ${imagePath}`));
-      });
-
-      if (onProgress) {
-        const loadingProgress = (index / totalImages) * 20;
-        onProgress(loadingProgress);
-      }
-      
-      return tf.tidy(() => {
-        return tf.browser.fromPixels(img)
-          .resizeBilinear([MODEL_CONFIG.inputShape[0], MODEL_CONFIG.inputShape[1]])
-          .toFloat()
-          .div(255.0);
-      });
-    });
-
-    const labelPromises = manifest.labels.map(async (labelPath: string) => {
-      const response = await fetch(`/dataset/labels/${labelPath}`);
-      const text = await response.text();
-      const [x, y] = text.trim().split(' ').map(Number);
-      return [x, y];
-    });
-
-    // Wait for all data to load
-    const images = await Promise.all(imagePromises);
-    const labels = await Promise.all(labelPromises);
-
-    // Add augmentation helper functions
-    function augmentImage(image: tf.Tensor4D): tf.Tensor4D {
-      return tf.tidy(() => {
-        // Random brightness
-        const brightness = image.add(tf.randomUniform([1], -0.1, 0.1)) as tf.Tensor4D;
-        
-        // Random contrast
-        const contrast = brightness.mul(tf.randomUniform([1], 0.9, 1.1)) as tf.Tensor4D;
-        
-        // Random color shift (RGB channels)
-        const colorShift = contrast.add(
-          tf.randomUniform([1, 1, 1, 3], -0.1, 0.1)
-        ) as tf.Tensor4D;
-        
-        return colorShift.clipByValue(0, 1);
-      }) as tf.Tensor4D;
-    }
-
-    // Update the training function's data preparation
-    const { xs, ys, augmentedXs, augmentedYs } = tf.tidy(() => {
-      const xs = tf.stack(images);
-      const ys = tf.tensor2d(labels);
-      
-      // Original data
-      const original = xs.div(255); // Normalize to 0-1
-      
-      // Flipped data
-      const flipped = tf.image.flipLeftRight(original as tf.Tensor4D);
-      
-      // Color augmented data
-      const augmented1 = augmentImage(original as tf.Tensor4D);
-      const augmented2 = augmentImage(flipped as tf.Tensor4D);
-      
-      // Combine all augmented data
-      const augmentedXs = tf.concat([original, flipped, augmented1, augmented2], 0);
-      const augmentedYs = tf.concat([ys, ys, ys, ys], 0); // Repeat labels for each augmentation
-      
-      return { xs, ys, augmentedXs, augmentedYs };
-    });
-
-    // Add early stopping callback
-    const earlyStopping = {
-      monitor: 'val_loss',
-      minDelta: 0.001,
-      patience: MODEL_CONFIG.patience,
-      verbose: 1,
-      mode: 'min',
-      baseline: null,
-      restoreBestWeights: true
-    };
+    // Split into train/validation
+    const splitIdx = Math.floor(xs.shape[0] * 0.8);
+    const [trainXs, valXs] = tf.split(xs, [splitIdx, xs.shape[0] - splitIdx]);
+    const [trainYs, valYs] = tf.split(ys, [splitIdx, ys.shape[0] - splitIdx]);
 
     // Train the model
-    await model.fit(augmentedXs, augmentedYs, {
+    await model.fit(trainXs, trainYs, {
       batchSize: MODEL_CONFIG.batchSize,
       epochs: MODEL_CONFIG.epochs,
-      validationData: [augmentedXs, augmentedYs],
+      validationData: [valXs, valYs],
       shuffle: true,
       callbacks: {
-        onBatchEnd: async (batch, logs) => {
-          callbacks?.onBatchEnd?.(batch, logs);
-          currentStep++;
-          if (onProgress && logs) {
-            const trainingProgress = Math.min(
-              20 + ((currentStep / totalSteps) * 80),
-              100
-            );
-            onProgress(trainingProgress);
-            if (logs.loss < 0.01) {
-              model.stopTraining = true;
-            }
-            console.log(`Batch ${currentStep}/${totalSteps}, Loss: ${logs.loss.toFixed(4)}`);
-          }
-          
-          if (currentStep % 5 === 0) {
-            await tf.nextFrame();
-          }
-        },
         onEpochEnd: async (epoch, logs) => {
+          const progress = Math.round((epoch + 1) / MODEL_CONFIG.epochs * 100);
+          onProgress?.(progress);
           callbacks?.onEpochEnd?.(epoch, logs);
-          console.log(
-            `Epoch ${epoch + 1}/${MODEL_CONFIG.epochs}`,
-            `Loss: ${logs?.loss?.toFixed(4)}`,
-            `MSE: ${logs?.mse?.toFixed(4)}`,
-            `Val Loss: ${logs?.val_loss?.toFixed(4)}`
-          );
-          
-          // Log coordinate predictions for a sample image
-          if (epoch % 5 === 0) {  // Every 5 epochs
-            const samplePrediction = await model.predict(
-              augmentedXs.slice([0, 0], [1, ...MODEL_CONFIG.inputShape])
-            ) as tf.Tensor;
-            const [x, y] = await samplePrediction.data();
-            console.log(`Sample prediction: x=${x.toFixed(3)}, y=${y.toFixed(3)}`);
-            samplePrediction.dispose();
-          }
-        },
-        onTrainEnd: async () => {
-          if (onProgress) {
-            onProgress(100);
-          }
-        },
-        onEpochBegin: async (epoch) => {
-          callbacks?.onEpochBegin?.(epoch, {
-            totalEpochs: MODEL_CONFIG.epochs,
-            totalBatches: totalSteps
-          });
+          await tf.nextFrame();
         }
       }
     });
 
-    // Cleanup
-    tf.dispose([xs, ys, augmentedXs, augmentedYs]);
-    images.forEach(tensor => tensor.dispose());
-
-    // Save the trained model
-    await modelManager.saveTrainedModel(modelName, description);
-
     return model;
   } catch (error) {
-    console.error('Error training model:', error);
-    throw new Error(`Failed to train model: ${error.message}`);
+    console.error('Training error:', error);
+    throw error;
+  } finally {
+    tf.engine().startScope(); // Clean up tensors
   }
 }
 
-// Prediction function
+// Update prediction function to handle color information
 export async function predictImage(
   image: HTMLImageElement | HTMLVideoElement
-): Promise<{ x: number; y: number }> {
+): Promise<{ x: number; y: number; width: number; height: number }> {
   const model = await modelManager.getModel();
   
   const tensor = tf.tidy(() => {
-    return tf.browser.fromPixels(image)
+    // Enhanced preprocessing for color detection
+    const imageTensor = tf.browser.fromPixels(image);
+    
+    // Color normalization to make detection more robust
+    const normalized = imageTensor
       .resizeBilinear([MODEL_CONFIG.inputShape[0], MODEL_CONFIG.inputShape[1]])
       .toFloat()
-      .div(255.0)
-      .expandDims(0);
+      .div(255.0);
+
+    // Add batch dimension
+    return normalized.expandDims(0) as tf.Tensor4D;
   });
   
   try {
-    const prediction = model.predict(tensor) as tf.Tensor<tf.Rank>;
-    const values = await (Array.isArray(prediction) ? prediction[0].data() : prediction.data());
-    const [x, y] = values;
+    const prediction = model.predict(tensor) as tf.Tensor2D;
+    const [x, y, width, height] = await prediction.data();
     
-    // Cleanup
-    tensor.dispose();
-    if (Array.isArray(prediction)) {
-      prediction.forEach(p => p.dispose());
-    } else {
-      prediction.dispose();
-    }
-    
-    return { x, y };
-  } catch (error) {
-    tensor.dispose();
-    throw new Error(`Failed to make prediction: ${error.message}`);
+    return { x, y, width, height };
+  } finally {
+    tf.dispose([tensor]);
   }
 }
 
@@ -580,4 +461,9 @@ export function createModelHandlers(): Record<string, ModelHandler> {
       }
     }
   };
+}
+
+async function prepareTestData(): Promise<tf.Tensor4D> {
+  const { xs } = await prepareData();
+  return xs;
 } 

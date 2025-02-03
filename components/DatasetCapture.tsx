@@ -1,198 +1,123 @@
-import React, { useState, useRef, useEffect } from 'react';
-import sharp from 'sharp';
+'use client';
+import React, { useRef, useState, useEffect } from 'react';
+import Webcam from 'react-webcam';
 
-interface CapturePoint {
-  x: number;
-  y: number;
-  timestamp: number;
-  imageName: string;
+interface DatasetCaptureProps {
+  onStatusChange: (status: 'idle' | 'recording' | 'processing') => void;
+  onSaveComplete: () => void;
 }
 
-export default function DatasetCapture() {
-  const [isCapturing, setIsCapturing] = useState(false);
-  const [capturedFrames, setCapturedFrames] = useState<CapturePoint[]>([]);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [selectedPoint, setSelectedPoint] = useState<{ x: number, y: number } | null>(null);
+export default function DatasetCapture({ onStatusChange, onSaveComplete }: DatasetCaptureProps) {
+  const webcamRef = useRef<Webcam>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [capturedFrames, setCapturedFrames] = useState<string[]>([]);
+  const [labels, setLabels] = useState<Array<{x: number, y: number}>>([]);
+  const [countdown, setCountdown] = useState(30);
+  const recordingInterval = useRef<NodeJS.Timeout>();
+  const frames = useRef<string[]>([]);
+
+  const videoConstraints = {
+    width: 640,
+    height: 480,
+    facingMode: "environment",
+    frameRate: 30
+  };
 
   useEffect(() => {
-    return () => {
-      stopCapture();
-    };
-  }, []);
+    onStatusChange(isRecording ? 'recording' : 'idle');
+  }, [isRecording, onStatusChange]);
 
-  const startCapture = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        } 
-      });
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-        setIsCapturing(true);
-        setErrorMessage(null);
+  const startRecording = () => {
+    if (!webcamRef.current) return;
+    setIsRecording(true);
+    setCountdown(30);
+    frames.current = [];
+
+    recordingInterval.current = setInterval(() => {
+      const screenshot = webcamRef.current?.getScreenshot();
+      if (screenshot) {
+        frames.current.push(screenshot);
       }
-    } catch (error) {
-      console.error('Webcam error:', error);
-      setErrorMessage('Failed to access webcam. Please ensure you have granted camera permissions.');
-    }
-  };
-
-  const stopCapture = () => {
-    if (videoRef.current?.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-    }
-    setIsCapturing(false);
-  };
-
-  const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!canvasRef.current) return;
-
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = (event.clientX - rect.left) / rect.width;
-    const y = (event.clientY - rect.top) / rect.height;
-    
-    setSelectedPoint({ x, y });
-  };
-
-  const captureFrame = async () => {
-    if (!videoRef.current || !canvasRef.current || !selectedPoint) return;
-
-    const ctx = canvasRef.current.getContext('2d');
-    if (!ctx) return;
-
-    // Draw the current video frame
-    ctx.drawImage(
-      videoRef.current,
-      0, 0,
-      canvasRef.current.width,
-      canvasRef.current.height
-    );
-
-    // Generate unique filename
-    const timestamp = Date.now();
-    const imageName = `frame_${timestamp}.jpg`;
-
-    // Save the frame
-    const imageBlob = await new Promise<Blob>((resolve) => {
-      canvasRef.current?.toBlob((blob) => {
-        resolve(blob!);
-      }, 'image/jpeg', 0.95);
-    });
-
-    // Create label data
-    const capturePoint: CapturePoint = {
-      x: selectedPoint.x,
-      y: selectedPoint.y,
-      timestamp,
-      imageName
-    };
-
-    // Save image and update manifest
-    await saveTrainingData(imageBlob, capturePoint);
-
-    // Update UI
-    setCapturedFrames(prev => [...prev, capturePoint]);
-    setSelectedPoint(null);
-
-    // Add real-time augmentation during capture
-    const augmentedVariations = await Promise.all([
-      augmentFrame(imageBlob, { rotation: 5 }),
-      augmentFrame(imageBlob, { rotation: -5 }),
-      augmentFrame(imageBlob, { zoom: 1.1 }),
-      augmentFrame(imageBlob, { brightness: 0.9 })
-    ]);
-
-    // Save all augmented versions
-    await Promise.all(augmentedVariations.map(async (augmentedBlob) => {
-      const augPoint = {...capturePoint, imageName: `aug_${Date.now()}_${capturePoint.imageName}`};
-      await saveTrainingData(augmentedBlob, augPoint);
-    }));
-  };
-
-  // Helper function for client-side augmentations
-  async function augmentFrame(blob: Blob, opts: {rotation?: number, zoom?: number, brightness?: number}) {
-    const img = await createImageBitmap(blob);
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d')!;
-    
-    // Apply transformations
-    canvas.width = img.width;
-    canvas.height = img.height;
-    
-    // Rotation
-    ctx.translate(canvas.width/2, canvas.height/2);
-    ctx.rotate((opts.rotation || 0) * Math.PI/180);
-    ctx.drawImage(img, -img.width/2, -img.height/2);
-    
-    // Zoom (crop and resize)
-    if (opts.zoom) {
-      const scale = 1/opts.zoom;
-      ctx.drawImage(img, 
-        img.width*(1-scale)/2, img.height*(1-scale)/2, 
-        img.width*scale, img.height*scale,
-        0, 0, img.width, img.height
-      );
-    }
-    
-    // Convert to blob
-    return new Promise<Blob>(resolve => 
-      canvas.toBlob(blob => resolve(blob!), 'image/jpeg', 0.9)
-    );
-  }
-
-  const createFormData = (image: Blob, label: string) => {
-    const formData = new FormData();
-    formData.append('image', image, 'frame.jpg');
-    formData.append('label', new Blob([label], { type: 'application/json' }), 'label.json');
-    return formData;
-  };
-
-  const saveTrainingData = async (imageBlob: Blob, point: CapturePoint) => {
-    const label = JSON.stringify({
-      x: point.x,  // Normalized x
-      y: point.y   // Normalized y
-    });
-    
-    // Send to server endpoint
-    await fetch('/api/dataset/save', {
-      method: 'POST',
-      body: createFormData(imageBlob, label)
-    });
-  };
-
-  const exportDataset = async () => {
-    try {
-      // Generate manifest
-      const manifest = {
-        images: capturedFrames.map(frame => frame.imageName),
-        labels: capturedFrames.map(frame => frame.imageName.replace('.jpg', '.json'))
-      };
-
-      // Download manifest
-      const manifestBlob = new Blob([JSON.stringify(manifest, null, 2)], {
-        type: 'application/json'
+      setCountdown(prev => {
+        if (prev <= 1) {
+          stopRecording();
+          return 0;
+        }
+        return prev - 1;
       });
-      const manifestUrl = URL.createObjectURL(manifestBlob);
-      const a = document.createElement('a');
-      a.href = manifestUrl;
-      a.download = 'manifest.json';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(manifestUrl);
-    } catch (error) {
-      console.error('Error exporting dataset:', error);
-      setErrorMessage('Failed to export dataset');
+    }, 300);
+  };
+
+  const stopRecording = () => {
+    if (recordingInterval.current) {
+      clearInterval(recordingInterval.current);
     }
+    setIsRecording(false);
+    setCapturedFrames(frames.current);
+  };
+
+  const handleFrameClick = (index: number, e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    
+    setLabels(prev => {
+      const newLabels = [...prev];
+      newLabels[index] = { x, y };
+      return newLabels;
+    });
+  };
+
+  const saveDataset = async () => {
+    try {
+      onStatusChange('processing');
+      const timestamp = Date.now();
+      const formData = new FormData();
+      
+      capturedFrames.forEach((frame, index) => {
+        if (!labels[index]) return;
+
+        const blob = dataURLtoBlob(frame);
+        const filename = `frame_${timestamp}_${index.toString().padStart(4, '0')}`;
+        
+        formData.append('images', blob, `${filename}.jpg`);
+        
+        const labelContent = `0 ${labels[index].x.toFixed(6)} ${labels[index].y.toFixed(6)} 0.05 0.05`;
+        formData.append('labels', 
+          new Blob([labelContent], { type: 'text/plain' }), 
+          `${filename}.txt`
+        );
+      });
+
+      const response = await fetch('/api/dataset/save', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) throw new Error('Failed to save dataset');
+      
+      setCapturedFrames([]);
+      setLabels([]);
+      onSaveComplete();
+      onStatusChange('idle');
+    } catch (error) {
+      console.error('Save error:', error);
+      alert('Failed to save dataset');
+      onStatusChange('idle');
+    }
+  };
+
+  const dataURLtoBlob = (dataURL: string) => {
+    const byteString = atob(dataURL.split(',')[1]);
+    const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    
+    return new Blob([ab], { type: mimeString });
   };
 
   return (
@@ -200,91 +125,68 @@ export default function DatasetCapture() {
       <div className="space-y-4">
         <h2 className="text-xl font-bold">Dataset Capture</h2>
         
-        <div className="bg-gray-900/50 rounded-lg p-4 space-y-3">
-          <p className="text-sm text-gray-300">
-            Instructions:
-          </p>
-          <ol className="list-decimal list-inside text-sm text-gray-300 space-y-1">
-            <li>Start the webcam</li>
-            <li>Click on the ball in each frame to set its position</li>
-            <li>Click "Capture Frame" to save the labeled frame</li>
-            <li>Repeat for multiple frames</li>
-            <li>Click "Export Dataset" when done</li>
-          </ol>
-        </div>
-
-        <div className="flex gap-4">
-          <button
-            onClick={isCapturing ? stopCapture : startCapture}
-            className="base-button"
-          >
-            {isCapturing ? 'Stop Camera' : 'Start Camera'}
-          </button>
-
-          {isCapturing && (
-            <>
-              <button
-                onClick={captureFrame}
-                disabled={!selectedPoint}
-                className="base-button"
-              >
-                Capture Frame
-              </button>
-
-              {capturedFrames.length > 0 && (
-                <button
-                  onClick={exportDataset}
-                  className="base-button"
-                >
-                  Export Dataset
-                </button>
-              )}
-            </>
+        <div className="relative">
+          <Webcam
+            audio={false}
+            ref={webcamRef}
+            screenshotFormat="image/jpeg"
+            videoConstraints={videoConstraints}
+            className="webcam-preview rounded-lg border-2 border-gray-700"
+          />
+          
+          {isRecording && (
+            <div className="absolute top-4 right-4 recording-indicator">
+              <div className="pulsing-red-dot" />
+              <span className="text-white bg-black/50 px-2 py-1 rounded">
+                {countdown}s
+              </span>
+            </div>
           )}
         </div>
 
-        {isCapturing && (
-          <div className="relative inline-block">
-            <video
-              ref={videoRef}
-              style={{ display: 'none' }}
-              width="640"
-              height="480"
-            />
-            <canvas
-              ref={canvasRef}
-              width="640"
-              height="480"
-              onClick={handleCanvasClick}
-              className="rounded-lg border border-gray-700 cursor-crosshair"
-            />
-            {selectedPoint && (
-              <div 
-                className="absolute w-4 h-4 border-2 border-red-500 rounded-full transform -translate-x-1/2 -translate-y-1/2"
-                style={{ 
-                  left: `${selectedPoint.x * 100}%`,
-                  top: `${selectedPoint.y * 100}%`
-                }}
-              />
-            )}
-          </div>
+        {!isRecording && capturedFrames.length === 0 && (
+          <button
+            onClick={startRecording}
+            className="base-button bg-blue-600 hover:bg-blue-700 w-full"
+          >
+            Start Recording (30s)
+          </button>
         )}
 
         {capturedFrames.length > 0 && (
-          <div className="bg-gray-900/30 rounded-lg p-4">
-            <h3 className="text-sm font-semibold text-gray-300 mb-2">
-              Captured Frames: {capturedFrames.length}
-            </h3>
-            <div className="text-xs text-gray-400">
-              Latest coordinates: ({capturedFrames[capturedFrames.length - 1].x.toFixed(3)}, 
-              {capturedFrames[capturedFrames.length - 1].y.toFixed(3)})
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              {capturedFrames.map((frame, index) => (
+                <div 
+                  key={index}
+                  className="relative cursor-crosshair"
+                  onClick={(e) => handleFrameClick(index, e)}
+                >
+                  <img 
+                    src={frame} 
+                    alt={`Frame ${index + 1}`}
+                    className="rounded-lg border-2 border-gray-700"
+                  />
+                  {labels[index] && (
+                    <div
+                      className="absolute w-4 h-4 bg-red-500 rounded-full border-2 border-white transform -translate-x-1/2 -translate-y-1/2"
+                      style={{
+                        left: `${labels[index].x * 100}%`,
+                        top: `${labels[index].y * 100}%`
+                      }}
+                    />
+                  )}
+                </div>
+              ))}
             </div>
-          </div>
-        )}
 
-        {errorMessage && (
-          <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
-            <p className="text-red-400">{errorMessage}</p>
+            <button
+              onClick={saveDataset}
+              disabled={labels.filter(Boolean).length !== capturedFrames.length}
+              className="base-button bg-green-600 hover:bg-green-700 w-full disabled:bg-gray-600"
+            >
+              Save Dataset ({labels.filter(Boolean).length}/{capturedFrames.length} labeled)
+            </button>
           </div>
         )}
       </div>

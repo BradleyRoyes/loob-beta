@@ -24,4 +24,6 @@ export type BoundingBox = {
   y: number;
   width: number;
   height: number;
-}; 
+};
+
+declare function predictImage(image: string): Promise<{x: number, y: number}>; 
