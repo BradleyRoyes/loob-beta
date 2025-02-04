@@ -11,16 +11,21 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 0 1rem;
 }
 
 .admin-panel {
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: 900px;
+  margin: 1.5rem auto;
   padding: 0;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  background: rgba(38, 38, 38, 0.3);
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .panel-header {
@@ -33,11 +38,16 @@
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.5rem 1.5rem 0 0;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .panel-header h2 {
   font-size: clamp(1.5rem, 5vw, 2rem);
-  background: linear-gradient(45deg, #ffb48f, #ff7e79);
+  font-family: 'Modulus Pro', sans-serif;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ffb48f 0%, #ff7e79 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin: 0;
@@ -45,17 +55,26 @@
 
 .admin-content {
   flex: 1;
-  padding: 2rem;
+  padding: 1.5rem;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 2rem;
+  gap: 1.5rem;
   width: 100%;
 }
 
-.info-section, .users-section {
-  background: rgba(255, 255, 255, 0.05);
+.info-section, 
+.users-section {
+  background: rgba(255, 255, 255, 0.03);
   padding: 1.5rem;
-  border-radius: 0.75rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+.info-section:hover,
+.users-section:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
 }
 
 .form-group {
@@ -66,6 +85,7 @@
   display: block;
   color: #f3f3f3;
   margin-bottom: 0.5rem;
+  font-size: 0.95rem;
 }
 
 .form-input {
@@ -73,8 +93,16 @@
   padding: 0.75rem;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   color: #f3f3f3;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-input:focus {
+  border-color: #ffb48f;
+  box-shadow: 0 0 0 2px rgba(255, 180, 143, 0.1);
+  outline: none;
 }
 
 .user-lists {
@@ -84,69 +112,73 @@
   margin: 1.5rem 0;
 }
 
-.admins-list, .members-list {
+.admins-list, 
+.members-list {
   background: rgba(0, 0, 0, 0.2);
-  padding: 1rem;
-  border-radius: 0.5rem;
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .panel-footer {
   position: sticky;
   bottom: 0;
   background: rgba(26, 26, 26, 0.98);
-  padding: 1rem;
+  padding: 1.25rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-}
-
-@media (min-width: 768px) {
-  .admin-content {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* Ensure proper spacing with header/footer */
-@supports (padding-top: env(safe-area-inset-top)) {
-  .admin-panel-modal {
-    top: calc(4rem + env(safe-area-inset-top));
-    bottom: calc(5rem + env(safe-area-inset-bottom));
-    padding-bottom: calc(2rem + env(safe-area-inset-bottom));
-  }
+  border-radius: 0 0 1.5rem 1.5rem;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .close-button {
-  background: none;
+  background: rgba(255, 255, 255, 0.1);
   border: none;
-  color: #666;
+  color: #f3f3f3;
   font-size: 1.5rem;
   cursor: pointer;
-  transition: color 0.2s;
+  padding: 0.5rem;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
 }
 
 .close-button:hover {
-  color: #fff;
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.1);
 }
 
-.info-section h3, .users-section h3 {
-  color: #ffb48f;
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-  font-size: 1.4rem;
+.info-section h3, 
+.users-section h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #ffb48f 0%, #ff7e79 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1rem;
 }
 
 .remove-user {
   background: none;
   border: none;
-  color: #666;
+  color: #ff7e79;
   cursor: pointer;
-  padding: 0.3rem;
-  transition: color 0.2s;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  opacity: 0.7;
 }
 
 .remove-user:hover {
-  color: #ff6b6b;
+  opacity: 1;
+  background: rgba(255, 126, 121, 0.1);
 }
 
 .add-user-form {
@@ -156,27 +188,25 @@
 }
 
 .add-user-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.8rem 1.2rem;
-  background: linear-gradient(to right, #ffb48f, #ff9f7f);
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, #ffb48f 0%, #ff7e79 100%);
   border: none;
-  border-radius: 6px;
-  color: #222;
+  border-radius: 0.75rem;
+  color: #1a1a1a;
   font-weight: 600;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
   white-space: nowrap;
 }
 
 .add-user-btn:hover:not(:disabled) {
-  background: linear-gradient(to right, #ff9f7f, #ff8b6b);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 180, 143, 0.2);
 }
 
 .add-user-btn:disabled {
-  opacity: 0.7;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -187,39 +217,33 @@
 }
 
 .save-button {
-  padding: 0.8rem 1.5rem;
-  font-size: 1rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.95rem;
   font-weight: 600;
   border: none;
-  border-radius: 6px;
+  border-radius: 0.75rem;
   cursor: pointer;
-  transition: all 0.2s;
-  opacity: 0.5;
-  background: #666;
-  color: #fff;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #ffb48f 0%, #ff7e79 100%);
+  color: #1a1a1a;
 }
 
-.save-button.active {
-  opacity: 1;
-  background: linear-gradient(to right, #ffb48f, #ff9f7f);
-  color: #222;
-}
-
-.save-button.active:hover:not(:disabled) {
-  background: linear-gradient(to right, #ff9f7f, #ff8b6b);
-  transform: translateY(-1px);
+.save-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 180, 143, 0.2);
 }
 
 .save-button:disabled {
-  cursor: not-allowed;
   opacity: 0.5;
+  cursor: not-allowed;
+  background: #444;
+  color: #888;
 }
 
 .add-user-container {
   position: relative;
   width: 100%;
   max-width: 400px;
-  margin: 0 auto;
 }
 
 .user-suggestions {
@@ -227,44 +251,60 @@
   top: 100%;
   left: 0;
   right: 0;
-  background: #2d2d2d;
-  border: 1px solid #444;
-  border-radius: 0 0 8px 8px;
+  background: rgba(38, 38, 38, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
   max-height: 200px;
   overflow-y: auto;
   z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  margin-top: 0.5rem;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .suggestion-item {
-  padding: 0.8rem 1rem;
+  padding: 0.75rem 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
   color: #f3f3f3;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .suggestion-item:hover {
-  background: #3d3d3d;
+  background: rgba(255, 180, 143, 0.1);
 }
 
-.suggestion-item:not(:last-child) {
-  border-bottom: 1px solid #444;
+.suggestion-item:last-child {
+  border-bottom: none;
 }
 
-/* Scrollbar styling for suggestions */
-.user-suggestions::-webkit-scrollbar {
-  width: 8px;
+@media (min-width: 768px) {
+  .admin-content {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-.user-suggestions::-webkit-scrollbar-track {
-  background: #2d2d2d;
+@media (max-width: 768px) {
+  .admin-panel {
+    margin: 1rem auto;
+  }
+
+  .panel-header,
+  .admin-content,
+  .panel-footer {
+    padding: 1rem;
+  }
+
+  .info-section,
+  .users-section {
+    padding: 1rem;
+  }
 }
 
-.user-suggestions::-webkit-scrollbar-thumb {
-  background: #444;
-  border-radius: 4px;
-}
-
-.user-suggestions::-webkit-scrollbar-thumb:hover {
-  background: #555;
+@supports (padding-top: env(safe-area-inset-top)) {
+  .admin-panel-modal {
+    top: calc(4rem + env(safe-area-inset-top));
+    bottom: calc(5rem + env(safe-area-inset-bottom));
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
 } 

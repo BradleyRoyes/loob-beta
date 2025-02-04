@@ -9,6 +9,8 @@ export interface LoobricateData {
   admins: string[];
   members: string[];
   createdAt: string;
+  updatedAt?: string;
   type?: string;
   address?: string;
+  status?: string;
 } 

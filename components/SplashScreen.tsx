@@ -127,18 +127,10 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="titleContainer">
-              <Image 
-                src="/favicon.ico"
-                alt="Loob Logo"
-                width={32}
-                height={32}
-                className="titleLogo"
-                priority
-              />
+            <div className="titleSection">
               <h1 className="mainTitle">Loob</h1>
+              <h2 className="superSubtitle">Reducing Friction</h2>
             </div>
-            <h2 className="superSubtitle">Reducing Friction</h2>
             <div className="inputContainer">
               <input
                 type="text"

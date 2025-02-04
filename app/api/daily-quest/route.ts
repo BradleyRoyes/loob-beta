@@ -11,7 +11,43 @@ const astraDb = new AstraDB(
   process.env.ASTRA_DB_NAMESPACE
 );
 
-async function generateQuestContext(userId: string, astraDb: any, openai: any): Promise<string> {
+// Hyperspace cheat codes
+const HYPERSPACE_CODES = [
+  {
+    code: 1,
+    description: "The game is infinite: The game has an infinite number of levels in an infinite number of dimensions"
+  },
+  {
+    code: 2,
+    description: "Anamesis: The purpose of the game is to remember you are playing it. The forgetting of the forgetting"
+  },
+  {
+    code: 3,
+    description: "The more levels of the game you remember you are playing, the more fun and consequential the game becomes"
+  },
+  {
+    code: 4,
+    description: "Higher levels of the game can bleed through into 3D. They often show up at coincidences, synchronicities, or absurdity"
+  },
+  {
+    code: 5,
+    description: "The 3D is the access point to all the other levels of the game. If you die at the 3D level of the game, it is game over unless proven otherwise"
+  },
+  {
+    code: 6,
+    description: "Don't say anything or think anything that you don't want to become more true"
+  },
+  {
+    code: 7,
+    description: "Find the others: Once you have figured out the game, help turn as many NPC's into Players and as many Players into Architects as you can"
+  },
+  {
+    code: 8,
+    description: "Stay awake, build stuff and help out"
+  }
+];
+
+async function generateQuestContext(userId: string, astraDb: any, openai: any): Promise<{ context: string, cheatCode: typeof HYPERSPACE_CODES[number] }> {
   try {
     // Get user's daily dumps
     const messagesCollection = await astraDb.collection("messages");
@@ -33,16 +69,28 @@ async function generateQuestContext(userId: string, astraDb: any, openai: any): 
       `Resource: ${entry.title}\nType: ${entry.type}\nDescription: ${entry.description || 'No description'}`
     ).join('\n\n');
 
-    return `
+    // Select a random cheat code
+    const randomCheatCode = HYPERSPACE_CODES[Math.floor(Math.random() * HYPERSPACE_CODES.length)];
+
+    return {
+      context: `
 User's Recent Thoughts:
 ${dumpContext}
 
 Available Community Resources:
 ${libraryContext}
-    `;
+
+Today's Hyperspace Lens - Cheat Code #${randomCheatCode.code}:
+${randomCheatCode.description}
+      `,
+      cheatCode: randomCheatCode
+    };
   } catch (error) {
     console.error("Error generating quest context:", error);
-    return "Error retrieving context";
+    return {
+      context: "Error retrieving context",
+      cheatCode: HYPERSPACE_CODES[7] // Default to "Stay awake, build stuff and help out"
+    };
   }
 }
 
@@ -71,11 +119,14 @@ export async function GET(req: NextRequest) {
     });
 
     if (existingQuest) {
-      return NextResponse.json({ quest: existingQuest.content });
+      return NextResponse.json({ 
+        quest: existingQuest.content,
+        cheatCode: existingQuest.cheatCode
+      });
     }
 
-    // Generate context for the quest
-    const context = await generateQuestContext(userId, astraDb, openai);
+    // Generate context and get random cheat code
+    const { context, cheatCode } = await generateQuestContext(userId, astraDb, openai);
 
     // Generate the quest using OpenAI
     const completion = await openai.chat.completions.create({
@@ -85,7 +136,12 @@ export async function GET(req: NextRequest) {
           role: "system",
           content: `You are a mystical guide in Berlin's creative underground scene. Your task is to generate a single, inspiring daily quest that encourages community engagement and creative exploration. The quest should be playful, slightly cryptic (like a tarot reading), but actionable.
 
-Format your response as a single sentence that starts with "Your quest today:" and incorporates real locations or resources from the provided context when relevant.
+Today's quest should be inspired by and subtly incorporate the wisdom of this hyperspace cheat code:
+"${cheatCode.description}"
+
+Format your response as a JSON object with two fields:
+1. "quest" - A single sentence that starts with "Your quest today:" and incorporates real locations or resources from the provided context when relevant.
+2. "explanation" - A brief mystical explanation of how this quest relates to the cheat code, written in a cryptic but inspiring way.
 
 Consider:
 - The user's interests and patterns from their daily dumps
@@ -95,11 +151,11 @@ Consider:
 - Use poetic/mystical language but keep it clear
 - Sometimes reference specific Loobrary resources when relevant
 
-Example quests:
-"Your quest today: Seek out the echoing chambers of Traumabar, where electronic whispers await your contribution to their open jam session."
-"Your quest today: Among the shelves of Bücherhalle, find three strangers' stories and weave them into your own creative tapestry."
-"Your quest today: When the clock strikes four, venture to the community garden and exchange one skill for another with a fellow seeker of knowledge."
-`
+Example response:
+{
+  "quest": "Your quest today: Seek out the echoing chambers of Traumabar, where electronic whispers await your contribution to their open jam session.",
+  "explanation": "As the game bleeds through dimensions (Cheat Code #4), synchronicities emerge in shared rhythms and collective resonance."
+}`
         },
         {
           role: "user",
@@ -107,20 +163,39 @@ Example quests:
         }
       ],
       temperature: 0.9,
-      max_tokens: 100,
+      max_tokens: 200,
     });
 
-    const quest = completion.choices[0]?.message?.content || "Seek inspiration in unexpected places today.";
+    const response = completion.choices[0]?.message?.content;
+    let questData;
+    try {
+      questData = JSON.parse(response || "{}");
+    } catch (error) {
+      console.error("Failed to parse quest response:", error);
+      questData = {
+        quest: "Seek inspiration in unexpected places today.",
+        explanation: "Sometimes the game reminds us to stay awake and help out."
+      };
+    }
 
     // Save the quest
     await messagesCollection.insertOne({
       userId,
       type: "daily_quest",
-      content: quest,
+      content: questData.quest,
+      explanation: questData.explanation,
+      cheatCode: cheatCode,
       createdAt: new Date(),
     });
 
-    return NextResponse.json({ quest });
+    return NextResponse.json({ 
+      quest: questData.quest,
+      explanation: questData.explanation,
+      cheatCode: {
+        number: cheatCode.code,
+        description: cheatCode.description
+      }
+    });
   } catch (error) {
     console.error('Error generating daily quest:', error);
     return NextResponse.json(

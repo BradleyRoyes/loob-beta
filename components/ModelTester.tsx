@@ -1,9 +1,46 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import Webcam from 'react-webcam';
 import * as cocossd from '@tensorflow-models/coco-ssd';
 import { predictImage } from '@/lib/model';
+
+// Add error boundary component
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('ModelTester error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-6 bg-red-100 rounded-lg">
+          <h3 className="text-red-800 font-bold">Something went wrong</h3>
+          <p className="text-red-600">{this.state.error?.message}</p>
+          <button
+            className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            onClick={() => this.setState({ hasError: false, error: null })}
+          >
+            Try again
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function OrangeDetector() {
   const webcamRef = useRef<Webcam>(null);
@@ -28,7 +65,21 @@ export default function OrangeDetector() {
 
   const objectDetector = useRef<cocossd.ObjectDetection>();
 
-  // Load model with error handling
+  // Add cleanup function for TensorFlow resources
+  useEffect(() => {
+    return () => {
+      if (objectDetector.current) {
+        // Clean up TensorFlow resources
+        try {
+          (objectDetector.current as any)?.dispose?.();
+        } catch (err) {
+          console.error('Error disposing model:', err);
+        }
+      }
+    };
+  }, []);
+
+  // Improve model loading error handling
   useEffect(() => {
     let isMounted = true;
     const loadModel = async () => {
@@ -38,11 +89,20 @@ export default function OrangeDetector() {
         if (isMounted) setModelStatus('Model loaded');
       } catch (error) {
         console.error('Model load error:', error);
-        if (isMounted) setModelStatus('Error loading model');
+        if (isMounted) {
+          setModelStatus('Error loading model');
+          setIsRunning(false);
+          throw new Error('Failed to load object detection model. Please check your connection and try again.');
+        }
       }
     };
     
-    loadModel();
+    loadModel().catch(err => {
+      if (isMounted) {
+        setModelStatus(`Error: ${err.message}`);
+        setIsRunning(false);
+      }
+    });
     return () => { isMounted = false; };
   }, []);
 
@@ -51,11 +111,11 @@ export default function OrangeDetector() {
     let frameCount = 0;
     let rafId: number;
 
-    const detectFrame = async () => {
+    const detectFrame = useCallback(async () => {
       if (!isRunning || !objectDetector.current || !webcamRef.current?.video) return;
       
       try {
-      const video = webcamRef.current.video;
+        const video = webcamRef.current.video;
         if (video.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA) return;
 
         // Process every other frame to reduce load
@@ -70,8 +130,9 @@ export default function OrangeDetector() {
       } catch (error) {
         console.error('Detection error:', error);
         setIsRunning(false);
+        setModelStatus('Detection error: ' + (error instanceof Error ? error.message : 'Unknown error'));
       }
-    };
+    }, [isRunning, frameCount]);
 
     if (isRunning) {
       detectFrame();
@@ -161,57 +222,69 @@ export default function OrangeDetector() {
     return [Math.round(h * 360), Math.round(s * 100), Math.round(v * 100)];
   };
 
-  // Add a test button that uses your custom model
+  // Improve custom model testing
   const testCustomModel = async () => {
-    const imgSrc = webcamRef.current?.getScreenshot();
-    if (!imgSrc) return;
+    try {
+      const imgSrc = webcamRef.current?.getScreenshot();
+      if (!imgSrc) {
+        throw new Error('Failed to capture image from camera');
+      }
 
-    const img = new Image();
-    img.src = imgSrc;
-    await new Promise((resolve) => img.onload = resolve);
+      const img = new Image();
+      img.src = imgSrc;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = () => reject(new Error('Failed to load captured image'));
+      });
     
-    const prediction = await predictImage(img);
-    // Visualize prediction coordinates
+      const prediction = await predictImage(img);
+      // Handle prediction visualization
+    } catch (error) {
+      console.error('Custom model test error:', error);
+      setModelStatus('Custom model error: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    }
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto">
-      <h2 className="text-xl font-bold">Orange Object Detector</h2>
-      
-      {/* Status indicators */}
-      <div className="space-y-2">
-        <p className="text-sm text-gray-400">{modelStatus}</p>
-        <p className="text-sm text-gray-400">{cameraStatus}</p>
+    <ErrorBoundary>
+      <div className="p-6 space-y-6 max-w-4xl mx-auto">
+        <h2 className="text-xl font-bold">Orange Object Detector</h2>
+        
+        {/* Status indicators */}
+        <div className="space-y-2">
+          <p className="text-sm text-gray-400">{modelStatus}</p>
+          <p className="text-sm text-gray-400">{cameraStatus}</p>
+        </div>
+
+          <Webcam
+            ref={webcamRef}
+            className="w-full rounded-lg"
+            audio={false}
+          videoConstraints={{
+            facingMode: 'environment',
+            width: { ideal: 640 },
+            height: { ideal: 360 }, // 16:9 aspect for better performance
+            frameRate: { ideal: 15 }
+          }}
+          onUserMedia={() => setCameraStatus('Camera active')}
+          onUserMediaError={(e) => setCameraStatus(`Camera error: ${e.toString()}`)}
+        />
+
+        <button
+          onClick={() => setIsRunning(!isRunning)}
+          className={`w-full p-4 rounded-lg ${
+            isRunning ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'
+          } text-white`}
+        >
+          {isRunning ? 'Stop Detection' : 'Start Detection'}
+        </button>
+
+        <div className="bg-gray-900 p-4 rounded-lg">
+          <p className="text-2xl font-bold text-center">
+            {orangeObjects.length} Orange Object{orangeObjects.length !== 1 ? 's' : ''} Detected
+          </p>
+        </div>
       </div>
-
-        <Webcam
-          ref={webcamRef}
-          className="w-full rounded-lg"
-          audio={false}
-        videoConstraints={{
-          facingMode: 'environment',
-          width: { ideal: 640 },
-          height: { ideal: 360 }, // 16:9 aspect for better performance
-          frameRate: { ideal: 15 }
-        }}
-        onUserMedia={() => setCameraStatus('Camera active')}
-        onUserMediaError={(e) => setCameraStatus(`Camera error: ${e.toString()}`)}
-      />
-
-      <button
-        onClick={() => setIsRunning(!isRunning)}
-        className={`w-full p-4 rounded-lg ${
-          isRunning ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'
-        } text-white`}
-      >
-        {isRunning ? 'Stop Detection' : 'Start Detection'}
-      </button>
-
-      <div className="bg-gray-900 p-4 rounded-lg">
-        <p className="text-2xl font-bold text-center">
-          {orangeObjects.length} Orange Object{orangeObjects.length !== 1 ? 's' : ''} Detected
-        </p>
-      </div>
-    </div>
+    </ErrorBoundary>
   );
 }

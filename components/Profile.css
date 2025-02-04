@@ -30,9 +30,10 @@
 }
 
 .pseudonym-value {
+  font-family: 'Modulus Pro', sans-serif;
+  font-weight: 700;
   font-size: 1.5rem;
-  font-weight: bold;
-  color: #ffb48f;
+  color: #f3f3f3;
 }
 
 .route-message {
@@ -71,9 +72,11 @@
 }
 
 .section-heading {
+  font-family: 'Modulus Pro', sans-serif;
+  font-weight: 700;
   font-size: 1.8rem;
   color: #ffb48f;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 /* List Items */
@@ -175,7 +178,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(8px);
   display: none;
   justify-content: center;
   align-items: center;
@@ -277,78 +281,62 @@
 }
 
 .anonymous-message {
-  background: var(--background-secondary);
+  text-align: center;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
   padding: 2rem;
-  border-radius: 8px;
-  margin-top: 1rem;
+  margin: 2rem 0;
+}
+
+.anonymous-message h2 {
+  font-family: 'Modulus Pro', sans-serif;
+  font-weight: 700;
+  font-size: 1.8rem;
+  color: #ffb48f;
+  margin-bottom: 1.5rem;
 }
 
 .anonymous-message p {
-  color: var(--text-primary);
   font-size: 1.1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .anonymous-message ul {
+  text-align: left;
   list-style: none;
   padding: 0;
+  margin-bottom: 2rem;
 }
 
 .anonymous-message li {
-  color: var(--text-secondary);
   padding: 0.5rem 0;
   padding-left: 1.5rem;
   position: relative;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .anonymous-message li:before {
   content: "→";
   position: absolute;
   left: 0;
-  color: var(--text-primary);
+  color: #ffb48f;
 }
 
 .daily-buttons-container {
   display: flex;
-  justify-content: space-between; /* Space between buttons */
-  margin-top: 2rem; /* Increased space above the buttons */
-  margin-bottom: 2rem; /* Added space below the buttons */
-  gap: 1.5rem; /* Added gap between buttons */
+  justify-content: space-between;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  gap: 1.5rem;
 }
 
-.daily-challenge-button {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0.5rem 1rem;
-  font-size: var(--font-size-default);
-  font-weight: 600;
-  color: #ffffff; /* Ensure text is white */
-  background: linear-gradient(to right, #ff9f7f, #ffb48f); /* Darker fleshy gradient */
-  border: none;
-  border-radius: var(--border-radius-default);
-  cursor: pointer;
-  transition: background 0.3s, transform 0.2s;
-}
-
-.daily-challenge-button:hover {
-  background: linear-gradient(to right, #ff8f6f, #ff9f7f); /* Slightly darker fleshy gradient on hover */
-}
-
-/* Daily Section */
-.daily-section {
-  margin: 2rem 0;
-  text-align: center;
-}
-
-/* Button Styles */
 .daily-dump-button,
 .daily-quest-button {
   padding: 0.6rem 1.2rem;
   font-size: 0.9rem;
   font-weight: 600;
   color: #1a1a1a;
-  background: linear-gradient(to right, #ffb4b4, #b4d4ff);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -356,7 +344,10 @@
   width: 100%;
   max-width: 300px;
   margin: 1rem auto;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .daily-dump-button {
@@ -367,14 +358,43 @@
   background: linear-gradient(to right, #d4a5ff, #a5c8ff);
 }
 
-.daily-dump-button:hover {
-  background: linear-gradient(to right, #ffc1d1, #a5e0ff);
+.daily-quest-button.locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: linear-gradient(to right, #a0a0a0, #808080);
+}
+
+.daily-dump-button:hover:not(:disabled),
+.daily-quest-button:hover:not(:disabled):not(.locked) {
   transform: translateY(-1px);
 }
 
-.daily-quest-button:hover {
+.daily-dump-button:hover:not(:disabled) {
+  background: linear-gradient(to right, #ffc1d1, #a5e0ff);
+}
+
+.daily-quest-button:hover:not(:disabled):not(.locked) {
   background: linear-gradient(to right, #c990ff, #90b8ff);
-  transform: translateY(-1px);
+}
+
+.completion-indicator {
+  font-size: 0.8rem;
+  padding: 0.2rem 0.5rem;
+  background: rgba(0, 200, 0, 0.2);
+  border: 1px solid rgba(0, 200, 0, 0.3);
+  border-radius: 1rem;
+  color: #90ee90;
+  margin-left: 0.5rem;
+}
+
+.lock-indicator {
+  font-size: 0.8rem;
+  padding: 0.2rem 0.5rem;
+  background: rgba(128, 128, 128, 0.2);
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  border-radius: 1rem;
+  color: #a0a0a0;
+  margin-left: 0.5rem;
 }
 
 .helper-text {
@@ -385,26 +405,19 @@
   max-width: 300px;
   margin-left: auto;
   margin-right: auto;
+  transition: color 0.3s ease;
 }
 
 /* Mobile Adjustments */
 @media (max-width: 640px) {
   .daily-buttons-container {
-    grid-template-columns: 1fr;
-    gap: 2rem;
+    flex-direction: column;
+    gap: 1rem;
   }
 
-  .daily-button {
-    gap: 0.75rem;
-  }
-
-  .daily-button-main {
-    padding: 0.75rem 1rem;
-  }
-
-  .daily-description {
-    max-width: 280px;
-    margin: 0 auto;
+  .daily-dump-button,
+  .daily-quest-button {
+    margin: 0.5rem auto;
   }
 }
 
@@ -452,19 +465,21 @@
 
 /* Loobricate Login Button */
 .loobricate-login-button {
-  padding: 0.6rem 1.2rem;
-  font-size: 0.9rem;
+  padding: 0.8rem 2rem;
+  font-size: 1rem;
   font-weight: 600;
   color: white;
   background: linear-gradient(to right, #ffb48f, #ff9f7f);
   border: none;
   border-radius: 8px;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .loobricate-login-button:hover {
   background: linear-gradient(to right, #ff9f7f, #ff8b6b);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 159, 127, 0.2);
 }
 
 /* Additional mobile optimizations */
@@ -662,5 +677,114 @@
 
 .retry-button:hover {
   background: #4d4d4d;
+  transform: translateY(-1px);
+}
+
+.connected-loobricates {
+  margin-top: 2rem;
+  width: 100%;
+}
+
+.badges-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.loobricate-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.loobricate-badge:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.badge-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.badge-name {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.admin-indicator {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  margin-left: 0.5rem;
+}
+
+.badge-placeholder {
+  opacity: 0.3;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2rem;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+}
+
+.anonymous-loobricates {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.login-button {
+  margin-top: 1rem;
+  padding: 0.5rem 1.5rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.5rem;
+  color: white;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.login-button:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.1));
+  transform: translateY(-1px);
+}
+
+.empty-loobricates {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.add-loobricate-button {
+  margin-top: 1rem;
+  padding: 0.5rem 1.5rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.5rem;
+  color: white;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.add-loobricate-button:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.1));
   transform: translateY(-1px);
 }

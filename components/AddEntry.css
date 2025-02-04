@@ -1,3 +1,5 @@
+@import url('https://fonts.cdnfonts.com/css/modulus-pro?styles=17014');
+
 .add-entry-container {
   position: absolute;
   top: 4rem;
@@ -10,44 +12,28 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2rem;
+  padding: 1rem 2rem;
   background-color: var(--background-primary, #121212);
   color: #f3f3f3;
-}
-
-.mainTitle {
-  font-size: 3rem;
-  font-weight: 900;
-  background: linear-gradient(90deg, #f3f3f3, #ffb48f, #f3f3f3);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-align: center;
-  animation: glowText 2s infinite alternate ease-in-out;
-  margin: 2rem 0;
 }
 
 .entry-type-icons {
   display: flex;
   justify-content: center;
-  gap: 3rem;
-  margin: 2.5rem 0;
+  gap: 3vw;
+  padding: 1rem 0.75rem;
+  margin: 0.5rem 0;
 }
 
-.icon {
-  font-size: 4rem;
-  cursor: pointer;
+.entry-type-icons .icon {
+  width: 48px !important;
+  height: 48px !important;
+  padding: 0.6rem;
   transition: all 0.3s ease;
-  color: #f3f3f3;
-  padding: 1.5rem;
-  border-radius: 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
 }
 
-.icon.active {
+.entry-type-icons .icon.active {
   color: #ffb48f;
-  transform: scale(1.1);
-  background: rgba(255, 180, 143, 0.1);
 }
 
 .icon:hover {
@@ -67,6 +53,7 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  margin-top: 1.5rem;
 }
 
 .error-message {
@@ -122,7 +109,8 @@
   font-size: 1.5rem;
   font-weight: 400;
   text-align: center;
-  margin-bottom: 15px;
+  margin: 3rem 0 2rem 0 !important;
+  padding-top: 1rem;
   color: #ffb48f;
   animation: fadeIn 0.5s ease-in-out;
 }
@@ -281,8 +269,11 @@
 .entry-type-sections {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 2rem;
+  gap: 1.5rem;
   width: 100%;
+  max-width: 900px;
+  margin: 1.5rem auto 0;
+  padding: 0 1rem;
 }
 
 @media (min-width: 768px) {
@@ -293,17 +284,18 @@
 
 .loobrary-section,
 .loobricate-section {
-  padding: 2rem;
+  padding: 1.25rem;
   border-radius: 1.5rem;
   background: rgba(38, 38, 38, 0.3);
   transition: all 0.3s ease;
   border: 2px solid transparent;
-  height: 100%;
-  min-height: 300px;
+  min-height: 200px;
+  height: auto;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   cursor: pointer;
+  box-sizing: border-box;
 }
 
 .loobrary-section:hover,
@@ -320,8 +312,8 @@
 }
 
 .section-title {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
   color: #f3f3f3;
   text-align: center;
 }
@@ -329,8 +321,9 @@
 .loobricate-description {
   text-align: center;
   color: #ffb48f;
-  margin-top: 1rem;
-  font-size: 1.1rem;
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  padding: 0 0.5rem;
 }
 
 .loobricate-icon {
@@ -419,6 +412,29 @@
   margin-bottom: 20px;
 }
 
+.loobricate-select-container select {
+  width: 100%;
+  padding: 1rem;
+  background: rgba(34, 34, 34, 0.8) !important;
+  color: #f3f3f3 !important;
+  border: 1px solid #444 !important;
+  border-radius: 1rem;
+  font-size: 1rem;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ffb48f%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 0.65em auto;
+  transition: all 0.3s ease;
+}
+
+.loobricate-select-container select:focus {
+  border-color: #ffb48f;
+  box-shadow: 0 0 0 2px rgba(255, 180, 143, 0.2);
+  outline: none;
+}
+
 .loobricate-select-container label {
   display: block;
   margin-bottom: 8px;
@@ -434,8 +450,9 @@
 .section-description {
   text-align: center;
   color: #aaa;
-  margin: 10px 0;
-  font-size: 0.9rem;
+  margin: 0.5rem 0;
+  font-size: 0.85rem;
+  padding: 0 0.5rem;
 }
 
 .input-group {
@@ -636,12 +653,26 @@
   }
 
   .entry-type-icons {
-    gap: 1.5rem;
+    gap: 1rem;
   }
 
-  .icon {
-    font-size: 3rem;
+  .entry-type-icons .icon {
+    width: 42px !important;
+    height: 42px !important;
+    padding: 0.5rem;
+  }
+
+  .loobrary-section,
+  .loobricate-section {
     padding: 1rem;
+    min-height: 180px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mainTitle {
+    font-size: clamp(1.75rem, 8vw, 2rem);
+    line-height: 1.1;
   }
 }
 

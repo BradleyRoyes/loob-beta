@@ -11,16 +11,21 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 0 1rem;
 }
 
 .loobricate-profile-container {
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: 900px;
+  margin: 1.5rem auto;
   padding: 0;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  background: rgba(38, 38, 38, 0.3);
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .loobricate-header {
@@ -33,41 +38,48 @@
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.5rem 1.5rem 0 0;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .loobricate-header h2 {
   font-size: clamp(1.5rem, 5vw, 2rem);
-  background: linear-gradient(45deg, #ffb48f, #ff7e79);
+  font-family: 'Modulus Pro', sans-serif;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ffb48f 0%, #ff7e79 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin: 0;
 }
 
 .close-button {
-  background: none;
+  background: rgba(255, 255, 255, 0.1);
   border: none;
-  color: #666;
-  font-size: 2rem;
+  color: #f3f3f3;
+  font-size: 1.5rem;
   cursor: pointer;
-  padding: 0.75rem;
-  transition: all 0.3s ease;
+  padding: 0.5rem;
   border-radius: 50%;
-  opacity: 0.8;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
 }
 
 .close-button:hover {
-  color: #f3f3f3;
-  background: rgba(255, 255, 255, 0.1);
-  transform: none;
-  opacity: 1;
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.1);
 }
 
 .loobricate-info {
   flex: 1;
-  padding: 2rem;
+  padding: 1.5rem;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 2rem;
+  gap: 1.5rem;
   width: 100%;
 }
 
@@ -87,21 +99,22 @@
 }
 
 .info-section {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 1rem;
-  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
   transition: all 0.3s ease;
 }
 
 .info-section:hover {
-  background: rgba(255, 255, 255, 0.08);
-  transform: none;
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
 }
 
 .info-section h3 {
-  font-size: clamp(1.25rem, 4vw, 1.5rem);
-  font-weight: 500;
-  background: linear-gradient(45deg, #ffb48f, #ff7e79);
+  font-size: 1.25rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #ffb48f 0%, #ff7e79 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 1rem;
@@ -112,6 +125,7 @@
   line-height: 1.6;
   font-size: 1rem;
   margin-bottom: 1rem;
+  opacity: 0.9;
 }
 
 .stats {
@@ -122,22 +136,29 @@
 }
 
 .stat {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.03);
   padding: 1rem;
   border-radius: 0.75rem;
   text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+.stat:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
 }
 
 .stat .label {
   display: block;
   color: #aaa;
-  font-size: 1rem;
+  font-size: 0.9rem;
   margin-bottom: 0.5rem;
 }
 
 .stat .value {
-  font-size: clamp(1.5rem, 4vw, 2rem);
-  background: linear-gradient(45deg, #ffb48f, #ff7e79);
+  font-size: 1.5rem;
+  background: linear-gradient(135deg, #ffb48f 0%, #ff7e79 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 600;
@@ -153,15 +174,16 @@
 .tag {
   padding: 0.5rem 1rem;
   background: rgba(255, 180, 143, 0.1);
-  border: 1px solid rgba(255, 180, 143, 0.3);
-  border-radius: 1rem;
+  border: 1px solid rgba(255, 180, 143, 0.2);
+  border-radius: 2rem;
   color: #ffb48f;
   font-size: 0.875rem;
+  transition: all 0.3s ease;
 }
 
 .tag:hover {
-  background: rgba(255, 180, 143, 0.2);
-  transform: none;
+  background: rgba(255, 180, 143, 0.15);
+  transform: translateY(-1px);
 }
 
 .details-grid {
@@ -197,17 +219,19 @@
 .admin-login-section {
   grid-column: 1 / -1;
   margin-top: 2rem;
-  padding-top: 2rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .admin-login-button {
   width: 100%;
-  padding: 1.25rem;
-  background: linear-gradient(45deg, #ffb48f, #ff7e79);
+  padding: 1rem;
+  background: linear-gradient(135deg, #ffb48f 0%, #ff7e79 100%);
   border: none;
   border-radius: 1rem;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #1a1a1a;
   cursor: pointer;
@@ -215,8 +239,8 @@
 }
 
 .admin-login-button:hover:not(:disabled) {
-  transform: none;
-  box-shadow: none;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 180, 143, 0.2);
 }
 
 .admin-login-button:disabled {
@@ -247,6 +271,10 @@
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
+  .loobricate-profile-container {
+    margin: 1rem auto;
+  }
+
   .loobricate-header {
     padding: 1rem;
   }
@@ -257,7 +285,7 @@
   }
 
   .info-section {
-    padding: 1.5rem;
+    padding: 1rem;
   }
 
   .visualization-section {
@@ -486,6 +514,6 @@ textarea.form-input {
   .loobricate-profile-modal {
     top: calc(4rem + env(safe-area-inset-top));
     bottom: calc(5rem + env(safe-area-inset-bottom));
-    padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
   }
 } 

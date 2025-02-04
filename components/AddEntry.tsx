@@ -578,8 +578,6 @@ const AddEntry: React.FC = () => {
 
   return (
     <div className="add-entry-container">
-      <h1 className="mainTitle">Add to Loob</h1>
-      
       <div className="entry-type-sections">
         <div className="loobricate-section">
           <h2 className="section-title">Create a Loobricate</h2>

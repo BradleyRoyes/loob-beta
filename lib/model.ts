@@ -5,6 +5,21 @@ import * as mediapipe from '@mediapipe/tasks-vision';
 import { Prediction } from '@/types/detection';
 import { prepareData } from './prepareData';
 
+// Custom error classes for better error handling
+export class ModelError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ModelError';
+  }
+}
+
+export class StorageError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'StorageError';
+  }
+}
+
 // Update model configuration
 export const MODEL_CONFIG = {
   inputShape: [128, 128, 3] as [number, number, number],
@@ -15,47 +30,51 @@ export const MODEL_CONFIG = {
   colorThreshold: 0.8
 };
 
-// Create a simple model architecture
+// Create a simple model architecture with error handling
 async function createModel(): Promise<tf.LayersModel> {
-  const model = tf.sequential();
-  
-  // Initial feature extraction - color and shape sensitive
-  model.add(tf.layers.conv2d({
-    inputShape: MODEL_CONFIG.inputShape,
-    filters: 16,
-    kernelSize: 3,
-    activation: 'relu',
-    padding: 'same'
-  }));
-  model.add(tf.layers.maxPooling2d({ poolSize: 2 }));
-  
-  // Global features
-  model.add(tf.layers.conv2d({
-    filters: 32,
-    kernelSize: 3,
-    activation: 'relu',
-    padding: 'same'
-  }));
-  model.add(tf.layers.maxPooling2d({ poolSize: 2 }));
-  
-  // Position-invariant features
-  model.add(tf.layers.globalAveragePooling2d({}));
-  
-  // Dense layers for final prediction
-  model.add(tf.layers.dense({ units: 64, activation: 'relu' }));
-  model.add(tf.layers.dropout({ rate: 0.2 }));
-  model.add(tf.layers.dense({ units: MODEL_CONFIG.outputShape, activation: 'sigmoid' }));
+  try {
+    const model = tf.sequential();
+    
+    // Initial feature extraction - color and shape sensitive
+    model.add(tf.layers.conv2d({
+      inputShape: MODEL_CONFIG.inputShape,
+      filters: 16,
+      kernelSize: 3,
+      activation: 'relu',
+      padding: 'same'
+    }));
+    model.add(tf.layers.maxPooling2d({ poolSize: 2 }));
+    
+    // Global features
+    model.add(tf.layers.conv2d({
+      filters: 32,
+      kernelSize: 3,
+      activation: 'relu',
+      padding: 'same'
+    }));
+    model.add(tf.layers.maxPooling2d({ poolSize: 2 }));
+    
+    // Position-invariant features
+    model.add(tf.layers.globalAveragePooling2d({}));
+    
+    // Dense layers for final prediction
+    model.add(tf.layers.dense({ units: 64, activation: 'relu' }));
+    model.add(tf.layers.dropout({ rate: 0.2 }));
+    model.add(tf.layers.dense({ units: MODEL_CONFIG.outputShape, activation: 'sigmoid' }));
 
-  // Use Adam optimizer with custom learning rate
-  const optimizer = tf.train.adam(MODEL_CONFIG.learningRate);
-  
-  model.compile({
-    optimizer,
-    loss: 'meanSquaredError',
-    metrics: ['accuracy']
-  });
-  
-  return model;
+    // Use Adam optimizer with custom learning rate
+    const optimizer = tf.train.adam(MODEL_CONFIG.learningRate);
+    
+    model.compile({
+      optimizer,
+      loss: 'meanSquaredError',
+      metrics: ['accuracy']
+    });
+    
+    return model;
+  } catch (error) {
+    throw new ModelError(`Failed to create model: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }
 
 interface SavedModel {
@@ -86,13 +105,28 @@ export class ModelManager {
   private readonly modelListKey = `${this.storagePrefix}-list`;
 
   constructor() {
-    // Initialize IndexedDB for model storage
-    tf.setBackend('webgl');
+    // Initialize IndexedDB for model storage with error handling
+    try {
+      tf.setBackend('webgl').catch(err => {
+        console.warn('WebGL backend not available, falling back to CPU:', err);
+        return tf.setBackend('cpu');
+      });
+    } catch (error) {
+      console.error('Failed to initialize TensorFlow backend:', error);
+      throw new ModelError('Failed to initialize TensorFlow backend');
+    }
   }
 
-  // Add setModel method
+  // Improved error handling for model operations
   async setModel(model: tf.LayersModel) {
-    this.model = model;
+    try {
+      if (this.model) {
+        this.model.dispose();
+      }
+      this.model = model;
+    } catch (error) {
+      throw new ModelError(`Failed to set model: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   private async getModelList(): Promise<SavedModel[]> {
@@ -100,8 +134,7 @@ export class ModelManager {
       const listJson = localStorage.getItem(this.modelListKey);
       return listJson ? JSON.parse(listJson) : [];
     } catch (err) {
-      console.error('Failed to get model list:', err);
-      return [];
+      throw new StorageError(`Failed to get model list: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   }
 
@@ -109,8 +142,7 @@ export class ModelManager {
     try {
       localStorage.setItem(this.modelListKey, JSON.stringify(models));
     } catch (err) {
-      console.error('Failed to save model list:', err);
-      throw new Error('Failed to save model list');
+      throw new StorageError(`Failed to save model list: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   }
 
@@ -265,15 +297,75 @@ export class ModelManager {
     }
   }
 
-  disposeModel() {
-    if (this.model) {
+  // Add memory management
+  private disposeAndCleanup() {
+    try {
+      if (this.model) {
         this.model.dispose();
-      this.model = null;
+        this.model = null;
+      }
+      // Clean up any dangling tensors
+      tf.disposeVariables();
+    } catch (error) {
+      console.error('Error during cleanup:', error);
     }
   }
 
+  // Add this to handle backend initialization
+  private async ensureBackendInitialized() {
+    if (!tf.getBackend()) {
+      try {
+        await tf.setBackend('webgl');
+      } catch (err) {
+        console.warn('WebGL backend failed, trying CPU:', err);
+        await tf.setBackend('cpu');
+      }
+    }
+  }
+
+  // Improved model prediction with error handling
+  async predictImage(
+    image: HTMLImageElement | HTMLVideoElement
+  ): Promise<{ x: number; y: number; width: number; height: number }> {
+    try {
+      await this.ensureBackendInitialized();
+      
+      if (!this.model) {
+        throw new ModelError('No model loaded');
+      }
+
+      // Convert image to tensor
+      const tensor = tf.tidy(() => {
+        const img = tf.browser.fromPixels(image);
+        const resized = tf.image.resizeBilinear(img, [MODEL_CONFIG.inputShape[0], MODEL_CONFIG.inputShape[1]]);
+        return resized.expandDims(0).toFloat().div(255);
+      });
+
+      try {
+        const prediction = await this.model.predict(tensor) as tf.Tensor;
+        const [x, y, width, height] = Array.from(await prediction.data());
+        
+        // Cleanup
+        tensor.dispose();
+        prediction.dispose();
+
+        return { x, y, width, height };
+      } catch (error) {
+        tensor.dispose();
+        throw error;
+      }
+    } catch (error) {
+      throw new ModelError(`Prediction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // Add destructor
+  destroy() {
+    this.disposeAndCleanup();
+  }
+
   async clearCache(): Promise<void> {
-    this.disposeModel();
+    this.disposeAndCleanup();
     await tf.ready();
     // Clear the backend
     tf.engine().reset();
@@ -447,33 +539,6 @@ export async function trainModel(
   }
 }
 
-// Update prediction function to handle color information
-export async function predictImage(
-  image: HTMLImageElement | HTMLVideoElement
-): Promise<{ x: number; y: number; width: number; height: number }> {
-  const model = await modelManager.getModel();
-  
-  const tensor = tf.tidy(() => {
-    const imageTensor = tf.browser.fromPixels(image);
-    
-    // Basic preprocessing - just resize and normalize
-    const normalized = imageTensor
-      .resizeBilinear([MODEL_CONFIG.inputShape[0], MODEL_CONFIG.inputShape[1]])
-      .toFloat()
-      .div(255.0);
-
-    return normalized.expandDims(0);
-  });
-  
-  try {
-    const prediction = model.predict(tensor) as tf.Tensor2D;
-    const [x, y, width, height] = await prediction.data();
-    return { x, y, width, height };
-  } finally {
-    tf.dispose([tensor]);
-  }
-}
-
 // First, ensure you have this type definition in your types
 type ModelHandler = {
   init: () => Promise<any>;
@@ -485,7 +550,7 @@ export function createModelHandlers(): Record<string, ModelHandler> {
     'custom': {
       init: async () => modelManager.getModel(),
       detect: async (image) => {
-        const result = await predictImage(image);
+        const result = await modelManager.predictImage(image);
         return [{
           x: result.x,
           y: result.y,

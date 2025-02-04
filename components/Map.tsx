@@ -377,8 +377,30 @@ const Map: React.FC = () => {
             }));
           },
           (error) => {
-            console.error('Watch position error:', error);
-            handleLocationError(error);
+            console.error('Watch position error:', {
+              code: error.code,
+              message: error.message,
+              error
+            });
+            
+            const errorMessage = 
+              error.code === 1 // PERMISSION_DENIED
+                ? 'Location access was denied. Please enable permissions in your browser settings.'
+                : error.code === 2 // POSITION_UNAVAILABLE
+                ? 'Unable to retrieve location. Please ensure location services are enabled.'
+                : error.code === 3 // TIMEOUT
+                ? 'Location request timed out. Please check your connection.'
+                : 'An unknown error occurred while getting location.';
+
+            setLocationState(prev => ({
+              ...prev,
+              status: 'error',
+              error: {
+                type: error.code === 1 ? 'permission' : 
+                      error.code === 3 ? 'timeout' : 'unavailable',
+                message: errorMessage
+              }
+            }));
           },
           LOCATION_CONFIG.HIGH_ACCURACY
         );

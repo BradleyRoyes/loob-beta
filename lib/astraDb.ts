@@ -44,3 +44,8 @@ export const initializeCollection = async (
 export const getCollection = async (collectionName: string) => {
   return await astraDb.collection(collectionName);
 };
+
+export async function getAstraClient() {
+  // ... existing client initialization code
+  return client;
+}

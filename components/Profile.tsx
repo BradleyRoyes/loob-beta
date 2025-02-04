@@ -36,10 +36,12 @@ const convertToLoobricateData = (loobricate: Loobricate): LoobricateData => {
     city,
     adminUsername: loobricate.adminUsername || '',
     tags: loobricate.tags || [],
+    type: loobricate.type || 'community',
     members: loobricate.members || [],
     admins: loobricate.admins || [],
     createdAt: new Date().toISOString(),
-    type: loobricate.type || 'community'
+    updatedAt: new Date().toISOString(),
+    status: 'active'
   };
 };
 
@@ -69,8 +71,8 @@ const Profile: React.FC<{
   const [entries, setEntries] = useState<any[]>([]);
   const [recentDiscoveries, setRecentDiscoveries] = useState<any[]>([]);
   const [routeMessage, setRouteMessage] = useState('');
-  const [showDailyDump, setShowDailyDump] = useState(false);
-  const [showDailyQuest, setShowDailyQuest] = useState(false);
+  const [showDailyDumpModal, setShowDailyDumpModal] = useState(false);
+  const [showDailyQuestModal, setShowDailyQuestModal] = useState(false);
   const [loadingState, setLoadingState] = useState<'idle' | 'loading' | 'error' | 'success'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false);
@@ -198,10 +200,31 @@ const Profile: React.FC<{
     alert('Feature coming soon!');
   };
 
-  // Update badge click handler
-  const handleLoobricateClick = (loobricate: Loobricate) => {
-    setSelectedLoobricate(loobricate);
-    setShowLoobricateModal(true);
+  // Update the handleLoobricateClick function
+  const handleLoobricateClick = async (loobricate: Loobricate) => {
+    try {
+      // Fetch fresh data from the server
+      const response = await fetch(`/api/loobricates/${loobricate.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch Loobricate data');
+      }
+      const freshData = await response.json();
+      
+      // Update the selected Loobricate with fresh data
+      setSelectedLoobricate({
+        ...loobricate,
+        members: freshData.members || [],
+        admins: freshData.admins || [],
+        description: freshData.description || loobricate.description || '',
+        tags: freshData.tags || loobricate.tags || []
+      });
+      setShowLoobricateModal(true);
+    } catch (error) {
+      console.error('Error fetching Loobricate details:', error);
+      // Fallback to existing data if fetch fails
+      setSelectedLoobricate(loobricate);
+      setShowLoobricateModal(true);
+    }
   };
 
   // Handle modal close
@@ -246,9 +269,19 @@ const Profile: React.FC<{
     );
   };
 
+  // Add placeholder badges for anonymous users
+  const placeholderBadges = [
+    { id: '1', name: '?' },
+    { id: '2', name: '?' },
+    { id: '3', name: '?' }
+  ];
+
+  const handleLoginClick = () => {
+    window.location.reload();
+  };
+
   return (
     <div className="profile-container">
-      {/* Connected Loobricates Section */}
       <div className="profile-box">
         <div className="profile-header">
           <div className="pseudonym-section">
@@ -260,21 +293,48 @@ const Profile: React.FC<{
             </div>
             
             {/* Connected Loobricates Section */}
-            <div className="connected-loobricates mt-4">
-              {connectedLoobricates.length > 0 && (
-                <div className="flex flex-wrap gap-2">
+            <div className="connected-loobricates">
+              {isAnonymous ? (
+                <div className="anonymous-loobricates">
+                  <div className="badges-container">
+                    {placeholderBadges.map((badge) => (
+                      <div
+                        key={badge.id}
+                        className="badge-placeholder"
+                      >
+                        <div className="badge-avatar">?</div>
+                        <span className="badge-name">Loobricate</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : connectedLoobricates.length > 0 ? (
+                <div className="badges-container">
                   {connectedLoobricates.map((loobricate) => (
                     <button
                       key={loobricate.id}
                       onClick={() => handleLoobricateClick(loobricate)}
-                      className="px-3 py-1.5 rounded-full bg-gradient-to-r from-pink-200 via-purple-200 to-blue-200 text-gray-800 text-sm font-medium shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center gap-2 hover:translate-y-[-1px]"
+                      className="loobricate-badge"
                     >
-                      <div className="w-5 h-5 rounded-full bg-white/50 flex items-center justify-center text-xs font-bold">
+                      <div className="badge-avatar">
                         {loobricate.name.charAt(0).toUpperCase()}
                       </div>
-                      <span>{loobricate.name}</span>
+                      <span className="badge-name">{loobricate.name}</span>
+                      {loobricate.role === 'admin' && (
+                        <span className="admin-indicator">Admin</span>
+                      )}
                     </button>
                   ))}
+                </div>
+              ) : (
+                <div className="empty-loobricates">
+                  <p>You haven't joined any Loobricates yet</p>
+                  <button 
+                    onClick={() => toggleView && toggleView("AddEntry")}
+                    className="add-loobricate-button"
+                  >
+                    Find Loobricates
+                  </button>
                 </div>
               )}
             </div>
@@ -286,137 +346,178 @@ const Profile: React.FC<{
           <TorusSphere loobricateId={userId || 'default'} />
         </div>
 
-        <div className="daily-section">
-          <button 
-            className="daily-dump-button"
-            onClick={() => setShowDailyDump(true)}
-          >
-            Daily Dump
-            {hasDumpedToday && (
-              <span className="ml-2 text-sm px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/30">
-                ✓ Done Today
-              </span>
-            )}
-          </button>
-          <p className="helper-text">
-            Share thoughts and goals to help Loob understand you better.
-          </p>
-
-          <button 
-            onClick={() => setShowDailyQuest(true)}
-            className={`daily-quest-button ${!hasDumpedToday ? 'opacity-50 cursor-not-allowed' : ''}`}
-            disabled={!hasDumpedToday}
-          >
-            Daily Quest
-            {!hasDumpedToday && (
-              <span className="ml-2 text-sm px-2 py-0.5 rounded-full bg-gray-700 text-gray-400 border border-gray-600">
-                Locked
-              </span>
-            )}
-          </button>
-          <p className="helper-text">
-            {hasDumpedToday 
-              ? "Receive a mystical quest based on your journey so far."
-              : "Complete a Daily Dump first to unlock your quest."}
-          </p>
-        </div>
-
-        {/* Recent Discoveries with Map Links */}
-        <div className="profile-section">
-          <h2 className="section-heading">Your Recent Discoveries</h2>
-          {recentDiscoveries.length > 0 ? (
-            <ul className="list">
-              {recentDiscoveries.map((r) => (
-                <li key={r.id} className="list-item">
-                  <div className="list-item-content">
-                    <span>{r.title}</span>
-                    <p>Visited on: {new Date(r.dateVisited).toLocaleDateString()}</p>
-                  </div>
-                  <div className="button-group">
-                    <button 
-                      className="inline-button"
-                      onClick={() => toggleView && toggleView("Map")}
-                    >
-                      View on Map
-                    </button>
-                    <button className="inline-button" onClick={handlePlaceholderClick}>
-                      Share
-                    </button>
-                  </div>
-                </li>
-              ))}
+        {/* For anonymous users, show welcome message */}
+        {isAnonymous ? (
+          <div className="anonymous-message">
+            <h2>Welcome to Loob!</h2>
+            <p>Join our community to unlock all features:</p>
+            <ul>
+              <li>Connect with Loobricates in your area</li>
+              <li>Track your daily journey with Dumps and Quests</li>
+              <li>Discover and share new experiences</li>
+              <li>Build your personal Loobrary</li>
             </ul>
-          ) : (
-            <p className="empty-message">You have no recent discoveries yet.</p>
-          )}
-        </div>
+            <button 
+              onClick={handleLoginClick}
+              className="loobricate-login-button"
+            >
+              Log In to Get Started
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* Daily Challenges Section */}
+            <div className="daily-section">
+              <div className="daily-buttons-container">
+                <div>
+                  <button
+                    className="daily-dump-button"
+                    onClick={() => setShowDailyDumpModal(true)}
+                    disabled={hasDumpedToday}
+                  >
+                    Daily Dump
+                    {hasDumpedToday && (
+                      <span className="completion-indicator">✓ Done Today</span>
+                    )}
+                  </button>
+                  <p className="helper-text">
+                    Share thoughts and goals to help Loob understand you better.
+                  </p>
+                </div>
+                <div>
+                  <button
+                    className={`daily-quest-button ${!hasDumpedToday ? 'locked' : ''}`}
+                    onClick={() => setShowDailyQuestModal(true)}
+                    disabled={!hasDumpedToday}
+                  >
+                    Daily Quest
+                    {!hasDumpedToday && (
+                      <span className="lock-indicator">Locked</span>
+                    )}
+                  </button>
+                  <p className="helper-text">
+                    {hasDumpedToday 
+                      ? "Receive a mystical quest based on your journey so far."
+                      : "Complete a Daily Dump first to unlock your quest."}
+                  </p>
+                </div>
+              </div>
+            </div>
 
-        {/* Loobrary Entries */}
-        <div className="profile-section">
-          <h2 className="section-heading">Your Loobrary Entries</h2>
-          {entries.length > 0 ? (
-            <ul className="list">
-              {entries.map((e) => (
-                <li key={e.id} className="list-item">
-                  <div className="list-item-content">
-                    <span>{e.label}</span>
-                    <p>{e.details}</p>
-                  </div>
-                  <div className="button-group">
-                    <button className="inline-button" onClick={handlePlaceholderClick}>
-                      Edit
-                    </button>
-                    <button className="inline-button" onClick={handlePlaceholderClick}>
-                      View Details
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="empty-message">You have not added any entries to the Loobrary yet.</p>
-          )}
-        </div>
+            {/* Recent Discoveries Section */}
+            <div className="profile-section">
+              <h2 className="section-heading">Recent Discoveries</h2>
+              {recentDiscoveries.length > 0 ? (
+                <ul className="list">
+                  {recentDiscoveries.map((r) => (
+                    <li key={r.id} className="list-item">
+                      <div className="list-item-content">
+                        <span>{r.title}</span>
+                        <p>Visited on: {new Date(r.dateVisited).toLocaleDateString()}</p>
+                      </div>
+                      <div className="button-group">
+                        <button 
+                          className="inline-button"
+                          onClick={() => toggleView && toggleView("Map")}
+                        >
+                          View on Map
+                        </button>
+                        <button className="inline-button" onClick={handlePlaceholderClick}>
+                          Share
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="empty-message">You have no recent discoveries yet.</p>
+              )}
+            </div>
 
-        {/* Main buttons container at the bottom */}
+            {/* Recent Entries Section */}
+            <div className="profile-section">
+              <h2 className="section-heading">Recent Entries</h2>
+              {entries.length > 0 ? (
+                <ul className="list">
+                  {entries.map((e) => (
+                    <li key={e.id} className="list-item">
+                      <div className="list-item-content">
+                        <span>{e.label}</span>
+                        <p>{e.details}</p>
+                      </div>
+                      <div className="button-group">
+                        <button className="inline-button" onClick={handlePlaceholderClick}>
+                          Edit
+                        </button>
+                        <button className="inline-button" onClick={handlePlaceholderClick}>
+                          View Details
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="empty-message">You have not added any entries to the Loobrary yet.</p>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Buttons Container */}
         <div className="buttons-container">
-          <button className="logout-button" onClick={handleLogOut}>
-            Log Out
-          </button>
+          <div className="button-group">
+            {!isAnonymous && (
+              <button className="logout-button" onClick={handleLogOut}>
+                Log Out
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Loobricate Profile Modal */}
-      {showLoobricateModal && selectedLoobricate && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
-          <LoobricateProfile
-            loobricate={convertToLoobricateData(selectedLoobricate)}
-            onClose={handleModalClose}
-            onUpdate={handleLoobricateUpdate}
+      {/* Modals */}
+      {showDailyDumpModal && !isAnonymous && (
+        <div className={`modal-overlay ${showDailyDumpModal ? 'visible' : ''}`}>
+          <DailyDump 
+            isOpen={showDailyDumpModal}
+            onClose={() => setShowDailyDumpModal(false)}
+            onDumpComplete={() => {
+              setHasDumpedToday(true);
+              setShowDailyDumpModal(false);
+            }}
           />
         </div>
       )}
 
-      {/* Other modals */}
-      {showDailyDump && (
-        <DailyDump 
-          isOpen={showDailyDump}
-          onClose={() => setShowDailyDump(false)}
-          onDumpComplete={() => {
-            setHasDumpedToday(true);
-          }}
-        />
+      {showDailyQuestModal && !isAnonymous && (
+        <div className={`modal-overlay ${showDailyQuestModal ? 'visible' : ''}`}>
+          <DailyQuest 
+            hasDumpedToday={hasDumpedToday}
+            onOpenDump={() => {
+              setShowDailyQuestModal(false);
+              setShowDailyDumpModal(true);
+            }}
+            onClose={() => setShowDailyQuestModal(false)}
+          />
+        </div>
       )}
 
-      {showDailyQuest && (
-        <DailyQuest 
-          hasDumpedToday={hasDumpedToday}
-          onOpenDump={() => {
-            setShowDailyQuest(false);
-            setShowDailyDump(true);
-          }}
-          onClose={() => setShowDailyQuest(false)}
-        />
+      {showLoobricateModal && selectedLoobricate && (
+        <div className={`modal-overlay ${showLoobricateModal ? 'visible' : ''}`}>
+          {selectedLoobricate.admins?.includes(userId || '') ? (
+            <LoobricateAdminPanel
+              loobricateId={selectedLoobricate.id}
+              onClose={handleModalClose}
+              onUpdate={handleLoobricateUpdate}
+            />
+          ) : (
+            <LoobricateProfile
+              loobricate={convertToLoobricateData(selectedLoobricate)}
+              onClose={handleModalClose}
+              onUpdate={handleLoobricateUpdate}
+            />
+          )}
+        </div>
       )}
     </div>
   );

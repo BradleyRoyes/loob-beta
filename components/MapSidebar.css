@@ -218,45 +218,50 @@ SEARCH BY ICONS STYLING
 }
 
 .search-icon {
+  position: relative;
+  z-index: 1; /* Ensure icons stay above other elements */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background: rgba(51, 51, 51, 0.5); /* More transparent */
+  background: #333; /* Solid color instead of rgba */
   border-radius: 12px;
   transition: transform 0.3s, background 0.3s;
   cursor: pointer;
-  width: 80px;
-  height: 80px;
+  width: 20vw;
+  height: 20vw;
+  min-width: 64px;
+  min-height: 64px;
+  max-width: 88px;
+  max-height: 88px;
+  gap: 4px; /* Space between icon and text */
 }
 
 .search-icon .icon {
-  font-size: 2rem;
-  color: #fcd1d1; /* A pastel pink accent */
+  /* Size now controlled by global styles */
 }
 
 .search-icon span {
   margin-top: 0.5rem;
   font-size: 0.875rem;
-  color: #fff;
+  color: #fed7aa; /* Match icon color */
+  transition: color 0.3s ease;
 }
 
 .search-icon:hover {
-  transform: scale(1.1);
-  background: rgba(68, 68, 68, 0.6); /* Slightly lighter but still transparent */
+  transform: scale(1.05);
+  background: rgba(68, 68, 68, 0.9);
+  border-color: rgba(254, 215, 170, 0.6);
 }
 
 .search-icon.active {
-  background: linear-gradient(
-    to right,
-    rgba(254, 215, 170, 0.8),
-    rgba(252, 209, 209, 0.8)
-  ); /* More transparent gradient */
+  background: rgba(254, 215, 170, 0.9) !important; /* Force override any conflicting gradients */
+  box-shadow: 0 4px 12px rgba(254, 215, 170, 0.2);
 }
 
 .search-icon.active .icon {
-  color: #333;
+  fill: rgba(0, 0, 0, 0.9); /* Update fill for active state */
 }
 
 .search-icon.active span {
@@ -276,7 +281,7 @@ LOOBRICATE SPECIFIC STYLING
 }
 
 .search-icon.loobricate .icon {
-  color: #333;
+  fill: #333 !important; /* Use fill instead of color */
 }
 
 .search-icon.loobricate span {
@@ -367,4 +372,9 @@ EXPLORE BY DROPDOWN STYLING
 
 .explore-dropdown:invalid {
   color: #888;
+}
+
+/* Increase contrast on hover */
+.search-icon:hover .icon {
+  fill: #ffedd5; /* Update hover state */
 }

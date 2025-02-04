@@ -2,19 +2,20 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-export interface Loobricate {
+export type Loobricate = {
   id: string;
   name: string;
-  description: string;
-  address: string;
-  adminUsername: string;
-  tags: string[];
-  email?: string;
-  location?: string;
+  description?: string;
+  address?: string;
+  adminUsername?: string;
+  tags?: string[];
   type?: string;
   members?: string[];
   admins?: string[];
-}
+  email?: string;
+  location?: { lat: number; lng: number };
+  role?: 'admin' | 'member';
+};
 
 interface UserState {
   userId: string | null;

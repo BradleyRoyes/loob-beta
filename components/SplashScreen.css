@@ -1,3 +1,6 @@
+/* Move font import to VERY TOP of file */
+@import url('https://fonts.cdnfonts.com/css/modulus-pro?styles=17014');
+
 /* SPLASH SCREEN CSS */
 
 /* General Layout */
@@ -34,80 +37,88 @@
   line-height: 1.2;
 }
 
+/* Title Section Styling */
+.titleSection {
+  margin-bottom: 4rem;
+  text-align: center;
+  padding-top: 2rem;
+}
+
 /* Secondary Title (Main Title) */
 .splashScreen .mainTitle {
-  font-size: 3rem;
-  font-weight: 800;
+  font-family: 'Modulus Pro', sans-serif;
+  font-size: 3.5rem;
+  color: #2d3436;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  margin: 0;
+  font-weight: 700;
   background: linear-gradient(90deg, #f3f3f3, #ffb48f, #ff9f7f);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: 1px;
-  margin-bottom: 10px;
   line-height: 1.2;
+  margin-bottom: 0.5rem;
 }
 
 /* Subtitle Styling */
 .splashScreen .superSubtitle {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   color: #c0bebe;
-  margin-top: 10px;
+  margin: 0;
   font-style: italic;
+  opacity: 0.9;
+}
+
+/* Input Container Styling */
+.inputContainer {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 /* Input Field */
 .splashScreen .pseudonymInput {
   width: 100%;
-  padding: 12px;
+  padding: 0.875rem;
   font-size: 1rem;
   border-radius: 8px;
-  border: 1px solid #ccc !important;
-  background: #222;
+  border: 1px solid rgba(204, 204, 204, 0.3) !important;
+  background: rgba(34, 34, 34, 0.8);
   color: #f3f3f3;
   text-align: center;
-  margin-bottom: 20px;
   outline: none;
-  transition: border-color 0.3s ease;
-}
-
-.splashScreen .pseudonymInput:focus {
-  outline: none !important;
-  border-color: transparent !important;
-  box-shadow: 0 0 0 2px transparent !important;
-  background-image: linear-gradient(to right, #FFB3BA, #FFDAB9) !important;
-  background-origin: border-box !important;
-  background-clip: padding-box, border-box !important;
-}
-
-.splashScreen .pseudonymInput::placeholder {
-  color: #aaa;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+  margin: 0;
 }
 
 /* Button Group */
 .splashScreen .buttonGroup {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  margin-bottom: 15px;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
   align-items: center;
 }
 
 /* Primary Button Styling */
 .splashScreen .actionButton {
-  padding: 12px;
+  padding: 0.875rem;
   font-size: 1rem;
   font-weight: 600;
-  background: linear-gradient(45deg, #ff9f7f, #ff7e79);
+  background: linear-gradient(45deg, rgba(255, 159, 127, 0.9), rgba(255, 126, 121, 0.9));
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: all 0.3s ease;
   max-width: 200px;
   width: 100%;
-}
-
-.splashScreen .actionButton:hover {
-  background: linear-gradient(45deg, #ff8b6b, #ff6b66);
+  backdrop-filter: blur(5px);
 }
 
 /* Secondary Button */
@@ -149,46 +160,53 @@
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
-  .splashScreen .logoText {
-    font-size: 3rem;
+  .titleSection {
+    margin-bottom: 3rem;
+    padding-top: 1.5rem;
   }
 
   .splashScreen .mainTitle {
     font-size: 2.5rem;
+    margin-bottom: 0.5rem;
   }
 
   .splashScreen .superSubtitle {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
   }
 
   .splashScreen .pseudonymInput {
-    padding: 10px;
-    font-size: 0.9rem;
+    padding: 0.75rem;
   }
 
-  .splashScreen .actionButton {
-    padding: 10px;
-    font-size: 0.9rem;
+  .splashScreen .buttonGroup {
+    gap: 0.4rem;
   }
 }
 
 @media (max-width: 480px) {
-  .splashScreen .logoText {
-    font-size: 2.5rem;
+  .titleSection {
+    margin-bottom: 2.5rem;
+    padding-top: 1rem;
   }
 
   .splashScreen .mainTitle {
     font-size: 2rem;
   }
 
-  .splashScreen .pseudonymInput {
-    padding: 8px;
-    font-size: 0.8rem;
+  .splashScreen .superSubtitle {
+    font-size: 1rem;
   }
 
-  .splashScreen .actionButton {
-    padding: 8px;
-    font-size: 0.8rem;
+  .inputContainer {
+    max-width: 280px;
+  }
+
+  .splashScreen .pseudonymInput {
+    padding: 0.625rem;
+  }
+
+  .splashScreen .buttonGroup {
+    gap: 0.375rem;
   }
 }
 
@@ -235,25 +253,21 @@
   opacity: 0.9;
 }
 
-/* Input Container Styling */
-.inputContainer {
-  width: 100%;
-  max-width: 320px;
-  margin: 0 auto;
-}
-
 /* Error Message */
 .error {
   color: #ff6b66;
-  margin: 10px 0;
-  font-size: 0.9rem;
+  margin: 0;
+  font-size: 0.875rem;
+  text-align: center;
 }
 
 /* Create Account Text */
 .createAccountText {
-  margin-top: 1rem;
+  margin-top: 0.75rem;
   color: #ccc;
   cursor: pointer;
+  font-size: 0.875rem;
+  text-align: center;
 }
 
 .linkText {

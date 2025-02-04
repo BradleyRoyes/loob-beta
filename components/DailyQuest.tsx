@@ -3,8 +3,13 @@ import { useGlobalState } from './GlobalStateContext';
 
 interface Quest {
   text: string;
-  reason?: string;
+  explanation?: string;
+  cheatCode?: {
+    number: number;
+    description: string;
+  };
   completed?: boolean;
+  createdAt?: string;
 }
 
 interface DailyQuestProps {
@@ -18,23 +23,41 @@ const DailyQuest: React.FC<DailyQuestProps> = ({ hasDumpedToday, onOpenDump, onC
   const [quest, setQuest] = useState<Quest | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Placeholder function - replace with actual implementation
-  const getQuestRecommendation = async (): Promise<Quest> => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return {
-      text: "Send that email",
-      reason: "Mentioned it 3 times this week"
-    };
+  const checkQuestExpiry = (questCreatedAt: string) => {
+    const createdDate = new Date(questCreatedAt);
+    const now = new Date();
+    
+    // Reset at midnight UTC
+    const midnight = new Date(now);
+    midnight.setUTCHours(0, 0, 0, 0);
+    
+    return createdDate < midnight;
   };
 
   const fetchQuest = async () => {
-    if (!hasDumpedToday) return;
+    if (!userId) return;
     
     setLoading(true);
     try {
-      const newQuest = await getQuestRecommendation();
-      setQuest(newQuest);
+      const response = await fetch(`/api/daily-quest?userId=${userId}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        // If quest exists but is expired, don't set it
+        if (data.createdAt && checkQuestExpiry(data.createdAt)) {
+          setQuest(null);
+        } else {
+          setQuest({
+            text: data.quest,
+            explanation: data.explanation,
+            cheatCode: data.cheatCode,
+            completed: false,
+            createdAt: data.createdAt
+          });
+        }
+      } else {
+        console.error('Failed to fetch quest:', data.error);
+      }
     } catch (error) {
       console.error('Error fetching quest:', error);
     } finally {
@@ -42,9 +65,25 @@ const DailyQuest: React.FC<DailyQuestProps> = ({ hasDumpedToday, onOpenDump, onC
     }
   };
 
+  // Fetch quest when component mounts or hasDumpedToday changes
   useEffect(() => {
-    fetchQuest();
-  }, [hasDumpedToday]);
+    if (hasDumpedToday) {
+      fetchQuest();
+    }
+  }, [hasDumpedToday, userId]);
+
+  // Check for quest expiry every minute
+  useEffect(() => {
+    if (!quest?.createdAt) return;
+
+    const checkInterval = setInterval(() => {
+      if (checkQuestExpiry(quest.createdAt!)) {
+        setQuest(null);
+      }
+    }, 60000); // Check every minute
+
+    return () => clearInterval(checkInterval);
+  }, [quest?.createdAt]);
 
   const handleRefresh = () => {
     fetchQuest();
@@ -53,9 +92,25 @@ const DailyQuest: React.FC<DailyQuestProps> = ({ hasDumpedToday, onOpenDump, onC
   const handleComplete = async () => {
     if (!quest) return;
     
-    setQuest(prev => prev ? { ...prev, completed: true } : null);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    fetchQuest();
+    try {
+      // Mark quest as completed in the database
+      const response = await fetch(`/api/daily-quest/complete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          questId: quest.createdAt // Using createdAt as a unique identifier
+        }),
+      });
+
+      if (response.ok) {
+        setQuest(prev => prev ? { ...prev, completed: true } : null);
+      }
+    } catch (error) {
+      console.error('Error completing quest:', error);
+    }
   };
 
   // Locked state
@@ -89,10 +144,12 @@ const DailyQuest: React.FC<DailyQuestProps> = ({ hasDumpedToday, onOpenDump, onC
   // Loading state
   if (loading) {
     return (
-      <div className="w-full bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-lg border border-gray-800 space-y-4 animate-pulse">
-        <div className="h-7 bg-gray-800 rounded-lg w-1/3"></div>
-        <div className="h-4 bg-gray-800 rounded w-3/4"></div>
-        <div className="h-4 bg-gray-800 rounded w-1/2"></div>
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="w-full max-w-xl bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-lg border border-gray-800 space-y-4 animate-pulse">
+          <div className="h-7 bg-gray-800 rounded-lg w-1/3"></div>
+          <div className="h-4 bg-gray-800 rounded w-3/4"></div>
+          <div className="h-4 bg-gray-800 rounded w-1/2"></div>
+        </div>
       </div>
     );
   }
@@ -112,20 +169,26 @@ const DailyQuest: React.FC<DailyQuestProps> = ({ hasDumpedToday, onOpenDump, onC
             ×
           </button>
         </div>
-        
+
         {quest && (
-          <div className="space-y-4">
-            <p className="text-gray-200 text-lg leading-relaxed">
-              Based on your dump, I think you should focus on{' '}
-              <span className="font-medium text-purple-400">
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <p className="text-gray-200 text-lg leading-relaxed">
                 {quest.text}
-              </span>
-            </p>
-            
-            {quest.reason && (
-              <p className="text-sm text-gray-400">
-                {quest.reason}
               </p>
+              
+              {quest.explanation && (
+                <p className="text-gray-400 text-sm italic leading-relaxed border-l-2 border-purple-500/30 pl-4">
+                  {quest.explanation}
+                </p>
+              )}
+            </div>
+
+            {quest.cheatCode && (
+              <div className="text-xs text-gray-500 bg-white/5 rounded-lg p-3 border border-white/10">
+                <span className="block mb-1">Inspired by Cheat Code #{quest.cheatCode.number}:</span>
+                <span className="italic">{quest.cheatCode.description}</span>
+              </div>
             )}
 
             <div className="flex flex-wrap gap-3 pt-2">

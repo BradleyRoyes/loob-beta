@@ -1,5 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getAstraClient } from '@/lib/astraDb';
+import { AstraDB } from "@datastax/astra-db-ts";
+
+// Initialize AstraDB
+const astraDb = new AstraDB(
+  process.env.ASTRA_DB_APPLICATION_TOKEN,
+  process.env.ASTRA_DB_ENDPOINT,
+  process.env.ASTRA_DB_NAMESPACE
+);
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -10,8 +17,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const astraClient = await getAstraClient();
-    const collection = astraClient.collection('messages');
+    const collection = await astraDb.collection('messages');
 
     // Get today's date at midnight UTC
     const today = new Date();
@@ -47,8 +53,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const astraClient = await getAstraClient();
-    const collection = astraClient.collection('messages');
+    const collection = await astraDb.collection('messages');
 
     // Create new daily dump
     await collection.insertOne({
