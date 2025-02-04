@@ -7,9 +7,11 @@ import DailyDumpArchive from './DailyDumpArchive';
 
 interface DailyDumpProps {
   onClose: () => void;
+  onDumpComplete?: () => void;
+  isOpen: boolean;
 }
 
-const DailyDump: React.FC<DailyDumpProps> = ({ onClose }) => {
+const DailyDump: React.FC<DailyDumpProps> = ({ onClose, onDumpComplete, isOpen }) => {
   const { userId, pseudonym } = useGlobalState();
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);

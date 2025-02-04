@@ -1,89 +1,155 @@
-"use client";
-
 import React, { useState, useEffect } from 'react';
 import { useGlobalState } from './GlobalStateContext';
 
+interface Quest {
+  text: string;
+  reason?: string;
+  completed?: boolean;
+}
+
 interface DailyQuestProps {
+  hasDumpedToday: boolean;
+  onOpenDump: () => void;
   onClose: () => void;
 }
 
-const DailyQuest: React.FC<DailyQuestProps> = ({ onClose }) => {
+const DailyQuest: React.FC<DailyQuestProps> = ({ hasDumpedToday, onOpenDump, onClose }) => {
   const { userId } = useGlobalState();
-  const [quest, setQuest] = useState<string | null>(null);
+  const [quest, setQuest] = useState<Quest | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  // Placeholder function - replace with actual implementation
+  const getQuestRecommendation = async (): Promise<Quest> => {
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return {
+      text: "Send that email",
+      reason: "Mentioned it 3 times this week"
+    };
+  };
+
+  const fetchQuest = async () => {
+    if (!hasDumpedToday) return;
+    
+    setLoading(true);
+    try {
+      const newQuest = await getQuestRecommendation();
+      setQuest(newQuest);
+    } catch (error) {
+      console.error('Error fetching quest:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchQuest = async () => {
-      if (!userId) {
-        setError('Please log in to receive your daily quest.');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const response = await fetch(`/api/daily-quest?userId=${userId}`);
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch quest');
-        }
-
-        setQuest(data.quest);
-      } catch (error) {
-        console.error('Error fetching quest:', error);
-        setError('Failed to retrieve your quest. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchQuest();
-  }, [userId]);
+  }, [hasDumpedToday]);
 
+  const handleRefresh = () => {
+    fetchQuest();
+  };
+
+  const handleComplete = async () => {
+    if (!quest) return;
+    
+    setQuest(prev => prev ? { ...prev, completed: true } : null);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    fetchQuest();
+  };
+
+  // Locked state
+  if (!hasDumpedToday) {
+    return (
+      <button 
+        onClick={onOpenDump}
+        className="w-full bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-lg border border-gray-800/30 space-y-2 text-left transition-all hover:border-gray-700/50 group"
+      >
+        <div className="flex justify-between items-start">
+          <h2 className="text-xl font-semibold text-gray-400">Daily Quest</h2>
+          <span className="text-sm px-3 py-1 rounded-full bg-gray-800 text-gray-500 border border-gray-700/50">
+            Locked
+          </span>
+        </div>
+        
+        <p className="text-gray-500 text-sm leading-relaxed">
+          Share your thoughts in a Daily Dump first so Loob can better understand where you're at and suggest a meaningful quest.
+        </p>
+
+        <div className="flex items-center gap-2 text-gray-400 group-hover:text-gray-300 transition-colors">
+          <span className="text-sm">Start Daily Dump</span>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </button>
+    );
+  }
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="w-full bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-lg border border-gray-800 space-y-4 animate-pulse">
+        <div className="h-7 bg-gray-800 rounded-lg w-1/3"></div>
+        <div className="h-4 bg-gray-800 rounded w-3/4"></div>
+        <div className="h-4 bg-gray-800 rounded w-1/2"></div>
+      </div>
+    );
+  }
+
+  // Active quest state
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-gray-900 rounded-lg shadow-2xl w-full max-w-2xl mx-4 p-8 relative">
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
-          aria-label="Close"
-        >
-          ×
-        </button>
-
-        {/* Title */}
-        <h2 className="text-3xl font-semibold text-center mb-8 bg-gradient-to-r from-pink-200 via-purple-200 to-blue-200 bg-clip-text text-transparent">
-          Daily Quest
-        </h2>
-
-        {/* Content */}
-        <div className="flex flex-col items-center justify-center min-h-[200px] text-center">
-          {loading ? (
-            <div className="text-gray-400 animate-pulse">
-              Divining your quest...
-            </div>
-          ) : error ? (
-            <div className="text-red-400">
-              {error}
-            </div>
-          ) : quest ? (
-            <p className="text-xl text-gray-200 leading-relaxed max-w-xl mx-auto">
-              {quest}
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="w-full max-w-xl bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-lg border border-gray-800 space-y-4">
+        <div className="flex justify-between items-start mb-4">
+          <h2 className="text-xl font-semibold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            Today's Quest
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10"
+          >
+            ×
+          </button>
+        </div>
+        
+        {quest && (
+          <div className="space-y-4">
+            <p className="text-gray-200 text-lg leading-relaxed">
+              Based on your dump, I think you should focus on{' '}
+              <span className="font-medium text-purple-400">
+                {quest.text}
+              </span>
             </p>
-          ) : (
-            <div className="text-gray-400">
-              No quest available at this time.
-            </div>
-          )}
-        </div>
+            
+            {quest.reason && (
+              <p className="text-sm text-gray-400">
+                {quest.reason}
+              </p>
+            )}
 
-        {/* Decorative Elements */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-r from-pink-500/10 to-purple-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-full blur-3xl" />
-        </div>
+            <div className="flex flex-wrap gap-3 pt-2">
+              <button
+                onClick={handleComplete}
+                disabled={quest.completed}
+                className={`px-4 py-2 rounded-xl transition-all ${
+                  quest.completed
+                    ? 'bg-green-900/30 text-green-400 border border-green-500/30 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 shadow-lg hover:shadow-xl hover:-translate-y-0.5'
+                }`}
+              >
+                {quest.completed ? '✓ Completed' : 'Mark Complete'}
+              </button>
+              
+              <button
+                onClick={handleRefresh}
+                className="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 transition-all border border-gray-700 hover:border-gray-600"
+              >
+                Try Another
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

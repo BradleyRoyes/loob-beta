@@ -8,6 +8,7 @@ interface LoobricateAdminPanelProps {
   loobricateId: string;
   onClose: () => void;
   onUpdate: (updatedLoobricate: LoobricateData) => void;
+  onViewProfile?: () => void;
 }
 
 // Add interface for user suggestions
@@ -19,7 +20,8 @@ interface UserSuggestion {
 const LoobricateAdminPanel: React.FC<LoobricateAdminPanelProps> = ({
   loobricateId,
   onClose,
-  onUpdate
+  onUpdate,
+  onViewProfile
 }) => {
   const [loobricate, setLoobricate] = useState<LoobricateData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -253,24 +255,62 @@ const LoobricateAdminPanel: React.FC<LoobricateAdminPanelProps> = ({
     }
   };
 
-  // Remove user handler
-  const handleRemoveUser = (username: string, type: 'admin' | 'member') => {
-    setUsers(prev => ({
-      ...prev,
-      [type + 's']: prev[type + 's'].filter(u => u !== username)
-    }));
-    setHasChanges(true);
+  // Enhanced user management
+  const handleRemoveUser = async (username: string, type: 'member' | 'admin') => {
+    try {
+      // First update the loobricate
+      const updatedUsers = {
+        ...users,
+        [type + 's']: users[type + 's'].filter(u => u !== username)
+      };
+
+      const updatedData = {
+        ...loobricate,
+        members: updatedUsers.members,
+        admins: updatedUsers.admins
+      };
+
+      const loobricateResponse = await fetch(`/api/loobricates/${loobricateId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedData)
+      });
+
+      if (!loobricateResponse.ok) {
+        throw new Error('Failed to update loobricate');
+      }
+
+      // Then update the user's connections
+      const userResponse = await fetch(`/api/users/by-username/${username}/loobricates`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          loobricateId,
+          action: 'remove'
+        })
+      });
+
+      if (!userResponse.ok) {
+        throw new Error('Failed to update user connections');
+      }
+
+      setUsers(updatedUsers);
+      setHasChanges(true);
+    } catch (error) {
+      console.error('Error removing user:', error);
+      setUserError('Failed to remove user. Please try again.');
+    }
   };
 
-  // Save changes handler
+  // Enhanced save handler with proper state updates
   const handleSave = async () => {
     setIsSaving(true);
     try {
       const updatedData = {
         ...loobricate,
         ...formData,
-        admins: users.admins,
-        members: users.members
+        members: users.members,
+        admins: users.admins
       };
 
       const response = await fetch(`/api/loobricates/${loobricateId}`, {
@@ -279,33 +319,56 @@ const LoobricateAdminPanel: React.FC<LoobricateAdminPanelProps> = ({
         body: JSON.stringify(updatedData)
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to update Loobricate');
+        throw new Error('Failed to update loobricate');
       }
 
-      setLoobricate(data);
-      onUpdate(data);
+      const savedData = await response.json();
+      setLoobricate(savedData);
       setHasChanges(false);
+      
+      // Call onUpdate with verified data
+      if (onUpdate) {
+        onUpdate(savedData);
+      }
     } catch (error) {
-      console.error('Failed to save changes:', error);
+      console.error('Error saving loobricate:', error);
       setError('Failed to save changes. Please try again.');
     } finally {
       setIsSaving(false);
     }
   };
 
+  // Prevent closing if there are unsaved changes
+  const handleClose = () => {
+    if (hasChanges && !window.confirm('You have unsaved changes. Are you sure you want to close?')) {
+      return;
+    }
+    onClose();
+  };
+
   return (
     <div className="admin-panel">
-      <div className="admin-header">
-        <h2>Manage {loobricate.name}</h2>
-        <button className="close-button" onClick={onClose}>
-          <FaTimes />
-        </button>
-        <button className="close-x-button" onClick={onClose}>
-          &times;
-        </button>
+      <div className="panel-header">
+        <h2>Admin Panel - {formData.name}</h2>
+        <div className="header-buttons">
+          {onViewProfile && (
+            <button 
+              className="view-profile-button"
+              onClick={onViewProfile}
+              disabled={isSaving}
+            >
+              View Profile
+            </button>
+          )}
+          <button 
+            className="close-button"
+            onClick={handleClose}
+            disabled={isSaving}
+          >
+            <FaTimes />
+          </button>
+        </div>
       </div>
 
       <div className="admin-content">
@@ -458,9 +521,9 @@ const LoobricateAdminPanel: React.FC<LoobricateAdminPanelProps> = ({
         </section>
       </div>
 
-      <div className="admin-footer">
+      <div className="panel-footer">
         <button
-          className={`save-button ${hasChanges ? 'active' : ''}`}
+          className="save-button"
           onClick={handleSave}
           disabled={!hasChanges || isSaving}
         >

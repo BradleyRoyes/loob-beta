@@ -42,14 +42,21 @@ const DailyDumpArchive: React.FC<DailyDumpArchiveProps> = ({ onClose }) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`/api/daily-dumps?userId=${userId}`);
+      
+      // Fetch all dumps with no date restriction
+      const response = await fetch(`/api/daily-dumps?userId=${userId}&limit=100`);
       const data = await response.json();
       
       if (!response.ok) {
         throw new Error(data.error || 'Failed to fetch dumps');
       }
       
-      setDumps(data);
+      // Sort dumps by date, newest first
+      const sortedDumps = data.sort((a: DumpEntry, b: DumpEntry) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      
+      setDumps(sortedDumps);
     } catch (error) {
       console.error('Error fetching dumps:', error);
       setError('Failed to load your memories. Please try again.');

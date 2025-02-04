@@ -60,8 +60,8 @@ const Settings: React.FC<Props> = ({
   }, [rag, selectedLlm]); // Auto-save when these values change
 
   const llmOptions = [
-    { label: "GPT 3.5 Turbo", value: "gpt-3.5-turbo" },
-    { label: "GPT 4", value: "gpt-4" },
+    { id: 'gpt-3.5-turbo', label: "GPT 3.5 Turbo", value: "gpt-3.5-turbo" },
+    { id: 'gpt-4', label: "GPT 4", value: "gpt-4" },
   ];
 
   const handleSave = () => {

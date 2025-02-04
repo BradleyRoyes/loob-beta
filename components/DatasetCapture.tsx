@@ -389,92 +389,114 @@ export default function DatasetCapture({ onStatusChange, onSaveComplete }: Datas
   return (
     <div className="space-y-6 min-h-0">
       <div className="space-y-4">
-        <div className="relative">
+        <div className="relative group">
           <Webcam
             audio={false}
             ref={webcamRef}
             screenshotFormat="image/jpeg"
             videoConstraints={videoConstraints}
-            className="webcam-preview rounded-lg border-2 border-gray-700 w-full"
+            className="webcam-preview"
           />
           
           {isRecording && (
             <div className="absolute top-4 right-4 recording-indicator">
               <div className="pulsing-red-dot" />
-              <span className="text-white bg-black/50 px-2 py-1 rounded">
-                {countdown}s
+              <span className="text-white font-medium">
+                Recording: {countdown}s
               </span>
+            </div>
+          )}
+
+          {!isRecording && !capturedFrames.length && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={startRecording}
+                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full text-white font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
+              >
+                Start Recording (30s)
+              </button>
             </div>
           )}
         </div>
 
-        {!isRecording && capturedFrames.length === 0 && (
-          <button
-            onClick={startRecording}
-            className="base-button bg-blue-600 hover:bg-blue-700 w-full"
-          >
-            Start Recording (30s)
-          </button>
-        )}
-
         {capturedFrames.length > 0 && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium text-white/90">Captured Frames</h3>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => {
+                    setCapturedFrames([]);
+                    setLabels([]);
+                  }}
+                  className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors"
+                >
+                  Clear All
+                </button>
+                <button
+                  onClick={startRecording}
+                  className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors"
+                >
+                  Record More
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {capturedFrames.map((frame, index) => {
                 const frameLabel = labels[index];
                 const isFullyLabeled = frameLabel?.orange?.isVisible && frameLabel?.white?.isVisible;
-                const borderColor = isFullyLabeled ? 'border-green-500' : 'border-gray-700';
                 
                 return (
-                  <div key={index} className="space-y-2">
-                    <div className="relative group">
-                      <div 
-                        className={`relative cursor-crosshair ${borderColor} border-2 rounded-lg transition-colors`}
-                        onClick={(e) => handleFrameClick(index, e)}
-                      >
-                        <img 
-                          src={frame} 
-                          alt={`Frame ${index + 1}`}
-                          className="rounded-lg w-full"
+                  <div key={index} className="frame-preview">
+                    <div 
+                      className="relative cursor-crosshair group"
+                      onClick={(e) => handleFrameClick(index, e)}
+                    >
+                      <img 
+                        src={frame} 
+                        alt={`Frame ${index + 1}`}
+                        className="w-full rounded-lg"
+                      />
+                      {frameLabel?.orange && (
+                        <div
+                          className="ball-marker orange"
+                          style={{ 
+                            left: `${frameLabel.orange.x * 100}%`,
+                            top: `${frameLabel.orange.y * 100}%`,
+                            opacity: frameLabel.orange.isVisible ? 1 : 0.5
+                          }}
                         />
-                        {frameLabel?.orange && (
-                          <div
-                            className="absolute w-4 h-4 bg-orange-500 rounded-full border-2 border-white transform -translate-x-1/2 -translate-y-1/2 transition-opacity"
-                            style={{ 
-                              left: `${frameLabel.orange.x * 100}%`,
-                              top: `${frameLabel.orange.y * 100}%`,
-                              opacity: frameLabel.orange.isVisible ? 1 : 0.5
-                            }}
-                          />
-                        )}
-                        {frameLabel?.white && (
-                          <div
-                            className="absolute w-4 h-4 bg-white rounded-full border-2 border-gray-700 transform -translate-x-1/2 -translate-y-1/2 transition-opacity"
-                            style={{ 
-                              left: `${frameLabel.white.x * 100}%`,
-                              top: `${frameLabel.white.y * 100}%`,
-                              opacity: frameLabel.white.isVisible ? 1 : 0.5
-                            }}
-                          />
-                        )}
-                        
-                        {/* Status indicator */}
-                        <div className="absolute top-2 left-2 right-2 flex justify-between items-center">
-                          <span className="text-sm font-medium px-2 py-1 rounded bg-black/50 text-white">
-                            {isFullyLabeled ? '✓ Complete' : 
-                             !frameLabel?.orange ? 'Click Orange Ball' :
-                             !frameLabel?.white ? 'Click White Ball' : ''}
-                          </span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              clearFrameLabels(index);
-                            }}
-                            className="text-sm px-2 py-1 rounded bg-red-500/50 hover:bg-red-500 text-white transition-colors opacity-0 group-hover:opacity-100"
-                          >
-                            Clear
-                          </button>
-                        </div>
+                      )}
+                      {frameLabel?.white && (
+                        <div
+                          className="ball-marker white"
+                          style={{ 
+                            left: `${frameLabel.white.x * 100}%`,
+                            top: `${frameLabel.white.y * 100}%`,
+                            opacity: frameLabel.white.isVisible ? 1 : 0.5
+                          }}
+                        />
+                      )}
+                      
+                      <div className="absolute inset-x-0 top-0 p-3 flex justify-between items-center bg-gradient-to-b from-black/50 to-transparent">
+                        <span className={`text-sm font-medium px-3 py-1.5 rounded-full ${
+                          isFullyLabeled ? 'bg-green-500/20 text-green-400' : 
+                          'bg-blue-500/20 text-blue-400'
+                        }`}>
+                          {isFullyLabeled ? '✓ Complete' : 
+                           !frameLabel?.orange ? 'Click Orange Ball' :
+                           !frameLabel?.white ? 'Click White Ball' : ''}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            clearFrameLabels(index);
+                          }}
+                          className="text-sm px-3 py-1.5 rounded-full bg-red-500/20 hover:bg-red-500/30 text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                        >
+                          Clear
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -482,30 +504,35 @@ export default function DatasetCapture({ onStatusChange, onSaveComplete }: Datas
               })}
             </div>
 
-            <div className="sticky bottom-4 space-y-2">
+            <div className="sticky bottom-4 space-y-4 bg-gradient-to-t from-black/90 to-transparent p-4 rounded-xl backdrop-blur-sm">
+              <div className="flex items-center justify-between text-sm text-white/60">
+                <span>Total Frames: {capturedFrames.length}</span>
+                <span>Labeled Frames: {labels.filter(l => l?.orange?.isVisible && l?.white?.isVisible).length}</span>
+              </div>
+              
               <button
                 onClick={saveDataset}
                 disabled={!labels.some(label => 
                   label?.orange?.isVisible && label?.white?.isVisible
                 )}
-                className="base-button bg-green-600 hover:bg-green-700 w-full disabled:bg-gray-600 py-3 text-lg font-medium"
+                className={`w-full py-4 rounded-xl font-medium text-lg transition-all transform hover:-translate-y-0.5 ${
+                  labels.some(l => l?.orange?.isVisible && l?.white?.isVisible)
+                    ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg hover:shadow-xl'
+                    : 'bg-gray-700/50 text-gray-400 cursor-not-allowed'
+                }`}
               >
-                Save Dataset ({labels.filter(l => l?.orange?.isVisible && l?.white?.isVisible).length} frames)
+                Save Dataset
               </button>
-              
-              {saveSuccess && (
-                <div className={`text-center font-medium p-3 rounded ${
-                  saveSuccess.includes('❌') ? 'bg-red-500/10 text-red-500' : 
-                  saveSuccess.includes('✅') ? 'bg-green-500/10 text-green-500' : 
-                  'bg-blue-500/10 text-blue-500'
-                }`}>
-                  {saveSuccess}
-                </div>
-              )}
             </div>
           </div>
         )}
       </div>
+
+      {saveSuccess && (
+        <div className="success-toast">
+          {saveSuccess}
+        </div>
+      )}
     </div>
   );
 } 

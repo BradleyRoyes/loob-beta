@@ -101,7 +101,6 @@
 
 /* Button Styles */
 .logout-button,
-.loobricate-login-button,
 .daily-dump-button,
 .daily-quest-button {
   padding: 0.6rem 1.2rem;
@@ -124,7 +123,6 @@
 }
 
 .logout-button:hover,
-.loobricate-login-button:hover,
 .daily-dump-button:hover,
 .daily-quest-button:hover {
   background: linear-gradient(to right, #ff9f7f, #ff8b6b);
@@ -425,30 +423,31 @@
 
 @media (max-width: 640px) {
   .button-group {
-    flex-direction: column-reverse;
+    flex-direction: column;
   }
-  
-  .logout-button,
-  .loobricate-login-button {
+
+  .logout-button {
     width: 100%;
+    margin-bottom: 1rem;
   }
 }
 
 /* Updated Logout Button */
 .logout-button {
-  padding: 0.6rem;
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.8);
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(to right, #ff9f7f, #ff8b6b);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
   border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .logout-button:hover {
-  border-color: rgba(255, 255, 255, 0.4);
-  color: rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.05);
+  background: linear-gradient(to right, #ff8b6b, #ff7757);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 159, 127, 0.2);
 }
 
 /* Loobricate Login Button */

@@ -135,24 +135,28 @@ const StickDashboard: React.FC<StickDashboardProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-start justify-center overflow-y-auto p-4">
-      <div className="bg-gray-900 rounded-lg shadow-xl w-full max-w-6xl my-4">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-50 flex items-start justify-center overflow-y-auto p-4">
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl w-full max-w-6xl my-4 border border-white/10">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-gray-900 border-b border-gray-800">
+        <div className="sticky top-0 z-10 bg-gradient-to-b from-gray-900 to-gray-900/95 backdrop-blur-xl border-b border-white/10">
           <div className="flex items-center justify-between p-4">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setActiveTab('capture')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                  activeTab === 'capture' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all ${
+                  activeTab === 'capture' 
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg' 
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
               >
                 {MinimalIcons.training} Capture
               </button>
               <button
                 onClick={() => setActiveTab('train')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                  activeTab === 'train' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all ${
+                  activeTab === 'train' 
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg' 
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
                 disabled={!datasetInfo?.isValid}
               >
@@ -160,8 +164,10 @@ const StickDashboard: React.FC<StickDashboardProps> = ({ onClose }) => {
               </button>
               <button
                 onClick={() => setActiveTab('test')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                  activeTab === 'test' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all ${
+                  activeTab === 'test' 
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg' 
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
               >
                 {MinimalIcons.test} Test
@@ -169,7 +175,7 @@ const StickDashboard: React.FC<StickDashboardProps> = ({ onClose }) => {
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+              className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
             >
               {MinimalIcons.close}
             </button>
@@ -177,7 +183,7 @@ const StickDashboard: React.FC<StickDashboardProps> = ({ onClose }) => {
         </div>
 
         {/* Content Area */}
-        <div className="p-4">
+        <div className="p-6">
           {activeTab === 'capture' && (
             <DatasetCapture 
               onStatusChange={handleCaptureStatus}
@@ -193,19 +199,31 @@ const StickDashboard: React.FC<StickDashboardProps> = ({ onClose }) => {
 
           {/* Dataset Status */}
           {datasetInfo && (
-            <div className="mt-4 p-4 rounded-lg bg-gray-800/50">
-              <h3 className="text-sm font-semibold mb-2">Dataset Status</h3>
-              <div className="space-y-1 text-sm">
-                <p>Total Images: {datasetInfo.stats.totalImages}</p>
-                <p>Total Labels: {datasetInfo.stats.totalLabels}</p>
+            <div className="mt-6 p-4 rounded-xl bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-white/5 backdrop-blur-sm">
+              <h3 className="text-sm font-medium text-white/90 mb-3">Dataset Status</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-white/5">
+                    <span className="text-gray-400">Total Images</span>
+                    <span className="text-white font-medium">{datasetInfo.stats.totalImages}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-white/5">
+                    <span className="text-gray-400">Total Labels</span>
+                    <span className="text-white font-medium">{datasetInfo.stats.totalLabels}</span>
+                  </div>
+                </div>
                 {datasetInfo.errors.length > 0 && (
-                  <div className="text-red-400 mt-2">
-                    {datasetInfo.errors.map((error, i) => (
-                      <p key={i}>
-                        {error.message}
-                        {error.details && `: ${error.details}`}
-                      </p>
-                    ))}
+                  <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                    <div className="text-red-400">
+                      {datasetInfo.errors.map((error, i) => (
+                        <p key={i} className="text-sm">
+                          {error.message}
+                          {error.details && (
+                            <span className="block text-xs text-red-500/70 mt-1">{error.details}</span>
+                          )}
+                        </p>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
