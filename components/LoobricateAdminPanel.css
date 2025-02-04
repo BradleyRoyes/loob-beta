@@ -1,25 +1,119 @@
+.admin-panel-modal {
+  position: absolute;
+  top: 4rem;
+  bottom: 5rem;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background-color: var(--background-primary, #121212);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .admin-panel {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  background: #222;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  color: #f3f3f3;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
-.admin-header {
+.panel-header {
+  position: sticky;
+  top: 0;
+  background: rgba(26, 26, 26, 0.98);
+  z-index: 10;
+  padding: 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 2rem;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.admin-header h2 {
+.panel-header h2 {
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  background: linear-gradient(45deg, #ffb48f, #ff7e79);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   margin: 0;
-  color: #ffb48f;
-  font-size: 1.8rem;
+}
+
+.admin-content {
+  flex: 1;
+  padding: 2rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  width: 100%;
+}
+
+.info-section, .users-section {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  color: #f3f3f3;
+  margin-bottom: 0.5rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  color: #f3f3f3;
+}
+
+.user-lists {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.admins-list, .members-list {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+.panel-footer {
+  position: sticky;
+  bottom: 0;
+  background: rgba(26, 26, 26, 0.98);
+  padding: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .admin-content {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Ensure proper spacing with header/footer */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .admin-panel-modal {
+    top: calc(4rem + env(safe-area-inset-top));
+    bottom: calc(5rem + env(safe-area-inset-bottom));
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+  }
 }
 
 .close-button {
@@ -35,104 +129,11 @@
   color: #fff;
 }
 
-.admin-content {
-  padding: 2rem;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  max-height: calc(90vh - 150px);
-  overflow-y: auto;
-}
-
-@media (max-width: 1024px) {
-  .admin-content {
-    grid-template-columns: 1fr;
-  }
-}
-
-.info-section, .users-section {
-  background: #2a2a2a;
-  padding: 1.5rem;
-  border-radius: 8px;
-}
-
 .info-section h3, .users-section h3 {
   color: #ffb48f;
   margin-top: 0;
   margin-bottom: 1.5rem;
   font-size: 1.4rem;
-}
-
-.form-group {
-  margin-bottom: 1.5rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #ccc;
-  font-size: 0.9rem;
-}
-
-.form-input {
-  width: 100%;
-  padding: 0.8rem;
-  background: #333;
-  border: 1px solid #444;
-  border-radius: 6px;
-  color: #f3f3f3;
-  font-size: 1rem;
-  transition: border-color 0.2s;
-}
-
-.form-input:focus {
-  border-color: #ffb48f;
-  outline: none;
-}
-
-textarea.form-input {
-  min-height: 100px;
-  resize: vertical;
-}
-
-.user-lists {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.admins-list, .members-list {
-  background: #333;
-  padding: 1rem;
-  border-radius: 6px;
-}
-
-.admins-list h4, .members-list h4 {
-  color: #ccc;
-  margin: 0 0 1rem 0;
-  font-size: 1.1rem;
-}
-
-.admins-list ul, .members-list ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.admins-list li, .members-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem;
-  background: #2a2a2a;
-  margin-bottom: 0.5rem;
-  border-radius: 4px;
-  transition: background 0.2s;
-}
-
-.admins-list li:hover, .members-list li:hover {
-  background: #363636;
 }
 
 .remove-user {
@@ -183,13 +184,6 @@ textarea.form-input {
   color: #ff6b6b;
   margin: 0.5rem 0;
   font-size: 0.9rem;
-}
-
-.admin-footer {
-  padding: 1.5rem 2rem;
-  border-top: 1px solid #333;
-  display: flex;
-  justify-content: flex-end;
 }
 
 .save-button {

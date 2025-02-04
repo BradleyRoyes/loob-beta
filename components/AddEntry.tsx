@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FaMapMarkerAlt, FaUser, FaTools, FaUsers } from 'react-icons/fa';
 import './AddEntry.css';
 import { useGlobalState } from '../components/GlobalStateContext';
+import { useAddressAutocomplete } from '../src/hooks/useAddressAutocomplete';
 
 // Add this new type for tag keywords
 type TagKeyword = string;
@@ -254,54 +255,111 @@ const AddEntry: React.FC = () => {
     }));
   };
 
-  // Update the selected form type
+  // Update the handleTypeSelection function
   const handleTypeSelection = (type: string) => {
     setSelectedType(type);
-    setFormData((prev) => ({ ...prev, offeringType: type.toLowerCase() }));
+    // Update offeringType to use 'venue' instead of 'location'
+    setFormData((prev) => ({ 
+      ...prev, 
+      offeringType: type.toLowerCase() === 'location' ? 'venue' : type.toLowerCase() 
+    }));
   };
 
-  // Update the AddressInput component to use the ref
-  const AddressInput = () => (
-    <div className="address-input-container">
-      <input
-        type="text"
-        name="location"
-        placeholder="Start typing an address..."
-        value={formData.location}
-        onChange={handleAddressChange}
-        className="form-input"
-        required
-        ref={addressInputRef}
-      />
-      {isSearching && (
-        <div className="search-indicator">Searching...</div>
-      )}
-      {addressSuggestions.length > 0 && (
-        <ul className="suggestions-list">
-          {addressSuggestions.map((suggestion, index) => (
-            <li
-              key={index}
-              className="suggestion-item"
-              onClick={(e) => handleSuggestionClick(suggestion, e)}
-            >
-              {suggestion.display_name}
-            </li>
-          ))}
-        </ul>
-      )}
-      <p className="field-helper">
-        Enter a complete address for accurate mapping
-      </p>
-      {formData.latitude && formData.longitude && (
-        <p className="location-confirmation">✓ Location confirmed on map</p>
-      )}
-    </div>
-  );
+  // Update the AddressInput component
+  const AddressInput = () => {
+    const {
+      inputValue,
+      suggestions,
+      loading,
+      error: addressError,
+      containerRef,
+      handleInputChange,
+      handleSelectSuggestion,
+    } = useAddressAutocomplete({
+      onSelect: (address) => {
+        setFormData(prev => ({
+          ...prev,
+          location: address.formatted,
+          latitude: address.lat,
+          longitude: address.lon
+        }));
+      }
+    });
+
+    return (
+      <div className="address-input-container" ref={containerRef}>
+        <input
+          type="text"
+          name="location"
+          placeholder="Start typing an address..."
+          value={inputValue}
+          onChange={handleInputChange}
+          className="form-input"
+          required
+        />
+        {loading && (
+          <div className="search-indicator">Searching...</div>
+        )}
+        {suggestions.length > 0 && (
+          <ul className="suggestions-list">
+            {suggestions.map((suggestion, index) => (
+              <li
+                key={index}
+                className="suggestion-item"
+                onClick={() => handleSelectSuggestion(suggestion)}
+              >
+                {suggestion.display_name}
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="field-helper">
+          Enter a complete address for accurate mapping
+        </p>
+        {formData.latitude && formData.longitude && (
+          <div className="confirmed-address">
+            <div className="confirmation-header">
+              <span className="checkmark">✓</span>
+              <span>Address Confirmed</span>
+            </div>
+            <p className="confirmed-address-text">{formData.location}</p>
+            <p className="coordinates-text">
+              Coordinates: {formData.latitude.toFixed(6)}, {formData.longitude.toFixed(6)}
+            </p>
+          </div>
+        )}
+        {addressError && (
+          <p className="error-message">{addressError}</p>
+        )}
+      </div>
+    );
+  };
 
   // Update the renderFormFields function
   const renderFormFields = () => {
     switch (selectedType) {
       case 'Location':
+        return (
+          <>
+            <p className="info-text">Add a new venue to the Loobrary.</p>
+            <input
+              type="text"
+              name="title"
+              placeholder="Venue Name"
+              value={formData.title || ''}
+              onChange={handleInputChange}
+              className="form-input"
+            />
+            <textarea
+              name="description"
+              placeholder="Describe the venue."
+              value={formData.description || ''}
+              onChange={handleInputChange}
+              className="form-input"
+            />
+            <AddressInput />
+          </>
+        );
       case 'Talent':
       case 'Gear':
         return (
@@ -322,7 +380,6 @@ const AddEntry: React.FC = () => {
               onChange={handleInputChange}
               className="form-input"
             />
-            <AddressInput />
           </>
         );
       case 'Loobricate':
@@ -561,7 +618,13 @@ const AddEntry: React.FC = () => {
 
       {selectedType && (
         <>
-          <h2 className="subtitle">{selectedType === 'Loobricate' ? 'Spawn Loobricate' : `Add ${selectedType}`}</h2>
+          <h2 className="subtitle">
+            {selectedType === 'Loobricate' 
+              ? 'Spawn Loobricate' 
+              : selectedType === 'Location' 
+                ? 'Add Venue'
+                : `Add ${selectedType}`}
+          </h2>
           <div className="form-container">
             {selectedType !== 'Loobricate' && (
               <div className="loobricate-select-container">

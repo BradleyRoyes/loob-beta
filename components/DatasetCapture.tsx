@@ -37,6 +37,7 @@ export default function DatasetCapture({ onStatusChange, onSaveComplete }: Datas
   const [selectedBall, setSelectedBall] = useState<'orange' | 'white'>('orange');
   const [latestModel, setLatestModel] = useState<{id: string, name: string} | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+  const [isWebcamReady, setIsWebcamReady] = useState(false);
 
   const videoConstraints = {
     width: 640,
@@ -386,36 +387,88 @@ export default function DatasetCapture({ onStatusChange, onSaveComplete }: Datas
     return new Blob([ab], { type: mimeString });
   };
 
+  const startWebcam = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: 640,
+          height: 480,
+          facingMode: "environment",
+          frameRate: 30
+        }
+      });
+      
+      if (webcamRef.current && webcamRef.current.video) {
+        webcamRef.current.video.srcObject = stream;
+        setIsWebcamReady(true);
+      }
+    } catch (err) {
+      console.error('Error accessing webcam:', err);
+      onStatusChange('idle');
+    }
+  };
+
+  const stopWebcam = () => {
+    if (webcamRef.current && webcamRef.current.video) {
+      const stream = webcamRef.current.video.srcObject as MediaStream;
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      webcamRef.current.video.srcObject = null;
+      setIsWebcamReady(false);
+    }
+  };
+
+  // Clean up webcam on unmount
+  useEffect(() => {
+    return () => {
+      stopWebcam();
+    };
+  }, []);
+
   return (
     <div className="space-y-6 min-h-0">
       <div className="space-y-4">
         <div className="relative group">
-          <Webcam
-            audio={false}
-            ref={webcamRef}
-            screenshotFormat="image/jpeg"
-            videoConstraints={videoConstraints}
-            className="webcam-preview"
-          />
-          
-          {isRecording && (
-            <div className="absolute top-4 right-4 recording-indicator">
-              <div className="pulsing-red-dot" />
-              <span className="text-white font-medium">
-                Recording: {countdown}s
-              </span>
-            </div>
-          )}
-
-          {!isRecording && !capturedFrames.length && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+          {!isWebcamReady ? (
+            <div className="aspect-video bg-gray-900 rounded-lg flex items-center justify-center">
               <button
-                onClick={startRecording}
-                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full text-white font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
+                onClick={startWebcam}
+                className="px-6 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg text-white font-medium"
               >
-                Start Recording (30s)
+                Start Camera
               </button>
             </div>
+          ) : (
+            <>
+              <Webcam
+                audio={false}
+                ref={webcamRef}
+                screenshotFormat="image/jpeg"
+                videoConstraints={videoConstraints}
+                className="webcam-preview"
+              />
+              
+              {isRecording && (
+                <div className="absolute top-4 right-4 recording-indicator">
+                  <div className="pulsing-red-dot" />
+                  <span className="text-white font-medium">
+                    Recording: {countdown}s
+                  </span>
+                </div>
+              )}
+
+              {!isRecording && !capturedFrames.length && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={startRecording}
+                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full text-white font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
+                  >
+                    Start Recording (30s)
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
 

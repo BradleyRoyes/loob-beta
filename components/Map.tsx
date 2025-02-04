@@ -518,11 +518,11 @@ const Map: React.FC = () => {
       refreshExpiredTiles: false,
     });
 
-    // Disable default map interactions so the map stays centered on the user.
-    map.dragPan.disable();
-    map.scrollZoom.disable();
-    map.doubleClickZoom.disable();
-    map.keyboard.disable();
+    // Enable default map interactions
+    map.dragPan.enable();
+    map.scrollZoom.enable();
+    map.doubleClickZoom.enable();
+    map.keyboard.enable();
 
     mapInstanceRef.current = map;
 
@@ -541,6 +541,9 @@ const Map: React.FC = () => {
     };
 
     userMarkerRef.current = createUserMarker();
+    if (!currentLocation) {
+      userMarkerRef.current.getElement().style.display = 'none';
+    }
 
     // Create a pulsing ring marker behind the user marker.
     const createPulsingMarker = () => {
@@ -555,6 +558,9 @@ const Map: React.FC = () => {
     };
 
     pulsingMarkerRef.current = createPulsingMarker();
+    if (!currentLocation) {
+      pulsingMarkerRef.current.getElement().style.display = 'none';
+    }
 
     const debouncedResize = debounce(() => {
       map.resize();
@@ -742,49 +748,39 @@ const Map: React.FC = () => {
         </div>
       )}
 
-      {!currentLocation && (
-        <div style={mobileOverlayStyle}>
-          <div style={{ 
-            backgroundColor: 'rgba(0,0,0,0.8)', 
-            padding: '20px', 
-            borderRadius: '12px',
-            textAlign: 'center' 
-          }}>
-            {locationState.status === 'requesting' ? (
-              <div>
-                <div className="location-spinner" />
-                <p style={{ color: 'white', marginTop: '10px' }}>
-                  {locationState.retryCount > 0 
-                    ? `Retrying to get your location (Attempt ${locationState.retryCount + 1}/${LOCATION_CONFIG.MAX_RETRIES + 1})...`
-                    : 'Getting your location...'}
-                </p>
-              </div>
-            ) : (
-              <>
-                <p style={{ marginBottom: '15px', color: 'white' }}>
-                  {locationState.error?.message || 'Please enable location services to use the map'}
-                </p>
-                <button
-                  onClick={() => {
-                    if (mapInstanceRef.current) {
-                      startWatchingLocation(mapInstanceRef.current);
-                    }
-                  }}
-                  style={{
-                    padding: '12px 24px',
-                    fontSize: '1rem',
-                    borderRadius: '8px',
-                    backgroundColor: '#FFB3BA',
-                    border: 'none',
-                    color: '#333',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  Enable Location
-                </button>
-              </>
-            )}
-          </div>
+      {locationState.error && (
+        <div className="location-error-banner" style={{
+          position: 'absolute',
+          top: '10px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          color: 'white',
+          padding: '10px 20px',
+          borderRadius: '8px',
+          zIndex: 1000,
+          maxWidth: '90%',
+          textAlign: 'center'
+        }}>
+          <p style={{ margin: '0 0 10px 0' }}>{locationState.error.message}</p>
+          <button
+            onClick={() => {
+              if (mapInstanceRef.current) {
+                startWatchingLocation(mapInstanceRef.current);
+              }
+            }}
+            style={{
+              padding: '8px 16px',
+              fontSize: '0.9rem',
+              borderRadius: '4px',
+              backgroundColor: '#FFB3BA',
+              border: 'none',
+              color: '#333',
+              cursor: 'pointer'
+            }}
+          >
+            Try Again
+          </button>
         </div>
       )}
 
@@ -813,18 +809,19 @@ const Map: React.FC = () => {
         </button>
       </div>
 
-      <button
-        className={`recenter-button ${
-          currentLocation &&
-          mapInstanceRef.current?.getCenter().toString() !== currentLocation.toString()
-            ? "not-centered"
-            : ""
-        }`}
-        onClick={handleRecenter}
-        aria-label="Center on my location"
-      >
-        <div className="recenter-icon" />
-      </button>
+      {currentLocation && (
+        <button
+          className={`recenter-button ${
+            mapInstanceRef.current?.getCenter().toString() !== currentLocation.toString()
+              ? "not-centered"
+              : ""
+          }`}
+          onClick={handleRecenter}
+          aria-label="Center on my location"
+        >
+          <div className="recenter-icon" />
+        </button>
+      )}
 
       <MapSidebar
         nodes={nodes}

@@ -65,8 +65,8 @@ const DatasetCapture = dynamic(() => import('./DatasetCapture'), {
   ssr: false
 });
 
-const ModelTester = dynamic(() => import('./WebcamDetector'), {
-  loading: () => <div>Loading detector...</div>,
+const StickTracker = dynamic(() => import('./StickTracker'), {
+  loading: () => <div>Loading tracker...</div>,
   ssr: false
 });
 
@@ -194,7 +194,7 @@ const StickDashboard: React.FC<StickDashboardProps> = ({ onClose }) => {
             <ModelTrainer />
           )}
           {activeTab === 'test' && (
-            <ModelTester />
+            <StickTracker />
           )}
 
           {/* Dataset Status */}
