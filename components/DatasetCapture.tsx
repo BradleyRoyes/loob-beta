@@ -1,7 +1,6 @@
 'use client';
 import React, { useRef, useState, useEffect } from 'react';
 import Webcam from 'react-webcam';
-import { modelManager } from '@/lib/model';
 import * as tf from '@tensorflow/tfjs';
 
 interface DatasetCaptureProps {
@@ -49,30 +48,6 @@ export default function DatasetCapture({ onStatusChange, onSaveComplete }: Datas
   useEffect(() => {
     onStatusChange(isRecording ? 'recording' : 'idle');
   }, [isRecording, onStatusChange]);
-
-  // Load available models
-  useEffect(() => {
-    const loadModels = async () => {
-      const models = await modelManager.listModels();
-      setAvailableModels(models.map(m => ({ id: m.id, name: m.name })));
-    };
-    loadModels();
-  }, []);
-
-  // Load latest model
-  useEffect(() => {
-    const loadLatestModel = async () => {
-      const models = await modelManager.listModels();
-      if (models.length > 0) {
-        // Get the most recently created model
-        const latest = models.reduce((latest, current) => 
-          current.createdAt > latest.createdAt ? current : latest
-        );
-        setLatestModel({ id: latest.id, name: latest.name });
-      }
-    };
-    loadLatestModel();
-  }, []);
 
   const startRecording = () => {
     if (!webcamRef.current) return;
@@ -276,24 +251,6 @@ export default function DatasetCapture({ onStatusChange, onSaveComplete }: Datas
       prediction.dispose();
     } catch (error) {
       console.error('Auto-labeling error:', error);
-    }
-  };
-
-  // Auto-label all frames
-  const autoLabelAllFrames = async () => {
-    if (!selectedModelId) return;
-
-    setIsAutoLabeling(true);
-    try {
-      await modelManager.switchModel(selectedModelId);
-      
-      for (let i = 0; i < capturedFrames.length; i++) {
-        await autoLabelFrame(capturedFrames[i], i);
-      }
-    } catch (error) {
-      console.error('Auto-labeling failed:', error);
-    } finally {
-      setIsAutoLabeling(false);
     }
   };
 

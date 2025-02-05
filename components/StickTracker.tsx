@@ -4,8 +4,10 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import Webcam from 'react-webcam';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-webgl';
-import * as posenet from '@tensorflow-models/posenet';
+import * as poseDetection from '@tensorflow-models/pose-detection';
 import { ColorResult, SketchPicker } from 'react-color';
+import { PoseDetectionService } from '../lib/ml/poseDetection';
+import { MLService, MLBackend } from '../lib/ml/MLService';
 
 interface StickEndpoint {
   x: number;
@@ -21,7 +23,7 @@ interface StickData {
 }
 
 interface PoseData {
-  keypoints: posenet.Keypoint[];
+  keypoints: Array<{x: number, y: number, score?: number, name?: string}>;
   score: number;
   timestamp: number;
 }
@@ -32,10 +34,13 @@ interface TrackingData {
   frameRate: number;
 }
 
+// Define color threshold type
+type ColorName = 'white' | 'black' | 'orange' | 'green' | 'blue';
+
 interface ColorThreshold {
-  hue: number;
-  saturation: number;
-  value: number;
+  r: number;
+  g: number;
+  b: number;
   tolerance: number;
 }
 
@@ -44,13 +49,12 @@ interface ProcessedVideo {
   thumbnail?: string;
 }
 
-const DEFAULT_COLOR_THRESHOLDS = {
-  white: { hue: 0, saturation: 0, value: 100, tolerance: 20 },
-  black: { hue: 0, saturation: 0, value: 0, tolerance: 20 },
-  orange: { hue: 30, saturation: 100, value: 100, tolerance: 15 },
-  green: { hue: 120, saturation: 100, value: 100, tolerance: 15 },
-  blue: { hue: 240, saturation: 100, value: 100, tolerance: 15 },
-  glow: { hue: 60, saturation: 20, value: 100, tolerance: 25 }
+const DEFAULT_COLOR_THRESHOLDS: Record<ColorName, ColorThreshold> = {
+  white: { r: 255, g: 255, b: 255, tolerance: 30 },
+  black: { r: 0, g: 0, b: 0, tolerance: 30 },
+  orange: { r: 255, g: 165, b: 0, tolerance: 30 },
+  green: { r: 0, g: 255, b: 0, tolerance: 30 },
+  blue: { r: 0, g: 0, b: 255, tolerance: 30 },
 };
 
 export default function StickTracker() {
@@ -58,17 +62,15 @@ export default function StickTracker() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const uploadedVideoRef = useRef<HTMLVideoElement>(null);
   const [isTracking, setIsTracking] = useState(false);
-  const [net, setNet] = useState<posenet.PoseNet>();
   const [trackingData, setTrackingData] = useState<TrackingData>({
     pose: null,
     stick: null,
     frameRate: 0
   });
-  const [endColors, setEndColors] = useState<[string, string]>(['orange', 'orange']);
+  const [endColors, setEndColors] = useState<[ColorName, ColorName]>(['orange', 'orange']);
   const [debugMode, setDebugMode] = useState(false);
   const [status, setStatus] = useState('Initializing...');
-  const [colorThresholds, setColorThresholds] = useState(DEFAULT_COLOR_THRESHOLDS);
-  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [colorThresholds] = useState(DEFAULT_COLOR_THRESHOLDS);
   const [isCalibrating, setIsCalibrating] = useState(false);
   const frameCount = useRef(0);
   const lastFrameTime = useRef(Date.now());
@@ -86,6 +88,9 @@ export default function StickTracker() {
   const [isWebcamReady, setIsWebcamReady] = useState(false);
   const rafId = useRef<number>();
   const modelLoaded = useRef(false);
+  const poseService = useRef<PoseDetectionService>();
+  const mlService = useRef<MLService>();
+  const [backend, setBackend] = useState<MLBackend>('tflite');
 
   // Initialize TensorFlow and PoseNet
   useEffect(() => {
@@ -107,19 +112,21 @@ export default function StickTracker() {
 
         // Load PoseNet if not already loaded
         if (!modelLoaded.current) {
-          const poseNet = await posenet.load({
-            architecture: 'MobileNetV1',
-            outputStride: 16,
-            inputResolution: { width: 513, height: 513 },
-            multiplier: 0.75
+          const detectorConfig = {
+            modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING,
+            enableTracking: true,
+            trackerType: poseDetection.TrackerType.BoundingBox,
+          };
+          const poseDetector = await poseDetection.createDetector(
+            poseDetection.SupportedModels.MoveNet,
+            detectorConfig
+          );
+          poseService.current = new PoseDetectionService({
+            modelType: 'MoveNet',
+            enableTracking: true,
+            minPoseScore: 0.3
           });
-          
-          if (!isMounted) {
-            poseNet.dispose();
-            return;
-          }
-          
-          setNet(poseNet);
+          await poseService.current.initialize();
           modelLoaded.current = true;
           setStatus('Ready! Click Start Tracking to begin');
         }
@@ -140,47 +147,45 @@ export default function StickTracker() {
     };
   }, []);
 
-  // Color detection using canvas pixel manipulation
-  const detectColor = useCallback((imageData: ImageData, threshold: ColorThreshold): { x: number, y: number, confidence: number } | null => {
-    const { data, width, height } = imageData;
-    let points: Array<{ x: number, y: number }> = [];
-    
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-      
-      // Convert RGB to HSV
-      const [h, s, v] = rgbToHsv(r, g, b);
-      
-      // Check if color matches threshold
-      if (Math.abs(h - threshold.hue) <= threshold.tolerance &&
-          Math.abs(s - threshold.saturation) <= threshold.tolerance &&
-          Math.abs(v - threshold.value) <= threshold.tolerance) {
-        const x = (i / 4) % width;
-        const y = Math.floor((i / 4) / width);
-        points.push({ x, y });
+  // Initialize ML service
+  useEffect(() => {
+    let isMounted = true;
+
+    const initializeML = async () => {
+      try {
+        setStatus('Initializing ML service...');
+        
+        mlService.current = new MLService({
+          backend,
+          modelType: 'MoveNet',
+          enableTracking: true,
+          minPoseScore: 0.3,
+          useWebGPU: true
+        });
+        
+        await mlService.current.initialize();
+        
+        if (!isMounted) return;
+        
+        setStatus('ML service ready! Click Start Camera to begin.');
+      } catch (error) {
+        if (!isMounted) return;
+        console.error('Error initializing ML service:', error);
+        setStatus(`Error initializing: ${error instanceof Error ? error.message : String(error)}`);
       }
-    }
-    
-    if (points.length === 0) return null;
-    
-    // Calculate centroid
-    const centroid = points.reduce(
-      (acc, point) => ({ x: acc.x + point.x, y: acc.y + point.y }),
-      { x: 0, y: 0 }
-    );
-    
-    return {
-      x: centroid.x / points.length / width,
-      y: centroid.y / points.length / height,
-      confidence: Math.min(1, points.length / (width * height * 0.01)) // Normalize confidence
     };
-  }, []);
+
+    initializeML();
+
+    return () => {
+      isMounted = false;
+      mlService.current?.dispose();
+    };
+  }, [backend]);
 
   // Process video frame
   const processFrame = useCallback(async () => {
-    if (!webcamRef.current?.video || !canvasRef.current || !net || processingFrame.current) return;
+    if (!webcamRef.current?.video || !canvasRef.current || !mlService.current || processingFrame.current) return;
 
     const video = webcamRef.current.video;
     const canvas = canvasRef.current;
@@ -188,95 +193,105 @@ export default function StickTracker() {
     if (!ctx) return;
 
     processingFrame.current = true;
+    const now = Date.now();
 
     try {
-      // Update frame rate
-      const now = Date.now();
-      if (frameCount.current % 30 === 0) {
-        const fps = 1000 / ((now - lastFrameTime.current) / 30);
-        setTrackingData(prev => ({ ...prev, frameRate: Math.round(fps) }));
-        lastFrameTime.current = now;
-      }
-      frameCount.current++;
-
-      // Draw video frame to canvas
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      
       // Detect pose
-      const pose = await net.estimateSinglePose(video, {
-        flipHorizontal: false
-      });
-      
-      // Detect colors for stick endpoints
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const endpointsData: StickEndpoint[] = [];
+      const poses = await mlService.current.detectPose(video);
+      const pose = poses[0];
 
-      for (const color of endColors) {
-        const threshold = colorThresholds[color as keyof typeof colorThresholds];
-        const result = detectColor(imageData, threshold);
-        
-        if (result) {
-          endpointsData.push({
-            ...result,
-            color
-          });
-        }
-      }
+      // Detect stick endpoints
+      const end1 = await mlService.current.detectColor(
+        video,
+        [colorThresholds[endColors[0]].r, colorThresholds[endColors[0]].g, colorThresholds[endColors[0]].b],
+        colorThresholds[endColors[0]].tolerance
+      );
 
-      // Update tracking data
-      if (endpointsData.length >= 2) {
-        const [end1, end2] = endpointsData;
+      const end2 = await mlService.current.detectColor(
+        video,
+        [colorThresholds[endColors[1]].r, colorThresholds[endColors[1]].g, colorThresholds[endColors[1]].b],
+        colorThresholds[endColors[1]].tolerance
+      );
+
+      if (pose && end1 && end2) {
         const midpoint = {
           x: (end1.x + end2.x) / 2,
           y: (end1.y + end2.y) / 2
         };
 
+        // Draw debug view if enabled
+        if (debugMode) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          drawDebugView(ctx, pose.keypoints, [
+            { ...end1, color: endColors[0] },
+            { ...end2, color: endColors[1] }
+          ], midpoint);
+        }
+
+        // Calculate frame rate
+        const frameTime = now - lastFrameTime.current;
+        const instantFPS = 1000 / frameTime;
+        const smoothedFPS = 0.9 * trackingData.frameRate + 0.1 * instantFPS;
+
         setTrackingData({
           pose: {
             keypoints: pose.keypoints,
-            score: pose.score,
+            score: pose.score || 0,
             timestamp: now
           },
           stick: {
-            endpoints: [end1, end2],
+            endpoints: [
+              { ...end1, color: endColors[0] },
+              { ...end2, color: endColors[1] }
+            ],
             midpoint,
             timestamp: now
           },
-          frameRate: trackingData.frameRate
+          frameRate: smoothedFPS
         });
 
-        if (debugMode) {
-          drawDebugView(ctx, pose.keypoints, [end1, end2], midpoint);
-        }
+        lastFrameTime.current = now;
       }
     } catch (error) {
       console.error('Frame processing error:', error);
     } finally {
       processingFrame.current = false;
     }
-  }, [net, endColors, debugMode, colorThresholds, detectColor, trackingData.frameRate]);
+  }, [endColors, debugMode, colorThresholds, trackingData.frameRate]);
+
+  // Animation loop
+  useEffect(() => {
+    const animate = () => {
+      if (isTracking) {
+        processFrame();
+      }
+      rafId.current = requestAnimationFrame(animate);
+    };
+
+    if (isTracking) {
+      animate();
+    }
+
+    return () => {
+      if (rafId.current) {
+        cancelAnimationFrame(rafId.current);
+      }
+    };
+  }, [isTracking, processFrame]);
 
   // Draw debug visualization
   const drawDebugView = useCallback((
     ctx: CanvasRenderingContext2D,
-    keypoints: posenet.Keypoint[],
+    keypoints: Array<{x: number, y: number, score?: number}>,
     endpoints: [StickEndpoint, StickEndpoint],
     midpoint: { x: number; y: number }
   ) => {
-    const canvas = ctx.canvas;
-
-    // Draw pose keypoints
+    // Draw keypoints
     keypoints.forEach(keypoint => {
-      if (keypoint.score > 0.5) {
+      if ((keypoint.score || 0) > 0.3) {
         ctx.beginPath();
-        ctx.arc(
-          keypoint.position.x,
-          keypoint.position.y,
-          5,
-          0,
-          2 * Math.PI
-        );
-        ctx.fillStyle = 'aqua';
+        ctx.arc(keypoint.x, keypoint.y, 5, 0, 2 * Math.PI);
+        ctx.fillStyle = 'yellow';
         ctx.fill();
       }
     });
@@ -284,41 +299,21 @@ export default function StickTracker() {
     // Draw stick endpoints
     endpoints.forEach(endpoint => {
       ctx.beginPath();
-      ctx.arc(
-        endpoint.x * canvas.width,
-        endpoint.y * canvas.height,
-        8,
-        0,
-        2 * Math.PI
-      );
+      ctx.arc(endpoint.x, endpoint.y, 8, 0, 2 * Math.PI);
       ctx.fillStyle = endpoint.color;
       ctx.fill();
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = 2;
-      ctx.stroke();
     });
 
-    // Draw stick midpoint and line
+    // Draw midpoint and connecting lines
     ctx.beginPath();
-    ctx.arc(
-      midpoint.x * canvas.width,
-      midpoint.y * canvas.height,
-      4,
-      0,
-      2 * Math.PI
-    );
-    ctx.fillStyle = 'yellow';
+    ctx.arc(midpoint.x, midpoint.y, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = 'green';
     ctx.fill();
 
     ctx.beginPath();
-    ctx.moveTo(
-      endpoints[0].x * canvas.width,
-      endpoints[0].y * canvas.height
-    );
-    ctx.lineTo(
-      endpoints[1].x * canvas.width,
-      endpoints[1].y * canvas.height
-    );
+    ctx.moveTo(endpoints[0].x, endpoints[0].y);
+    ctx.lineTo(midpoint.x, midpoint.y);
+    ctx.lineTo(endpoints[1].x, endpoints[1].y);
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
     ctx.lineWidth = 2;
     ctx.stroke();
@@ -480,86 +475,6 @@ export default function StickTracker() {
     };
   }, [isTracking, processFrame]);
 
-  // Utility function to convert HSV to RGB
-  const hsvToRgb = (h: number, s: number, v: number): { r: number, g: number, b: number } => {
-    s = s / 100;
-    v = v / 100;
-    const c = v * s;
-    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-    const m = v - c;
-
-    let r = 0, g = 0, b = 0;
-    if (h >= 0 && h < 60) {
-      r = c; g = x; b = 0;
-    } else if (h >= 60 && h < 120) {
-      r = x; g = c; b = 0;
-    } else if (h >= 120 && h < 180) {
-      r = 0; g = c; b = x;
-    } else if (h >= 180 && h < 240) {
-      r = 0; g = x; b = c;
-    } else if (h >= 240 && h < 300) {
-      r = x; g = 0; b = c;
-    } else if (h >= 300 && h < 360) {
-      r = c; g = 0; b = x;
-    }
-
-    return {
-      r: Math.round((r + m) * 255),
-      g: Math.round((g + m) * 255),
-      b: Math.round((b + m) * 255)
-    };
-  };
-
-  // Color calibration handlers
-  const handleColorSelect = (color: string) => {
-    setSelectedColor(color);
-    setIsCalibrating(true);
-  };
-
-  const handleColorChange = (color: ColorResult) => {
-    if (selectedColor) {
-      const [h, s, v] = rgbToHsv(color.rgb.r, color.rgb.g, color.rgb.b);
-      setColorThresholds(prev => ({
-        ...prev,
-        [selectedColor]: {
-          hue: h,
-          saturation: s,
-          value: v,
-          tolerance: prev[selectedColor as keyof typeof prev].tolerance
-        }
-      }));
-    }
-  };
-
-  // Utility function to convert RGB to HSV
-  const rgbToHsv = (r: number, g: number, b: number): [number, number, number] => {
-    r /= 255;
-    g /= 255;
-    b /= 255;
-
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    const diff = max - min;
-
-    let h = 0;
-    if (diff === 0) {
-      h = 0;
-    } else if (max === r) {
-      h = 60 * ((g - b) / diff % 6);
-    } else if (max === g) {
-      h = 60 * ((b - r) / diff + 2);
-    } else {
-      h = 60 * ((r - g) / diff + 4);
-    }
-
-    if (h < 0) h += 360;
-
-    const s = max === 0 ? 0 : diff / max * 100;
-    const v = max * 100;
-
-    return [h, s, v];
-  };
-
   // Start recording
   const startRecording = () => {
     if (!webcamRef.current?.video || !canvasRef.current) return;
@@ -631,12 +546,6 @@ export default function StickTracker() {
 
   const startWebcam = async () => {
     try {
-      // First ensure TensorFlow and PoseNet are initialized
-      if (!modelLoaded.current) {
-        setStatus('Please wait for model to initialize...');
-        return;
-      }
-
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 1280 },
@@ -686,8 +595,16 @@ export default function StickTracker() {
         <div className="space-x-4">
           <select
             className="bg-gray-800 text-white rounded px-3 py-2"
+            value={backend}
+            onChange={(e) => setBackend(e.target.value as MLBackend)}
+          >
+            <option value="tflite">TensorFlow Lite</option>
+            <option value="tfjs">TensorFlow.js</option>
+          </select>
+          <select
+            className="bg-gray-800 text-white rounded px-3 py-2"
             value={endColors[0]}
-            onChange={(e) => setEndColors([e.target.value as string, endColors[1]])}
+            onChange={(e) => setEndColors([e.target.value as ColorName, endColors[1]])}
           >
             {Object.keys(colorThresholds).map(color => (
               <option key={`end1-${color}`} value={color}>
@@ -698,7 +615,7 @@ export default function StickTracker() {
           <select
             className="bg-gray-800 text-white rounded px-3 py-2"
             value={endColors[1]}
-            onChange={(e) => setEndColors([endColors[0], e.target.value as string])}
+            onChange={(e) => setEndColors([endColors[0], e.target.value as ColorName])}
           >
             {Object.keys(colorThresholds).map(color => (
               <option key={`end2-${color}`} value={color}>
@@ -853,55 +770,10 @@ export default function StickTracker() {
             <span>Debug Mode</span>
           </label>
           <div className="text-sm text-gray-400">
-            FPS: {trackingData.frameRate}
+            FPS: {Math.round(trackingData.frameRate)}
           </div>
         </div>
       </div>
-
-      {isCalibrating && selectedColor && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-4 rounded-lg">
-            <h3 className="text-lg font-medium mb-4">Calibrate {selectedColor}</h3>
-            <SketchPicker
-              color={(() => {
-                const threshold = colorThresholds[selectedColor as keyof typeof colorThresholds];
-                const rgb = hsvToRgb(threshold.hue, threshold.saturation, threshold.value);
-                return { r: rgb.r, g: rgb.g, b: rgb.b };
-              })()}
-              onChange={handleColorChange}
-            />
-            <button
-              onClick={() => setIsCalibrating(false)}
-              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-            >
-              Done
-            </button>
-          </div>
-        </div>
-      )}
-
-      {debugMode && (
-        <div className="bg-gray-900 p-4 rounded-lg">
-          <h3 className="text-lg font-medium mb-2">Debug Info</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <h4 className="font-medium mb-2">Color Calibration</h4>
-              {Object.entries(colorThresholds).map(([color, threshold]) => (
-                <button
-                  key={color}
-                  onClick={() => handleColorSelect(color)}
-                  className="block mb-2 px-3 py-1 bg-gray-800 rounded"
-                >
-                  Calibrate {color}
-                </button>
-              ))}
-            </div>
-            <pre className="text-sm">
-              {JSON.stringify(trackingData, null, 2)}
-            </pre>
-          </div>
-        </div>
-      )}
 
       {processedVideo && (
         <div className="bg-gray-900 p-4 rounded-lg">

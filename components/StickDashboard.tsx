@@ -55,11 +55,6 @@ const MinimalIcons = {
 type Tab = 'capture' | 'train' | 'test';
 
 // Dynamically import components
-const ModelTrainer = dynamic(() => import('./ModelTrainer'), {
-  loading: () => <div>Loading trainer...</div>,
-  ssr: false
-});
-
 const DatasetCapture = dynamic(() => import('./DatasetCapture'), {
   loading: () => <div>Loading capture...</div>,
   ssr: false
@@ -191,7 +186,7 @@ const StickDashboard: React.FC<StickDashboardProps> = ({ onClose }) => {
             />
           )}
           {activeTab === 'train' && datasetInfo?.isValid && (
-            <ModelTrainer />
+            <div className="p-4 text-white/80">Model training coming soon</div>
           )}
           {activeTab === 'test' && (
             <StickTracker />
