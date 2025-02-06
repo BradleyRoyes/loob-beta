@@ -207,61 +207,30 @@ export async function POST(req: any) {
             timestamp: new Date().toISOString()
           };
 
-          // Update user's vibe entity
-          if (userId) {
-            try {
-              await fetch('/api/vibe_entities', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  id: userId,
-                  state: vibeUpdate
-                })
-              });
-            } catch (err) {
-              console.error("Error updating user vibe entity:", err);
-            }
-          }
+          // Update all entities through the vibe_entities API
+          try {
+            const entitiesToUpdate = [
+              ...(userId ? [userId] : []),
+              ...(connectedLoobricates || [])
+            ];
 
-          // Update connected loobricates' vibe entities
-          if (connectedLoobricates?.length > 0) {
-            await Promise.all(connectedLoobricates.map(async (loobricateId: string) => {
-              try {
-                await fetch('/api/vibe_entities', {
+            if (entitiesToUpdate.length > 0) {
+              await Promise.all(entitiesToUpdate.map(entityId =>
+                fetch('/api/vibe_entities', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    id: loobricateId,
-                    state: vibeUpdate
+                    id: entityId,
+                    state: {
+                      ...vibeUpdate,
+                      entityId
+                    }
                   })
-                });
-              } catch (err) {
-                console.error(`Error updating loobricate ${loobricateId} vibe entity:`, err);
-              }
-            }));
-          }
-
-          // Trigger Pusher events for real-time updates
-          try {
-            // Trigger user's channel
-            if (userId) {
-              await pusher.trigger(`user-${userId}`, "vibe-update", {
-                ...vibeUpdate,
-                entityId: userId
-              });
-            }
-
-            // Trigger loobricate channels
-            if (connectedLoobricates?.length > 0) {
-              await Promise.all(connectedLoobricates.map(loobricateId =>
-                pusher.trigger(`loobricate-${loobricateId}`, "vibe-update", {
-                  ...vibeUpdate,
-                  entityId: loobricateId
                 })
               ));
             }
           } catch (err) {
-            console.error("Error triggering Pusher events:", err);
+            console.error("Error updating vibe entities:", err);
           }
         }
         await saveMessageToDatabase(sessionId, completion, "assistant", analysis);

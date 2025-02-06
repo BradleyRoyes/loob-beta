@@ -59,9 +59,14 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          loobricate_id,
-          message,
-          timestamp: new Date().toISOString(),
+          id: loobricate_id,
+          state: {
+            message,
+            timestamp: new Date().toISOString(),
+            mood: 'neutral',
+            sentiment: 0,
+            intensity: 0.5
+          }
         }),
       });
       
