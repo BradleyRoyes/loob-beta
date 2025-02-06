@@ -15,23 +15,18 @@
 .recording-indicator {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border-radius: 1rem;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.75);
 }
 
 .pulsing-red-dot {
-  width: 12px;
-  height: 12px;
-  background: linear-gradient(45deg, #ff4b4b, #ff6b6b);
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
   border-radius: 50%;
-  animation: pulse 1s infinite;
-  box-shadow: 0 0 10px rgba(255, 75, 75, 0.5);
+  animation: pulse 1.5s infinite;
 }
 
 .frame-container {
@@ -134,13 +129,9 @@
 
 .bounding-box {
   position: absolute;
-  border: 2px dashed;
-  transform: translate(-50%, -50%);
+  border: 2px solid;
   pointer-events: none;
-  z-index: 10;
-  opacity: 0.7;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(2px);
+  transform: translate(-50%, -50%);
 }
 
 .frame-container:hover .bounding-box {
@@ -148,19 +139,13 @@
 }
 
 .bounding-box.ball1 {
-  border-color: rgba(255, 107, 107, 0.9);
-  background: rgba(255, 107, 107, 0.15);
-  box-shadow: 
-    0 0 10px rgba(255, 107, 107, 0.2),
-    inset 0 0 20px rgba(255, 107, 107, 0.1);
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.2);
 }
 
 .bounding-box.ball2 {
-  border-color: rgba(75, 131, 255, 0.9);
-  background: rgba(75, 131, 255, 0.15);
-  box-shadow: 
-    0 0 10px rgba(75, 131, 255, 0.2),
-    inset 0 0 20px rgba(75, 131, 255, 0.1);
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.2);
 }
 
 .label-indicator {
@@ -240,9 +225,18 @@
 }
 
 @keyframes pulse {
-  0% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.1); }
-  100% { opacity: 1; transform: scale(1); }
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
@@ -252,17 +246,15 @@
 
 .annotation-frame {
   position: relative;
-  border-radius: 0.5rem;
+  width: 100%;
+  border-radius: 8px;
   overflow: hidden;
-  background: #1a1a1a;
-  cursor: crosshair;
 }
 
 .annotation-frame img {
   width: 100%;
-  height: 100%;
-  object-fit: contain;
-  pointer-events: none; /* Prevent image from blocking clicks */
+  height: auto;
+  display: block;
 }
 
 .annotation-overlay {
@@ -312,7 +304,7 @@
 }
 
 .bounding-box.ball2::before {
-  border-color: #4b83ff;
+  border-border-color: #4b83ff;
 }
 
 /* Label Styles */
@@ -321,14 +313,12 @@
   top: -25px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.75);
   color: white;
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 12px;
-  font-weight: bold;
   white-space: nowrap;
-  z-index: 120;
 }
 
 .box-label.ball1 {
@@ -525,4 +515,89 @@
 .box-label.ball2 {
   background: #3b82f6;
   color: white;
+}
+
+.frame-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  margin-top: 1rem;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
+}
+
+.control-button {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.control-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.control-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.frame-info {
+  text-align: center;
+}
+
+.frame-info span {
+  display: block;
+}
+
+.mode-indicator {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+.frame-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.progress-bar {
+  display: flex;
+  gap: 4px;
+  padding: 1rem;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
+  overflow-x: auto;
+}
+
+.progress-segment {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 20px;
+}
+
+.progress-segment:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.progress-segment.current {
+  background: #60a5fa;
+}
+
+.progress-segment.partial {
+  background: #f59e0b;
+}
+
+.progress-segment.complete {
+  background: #10b981;
 } 

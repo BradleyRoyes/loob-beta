@@ -4,7 +4,7 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import Webcam from 'react-webcam';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-webgl';
-import * as posenet from '@tensorflow-models/posenet';
+import { PoseLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { ColorResult, SketchPicker } from 'react-color';
 
 interface StickEndpoint {
@@ -21,7 +21,12 @@ interface StickData {
 }
 
 interface PoseData {
-  keypoints: posenet.Keypoint[];
+  keypoints: Array<{
+    x: number;
+    y: number;
+    z: number;
+    visibility?: number;
+  }>;
   score: number;
   timestamp: number;
 }
@@ -58,7 +63,7 @@ export default function StickTracker() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const uploadedVideoRef = useRef<HTMLVideoElement>(null);
   const [isTracking, setIsTracking] = useState(false);
-  const [net, setNet] = useState<posenet.PoseNet>();
+  const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker>();
   const [trackingData, setTrackingData] = useState<TrackingData>({
     pose: null,
     stick: null,
@@ -87,13 +92,13 @@ export default function StickTracker() {
   const rafId = useRef<number>();
   const modelLoaded = useRef(false);
 
-  // Initialize TensorFlow and PoseNet
+  // Initialize TensorFlow and MoveNet
   useEffect(() => {
     let isMounted = true;
 
-    const loadPoseNet = async () => {
+    const loadPoseLandmarker = async () => {
       try {
-        setStatus('Loading TensorFlow.js and PoseNet model...');
+        setStatus('Loading TensorFlow.js and MoveNet model...');
         
         // Initialize TensorFlow
         if (!tf.getBackend()) {
@@ -105,21 +110,24 @@ export default function StickTracker() {
         
         console.log('TensorFlow backend initialized:', tf.getBackend());
 
-        // Load PoseNet if not already loaded
+        // Load MoveNet if not already loaded
         if (!modelLoaded.current) {
-          const poseNet = await posenet.load({
-            architecture: 'MobileNetV1',
-            outputStride: 16,
-            inputResolution: { width: 513, height: 513 },
-            multiplier: 0.75
+          const vision = await FilesetResolver.forVisionTasks(
+            "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+          );
+          
+          const landmarker = await PoseLandmarker.createFromOptions(vision, {
+            baseOptions: {
+              modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+              delegate: "GPU"
+            },
+            runningMode: "VIDEO",
+            numPoses: 1
           });
           
-          if (!isMounted) {
-            poseNet.dispose();
-            return;
-          }
+          if (!isMounted) return;
           
-          setNet(poseNet);
+          setPoseLandmarker(landmarker);
           modelLoaded.current = true;
           setStatus('Ready! Click Start Tracking to begin');
         }
@@ -130,7 +138,7 @@ export default function StickTracker() {
       }
     };
 
-    loadPoseNet();
+    loadPoseLandmarker();
 
     return () => {
       isMounted = false;
@@ -180,7 +188,7 @@ export default function StickTracker() {
 
   // Process video frame
   const processFrame = useCallback(async () => {
-    if (!webcamRef.current?.video || !canvasRef.current || !net || processingFrame.current) return;
+    if (!webcamRef.current?.video || !canvasRef.current || !poseLandmarker || processingFrame.current) return;
 
     const video = webcamRef.current.video;
     const canvas = canvasRef.current;
@@ -202,10 +210,9 @@ export default function StickTracker() {
       // Draw video frame to canvas
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       
-      // Detect pose
-      const pose = await net.estimateSinglePose(video, {
-        flipHorizontal: false
-      });
+      // Detect pose using MoveNet
+      const results = await poseLandmarker.detectForVideo(video, now);
+      const pose = results.landmarks[0];
       
       // Detect colors for stick endpoints
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -224,7 +231,7 @@ export default function StickTracker() {
       }
 
       // Update tracking data
-      if (endpointsData.length >= 2) {
+      if (endpointsData.length >= 2 && pose) {
         const [end1, end2] = endpointsData;
         const midpoint = {
           x: (end1.x + end2.x) / 2,
@@ -233,8 +240,13 @@ export default function StickTracker() {
 
         setTrackingData({
           pose: {
-            keypoints: pose.keypoints,
-            score: pose.score,
+            keypoints: pose.map(point => ({
+              x: point.x * canvas.width,
+              y: point.y * canvas.height,
+              z: point.z,
+              visibility: point.visibility
+            })),
+            score: results.segmentationMasks?.[0] ? 1.0 : 0.0,
             timestamp: now
           },
           stick: {
@@ -246,7 +258,7 @@ export default function StickTracker() {
         });
 
         if (debugMode) {
-          drawDebugView(ctx, pose.keypoints, [end1, end2], midpoint);
+          drawDebugView(ctx, pose, [end1, end2], midpoint);
         }
       }
     } catch (error) {
@@ -254,24 +266,24 @@ export default function StickTracker() {
     } finally {
       processingFrame.current = false;
     }
-  }, [net, endColors, debugMode, colorThresholds, detectColor, trackingData.frameRate]);
+  }, [poseLandmarker, endColors, colorThresholds, debugMode, trackingData.frameRate]);
 
   // Draw debug visualization
   const drawDebugView = useCallback((
     ctx: CanvasRenderingContext2D,
-    keypoints: posenet.Keypoint[],
+    pose: Array<{x: number, y: number, z: number, visibility?: number}>,
     endpoints: [StickEndpoint, StickEndpoint],
     midpoint: { x: number; y: number }
   ) => {
     const canvas = ctx.canvas;
 
     // Draw pose keypoints
-    keypoints.forEach(keypoint => {
-      if (keypoint.score > 0.5) {
+    pose.forEach(keypoint => {
+      if (keypoint.visibility && keypoint.visibility > 0.5) {
         ctx.beginPath();
         ctx.arc(
-          keypoint.position.x,
-          keypoint.position.y,
+          keypoint.x * canvas.width,
+          keypoint.y * canvas.height,
           5,
           0,
           2 * Math.PI
@@ -631,7 +643,7 @@ export default function StickTracker() {
 
   const startWebcam = async () => {
     try {
-      // First ensure TensorFlow and PoseNet are initialized
+      // First ensure TensorFlow and MoveNet are initialized
       if (!modelLoaded.current) {
         setStatus('Please wait for model to initialize...');
         return;
