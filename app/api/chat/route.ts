@@ -1,9 +1,26 @@
 import OpenAI from "openai";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 import { AstraDB } from "@datastax/astra-db-ts";
-import { v4 as uuidv4 } from "uuid";
 import generateDocContext from "./generateDocContext";
 const Pusher = require("pusher");
+
+// Validate environment variables
+const requiredEnvVars = {
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  ASTRA_DB_APPLICATION_TOKEN: process.env.ASTRA_DB_APPLICATION_TOKEN,
+  ASTRA_DB_ENDPOINT: process.env.ASTRA_DB_ENDPOINT,
+  ASTRA_DB_NAMESPACE: process.env.ASTRA_DB_NAMESPACE,
+  VERCEL_URL: process.env.VERCEL_URL,
+};
+
+// Check for missing environment variables
+const missingEnvVars = Object.entries(requiredEnvVars)
+  .filter(([key, value]) => !value)
+  .map(([key]) => key);
+
+if (missingEnvVars.length > 0) {
+  throw new Error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
+}
 
 // Initialize OpenAI and AstraDB
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -46,30 +63,34 @@ function parseAnalysis(content: string) {
 
 // Save a message to the database
 async function saveMessageToDatabase(sessionId: string, content: string, role: string, analysis: any = null) {
-  const messagesCollection = await astraDb.collection("messages");
-  const existingMessage = await messagesCollection.findOne({ sessionId, content });
-  if (existingMessage) {
-    console.log("Duplicate message detected. Skipping save.");
-    return;
+  try {
+    const messagesCollection = await astraDb.collection("messages");
+    const existingMessage = await messagesCollection.findOne({ sessionId, content });
+    if (existingMessage) {
+      console.log("Duplicate message detected. Skipping save.");
+      return;
+    }
+    const messageData = {
+      sessionId,
+      role,
+      content,
+      length: content.length,
+      createdAt: new Date(),
+      type: 'chat_message',
+      mood: analysis?.mood,
+      keywords: analysis?.keywords,
+      analysis: analysis ? {
+        mood: analysis.mood,
+        keywords: analysis.keywords,
+        raw: analysis
+      } : null
+    };
+    await messagesCollection.insertOne(messageData);
+    console.log(`Saved ${role} message to DB (sessionId: ${sessionId})`);
+  } catch (error) {
+    console.error("Error saving message to database:", error);
+    // Don't throw the error - we want to continue even if DB save fails
   }
-  const messageData = {
-    sessionId,
-    role,
-    content,
-    length: content.length,
-    createdAt: new Date(),
-    type: 'chat_message',
-    mood: analysis?.mood,
-    keywords: analysis?.keywords,
-    analysis: analysis ? {
-      mood: analysis.mood,
-      keywords: analysis.keywords,
-      // Store other analysis fields that might be useful in the future
-      raw: analysis
-    } : null
-  };
-  await messagesCollection.insertOne(messageData);
-  console.log(`Saved ${role} message to DB (sessionId: ${sessionId})`);
 }
 
 // Brushstroke actions for Pusher
@@ -86,23 +107,47 @@ const brushstrokes = [
   "animatePosition",
 ];
 
+// Get the base URL for API calls
+const getBaseUrl = () => {
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  return 'http://localhost:3000';
+};
+
 // Main POST function
-export async function POST(req: any) {
+export async function POST(req: Request) {
   try {
     console.log("Received POST request...");
     const { messages, llm, sessionId, userId, connectedLoobricates } = await req.json();
 
+    if (!messages || !Array.isArray(messages)) {
+      return new Response(JSON.stringify({ error: "Invalid messages format" }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     const latestMessage = messages[messages.length - 1]?.content;
     if (!latestMessage) {
-      throw new Error("No latest message found in the request.");
+      return new Response(JSON.stringify({ error: "No latest message found in the request" }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     console.log("Generating document context...");
-    const docContext = await generateDocContext(latestMessage, astraDb, openai);
-    console.log("Document context generated:", docContext);
+    let docContext;
+    try {
+      docContext = await generateDocContext(latestMessage, astraDb, openai);
+      console.log("Document context generated:", docContext);
+    } catch (error) {
+      console.error("Error generating document context:", error);
+      docContext = ""; // Continue without context if generation fails
+    }
 
+    // Save user messages to database
     for (const message of messages) {
-      // Only save user messages
       if (message.role === 'user') {
         await saveMessageToDatabase(sessionId, message.content, message.role);
       }
@@ -212,11 +257,12 @@ export async function POST(req: any) {
             const entitiesToUpdate = [
               ...(userId ? [userId] : []),
               ...(connectedLoobricates || [])
-            ];
+            ].filter(Boolean); // Remove any null/undefined values
 
             if (entitiesToUpdate.length > 0) {
+              const baseUrl = getBaseUrl();
               await Promise.all(entitiesToUpdate.map(entityId =>
-                fetch('/api/vibe_entities', {
+                fetch(`${baseUrl}/api/vibe_entities`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
@@ -226,11 +272,15 @@ export async function POST(req: any) {
                       entityId
                     }
                   })
+                }).catch(err => {
+                  console.error(`Error updating vibe entity ${entityId}:`, err);
+                  // Continue with other updates even if one fails
                 })
               ));
             }
           } catch (err) {
             console.error("Error updating vibe entities:", err);
+            // Continue even if vibe updates fail
           }
         }
         await saveMessageToDatabase(sessionId, completion, "assistant", analysis);
@@ -238,8 +288,21 @@ export async function POST(req: any) {
     });
 
     return new StreamingTextResponse(stream);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in chatbot route:", error);
-    throw error;
+    
+    // Return a proper error response
+    return new Response(
+      JSON.stringify({
+        error: "Internal server error",
+        message: error.message || "An unexpected error occurred",
+        // Only include stack trace in development
+        ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
 }

@@ -32,6 +32,8 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
   const [audioLevel, setAudioLevel] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [waveformBars, setWaveformBars] = useState<Array<number>>([]);
+  const [statusMessage, setStatusMessage] = useState<string>('');
+  const [recordingFormat, setRecordingFormat] = useState<string>('');
   
   // Refs to maintain references across re-renders
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -223,7 +225,9 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
         'audio/aac',
         'audio/wav'
       ];
-      return desktopMimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || null;
+      const format = desktopMimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || null;
+      setRecordingFormat(format || 'No supported format found');
+      return format;
     }
 
     // Mobile-optimized formats
@@ -237,10 +241,13 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
     
     // Special case for iOS
     if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+      setRecordingFormat('audio/mp4 (iOS)');
       return 'audio/mp4';
     }
     
-    return mobileMimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || null;
+    const format = mobileMimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || null;
+    setRecordingFormat(format || 'No supported format found');
+    return format;
   };
 
   useEffect(() => {
@@ -307,6 +314,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
   const handleStartRecording = async () => {
     try {
       setError(null);
+      setStatusMessage('Initializing recording...');
 
       if (isRecording) {
         handleStopRecording();
@@ -315,6 +323,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
 
       // Request permission if not granted
       if (permissionState !== 'granted') {
+        setStatusMessage('Requesting microphone permission...');
         const granted = await requestMicrophonePermission();
         if (!granted) {
           throw new Error(getPermissionInstructions('microphone'));
@@ -335,6 +344,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       if (!mimeType) {
         throw new Error('No supported audio format found for your browser');
       }
+      setStatusMessage(`Using format: ${mimeType}`);
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -347,6 +357,8 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
           })
         }
       });
+      
+      setStatusMessage('Microphone connected successfully');
       
       streamRef.current = stream;
       recordingStartTimeRef.current = Date.now();
@@ -391,12 +403,16 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
           chunksRef.current.push(e.data);
+          setStatusMessage(`Recording... (${formatDuration(recordingDuration)})`);
+        } else {
+          setStatusMessage('Warning: No audio data received');
         }
       };
 
       mediaRecorder.onerror = (event) => {
         console.error('MediaRecorder error:', event);
         setError('An error occurred during recording');
+        setStatusMessage('Recording failed');
         cleanupRecording();
       };
 
@@ -404,6 +420,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
         cleanup();
         if (chunksRef.current.length === 0) {
           setError('No audio data was captured');
+          setStatusMessage('Recording failed - no audio data');
           return;
         }
       };
@@ -424,6 +441,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
     } catch (error: any) {
       const errorMessage = getErrorMessage(error);
       setError(errorMessage);
+      setStatusMessage('Recording failed to start');
       console.error("Recording error:", error);
       cleanupRecording();
     }
@@ -440,7 +458,15 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
   const handleConfirmRecording = () => {
     if (!mediaRecorderRef.current || !isRecording) return;
     
+    setStatusMessage('Finalizing recording...');
     const audioBlob = new Blob(chunksRef.current, { type: mediaRecorderRef.current.mimeType });
+    if (audioBlob.size === 0) {
+      setError('No audio data was captured');
+      setStatusMessage('Recording failed - no audio data');
+      return;
+    }
+    
+    setStatusMessage('Recording complete');
     stopRecordingProp();
     onRecordingComplete(audioBlob);
     cleanupRecording();
@@ -557,6 +583,19 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
           )}
         </div>
       )}
+
+      <div className={styles.statusContainer}>
+        {statusMessage && (
+          <div className={styles.statusMessage}>
+            {statusMessage}
+          </div>
+        )}
+        {recordingFormat && !isRecording && (
+          <div className={styles.formatInfo}>
+            Format: {recordingFormat}
+          </div>
+        )}
+      </div>
 
       <div className={styles.recordingContainer}>
         <div className={styles.waveformContainer}>
