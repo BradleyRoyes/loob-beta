@@ -148,27 +148,21 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 className="pseudonymInput"
                 disabled={loading}
               />
-              {loginError && (
-                <p className="error">
-                  {loginError}
-                </p>
-              )}
-              <div className="buttonGroup">
-                <button
-                  className="actionButton"
-                  onClick={handleLogin}
-                  disabled={loading}
-                >
-                  {loading ? "Logging in..." : "Log In"}
-                </button>
-                <button
-                  className="actionButton secondary"
-                  onClick={handleStayAnonymous}
-                  disabled={loading}
-                >
-                  Stay Anonymous
-                </button>
-              </div>
+              {loginError && <p className="error">{loginError}</p>}
+              <button
+                className="actionButton"
+                onClick={handleLogin}
+                disabled={loading}
+              >
+                {loading ? "Logging in..." : "Log In"}
+              </button>
+              <button
+                className="actionButton secondary"
+                onClick={handleStayAnonymous}
+                disabled={loading}
+              >
+                Stay Anonymous
+              </button>
               <p className="createAccountText" onClick={() => setPhase("signupPhase")}>
                 Don't have an account? <span className="linkText">Sign up</span>
               </p>

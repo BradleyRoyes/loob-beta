@@ -63,6 +63,7 @@ const DailyDump: React.FC<DailyDumpProps> = ({ onClose, onDumpComplete, isOpen }
     setSaveSuccess(false);
     
     try {
+      // Save the dump
       const response = await fetch("/api/daily-dumps", {
         method: "POST",
         headers: {
@@ -85,6 +86,26 @@ const DailyDump: React.FC<DailyDumpProps> = ({ onClose, onDumpComplete, isOpen }
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to save dump");
+      }
+
+      // Update vibe entities
+      try {
+        // Analyze the dump content
+        const analysisResponse = await fetch("/api/chat/route", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: [{ role: "user", content: dumpText.trim() }],
+            userId,
+            connectedLoobricates: pseudonym ? [pseudonym] : []
+          })
+        });
+
+        if (!analysisResponse.ok) {
+          console.error("Failed to analyze dump content");
+        }
+      } catch (error) {
+        console.error("Error analyzing dump content:", error);
       }
 
       // Show success message and clear the form

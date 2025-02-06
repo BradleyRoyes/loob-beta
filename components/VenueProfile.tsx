@@ -2,7 +2,7 @@
 
 import React from 'react';
 import './OfferingProfile.css';
-import TorusSphere from './TorusSphere';
+import VibeEntity from './VibeEntity';
 import {
   Box,
   Modal,
@@ -69,7 +69,21 @@ const OfferingProfile: React.FC<OfferingProfileProps> = ({ offering, onClose }) 
 
             {/* Visual Section */}
             <Box className="visualization-section" sx={{ my: 3 }}>
-              <TorusSphere loobricateId={offering._id} />
+              <VibeEntity 
+                entityId={offering._id}
+                className="offering-vibe-entity"
+                onStateUpdate={async (state) => {
+                  try {
+                    await fetch('/api/vibe_entities', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ id: offering._id, state })
+                    });
+                  } catch (error) {
+                    console.error('Failed to update vibe state:', error);
+                  }
+                }}
+              />
             </Box>
 
             {/* Description */}

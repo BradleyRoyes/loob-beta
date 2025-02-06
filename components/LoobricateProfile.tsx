@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react';
 import './LoobricateProfile.css';
-import TorusSphere from './TorusSphere';
+import VibeEntity from './VibeEntity';
 import type { LoobricateData } from '../types/loobricate';
 import LoobricateAdminPanel from './LoobricateAdminPanel';
 import { FaLock, FaUserCircle } from 'react-icons/fa';
+import { useGlobalState } from './GlobalStateContext';
 
 interface Props {
   loobricate: LoobricateData;
@@ -22,6 +23,8 @@ const LoobricateProfile: React.FC<Props> = ({ loobricate, onClose, onUpdate }) =
   const [password, setPassword] = useState('');
   const [currentLoobricate, setCurrentLoobricate] = useState(loobricate);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showVibeComparison, setShowVibeComparison] = useState(false);
+  const { userId } = useGlobalState();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,68 +164,104 @@ const LoobricateProfile: React.FC<Props> = ({ loobricate, onClose, onUpdate }) =
               <button className="close-button" onClick={onClose}>×</button>
             </div>
 
-            <div className="visualization-section">
-              <TorusSphere loobricateId={currentLoobricate._id} />
-            </div>
-
-            <div className="loobricate-info">
-              <div className="info-section">
+            <div className="main-content">
+              <div className="description-section">
                 <p className="description">{currentLoobricate.description}</p>
               </div>
 
-              {currentLoobricate.addressLine1 && (
-                <div className="info-section">
-                  <h3>Location</h3>
-                  <p className="description">
-                    {currentLoobricate.addressLine1}
-                    {currentLoobricate.city && <>, {currentLoobricate.city}</>}
-                  </p>
-                </div>
-              )}
+              <div className="visualization-container">
+                {showVibeComparison ? (
+                  <div className="vibe-comparison">
+                    <div className="vibe-entity-wrapper">
+                      <h3>Loobricate Vibe</h3>
+                      <VibeEntity 
+                        entityId={currentLoobricate._id}
+                        className="loobricate-vibe-entity"
+                        onStateUpdate={async (state) => {
+                          try {
+                            await fetch('/api/vibe_entities', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ id: currentLoobricate._id, state })
+                            });
+                          } catch (error) {
+                            console.error('Failed to update vibe state:', error);
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="vibe-entity-wrapper">
+                      <h3>Your Vibe</h3>
+                      <VibeEntity 
+                        entityId={userId || 'default'}
+                        className="user-vibe-entity"
+                        onStateUpdate={async (state) => {
+                          try {
+                            await fetch('/api/vibe_entities', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ id: userId, state })
+                            });
+                          } catch (error) {
+                            console.error('Failed to update vibe state:', error);
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="single-vibe">
+                    <VibeEntity 
+                      entityId={currentLoobricate._id}
+                      className="loobricate-vibe-entity"
+                      onStateUpdate={async (state) => {
+                        try {
+                          await fetch('/api/vibe_entities', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: currentLoobricate._id, state })
+                          });
+                        } catch (error) {
+                          console.error('Failed to update vibe state:', error);
+                        }
+                      }}
+                    />
+                  </div>
+                )}
+                <button 
+                  className="compare-vibes-button"
+                  onClick={() => setShowVibeComparison(!showVibeComparison)}
+                >
+                  {showVibeComparison ? 'Hide Comparison' : 'Compare Vibes'}
+                </button>
+              </div>
 
-              <div className="info-section">
-                <h3>Community</h3>
-                <div className="stats">
+              <div className="loobricate-info">
+                <div className="info-section members-section">
                   <div className="stat">
                     <span className="label">Members</span>
                     <span className="value">{currentLoobricate.members.length}</span>
                   </div>
-                  <div className="stat">
-                    <span className="label">Admins</span>
-                    <span className="value">{currentLoobricate.admins.length}</span>
-                  </div>
                 </div>
-              </div>
 
-              {currentLoobricate.tags && currentLoobricate.tags.length > 0 && (
-                <div className="info-section">
-                  <h3>Tags</h3>
-                  <div className="tags-display">
-                    {currentLoobricate.tags.map((tag, index) => (
-                      <span key={`${tag}-${index}`} className="tag">{tag}</span>
-                    ))}
+                {currentLoobricate.tags && currentLoobricate.tags.length > 0 && (
+                  <div className="info-section tags-section">
+                    <div className="tags-display">
+                      {currentLoobricate.tags.map((tag, index) => (
+                        <span key={`${tag}-${index}`} className="tag">{tag}</span>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              <div className="info-section">
-                <h3>Details</h3>
-                <div className="details-grid">
-                  <div className="detail-item">
-                    <span className="label">Type</span>
-                    <span className="value">{currentLoobricate.type || 'Community'}</span>
+                {currentLoobricate.addressLine1 && (
+                  <div className="info-section location-section">
+                    <p className="location">
+                      {currentLoobricate.addressLine1}
+                      {currentLoobricate.city && <>, {currentLoobricate.city}</>}
+                    </p>
                   </div>
-                  <div className="detail-item">
-                    <span className="label">Created</span>
-                    <span className="value">
-                      {new Date(currentLoobricate.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="label">Admin</span>
-                    <span className="value">{currentLoobricate.adminUsername}</span>
-                  </div>
-                </div>
+                )}
               </div>
 
               <div className="admin-login-section">

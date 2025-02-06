@@ -13,15 +13,32 @@ interface ChatModalProps {
   showModal?: () => void;
 }
 
+const TypingIndicator = () => (
+  <div className="flex items-center space-x-2 p-4 bg-gray-100/5 backdrop-blur-sm rounded-lg mx-4 mb-2">
+    <div className="flex space-x-2">
+      <div className="w-2.5 h-2.5 bg-pink-300/70 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+      <div className="w-2.5 h-2.5 bg-pink-300/70 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+      <div className="w-2.5 h-2.5 bg-pink-300/70 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+    </div>
+  </div>
+);
+
 export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps) {
-  const { append, messages, input, handleInputChange, handleSubmit } = useChat();
+  const { activeLoobricate, userId } = useGlobalState();
+  
+  const { append, messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+    body: {
+      userId: userId || undefined,
+      connectedLoobricates: activeLoobricate ? [activeLoobricate.id] : []
+    }
+  });
+  
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const latestMessageRef = useRef<HTMLDivElement>(null);
   const [showIntroMessage, setShowIntroMessage] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const { activeLoobricate } = useGlobalState();
 
   // Update vibe entity when messages change and we have a selected loobricate
   useEffect(() => {
@@ -105,15 +122,21 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
 
   const handleSend = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!input.trim()) return;
+    
     handleSubmit(e);
     handleInputChange({ target: { value: "" } } as React.ChangeEvent<HTMLInputElement>);
     setShowIntroMessage(false);
     setTimeout(scrollToBottom, 100);
   };
 
-  const handlePrompt = (text: string) => {
-    append({ id: crypto.randomUUID(), content: text, role: "user" });
+  const handlePrompt = async (text: string) => {
     setShowIntroMessage(false);
+    await append({
+      id: crypto.randomUUID(),
+      content: text,
+      role: "user"
+    });
     setTimeout(scrollToBottom, 100);
   };
 
@@ -147,7 +170,7 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
         className="flex-1 overflow-y-auto mb-4 relative"
         onScroll={handleScroll}
       >
-        <div className="w-full">
+        <div className="w-full flex flex-col">
           {showIntroMessage && (
             <div ref={latestMessageRef}>
               <Bubble
@@ -175,6 +198,11 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
                   content: "Processing your voice message...",
                 }}
               />
+            </div>
+          )}
+          {isLoading && (
+            <div className="self-start" ref={latestMessageRef}>
+              <TypingIndicator />
             </div>
           )}
         </div>
@@ -217,6 +245,10 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
             setIsRecording(false);
             setIsProcessing(true);
           }}
+          onCancel={() => {
+            setIsRecording(false);
+            setIsProcessing(false);
+          }}
           className="audio-recorder-mobile"
         />
       </div>
@@ -231,7 +263,7 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
             className={`chatbot-input flex-1 text-base md:text-base outline-none bg-gray-100 rounded-md p-3 
               ${inputDisabled ? 'opacity-50 cursor-not-allowed' : ''} 
               no-zoom-fix`}
-            placeholder={inputDisabled ? 'Processing...' : 'Send a message...'}
+            placeholder={isProcessing ? 'Processing...' : isRecording ? 'Recording...' : 'Send a message...'}
             autoComplete="off"
             autoCorrect="off"
             spellCheck="false"

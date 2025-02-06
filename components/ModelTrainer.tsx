@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { trainModel, modelManager, MODEL_CONFIG } from '@/lib/model';
-import * as tf from '@tensorflow/tfjs';
 
 interface TrainingDetails {
   currentEpoch: number;
@@ -13,9 +12,6 @@ interface TrainingDetails {
   bestLoss: number | null;
   timeElapsed: number;
   estimatedTimeRemaining: number | null;
-  currentLearningRate: number;
-  gpuMemoryUsage: number;
-  dataThroughput: number;
 }
 
 interface TrainingMetrics {
@@ -36,10 +32,7 @@ export default function ModelTrainer() {
     currentLoss: null,
     bestLoss: null,
     timeElapsed: 0,
-    estimatedTimeRemaining: null,
-    currentLearningRate: MODEL_CONFIG.learningRate,
-    gpuMemoryUsage: 0,
-    dataThroughput: 0
+    estimatedTimeRemaining: null
   });
 
   const handleTrain = async () => {
@@ -47,46 +40,34 @@ export default function ModelTrainer() {
     setProgress(0);
     setMetrics({ loss: [], val_loss: [] });
     const startTime = Date.now();
-    let lastUpdate = 0;
 
     try {
       await trainModel(
         (progress) => setProgress(progress),
         {
           onBatchEnd: async (batch, logs) => {
-            const now = Date.now();
-            const timeElapsed = (now - startTime) / 1000;
-            
-            // Throttle updates to 60fps
-            if (now - lastUpdate > 16) {
-              setTrainingDetails(prev => {
-                const batchesComplete = prev.batchesComplete + 1;
-                const batchesPerSecond = batchesComplete / timeElapsed;
-                const dataThroughput = batchesPerSecond * MODEL_CONFIG.batchSize;
-                
-                // Calculate memory usage from tf.memory()
-                const gpuMemory = (tf.memory() as any).numBytesInGPU || 0;
-                
-                return {
-                  ...prev,
-                  batchesComplete,
-                  currentLoss: logs.loss,
-                  bestLoss: prev.bestLoss === null ? logs.loss : Math.min(prev.bestLoss, logs.loss),
-                  timeElapsed,
-                  estimatedTimeRemaining: (MODEL_CONFIG.epochs * prev.totalBatches - batchesComplete) / batchesPerSecond,
-                  currentLearningRate: logs.lr || MODEL_CONFIG.learningRate,
-                  gpuMemoryUsage: gpuMemory / 1024 / 1024, // MB
-                  dataThroughput: Number(dataThroughput.toFixed(1))
-                };
-              });
-              lastUpdate = now;
-            }
+            const timeElapsed = (Date.now() - startTime) / 1000;
+            setTrainingDetails(prev => {
+              const batchesComplete = prev.batchesComplete + 1;
+              const totalBatchesAllEpochs = prev.totalBatches * prev.totalEpochs;
+              const timePerBatch = timeElapsed / batchesComplete;
+              const remaining = (totalBatchesAllEpochs - batchesComplete) * timePerBatch;
+              
+              return {
+                ...prev,
+                batchesComplete,
+                currentLoss: logs.loss,
+                bestLoss: prev.bestLoss === null ? logs.loss : Math.min(prev.bestLoss, logs.loss),
+                timeElapsed,
+                estimatedTimeRemaining: remaining
+              };
+            });
           },
           onEpochBegin: async (epoch, logs) => {
             setTrainingDetails(prev => ({
               ...prev,
               currentEpoch: epoch + 1,
-              totalBatches: logs.totalBatches || prev.totalBatches
+              totalBatches: logs.totalBatches
             }));
           },
           onEpochEnd: async (epoch, logs) => {
@@ -94,10 +75,6 @@ export default function ModelTrainer() {
               loss: [...prev.loss, logs.loss],
               val_loss: [...prev.val_loss, logs.val_loss]
             }));
-            
-            // Update progress display
-            const progress = ((epoch + 1) / MODEL_CONFIG.epochs) * 100;
-            setProgress(progress);
           }
         }
       );

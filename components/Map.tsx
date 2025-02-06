@@ -14,7 +14,7 @@ import { checkPermission, getPermissionInstructions } from "../utils/permissions
 import { useGeolocation } from "./hooks/useGeolocation";
 import debounce from "lodash/debounce";
 
-import TorusSphere from "./TorusSphere";
+import VibeEntity from "./VibeEntity";
 import OfferingProfile from "./OfferingProfile";
 import MapSidebar from "./MapSidebar";
 import AddVenueModal from "./AddVenueModal";
@@ -58,9 +58,10 @@ interface LocationError {
 
 interface LocationState {
   status: 'idle' | 'requesting' | 'watching' | 'error';
-  error?: LocationError;
+  error?: LocationError | null;
   retryCount: number;
   lastUpdate?: number;
+  hasPermission?: boolean;
 }
 
 const LOCATION_CONFIG = {
@@ -326,8 +327,6 @@ const Map: React.FC = () => {
 
   const startWatchingLocation = useCallback(
     async (map: maplibregl.Map) => {
-      setLocationState(prev => ({ ...prev, status: 'requesting' }));
-
       if (!navigator.geolocation) {
         setLocationState(prev => ({
           ...prev,
@@ -343,6 +342,8 @@ const Map: React.FC = () => {
       try {
         // Check for permission first
         const hasPermission = await requestLocationPermission();
+        setLocationState(prev => ({ ...prev, hasPermission }));
+        
         if (!hasPermission) {
           setLocationState(prev => ({
             ...prev,
@@ -355,131 +356,83 @@ const Map: React.FC = () => {
           return;
         }
 
-        // Try to get initial position with high accuracy first
-        try {
-          const initialPosition = await getLocationWithRetry(LOCATION_CONFIG.HIGH_ACCURACY);
-          handlePositionUpdate(initialPosition, map);
-        } catch (error: any) {
-          console.warn('High accuracy position failed, falling back to low accuracy');
-          const initialPosition = await getLocationWithRetry(LOCATION_CONFIG.LOW_ACCURACY);
-          handlePositionUpdate(initialPosition, map);
-        }
+        setLocationState(prev => ({ ...prev, status: 'requesting' }));
 
-        // Start watching position
+        // Start watching position with high accuracy first
         watchIdRef.current = navigator.geolocation.watchPosition(
           (position) => {
-            handlePositionUpdate(position, map);
+            const { latitude, longitude } = position.coords;
+            setCurrentLocation([longitude, latitude]);
+            
+            // Update markers if they exist
+            if (userMarkerRef.current) {
+              userMarkerRef.current.setLngLat([longitude, latitude]);
+              userMarkerRef.current.getElement().style.display = 'block';
+            }
+            if (pulsingMarkerRef.current) {
+              pulsingMarkerRef.current.setLngLat([longitude, latitude]);
+              pulsingMarkerRef.current.getElement().style.display = 'block';
+            }
+
+            // Only fly to location on first position or if explicitly requested
+            if (locationState.status === 'requesting') {
+              map.flyTo({
+                center: [longitude, latitude],
+                zoom: INITIAL_ZOOM,
+                duration: 1000
+              });
+            }
+
             setLocationState(prev => ({
               ...prev,
               status: 'watching',
+              error: null,
               lastUpdate: Date.now(),
-              retryCount: 0,
+              retryCount: 0
             }));
           },
           (error) => {
-            console.error('Watch position error:', {
-              code: error.code,
-              message: error.message,
-              error
-            });
-            
-            const errorMessage = 
-              error.code === 1 // PERMISSION_DENIED
-                ? 'Location access was denied. Please enable permissions in your browser settings.'
-                : error.code === 2 // POSITION_UNAVAILABLE
-                ? 'Unable to retrieve location. Please ensure location services are enabled.'
-                : error.code === 3 // TIMEOUT
-                ? 'Location request timed out. Please check your connection.'
-                : 'An unknown error occurred while getting location.';
+            // Only update error state if we don't already have permission
+            if (!locationState.hasPermission || error.code === 1) {
+              const errorMessage = 
+                error.code === 1 ? 'Location access was denied. Please enable permissions in your browser settings.' :
+                error.code === 2 ? 'Unable to determine your location. Please check your device settings.' :
+                error.code === 3 ? 'Location request timed out. Please check your connection.' :
+                'An unknown error occurred while getting your location.';
 
-            setLocationState(prev => ({
-              ...prev,
-              status: 'error',
-              error: {
-                type: error.code === 1 ? 'permission' : 
-                      error.code === 3 ? 'timeout' : 'unavailable',
-                message: errorMessage
-              }
-            }));
+              setLocationState(prev => ({
+                ...prev,
+                status: 'error',
+                error: {
+                  type: error.code === 1 ? 'permission' : 
+                        error.code === 3 ? 'timeout' : 'unavailable',
+                  message: errorMessage
+                }
+              }));
+            }
+            // Log error without the full error object to avoid circular reference
+            console.warn('Watch position error:', {
+              code: error.code,
+              message: error.message
+            });
           },
           LOCATION_CONFIG.HIGH_ACCURACY
         );
 
-        // Set up a periodic check for stale location data
-        const staleCheckInterval = setInterval(() => {
-          if (locationState.lastUpdate && 
-              Date.now() - locationState.lastUpdate > LOCATION_CONFIG.TIMEOUT) {
-            restartLocationWatch(map);
-          }
-        }, LOCATION_CONFIG.TIMEOUT);
-
-        return () => {
-          if (watchIdRef.current !== null) {
-            navigator.geolocation.clearWatch(watchIdRef.current);
-          }
-          clearInterval(staleCheckInterval);
-        };
-
       } catch (error: any) {
-        handleLocationError(error);
+        console.warn('Location setup error:', error.message);
+        setLocationState(prev => ({
+          ...prev,
+          status: 'error',
+          error: {
+            type: 'unavailable',
+            message: 'Failed to initialize location services.'
+          }
+        }));
       }
     },
-    [getLocationWithRetry]
+    [locationState.hasPermission, locationState.status]
   );
-
-  const handlePositionUpdate = useCallback((
-    position: GeolocationPosition,
-    map: maplibregl.Map
-  ) => {
-    const { longitude, latitude } = position.coords;
-    const newPosition: [number, number] = [longitude, latitude];
-    setCurrentLocation(newPosition);
-    
-    // Update markers
-    if (userMarkerRef.current) {
-      userMarkerRef.current.setLngLat(newPosition);
-    }
-    if (pulsingMarkerRef.current) {
-      pulsingMarkerRef.current.setLngLat(newPosition);
-    }
-
-    // Only fly to location if it's the first update or significant change
-    if (!locationState.lastUpdate || 
-        locationState.status === 'requesting') {
-      map.flyTo({
-        center: newPosition,
-        zoom: INITIAL_ZOOM,
-        duration: 1000
-      });
-    }
-  }, [locationState]);
-
-  const handleLocationError = useCallback((error: any) => {
-    const errorMessage = error.code === 1 
-      ? 'Location access was denied. Please enable it in your settings.'
-      : error.code === 2
-      ? 'Location information is unavailable. Please check your device settings.'
-      : error.code === 3
-      ? 'Location request timed out. Please try again.'
-      : 'An unknown error occurred while getting location.';
-
-    setLocationState(prev => ({
-      ...prev,
-      status: 'error',
-      error: {
-        type: error.code === 1 ? 'permission' : 'unavailable',
-        message: errorMessage
-      }
-    }));
-  }, []);
-
-  const restartLocationWatch = useCallback((map: maplibregl.Map) => {
-    if (watchIdRef.current !== null) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-      watchIdRef.current = null;
-    }
-    startWatchingLocation(map);
-  }, [startWatchingLocation]);
 
   const handleDeviceOrientation = useCallback(
     (event: DeviceOrientationEventWithWebkit) => {
@@ -652,7 +605,7 @@ const Map: React.FC = () => {
   }, []);
 
   const renderSphereForNode = (node: Node) => {
-    return <TorusSphere loobricateId={node.id} />;
+    return <VibeEntity entityId={node.id} />;
   };
 
   const handleConfirmAddVenue = (venueName: string) => {
@@ -770,7 +723,7 @@ const Map: React.FC = () => {
         </div>
       )}
 
-      {locationState.error && (
+      {locationState.error && !locationState.hasPermission && (
         <div className="location-error-banner" style={{
           position: 'absolute',
           top: '10px',
@@ -785,24 +738,26 @@ const Map: React.FC = () => {
           textAlign: 'center'
         }}>
           <p style={{ margin: '0 0 10px 0' }}>{locationState.error.message}</p>
-          <button
-            onClick={() => {
-              if (mapInstanceRef.current) {
-                startWatchingLocation(mapInstanceRef.current);
-              }
-            }}
-            style={{
-              padding: '8px 16px',
-              fontSize: '0.9rem',
-              borderRadius: '4px',
-              backgroundColor: '#FFB3BA',
-              border: 'none',
-              color: '#333',
-              cursor: 'pointer'
-            }}
-          >
-            Try Again
-          </button>
+          {locationState.error.type !== 'permission' && (
+            <button
+              onClick={() => {
+                if (mapInstanceRef.current) {
+                  startWatchingLocation(mapInstanceRef.current);
+                }
+              }}
+              style={{
+                padding: '8px 16px',
+                fontSize: '0.9rem',
+                borderRadius: '4px',
+                backgroundColor: '#FFB3BA',
+                border: 'none',
+                color: '#333',
+                cursor: 'pointer'
+              }}
+            >
+              Try Again
+            </button>
+          )}
         </div>
       )}
 
@@ -950,18 +905,23 @@ const Map: React.FC = () => {
         }}
       />
 
-      {locationState.error && (
-        <LocationErrorMessage
-          error={locationState.error}
-          onRetry={() => {
-            setLocationState(prev => ({ ...prev, status: 'idle', error: undefined }));
-            if (mapInstanceRef.current) {
-              startWatchingLocation(mapInstanceRef.current);
+      <div className="map-visualization">
+        <VibeEntity 
+          entityId={previewNode?.id || 'map'}
+          className="map-vibe-entity"
+          onStateUpdate={async (state) => {
+            try {
+              await fetch('/api/vibe_entities', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: previewNode?.id || 'map', state })
+              });
+            } catch (error) {
+              console.error('Failed to update vibe state:', error);
             }
           }}
-          onDismiss={() => setLocationState(prev => ({ ...prev, status: 'idle', error: undefined }))}
         />
-      )}
+      </div>
     </div>
   );
 };

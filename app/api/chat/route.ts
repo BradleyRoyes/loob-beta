@@ -90,7 +90,7 @@ const brushstrokes = [
 export async function POST(req: any) {
   try {
     console.log("Received POST request...");
-    const { messages, llm, sessionId,  } = await req.json();
+    const { messages, llm, sessionId, userId, connectedLoobricates } = await req.json();
 
     const latestMessage = messages[messages.length - 1]?.content;
     if (!latestMessage) {
@@ -189,30 +189,82 @@ export async function POST(req: any) {
       messages: [...systemPrompt, ...messages],
     });
 
-    const stream = OpenAIStream(response, {
+    // Convert the response to a ReadableStream
+    const stream = OpenAIStream(response as any, {
       onCompletion: async (completion: string) => {
         const analysis = parseAnalysis(completion);
         if (analysis) {
           console.log("Sending analysis data:", { analysis });
           const randomBrushstroke = brushstrokes[Math.floor(Math.random() * brushstrokes.length)];
-          const pusherData = {
-            analysis,
-            actionName: randomBrushstroke,
-            payload: {
-              mood: analysis.mood,
-              keywords: analysis.keywords,
-              brushstroke: randomBrushstroke,
-              drink: analysis.drink,
-              joinCyberdelicSociety: analysis.joinCyberdelicSociety,
-            },
+          
+          // Create vibe update payload
+          const vibeUpdate = {
+            mood: analysis.mood,
+            sentiment: analysis.sentiment || 0,
+            intensity: analysis.intensity || 0.5,
+            keywords: analysis.keywords,
+            action: randomBrushstroke,
+            timestamp: new Date().toISOString()
           };
+
+          // Update user's vibe entity
+          if (userId) {
+            try {
+              await fetch('/api/vibe_entities', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  id: userId,
+                  state: vibeUpdate
+                })
+              });
+            } catch (err) {
+              console.error("Error updating user vibe entity:", err);
+            }
+          }
+
+          // Update connected loobricates' vibe entities
+          if (connectedLoobricates?.length > 0) {
+            await Promise.all(connectedLoobricates.map(async (loobricateId: string) => {
+              try {
+                await fetch('/api/vibe_entities', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    id: loobricateId,
+                    state: vibeUpdate
+                  })
+                });
+              } catch (err) {
+                console.error(`Error updating loobricate ${loobricateId} vibe entity:`, err);
+              }
+            }));
+          }
+
+          // Trigger Pusher events for real-time updates
           try {
-            await pusher.trigger("my-channel", "my-event", pusherData);
+            // Trigger user's channel
+            if (userId) {
+              await pusher.trigger(`user-${userId}`, "vibe-update", {
+                ...vibeUpdate,
+                entityId: userId
+              });
+            }
+
+            // Trigger loobricate channels
+            if (connectedLoobricates?.length > 0) {
+              await Promise.all(connectedLoobricates.map(loobricateId =>
+                pusher.trigger(`loobricate-${loobricateId}`, "vibe-update", {
+                  ...vibeUpdate,
+                  entityId: loobricateId
+                })
+              ));
+            }
           } catch (err) {
-            console.error("Error triggering Pusher event:", err);
+            console.error("Error triggering Pusher events:", err);
           }
         }
-        await saveMessageToDatabase(sessionId, completion, "assistant");
+        await saveMessageToDatabase(sessionId, completion, "assistant", analysis);
       },
     });
 

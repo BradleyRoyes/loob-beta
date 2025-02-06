@@ -6,6 +6,7 @@ interface AudioRecorderProps {
   onRecordingComplete: (audioData: Blob) => void;
   startRecording: () => void;
   stopRecording: () => void;
+  onCancel?: () => void;
   className?: string;
 }
 
@@ -22,13 +23,15 @@ const CHUNK_SIZE = 1024 * 16; // 16KB chunks for better memory management
  */
 const AudioRecorder: React.FC<AudioRecorderProps> = ({
   onRecordingComplete,
-  startRecording,
-  stopRecording,
+  startRecording: startRecordingProp,
+  stopRecording: stopRecordingProp,
+  onCancel,
 }) => {
   // State management for recording status and audio visualization
   const [isRecording, setIsRecording] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [waveformBars, setWaveformBars] = useState<Array<number>>([]);
   
   // Refs to maintain references across re-renders
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -50,6 +53,8 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
   const currentChunkStartTime = useRef<number>(0);
   const chunkIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  const animationFrameRef = useRef<number | null>(null);
+
   const isMobile = () => {
     return /iPhone|iPad|iPod|Android|Mobile|webOS/i.test(navigator.userAgent);
   };
@@ -70,6 +75,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
    */
   const cleanupRecording = () => {
     try {
+      // Clear all intervals
       if (recordingIntervalRef.current) {
         clearInterval(recordingIntervalRef.current);
         recordingIntervalRef.current = null;
@@ -80,44 +86,48 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
         chunkIntervalRef.current = null;
       }
 
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => {
-          try {
-            track.stop();
-            if (isMobile()) {
-              track.enabled = false;
-            }
-          } catch (e) {
-            console.warn('Error stopping track:', e);
-          }
-        });
-        streamRef.current = null;
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
       }
 
-      if (analyserRef.current) {
-        try {
-          analyserRef.current.disconnect();
-          analyserRef.current = null;
-        } catch (e) {
-          console.warn('Error disconnecting analyser:', e);
-        }
-      }
-
-      if (mediaRecorderRef.current) {
+      // Stop and cleanup MediaRecorder
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
         try {
           mediaRecorderRef.current.stop();
-          mediaRecorderRef.current = null;
         } catch (e) {
           console.debug('MediaRecorder was already stopped');
         }
       }
+      mediaRecorderRef.current = null;
 
+      // Stop all tracks and release stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => {
+          track.stop();
+          track.enabled = false;
+        });
+        streamRef.current = null;
+      }
+
+      // Disconnect and cleanup analyzer
+      if (analyserRef.current) {
+        try {
+          analyserRef.current.disconnect();
+        } catch (e) {
+          console.debug('Analyser was already disconnected');
+        }
+        analyserRef.current = null;
+      }
+
+      // Reset all state
       setIsRecording(false);
       setAudioLevel(0);
-      setError(null);
+      setWaveformBars([]);
       setRecordingDuration(0);
       recordingStartTimeRef.current = null;
       currentChunkStartTime.current = 0;
+      chunksRef.current = [];
     } catch (e) {
       console.error('Error during cleanup:', e);
     }
@@ -132,49 +142,65 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       const analyser = audioContext.createAnalyser();
       const microphone = audioContext.createMediaStreamSource(stream);
       
-      // Create scriptProcessor with appropriate settings for device type
-      const scriptProcessor = audioContext.createScriptProcessor(
-        isMobile() ? 1024 : 2048,  // Buffer size
-        1,  // Number of input channels
-        1   // Number of output channels
-      );
-
-      // Configure analyser based on device type
-      if (isMobile()) {
-        analyser.fftSize = 256; // Reduced for mobile
-        analyser.smoothingTimeConstant = 0.8;
-      } else {
-        analyser.fftSize = 512; // Original desktop setting
-        analyser.smoothingTimeConstant = 0.3;
-      }
+      // More responsive settings for the analyser
+      analyser.fftSize = 256;
+      analyser.minDecibels = -95; // Lower minimum for more sensitivity
+      analyser.maxDecibels = -0; // Increased from -5 for even more sensitivity
+      analyser.smoothingTimeConstant = 0.4; // Reduced for faster response
 
       microphone.connect(analyser);
-      analyser.connect(scriptProcessor);
-      scriptProcessor.connect(audioContext.destination);
 
-      // Throttle updates only on mobile
-      let lastUpdate = 0;
-      const updateInterval = isMobile() ? 100 : 0; // No throttle on desktop
+      const updateWaveform = () => {
+        const analyser = analyserRef.current;
+        if (!analyser) return;
 
-      scriptProcessor.onaudioprocess = () => {
-        if (isMobile()) {
-          const now = Date.now();
-          if (now - lastUpdate < updateInterval) return;
-          lastUpdate = now;
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(dataArray);
+
+        const bars: number[] = [];
+        const barCount = Math.min(64, Math.max(32, Math.floor(window.innerWidth / 12)));
+        const segmentLength = Math.floor(dataArray.length / barCount);
+
+        for (let i = 0; i < barCount; i++) {
+          let sum = 0;
+          let count = 0;
+          
+          const startIdx = Math.floor(i * segmentLength);
+          const endIdx = Math.min(startIdx + segmentLength, dataArray.length);
+          
+          for (let j = startIdx; j < endIdx; j++) {
+            // Enhanced frequency weighting
+            const weight = j < dataArray.length / 4 ? 1.8 : // Increased boost for low frequencies
+                         j < dataArray.length / 2 ? 1.4 : 
+                         0.8;
+            sum += dataArray[j] * weight;
+            count++;
+          }
+
+          // Enhanced normalization and scaling
+          const normalizedValue = (sum / count) / 180; // Further reduced denominator
+          
+          // Adjusted non-linear scaling
+          const scaledValue = Math.pow(normalizedValue, 0.5) * 100; // Reduced power for more movement
+          
+          // Increased minimum height and amplification
+          const finalValue = Math.max(15, Math.min(98, scaledValue * 1.8));
+          
+          bars.push(finalValue);
         }
 
-        const array = new Uint8Array(analyser.frequencyBinCount);
-        analyser.getByteFrequencyData(array);
-        const volume = array.reduce((a, b) => a + b, 0) / array.length;
-        
-        requestAnimationFrame(() => setAudioLevel(volume));
+        setWaveformBars(bars);
+        animationFrameRef.current = requestAnimationFrame(updateWaveform);
       };
 
       analyserRef.current = analyser;
+      updateWaveform();
 
       return () => {
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+        }
         try {
-          scriptProcessor.disconnect();
           analyser.disconnect();
           microphone.disconnect();
         } catch (e) {
@@ -380,11 +406,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
           setError('No audio data was captured');
           return;
         }
-
-        // Combine all chunks into a single blob
-        const audioBlob = new Blob(chunksRef.current, { type: mediaRecorder.mimeType });
-        onRecordingComplete(audioBlob);
-        cleanupRecording();
       };
 
       mediaRecorderRef.current = mediaRecorder;
@@ -398,7 +419,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       }, CHUNK_INTERVAL);
 
       setIsRecording(true);
-      startRecording();
+      startRecordingProp();
 
     } catch (error: any) {
       const errorMessage = getErrorMessage(error);
@@ -408,6 +429,23 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
     }
   };
 
+  const handleCancelRecording = () => {
+    cleanupRecording();
+    // Call the onCancel callback if provided
+    if (onCancel) {
+      onCancel();
+    }
+  };
+
+  const handleConfirmRecording = () => {
+    if (!mediaRecorderRef.current || !isRecording) return;
+    
+    const audioBlob = new Blob(chunksRef.current, { type: mediaRecorderRef.current.mimeType });
+    stopRecordingProp();
+    onRecordingComplete(audioBlob);
+    cleanupRecording();
+  };
+
   /**
    * Safely stops recording and handles any errors during the process
    */
@@ -415,7 +453,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
     try {
       if (!mediaRecorderRef.current || !isRecording) return;
       
-      stopRecording();
+      stopRecordingProp();
       cleanupRecording();
     } catch (error) {
       console.error("Error stopping recording:", error);
@@ -450,6 +488,56 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
     return error.message || 'An unexpected error occurred while accessing the microphone.';
   };
 
+  // Update waveform visualization
+  useEffect(() => {
+    if (isRecording && analyserRef.current) {
+      const updateWaveform = () => {
+        const analyser = analyserRef.current;
+        if (!analyser) return;
+
+        analyser.minDecibels = -90;
+        analyser.maxDecibels = -10;
+        analyser.smoothingTimeConstant = 0.85;
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteTimeDomainData(dataArray);
+
+        const bars: number[] = [];
+        const barCount = Math.min(64, Math.max(32, Math.floor(window.innerWidth / 12))); // Responsive bar count
+        const segmentLength = Math.floor(dataArray.length / barCount);
+
+        for (let i = 0; i < barCount; i++) {
+          let sum = 0;
+          let count = 0;
+          for (let j = 0; j < segmentLength; j++) {
+            const value = Math.abs(dataArray[i * segmentLength + j] - 128) / 128;
+            sum += value;
+            count++;
+          }
+          // Enhanced visualization with smoother transitions
+          const normalizedValue = (sum / count) * 100;
+          // Apply exponential smoothing for more natural movement
+          const smoothedValue = Math.pow(normalizedValue, 1.3);
+          // Add minimum height and amplify the signal
+          const amplifiedValue = Math.max(15, Math.min(95, smoothedValue * 4));
+          bars.push(amplifiedValue);
+        }
+
+        setWaveformBars(bars);
+        animationFrameRef.current = requestAnimationFrame(updateWaveform);
+      };
+
+      updateWaveform();
+      return () => {
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+        }
+      };
+    } else {
+      setWaveformBars([]); // Clear waveform when not recording
+    }
+  }, [isRecording]);
+
   // Cleanup on component unmount
   useEffect(() => {
     return () => {
@@ -458,7 +546,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
   }, []);
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ${isRecording ? styles.recording : ''}`}>
       {error && (
         <div className={styles.errorMessage} role="alert">
           {error}
@@ -469,56 +557,47 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
           )}
         </div>
       )}
-      <button
-        onClick={handleStartRecording}
-        onTouchStart={(e) => {
-          e.preventDefault();
-          if (!isRecording) {
-            handleStartRecording();
-          }
-        }}
-        onTouchEnd={(e) => {
-          e.preventDefault();
-          if (isRecording) {
-            handleStopRecording();
-          }
-        }}
-        className={`${styles.recorderButton} ${!browserSupport.hasAudioSupport ? styles.disabled : ''}`}
-        aria-label={isRecording ? "Stop recording" : "Start recording"}
-        disabled={!!error || !browserSupport.hasAudioSupport}
-      >
-        <div className={styles.microphoneIcon}>
-          {isRecording ? <StopIcon /> : <MicIcon />}
-          {isRecording && (
-            <div className={styles.duration}>
-              {formatDuration(recordingDuration)}
-            </div>
-          )}
-          <div className={styles.rippleContainer}>
-            {isRecording && Array.from({ length: Math.min(5, Math.ceil(audioLevel / 25)) }).map((_, i) => (
+
+      <div className={styles.recordingContainer}>
+        <div className={styles.waveformContainer}>
+          <div className={styles.waveform}>
+            {waveformBars.map((height, index) => (
               <div
-                key={i}
-                className={styles.ripple}
+                key={index}
+                className={styles.waveformBar}
                 style={{
-                  animationDelay: `${i * 0.15}s`,
-                  animationDuration: '1.5s',
-                  opacity: Math.max(0.2, Math.min(audioLevel / 100, 0.8))
+                  height: `${height}%`,
+                  opacity: Math.max(0.4, height / 100)
                 }}
               />
             ))}
           </div>
-          {isRecording && (
-            <div 
-              className={styles.glowRipple}
-              style={{
-                width: `${80 + audioLevel}px`,
-                height: `${80 + audioLevel}px`,
-                opacity: Math.min(audioLevel / 100, 0.6)
-              }}
-            />
-          )}
         </div>
-      </button>
+        <div className={styles.duration}>
+          {formatDuration(recordingDuration)}
+        </div>
+      </div>
+
+      <div className={styles.buttonsContainer}>
+        {isRecording && (
+          <button
+            className={styles.cancelButton}
+            onClick={handleCancelRecording}
+            aria-label="Cancel recording"
+          >
+            <CloseIcon />
+          </button>
+        )}
+        <button
+          onClick={isRecording ? handleConfirmRecording : handleStartRecording}
+          className={styles.confirmButton}
+          aria-label={isRecording ? "Send recording" : "Start recording"}
+          disabled={!!error || !browserSupport.hasAudioSupport}
+        >
+          {isRecording ? <CheckIcon /> : <MicIcon />}
+        </button>
+      </div>
+
       {!browserSupport.hasAudioSupport && (
         <div className={styles.browserSupport}>
           Your browser doesn't support audio recording.
@@ -539,6 +618,18 @@ const MicIcon = ({ className }: { className?: string }) => (
 const StopIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <path d="M6 6h12v12H6z" />
+  </svg>
+);
+
+const CloseIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+  </svg>
+);
+
+const CheckIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
   </svg>
 );
 

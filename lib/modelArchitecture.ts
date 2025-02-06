@@ -26,11 +26,11 @@ export const createDetectionModel = (outputType: 'regression' | 'detection' = 'd
   if (outputType === 'regression') {
     model.add(tf.layers.flatten());
     model.add(tf.layers.dense({units: 32, activation: 'relu'}));
-    model.add(tf.layers.dense({units: 2, activation: 'sigmoid'}));
+    model.add(tf.layers.dense({units: 4, activation: 'sigmoid'}));
   } else {
-    // Detection output: 5 values (x, y, width, height, confidence)
+    // Detection output: 10 values for two objects (x, y, width, height, confidence) × 2
     model.add(tf.layers.conv2d({
-      filters: 5,
+      filters: 10,
       kernelSize: 3,
       activation: 'sigmoid',
       padding: 'same'
@@ -39,9 +39,9 @@ export const createDetectionModel = (outputType: 'regression' | 'detection' = 'd
   }
 
   // Use a fixed learning rate for older TF.js versions
-  const learningRate = 0.0001; // Define the learning rate
+  const learningRate = 0.0001;
   model.compile({
-    optimizer: tf.train.adam(learningRate), // Use the fixed learning rate
+    optimizer: tf.train.adam(learningRate),
     loss: 'meanSquaredError'
   });
   

@@ -24,40 +24,246 @@
   height: 60px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
+  transition: all 0.3s ease;
 }
 
-.recorderButton {
-  width: 60px;
-  height: 60px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  padding: 0;
-  margin: 0;
+.recordingContainer {
+  position: absolute;
+  left: 0;
+  right: 96px;
+  min-height: 48px;
+  background: rgba(20, 20, 20, 0.4);
+  border: 1px solid rgba(248, 180, 180, 0.2);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  opacity: 0;
+  transform: translateX(20px);
+  pointer-events: none;
+  transition: all 0.3s ease;
+  width: calc(100% - 96px);
+}
+
+.container.recording {
+  width: 100%;
+}
+
+.container.recording .recordingContainer {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: all;
+}
+
+.waveformContainer {
+  flex: 1;
+  height: 32px;
   position: relative;
-  z-index: 2;
+  overflow: hidden;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: rgba(20, 20, 20, 0.2);
+  border-radius: 16px;
+  padding: 0 4px;
+}
+
+.waveform {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+}
+
+.waveformBar {
+  flex: 1;
+  min-width: 2px;
+  max-width: 3px;
+  height: 100%;
+  background: linear-gradient(180deg, rgb(248, 180, 180) 0%, rgb(243, 164, 164) 100%);
+  border-radius: 2px;
+  transition: all 0.08s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0.9;
+  transform-origin: center;
+  will-change: height, opacity;
+  box-shadow: 0 0 8px rgba(248, 180, 180, 0.3);
+}
+
+.waveformBar:hover {
+  opacity: 1;
+  box-shadow: 0 0 12px rgba(248, 180, 180, 0.5);
 }
 
 .microphoneIcon {
-  width: 60px;
-  height: 60px;
+  width: 48px;
+  height: 48px;
   background: radial-gradient(circle at center, rgba(255, 182, 193, 0.9), rgba(255, 218, 185, 0.6));
   border-radius: 50%;
   position: relative;
   box-shadow: 0 0 10px rgba(255, 145, 135, 0.8);
-  transform: scale(1);
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.3s ease;
 }
 
-/* Make the SVG icons smaller */
 .microphoneIcon svg {
   width: 24px;
   height: 24px;
-  color: var(--text-primary);
+  color: white;
+}
+
+.buttonsContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.cancelButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, rgb(255, 170, 170) 0%, rgb(255, 140, 140) 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0;
+  transform: scale(0.8);
+  pointer-events: none;
+  box-shadow: 0 0 20px rgba(255, 140, 140, 0.4);
+  position: relative;
+  z-index: 1;
+}
+
+.cancelButton::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: radial-gradient(circle at center, rgba(255, 140, 140, 0.3), transparent 70%);
+  border-radius: 50%;
+  z-index: -1;
+  opacity: 0.8;
+}
+
+.container.recording .cancelButton {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: all;
+}
+
+.confirmButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, rgb(248, 180, 180) 0%, rgb(243, 164, 164) 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 20px rgba(248, 180, 180, 0.4);
+  position: relative;
+  z-index: 1;
+}
+
+.confirmButton::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: radial-gradient(circle at center, rgba(248, 180, 180, 0.3), transparent 70%);
+  border-radius: 50%;
+  z-index: -1;
+  opacity: 0.8;
+}
+
+.confirmButton:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 25px rgba(248, 180, 180, 0.5);
+}
+
+.confirmButton svg,
+.cancelButton svg {
+  width: 20px;
+  height: 20px;
+}
+
+.duration {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-right: 12px;
+  font-family: monospace;
+  min-width: 44px;
+  text-align: center;
+}
+
+.errorMessage {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #ff5757;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  max-width: 90vw;
+  text-align: center;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.browserSupport {
+  text-align: center;
+  color: #666;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.permissionHint {
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  color: #666;
+}
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.errorMessage {
+  background-color: #fee2e2;
+  border: 1px solid #ef4444;
+  color: #991b1b;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
 }
 
 /* Mobile adjustments */
@@ -72,6 +278,52 @@
   .microphoneIcon svg {
     width: 20px;
     height: 20px;
+  }
+
+  .recordingContainer {
+    right: 88px;
+    min-height: 40px;
+    padding: 0 8px;
+    gap: 6px;
+  }
+
+  .waveform {
+    gap: 1px;
+  }
+
+  .waveformBar {
+    min-width: 1px;
+    max-width: 2px;
+  }
+
+  .duration {
+    font-size: 12px;
+    min-width: 36px;
+    margin-right: 8px;
+  }
+}
+
+/* Small mobile adjustments */
+@media (max-width: 380px) {
+  .recordingContainer {
+    right: 84px;
+    min-height: 36px;
+    padding: 0 6px;
+    gap: 4px;
+  }
+
+  .waveform {
+    gap: 1px;
+  }
+
+  .waveformBar {
+    min-width: 1px;
+    max-width: 2px;
+  }
+
+  .duration {
+    min-width: 32px;
+    margin-right: 6px;
   }
 }
 
@@ -130,70 +382,9 @@
   }
 }
 
-.errorMessage {
-  position: absolute;
-  top: -40px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #ff5757;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-size: 14px;
-  max-width: 90vw;
-  text-align: center;
-  animation: fadeIn 0.3s ease-in-out;
+.cancelButton:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 25px rgba(255, 140, 140, 0.5);
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translate(-50%, 10px);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-}
 
-.browserSupport {
-  text-align: center;
-  color: #666;
-  font-size: 0.875rem;
-  margin-top: 0.5rem;
-}
-
-.permissionHint {
-  font-size: 0.875rem;
-  margin-top: 0.5rem;
-  color: #666;
-}
-
-.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.errorMessage {
-  background-color: #fee2e2;
-  border: 1px solid #ef4444;
-  color: #991b1b;
-  padding: 0.75rem;
-  border-radius: 0.375rem;
-  margin-bottom: 1rem;
-  font-size: 0.875rem;
-}
-
-.duration {
-  position: absolute;
-  top: -24px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-family: monospace;
-  white-space: nowrap;
-}

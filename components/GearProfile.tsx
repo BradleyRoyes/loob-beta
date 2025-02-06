@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from "react";
-import TorusSphere from "./TorusSphere";
+import VibeEntity from "./VibeEntity";
 
 // Define the structure of history entries
 interface HistoryEntry {
@@ -47,11 +47,23 @@ const GearProfile: React.FC<GearProfileProps> = ({ gear, onClose }) => {
         <h2 className="text-2xl font-bold mb-2 text-center">{gear.name}</h2>
         <p className="text-gray-400 mb-4 text-center">{gear.description}</p>
 
-        {/* Visuals */}
-        <div className="mb-4">
-          <div className="relative h-48 flex justify-center items-center">
-            <TorusSphere loobricateId={gear.loobricateId} />
-          </div>
+        {/* Visual Section */}
+        <div className="visualization-section">
+          <VibeEntity 
+            entityId={gear.loobricateId}
+            className="gear-vibe-entity"
+            onStateUpdate={async (state) => {
+              try {
+                await fetch('/api/vibe_entities', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ id: gear.loobricateId, state })
+                });
+              } catch (error) {
+                console.error('Failed to update vibe state:', error);
+              }
+            }}
+          />
         </div>
 
         {/* Gear status */}

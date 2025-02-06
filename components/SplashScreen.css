@@ -1,5 +1,10 @@
-/* Move font import to VERY TOP of file */
-@import url('https://fonts.cdnfonts.com/css/modulus-pro?styles=17014');
+/* Font loading with fallback */
+@font-face {
+  font-family: 'Modulus Pro';
+  src: local('Modulus Pro'),
+       url('https://fonts.cdnfonts.com/css/modulus-pro') format('woff2');
+  font-display: swap;
+}
 
 /* SPLASH SCREEN CSS */
 
@@ -12,7 +17,7 @@
   inset: 0;
   background-color: black;
   color: #f3f3f3;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   overflow: hidden;
   z-index: 1000;
   font-size: calc(14px + 0.390625vw);
@@ -39,9 +44,9 @@
 
 /* Title Section Styling */
 .titleSection {
-  margin-bottom: 4rem;
+  margin-bottom: 2rem;
   text-align: center;
-  padding-top: 2rem;
+  padding-top: 1rem;
 }
 
 /* Secondary Title (Main Title) */
@@ -77,12 +82,13 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  align-items: center;
 }
 
 /* Input Field */
 .splashScreen .pseudonymInput {
   width: 100%;
-  padding: 0.875rem;
+  padding: 0.75rem;
   font-size: 1rem;
   border-radius: 8px;
   border: 1px solid rgba(204, 204, 204, 0.3) !important;
@@ -92,7 +98,7 @@
   outline: none;
   transition: all 0.3s ease;
   backdrop-filter: blur(5px);
-  margin: 0;
+  margin-bottom: 0.25rem;
 }
 
 /* Button Group */
@@ -100,14 +106,14 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.5rem;
   align-items: center;
 }
 
 /* Primary Button Styling */
 .splashScreen .actionButton {
-  padding: 0.875rem;
+  padding: 0.75rem;
   font-size: 1rem;
   font-weight: 600;
   background: linear-gradient(45deg, rgba(255, 159, 127, 0.9), rgba(255, 126, 121, 0.9));
@@ -119,19 +125,17 @@
   max-width: 200px;
   width: 100%;
   backdrop-filter: blur(5px);
+  margin: 0.25rem auto;
+  display: block;
 }
 
 /* Secondary Button */
 .splashScreen .actionButton.secondary {
-  padding: 12px;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #ccc;
-  border: 1px solid #444;
   background: transparent;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.3s ease, color 0.3s ease;
+  border: 1px solid #444;
+  color: #ccc;
+  margin: 0.25rem auto;
+  display: block;
   max-width: 200px;
   width: 100%;
 }
@@ -256,14 +260,14 @@
 /* Error Message */
 .error {
   color: #ff6b66;
-  margin: 0;
+  margin: 0.25rem 0;
   font-size: 0.875rem;
   text-align: center;
 }
 
 /* Create Account Text */
 .createAccountText {
-  margin-top: 0.75rem;
+  margin-top: 0.5rem;
   color: #ccc;
   cursor: pointer;
   font-size: 0.875rem;

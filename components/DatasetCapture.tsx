@@ -1,42 +1,40 @@
 'use client';
 import React, { useRef, useState, useEffect } from 'react';
 import Webcam from 'react-webcam';
-import * as tf from '@tensorflow/tfjs';
+import './DatasetCapture.css';
 
 interface DatasetCaptureProps {
   onStatusChange: (status: 'idle' | 'recording' | 'processing') => void;
   onSaveComplete: () => void;
 }
 
-interface BallLabel {
+// Constants
+const BBOX_SIZE = 0.05;
+const MAX_FRAMES = 100; // Safety limit for memory
+const RECORDING_INTERVAL = 300; // 300ms between frames
+
+interface Annotation {
   x: number;
   y: number;
-  isVisible: boolean;
   width: number;
   height: number;
-  boundingPoints?: { x: number; y: number }[];
 }
 
-interface FrameLabel {
-  orange: BallLabel | null;
-  white: BallLabel | null;
+interface FrameLabels {
+  ball1?: Annotation;
+  ball2?: Annotation;
 }
 
 export default function DatasetCapture({ onStatusChange, onSaveComplete }: DatasetCaptureProps) {
   const webcamRef = useRef<Webcam>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [capturedFrames, setCapturedFrames] = useState<string[]>([]);
-  const [labels, setLabels] = useState<FrameLabel[]>([]);
+  const [labels, setLabels] = useState<Array<FrameLabels>>([]);
   const [countdown, setCountdown] = useState(30);
+  const [error, setError] = useState<string | null>(null);
   const recordingInterval = useRef<NodeJS.Timeout>();
   const frames = useRef<string[]>([]);
-  const [availableModels, setAvailableModels] = useState<Array<{id: string, name: string}>>([]);
-  const [selectedModelId, setSelectedModelId] = useState<string>('');
-  const [isAutoLabeling, setIsAutoLabeling] = useState(false);
-  const [selectedBall, setSelectedBall] = useState<'orange' | 'white'>('orange');
-  const [latestModel, setLatestModel] = useState<{id: string, name: string} | null>(null);
-  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
-  const [isWebcamReady, setIsWebcamReady] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   const videoConstraints = {
     width: 640,
@@ -45,12 +43,29 @@ export default function DatasetCapture({ onStatusChange, onSaveComplete }: Datas
     frameRate: 30
   };
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (recordingInterval.current) {
+        clearInterval(recordingInterval.current);
+      }
+      // Clear any stored frames
+      frames.current = [];
+      setCapturedFrames([]);
+    };
+  }, []);
+
   useEffect(() => {
     onStatusChange(isRecording ? 'recording' : 'idle');
   }, [isRecording, onStatusChange]);
 
   const startRecording = () => {
-    if (!webcamRef.current) return;
+    if (!webcamRef.current) {
+      setError('Camera not initialized');
+      return;
+    }
+    
+    setError(null);
     setIsRecording(true);
     setCountdown(30);
     frames.current = [];
@@ -59,7 +74,15 @@ export default function DatasetCapture({ onStatusChange, onSaveComplete }: Datas
       const screenshot = webcamRef.current?.getScreenshot();
       if (screenshot) {
         frames.current.push(screenshot);
+        
+        // Safety check for memory
+        if (frames.current.length >= MAX_FRAMES) {
+          stopRecording();
+          setError('Maximum frame limit reached');
+          return;
+        }
       }
+      
       setCountdown(prev => {
         if (prev <= 1) {
           stopRecording();
@@ -67,7 +90,7 @@ export default function DatasetCapture({ onStatusChange, onSaveComplete }: Datas
         }
         return prev - 1;
       });
-    }, 300);
+    }, RECORDING_INTERVAL);
   };
 
   const stopRecording = () => {
@@ -78,229 +101,92 @@ export default function DatasetCapture({ onStatusChange, onSaveComplete }: Datas
     setCapturedFrames(frames.current);
   };
 
-  const generateBoundingPoints = (centerX: number, centerY: number, width: number, height: number): { x: number; y: number }[] => {
-    const points: { x: number; y: number }[] = [];
-    const numPoints = 20;
-    
-    // Generate points in a perfect circle and then scale to ellipse if needed
-    for (let i = 0; i < numPoints; i++) {
-      const angle = (i / numPoints) * Math.PI * 2;
-      // Use precise trigonometry to place points
-      const ellipseX = Math.cos(angle) * (width / 2);
-      const ellipseY = Math.sin(angle) * (height / 2);
-      
-      // Ensure points stay within frame bounds
-      const x = Math.max(0, Math.min(1, centerX + ellipseX));
-      const y = Math.max(0, Math.min(1, centerY + ellipseY));
-      
-      points.push({ x, y });
-    }
-    return points;
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setMousePos({ x, y });
   };
 
   const handleFrameClick = (index: number, e: React.MouseEvent<HTMLDivElement>) => {
-    e.preventDefault(); // Prevent any default browser handling
-    
-    // Get the clicked image element for accurate coordinates
-    const imgElement = e.currentTarget.querySelector('img');
-    if (!imgElement) return;
-
-    const rect = imgElement.getBoundingClientRect();
-    
-    // Calculate coordinates relative to the image, not the container
-    const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
-    
-    const width = 0.025;  // 2.5% of frame width
-    const height = 0.025; // 2.5% of frame height
-    
-    setLabels(prev => {
-      const newLabels = [...prev];
-      if (!newLabels[index]) {
-        newLabels[index] = { orange: null, white: null };
+    try {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      
+      if (x < 0 || x > 1 || y < 0 || y > 1) {
+        setError('Invalid click position');
+        return;
       }
-      
-      const currentLabel = newLabels[index];
-      
-      // Check if clicking near existing points
-      const isNearOrange = currentLabel?.orange && 
-        Math.hypot(
-          (x - currentLabel.orange.x) * rect.width,
-          (y - currentLabel.orange.y) * rect.height
-        ) < 20;
 
-      const isNearWhite = currentLabel?.white && 
-        Math.hypot(
-          (x - currentLabel.white.x) * rect.width,
-          (y - currentLabel.white.y) * rect.height
-        ) < 20;
-
-      // Create the new ball label
-      const newBall = {
+      const boxSize = BBOX_SIZE;
+      const annotation: Annotation = {
         x,
         y,
-        width,
-        height,
-        isVisible: true
+        width: boxSize,
+        height: boxSize
       };
-
-      // Update based on proximity and current selection
-      if (isNearOrange) {
-        newLabels[index] = {
-          ...currentLabel,
-          orange: newBall
-        };
-      } else if (isNearWhite) {
-        newLabels[index] = {
-          ...currentLabel,
-          white: newBall
-        };
-      } else {
-        // Place new point based on selection
-        if (selectedBall === 'orange' && !currentLabel?.orange) {
-          newLabels[index] = {
-            ...currentLabel,
-            orange: newBall
-          };
-          // Auto-switch to white if it's not set yet
-          if (!currentLabel?.white) {
-            setSelectedBall('white');
-          }
-        } else if (selectedBall === 'white' && !currentLabel?.white) {
-          newLabels[index] = {
-            ...currentLabel,
-            white: newBall
-          };
-          // Auto-switch to orange for next frame
-          setSelectedBall('orange');
-        }
-      }
       
-      return newLabels;
-    });
-  };
-
-  // Add a function to clear a frame's labels
-  const clearFrameLabels = (index: number) => {
-    setLabels(prev => {
-      const newLabels = [...prev];
-      newLabels[index] = { orange: null, white: null };
-      return newLabels;
-    });
-    setSelectedBall('orange'); // Reset selection to orange
-  };
-
-  const toggleBallVisibility = (frameIndex: number, ballType: 'orange' | 'white') => {
-    setLabels(prev => {
-      const newLabels = [...prev];
-      const ball = newLabels[frameIndex]?.[ballType];
-      if (ball) {
-        ball.isVisible = !ball.isVisible;
-      }
-      return newLabels;
-    });
-  };
-
-  // Auto-label function
-  const autoLabelFrame = async (frameDataUrl: string, index: number) => {
-    try {
-      const img = new Image();
-      img.src = frameDataUrl;
-      await new Promise((resolve) => { img.onload = resolve; });
-
-      const model = await modelManager.getModel();
-      const tensor = tf.tidy(() => {
-        return tf.browser.fromPixels(img)
-          .resizeBilinear([128, 128])
-          .expandDims(0)
-          .toFloat()
-          .div(255.0);
-      });
-
-      const prediction = model.predict(tensor) as tf.Tensor;
-      const [orangeX, orangeY, whiteX, whiteY] = await prediction.data();
-
-      // Use the same ball dimensions as manual labeling
-      const width = 0.025;
-      const height = 0.025;
-
       setLabels(prev => {
         const newLabels = [...prev];
-        newLabels[index] = {
-          orange: { 
-            x: orangeX, 
-            y: orangeY, 
-            isVisible: true,
-            width,
-            height,
-            boundingPoints: generateBoundingPoints(orangeX, orangeY, width, height)
-          },
-          white: { 
-            x: whiteX, 
-            y: whiteY, 
-            isVisible: true,
-            width,
-            height,
-            boundingPoints: generateBoundingPoints(whiteX, whiteY, width, height)
-          }
-        };
+        if (!newLabels[index]) {
+          newLabels[index] = {};
+        }
+        
+        if (!newLabels[index].ball1) {
+          newLabels[index].ball1 = annotation;
+        } else if (!newLabels[index].ball2) {
+          newLabels[index].ball2 = annotation;
+        } else {
+          newLabels[index] = { ball1: annotation };
+        }
+        
         return newLabels;
       });
-
-      tensor.dispose();
-      prediction.dispose();
-    } catch (error) {
-      console.error('Auto-labeling error:', error);
+      
+      setError(null);
+    } catch (err) {
+      setError('Failed to process click');
+      console.error('Click handling error:', err);
     }
-  };
-
-  const removeBallLabel = (index: number, ballType: 'orange' | 'white') => {
-    setLabels(prev => {
-      const newLabels = [...prev];
-      if (newLabels[index]) {
-        newLabels[index] = {
-          ...newLabels[index],
-          [ballType]: null
-        };
-      }
-      return newLabels;
-    });
   };
 
   const saveDataset = async () => {
     try {
       onStatusChange('processing');
-      setSaveSuccess('Saving dataset...');
-
       const timestamp = Date.now();
       const formData = new FormData();
       let savedCount = 0;
       
-      capturedFrames.forEach((frame, index) => {
-        const label = labels[index];
-        // Skip if no label or if either ball is marked as not visible
-        if (!label?.orange?.isVisible || !label?.white?.isVisible) return;
-
-        const blob = dataURLtoBlob(frame);
-        const filename = `frame_${timestamp}_${index.toString().padStart(4, '0')}`;
+      // Only save frames that have both balls labeled
+      for (let index = 0; index < capturedFrames.length; index++) {
+        const frame = capturedFrames[index];
+        const frameLabels = labels[index];
         
-        // Save image
-        formData.append('images', blob, `${filename}.jpg`);
+        if (!frameLabels?.ball1 || !frameLabels?.ball2) continue;
 
-        // Save both ball labels in a single file
-        // Format: "class_id x y width height" (one ball per line)
-        const labelContent = [
-          `0 ${label.orange.x.toFixed(6)} ${label.orange.y.toFixed(6)} ${label.orange.width.toFixed(6)} ${label.orange.height.toFixed(6)}`,
-          `1 ${label.white.x.toFixed(6)} ${label.white.y.toFixed(6)} ${label.white.width.toFixed(6)} ${label.white.height.toFixed(6)}`
-        ].join('\n');
-
-        formData.append('labels', 
-          new Blob([labelContent], { type: 'text/plain' }), 
-          `${filename}.txt`
-        );
-        
-        savedCount++;
-      });
+        try {
+          const blob = dataURLtoBlob(frame);
+          const filename = `frame_${timestamp}_${index.toString().padStart(4, '0')}`;
+          
+          formData.append('images', blob, `${filename}.jpg`);
+          
+          // Create YOLO format labels for both balls
+          const labelContent = 
+            `0 ${frameLabels.ball1.x.toFixed(6)} ${frameLabels.ball1.y.toFixed(6)} ${BBOX_SIZE} ${BBOX_SIZE}\n` +
+            `0 ${frameLabels.ball2.x.toFixed(6)} ${frameLabels.ball2.y.toFixed(6)} ${BBOX_SIZE} ${BBOX_SIZE}`;
+          
+          formData.append('labels', 
+            new Blob([labelContent], { type: 'text/plain' }), 
+            `${filename}.txt`
+          );
+          
+          savedCount++;
+        } catch (err) {
+          console.error(`Failed to process frame ${index}:`, err);
+          continue; // Skip this frame but continue with others
+        }
+      }
 
       if (savedCount === 0) {
         throw new Error('No valid frames to save');
@@ -312,21 +198,20 @@ export default function DatasetCapture({ onStatusChange, onSaveComplete }: Datas
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to save dataset');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to save dataset');
       }
       
-      setSaveSuccess(`✅ Successfully saved ${savedCount} frames to dataset`);
+      // Clear memory
+      frames.current = [];
       setCapturedFrames([]);
       setLabels([]);
+      setError(null);
       onSaveComplete();
       onStatusChange('idle');
-
-      // Clear success message after 5 seconds
-      setTimeout(() => setSaveSuccess(null), 5000);
     } catch (error) {
       console.error('Save error:', error);
-      setSaveSuccess(`❌ Error: ${error instanceof Error ? error.message : String(error)}`);
+      setError(error instanceof Error ? error.message : 'Failed to save dataset');
       onStatusChange('idle');
     }
   };
@@ -344,205 +229,168 @@ export default function DatasetCapture({ onStatusChange, onSaveComplete }: Datas
     return new Blob([ab], { type: mimeString });
   };
 
-  const startWebcam = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: 640,
-          height: 480,
-          facingMode: "environment",
-          frameRate: 30
-        }
-      });
-      
-      if (webcamRef.current && webcamRef.current.video) {
-        webcamRef.current.video.srcObject = stream;
-        setIsWebcamReady(true);
-      }
-    } catch (err) {
-      console.error('Error accessing webcam:', err);
-      onStatusChange('idle');
-    }
-  };
-
-  const stopWebcam = () => {
-    if (webcamRef.current && webcamRef.current.video) {
-      const stream = webcamRef.current.video.srcObject as MediaStream;
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-      webcamRef.current.video.srcObject = null;
-      setIsWebcamReady(false);
-    }
-  };
-
-  // Clean up webcam on unmount
-  useEffect(() => {
-    return () => {
-      stopWebcam();
+  // Helper function to calculate bounding box dimensions
+  const getBoundingBoxStyle = (x: number, y: number) => {
+    const size = BBOX_SIZE * 100; // Convert to percentage
+    return {
+      left: `${x * 100}%`,
+      top: `${y * 100}%`,
+      width: `${size}%`,
+      height: `${size}%`
     };
-  }, []);
+  };
+
+  const getFrameStatus = (index: number) => {
+    const frameLabels = labels[index];
+    if (!frameLabels) return 'unlabeled';
+    if (frameLabels.ball1 && frameLabels.ball2) return 'complete';
+    if (frameLabels.ball1 || frameLabels.ball2) return 'partial';
+    return 'unlabeled';
+  };
+
+  const getLabelingGuideText = (index: number) => {
+    const frameLabels = labels[index];
+    if (!frameLabels || (!frameLabels.ball1 && !frameLabels.ball2)) {
+      return 'Click to place Ball 1 (Red)';
+    }
+    if (frameLabels.ball1 && !frameLabels.ball2) {
+      return 'Click to place Ball 2 (Blue)';
+    }
+    return 'Click again to relabel';
+  };
 
   return (
-    <div className="space-y-6 min-h-0">
+    <div className="p-6 space-y-6">
       <div className="space-y-4">
-        <div className="relative group">
-          {!isWebcamReady ? (
-            <div className="aspect-video bg-gray-900 rounded-lg flex items-center justify-center">
-              <button
-                onClick={startWebcam}
-                className="px-6 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg text-white font-medium"
-              >
-                Start Camera
-              </button>
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-bold">Dataset Capture</h2>
+          <div className="flex gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-red-500"></div>
+              <span>Unlabeled</span>
             </div>
-          ) : (
-            <>
-              <Webcam
-                audio={false}
-                ref={webcamRef}
-                screenshotFormat="image/jpeg"
-                videoConstraints={videoConstraints}
-                className="webcam-preview"
-              />
-              
-              {isRecording && (
-                <div className="absolute top-4 right-4 recording-indicator">
-                  <div className="pulsing-red-dot" />
-                  <span className="text-white font-medium">
-                    Recording: {countdown}s
-                  </span>
-                </div>
-              )}
-
-              {!isRecording && !capturedFrames.length && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={startRecording}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full text-white font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
-                  >
-                    Start Recording (30s)
-                  </button>
-                </div>
-              )}
-            </>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+              <span>Partially Labeled</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              <span>Fully Labeled</span>
+            </div>
+          </div>
+        </div>
+        
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400">
+            {error}
+          </div>
+        )}
+        
+        <div className="relative">
+          <Webcam
+            audio={false}
+            ref={webcamRef}
+            screenshotFormat="image/jpeg"
+            videoConstraints={videoConstraints}
+            className="webcam-preview rounded-lg border-2 border-gray-700"
+          />
+          
+          {isRecording && (
+            <div className="absolute top-4 right-4 recording-indicator">
+              <div className="pulsing-red-dot" />
+              <span className="text-white bg-black/50 px-2 py-1 rounded">
+                {countdown}s
+              </span>
+            </div>
           )}
         </div>
 
+        {!isRecording && capturedFrames.length === 0 && (
+          <button
+            onClick={startRecording}
+            className="base-button bg-blue-600 hover:bg-blue-700 w-full"
+          >
+            Start Recording (30s)
+          </button>
+        )}
+
         {capturedFrames.length > 0 && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium text-white/90">Captured Frames</h3>
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => {
-                    setCapturedFrames([]);
-                    setLabels([]);
-                  }}
-                  className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors"
+          <div className="annotation-grid">
+            {capturedFrames.map((frame, index) => {
+              const status = getFrameStatus(index);
+              return (
+                <div 
+                  key={index}
+                  className="annotation-frame"
+                  onClick={(e) => handleFrameClick(index, e)}
+                  onMouseMove={handleMouseMove}
                 >
-                  Clear All
-                </button>
-                <button
-                  onClick={startRecording}
-                  className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors"
-                >
-                  Record More
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {capturedFrames.map((frame, index) => {
-                const frameLabel = labels[index];
-                const isFullyLabeled = frameLabel?.orange?.isVisible && frameLabel?.white?.isVisible;
-                
-                return (
-                  <div key={index} className="frame-preview">
-                    <div 
-                      className="relative cursor-crosshair group"
-                      onClick={(e) => handleFrameClick(index, e)}
-                    >
-                      <img 
-                        src={frame} 
-                        alt={`Frame ${index + 1}`}
-                        className="w-full rounded-lg"
-                      />
-                      {frameLabel?.orange && (
-                        <div
-                          className="ball-marker orange"
-                          style={{ 
-                            left: `${frameLabel.orange.x * 100}%`,
-                            top: `${frameLabel.orange.y * 100}%`,
-                            opacity: frameLabel.orange.isVisible ? 1 : 0.5
-                          }}
-                        />
-                      )}
-                      {frameLabel?.white && (
-                        <div
-                          className="ball-marker white"
-                          style={{ 
-                            left: `${frameLabel.white.x * 100}%`,
-                            top: `${frameLabel.white.y * 100}%`,
-                            opacity: frameLabel.white.isVisible ? 1 : 0.5
-                          }}
-                        />
-                      )}
-                      
-                      <div className="absolute inset-x-0 top-0 p-3 flex justify-between items-center bg-gradient-to-b from-black/50 to-transparent">
-                        <span className={`text-sm font-medium px-3 py-1.5 rounded-full ${
-                          isFullyLabeled ? 'bg-green-500/20 text-green-400' : 
-                          'bg-blue-500/20 text-blue-400'
-                        }`}>
-                          {isFullyLabeled ? '✓ Complete' : 
-                           !frameLabel?.orange ? 'Click Orange Ball' :
-                           !frameLabel?.white ? 'Click White Ball' : ''}
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            clearFrameLabels(index);
-                          }}
-                          className="text-sm px-3 py-1.5 rounded-full bg-red-500/20 hover:bg-red-500/30 text-red-400 opacity-0 group-hover:opacity-100 transition-all"
-                        >
-                          Clear
-                        </button>
-                      </div>
+                  <img 
+                    src={frame} 
+                    alt={`Frame ${index + 1}`}
+                  />
+                  
+                  <div 
+                    className="annotation-overlay"
+                    style={{
+                      '--x': `${mousePos.x}%`,
+                      '--y': `${mousePos.y}%`
+                    } as React.CSSProperties}
+                  >
+                    <div className={`frame-status ${status}`}>
+                      {status === 'unlabeled' && 'Click to Label'}
+                      {status === 'partial' && 'Need Ball 2'}
+                      {status === 'complete' && 'Complete'}
                     </div>
-                  </div>
-                );
-              })}
-            </div>
 
-            <div className="sticky bottom-4 space-y-4 bg-gradient-to-t from-black/90 to-transparent p-4 rounded-xl backdrop-blur-sm">
-              <div className="flex items-center justify-between text-sm text-white/60">
-                <span>Total Frames: {capturedFrames.length}</span>
-                <span>Labeled Frames: {labels.filter(l => l?.orange?.isVisible && l?.white?.isVisible).length}</span>
-              </div>
-              
-              <button
-                onClick={saveDataset}
-                disabled={!labels.some(label => 
-                  label?.orange?.isVisible && label?.white?.isVisible
-                )}
-                className={`w-full py-4 rounded-xl font-medium text-lg transition-all transform hover:-translate-y-0.5 ${
-                  labels.some(l => l?.orange?.isVisible && l?.white?.isVisible)
-                    ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg hover:shadow-xl'
-                    : 'bg-gray-700/50 text-gray-400 cursor-not-allowed'
-                }`}
-              >
-                Save Dataset
-              </button>
-            </div>
+                    <div className="annotation-instructions">
+                      {!labels[index]?.ball1 && 'Click to place Ball 1'}
+                      {labels[index]?.ball1 && !labels[index]?.ball2 && 'Click to place Ball 2'}
+                      {labels[index]?.ball1 && labels[index]?.ball2 && 'Click to reset'}
+                    </div>
+
+                    {labels[index]?.ball1 && (
+                      <>
+                        <div 
+                          className="bounding-box ball1"
+                          style={{
+                            left: `${labels[index].ball1.x * 100}%`,
+                            top: `${labels[index].ball1.y * 100}%`
+                          }}
+                        >
+                          <div className="box-label ball1">Ball 1</div>
+                        </div>
+                      </>
+                    )}
+
+                    {labels[index]?.ball2 && (
+                      <>
+                        <div 
+                          className="bounding-box ball2"
+                          style={{
+                            left: `${labels[index].ball2.x * 100}%`,
+                            top: `${labels[index].ball2.y * 100}%`
+                          }}
+                        >
+                          <div className="box-label ball2">Ball 2</div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
-      </div>
 
-      {saveSuccess && (
-        <div className="success-toast">
-          {saveSuccess}
-        </div>
-      )}
+        <button
+          onClick={saveDataset}
+          disabled={!capturedFrames.every((_, i) => labels[i]?.ball1 && labels[i]?.ball2)}
+          className="base-button bg-green-600 hover:bg-green-700 w-full disabled:bg-gray-600"
+        >
+          Save Dataset ({labels.filter(l => l?.ball1 && l?.ball2).length}/{capturedFrames.length} fully labeled)
+        </button>
+      </div>
     </div>
   );
 } 

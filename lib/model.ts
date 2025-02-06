@@ -396,7 +396,13 @@ export class ModelManager {
   }
 }
 
+// Export a singleton instance of ModelManager
 export const modelManager = new ModelManager();
+
+// Export the predictImage function
+export const predictImage = async (image: HTMLImageElement | HTMLVideoElement) => {
+  return modelManager.predictImage(image);
+};
 
 // Training function
 export async function trainModel(

@@ -34,6 +34,54 @@
   box-shadow: 0 0 10px rgba(255, 75, 75, 0.5);
 }
 
+.frame-container {
+  position: relative;
+  cursor: crosshair;
+  border: 2px solid transparent;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  overflow: visible;
+}
+
+.frame-container img {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.frame-container:hover {
+  transform: scale(1.02);
+}
+
+.frame-container.unlabeled {
+  border-color: rgba(255, 99, 71, 0.5);
+  box-shadow: 0 0 15px rgba(255, 99, 71, 0.2);
+}
+
+.frame-container.partially-labeled {
+  border-color: rgba(255, 165, 0, 0.5);
+  box-shadow: 0 0 15px rgba(255, 165, 0, 0.2);
+}
+
+.frame-container.fully-labeled {
+  border-color: rgba(46, 213, 115, 0.5);
+  box-shadow: 0 0 15px rgba(46, 213, 115, 0.2);
+}
+
+.frame-status {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 20;
+}
+
 .frame-preview {
   position: relative;
   border-radius: 1rem;
@@ -59,18 +107,120 @@
   height: 16px;
   border-radius: 50%;
   transform: translate(-50%, -50%);
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 0 10px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(0, 0, 0, 0.2);
+  z-index: 15;
+  pointer-events: none;
+}
+
+.ball-marker:hover {
+  transform: translate(-50%, -50%) scale(1.2);
+  box-shadow: 
+    0 0 15px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(0, 0, 0, 0.3);
+}
+
+.ball-marker.ball1 {
+  background: linear-gradient(45deg, #ff6b6b, #ff4b4b);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+}
+
+.ball-marker.ball2 {
+  background: linear-gradient(45deg, #4b83ff, #4b4bff);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+}
+
+.bounding-box {
+  position: absolute;
+  border: 2px dashed;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0.7;
   transition: all 0.3s ease;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(2px);
 }
 
-.ball-marker.orange {
-  background: linear-gradient(45deg, #ff9a9e, #fad0c4);
-  border: 2px solid rgba(255, 255, 255, 0.8);
+.frame-container:hover .bounding-box {
+  opacity: 0.7;
 }
 
-.ball-marker.white {
-  background: linear-gradient(45deg, #e2ebf0, #cfd9df);
-  border: 2px solid rgba(0, 0, 0, 0.3);
+.bounding-box.ball1 {
+  border-color: rgba(255, 107, 107, 0.9);
+  background: rgba(255, 107, 107, 0.15);
+  box-shadow: 
+    0 0 10px rgba(255, 107, 107, 0.2),
+    inset 0 0 20px rgba(255, 107, 107, 0.1);
+}
+
+.bounding-box.ball2 {
+  border-color: rgba(75, 131, 255, 0.9);
+  background: rgba(75, 131, 255, 0.15);
+  box-shadow: 
+    0 0 10px rgba(75, 131, 255, 0.2),
+    inset 0 0 20px rgba(75, 131, 255, 0.1);
+}
+
+.label-indicator {
+  position: absolute;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transform: translate(-50%, -150%);
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  z-index: 25;
+  opacity: 1;
+  pointer-events: none;
+}
+
+.frame-container:hover .label-indicator {
+  opacity: 1;
+  transform: translate(-50%, -170%);
+}
+
+.label-indicator.ball1 {
+  background: rgba(255, 107, 107, 0.95);
+  color: white;
+  box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
+}
+
+.label-indicator.ball2 {
+  background: rgba(75, 131, 255, 0.95);
+  color: white;
+  box-shadow: 0 2px 4px rgba(75, 131, 255, 0.3);
+}
+
+.labeling-guide {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 0.5rem;
+  color: white;
+  font-size: 0.875rem;
+  text-align: center;
+  pointer-events: none;
+  z-index: 30;
+  opacity: 1;
+}
+
+.frame-container:hover .labeling-guide {
+  opacity: 1;
+}
+
+/* Frame hover effects */
+.relative.cursor-crosshair:hover .bounding-box {
+  opacity: 0.9;
+}
+
+.relative.cursor-crosshair:hover .label-indicator {
+  transform: translate(-50%, -160%);
 }
 
 .success-toast {
@@ -98,4 +248,281 @@
 @keyframes slideUp {
   from { transform: translate(-50%, 100%); opacity: 0; }
   to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+.annotation-frame {
+  position: relative;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #1a1a1a;
+  cursor: crosshair;
+}
+
+.annotation-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none; /* Prevent image from blocking clicks */
+}
+
+.annotation-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
+}
+
+/* Bounding Box Styles */
+.bounding-box {
+  position: absolute;
+  border: 2px solid;
+  width: 20px;
+  height: 20px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 110;
+  transition: all 0.2s ease;
+}
+
+.bounding-box::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 2px dashed;
+  opacity: 0.5;
+}
+
+.bounding-box.ball1 {
+  border-color: #ff4b4b;
+  background: rgba(255, 75, 75, 0.2);
+}
+
+.bounding-box.ball1::before {
+  border-color: #ff4b4b;
+}
+
+.bounding-box.ball2 {
+  border-color: #4b83ff;
+  background: rgba(75, 131, 255, 0.2);
+}
+
+.bounding-box.ball2::before {
+  border-color: #4b83ff;
+}
+
+/* Label Styles */
+.box-label {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  white-space: nowrap;
+  z-index: 120;
+}
+
+.box-label.ball1 {
+  background: #ff4b4b;
+}
+
+.box-label.ball2 {
+  background: #4b83ff;
+}
+
+/* Frame Status */
+.frame-status {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+  z-index: 130;
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.frame-status.unlabeled {
+  background: rgba(255, 75, 75, 0.9);
+}
+
+.frame-status.partial {
+  background: rgba(255, 165, 0, 0.9);
+}
+
+.frame-status.complete {
+  background: rgba(46, 213, 115, 0.9);
+}
+
+/* Crosshair Cursor */
+.annotation-overlay::before,
+.annotation-overlay::after {
+  content: '';
+  position: absolute;
+  background: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+  z-index: 105;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.annotation-overlay:hover::before,
+.annotation-overlay:hover::after {
+  opacity: 1;
+}
+
+.annotation-overlay::before {
+  width: 1px;
+  height: 100%;
+  left: var(--x, 50%);
+  transform: translateX(-50%);
+}
+
+.annotation-overlay::after {
+  width: 100%;
+  height: 1px;
+  top: var(--y, 50%);
+  transform: translateY(-50%);
+}
+
+/* Instructions */
+.annotation-instructions {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 130;
+  white-space: nowrap;
+}
+
+/* Grid Layout */
+.annotation-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.annotation-frame {
+  position: relative;
+  aspect-ratio: 16/9;
+  cursor: crosshair;
+  border-radius: 0.5rem;
+  overflow: visible;
+}
+
+.annotation-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.annotation-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.frame-status {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+  z-index: 20;
+}
+
+.frame-status.unlabeled {
+  background: rgba(209, 213, 219, 0.75);
+}
+
+.frame-status.partial {
+  background: rgba(245, 158, 11, 0.75);
+}
+
+.frame-status.complete {
+  background: rgba(34, 197, 94, 0.75);
+}
+
+.annotation-instructions {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+  white-space: nowrap;
+  z-index: 20;
+}
+
+.bounding-box {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  transform: translate(-50%, -50%);
+  border: 2px solid;
+  z-index: 30;
+}
+
+.bounding-box.ball1 {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.5);
+}
+
+.bounding-box.ball2 {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5);
+}
+
+.box-label {
+  position: absolute;
+  top: -1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.125rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 40;
+}
+
+.box-label.ball1 {
+  background: #ef4444;
+  color: white;
+}
+
+.box-label.ball2 {
+  background: #3b82f6;
+  color: white;
 } 

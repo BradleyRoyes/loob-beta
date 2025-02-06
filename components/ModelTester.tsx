@@ -1,54 +1,69 @@
 'use client';
 
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import Webcam from 'react-webcam';
 import * as cocossd from '@tensorflow-models/coco-ssd';
 import { predictImage } from '@/lib/model';
 
-// Add error boundary component
-class ErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean; error: Error | null }
-> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ModelTester error:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="p-6 bg-red-100 rounded-lg">
-          <h3 className="text-red-800 font-bold">Something went wrong</h3>
-          <p className="text-red-600">{this.state.error?.message}</p>
-          <button
-            className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-            onClick={() => this.setState({ hasError: false, error: null })}
-          >
-            Try again
-          </button>
-        </div>
-      );
-    }
-    return this.props.children;
+// Add type declaration for Performance.memory
+declare global {
+  interface Performance {
+    memory?: {
+      usedJSHeapSize: number;
+      totalJSHeapSize: number;
+      jsHeapSizeLimit: number;
+    };
   }
 }
 
-export default function OrangeDetector() {
+interface DetectionStats {
+  fps: number;
+  avgConfidence: number;
+  detectionCount: number;
+  processingTime: number;
+  frameSkips: number;
+  memoryUsage: number;
+}
+
+interface ModelMetrics {
+  loss: number[];
+  accuracy: number[];
+  validationLoss: number[];
+  learningRate: number;
+  epoch: number;
+  batchesProcessed: number;
+  totalBatches: number;
+}
+
+export default function ModelTester() {
   const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [orangeObjects, setOrangeObjects] = useState<Array<cocossd.DetectedObject>>([]);
   const [modelStatus, setModelStatus] = useState('Loading model...');
   const [cameraStatus, setCameraStatus] = useState('Starting camera...');
+  const [stats, setStats] = useState<DetectionStats>({
+    fps: 0,
+    avgConfidence: 0,
+    detectionCount: 0,
+    processingTime: 0,
+    frameSkips: 0,
+    memoryUsage: 0
+  });
+  const [metrics, setMetrics] = useState<ModelMetrics>({
+    loss: [],
+    accuracy: [],
+    validationLoss: [],
+    learningRate: 0.001,
+    epoch: 0,
+    batchesProcessed: 0,
+    totalBatches: 0
+  });
+
+  const lastFrameTime = useRef(Date.now());
+  const frameCount = useRef(0);
+  const processingTimes = useRef<number[]>([]);
+  const confidenceHistory = useRef<number[]>([]);
 
   // COCO-SSD configuration
   const modelConfig = {
@@ -65,21 +80,7 @@ export default function OrangeDetector() {
 
   const objectDetector = useRef<cocossd.ObjectDetection>();
 
-  // Add cleanup function for TensorFlow resources
-  useEffect(() => {
-    return () => {
-      if (objectDetector.current) {
-        // Clean up TensorFlow resources
-        try {
-          (objectDetector.current as any)?.dispose?.();
-        } catch (err) {
-          console.error('Error disposing model:', err);
-        }
-      }
-    };
-  }, []);
-
-  // Improve model loading error handling
+  // Load model with error handling
   useEffect(() => {
     let isMounted = true;
     const loadModel = async () => {
@@ -89,50 +90,88 @@ export default function OrangeDetector() {
         if (isMounted) setModelStatus('Model loaded');
       } catch (error) {
         console.error('Model load error:', error);
-        if (isMounted) {
-          setModelStatus('Error loading model');
-          setIsRunning(false);
-          throw new Error('Failed to load object detection model. Please check your connection and try again.');
-        }
+        if (isMounted) setModelStatus('Error loading model');
       }
     };
     
-    loadModel().catch(err => {
-      if (isMounted) {
-        setModelStatus(`Error: ${err.message}`);
-        setIsRunning(false);
-      }
-    });
+    loadModel();
     return () => { isMounted = false; };
   }, []);
 
-  // Detection loop with frame skipping
-  useEffect(() => {
-    let frameCount = 0;
-    let rafId: number;
+  // Enhanced stats tracking
+  const updateStats = (detections: cocossd.DetectedObject[], processTime: number) => {
+    const now = Date.now();
+    const timeDiff = now - lastFrameTime.current;
+    frameCount.current++;
+    
+    // Update processing times history (keep last 30 frames)
+    processingTimes.current.push(processTime);
+    if (processingTimes.current.length > 30) processingTimes.current.shift();
+    
+    // Update confidence history
+    const avgConfidence = detections.reduce((acc, det) => acc + det.score, 0) / (detections.length || 1);
+    confidenceHistory.current.push(avgConfidence);
+    if (confidenceHistory.current.length > 100) confidenceHistory.current.shift();
 
-    const detectFrame = useCallback(async () => {
-      if (!isRunning || !objectDetector.current || !webcamRef.current?.video) return;
+    // Calculate stats
+    setStats({
+      fps: Math.round((1000 / timeDiff) * 10) / 10,
+      avgConfidence: Math.round(avgConfidence * 100) / 100,
+      detectionCount: detections.length,
+      processingTime: Math.round(processTime),
+      frameSkips: frameCount.current % 2,
+      memoryUsage: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1024 / 1024) : 0
+    });
+
+    lastFrameTime.current = now;
+  };
+
+  // Enhanced detection loop
+  useEffect(() => {
+    let rafId: number;
+    let isProcessing = false;
+
+    const detectFrame = async () => {
+      if (!isRunning || !objectDetector.current || !webcamRef.current?.video || isProcessing) {
+        rafId = requestAnimationFrame(detectFrame);
+        return;
+      }
+      
+      isProcessing = true;
+      const startTime = performance.now();
       
       try {
         const video = webcamRef.current.video;
-        if (video.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA) return;
+        if (video.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA) {
+          rafId = requestAnimationFrame(detectFrame);
+          return;
+        }
 
-        // Process every other frame to reduce load
-        if (frameCount++ % 2 === 0) {
+        // Process every other frame
+        if (frameCount.current++ % 2 === 0) {
           const detections = await objectDetector.current.detect(video);
           const orangeItems = filterOrangeObjects(detections, video);
           setOrangeObjects(orangeItems);
           drawDetections(orangeItems, video);
+          
+          const processTime = performance.now() - startTime;
+          updateStats(orangeItems, processTime);
+
+          // Update metrics
+          setMetrics(prev => ({
+            ...prev,
+            accuracy: [...prev.accuracy, orangeItems.length > 0 ? 1 : 0].slice(-100),
+            loss: [...prev.loss, 1 - (orangeItems[0]?.score || 0)].slice(-100)
+          }));
         }
-        
-        rafId = requestAnimationFrame(detectFrame);
       } catch (error) {
         console.error('Detection error:', error);
-        setIsRunning(false);
-        setModelStatus('Detection error: ' + (error instanceof Error ? error.message : 'Unknown error'));
+        setModelStatus('Detection error occurred');
       }
-    }, [isRunning, frameCount]);
+
+      isProcessing = false;
+      rafId = requestAnimationFrame(detectFrame);
+    };
 
     if (isRunning) {
       detectFrame();
@@ -173,30 +212,82 @@ export default function OrangeDetector() {
     });
   };
 
-  // Drawing optimizations
+  // Enhanced drawing with more information
   const drawDetections = (detections: cocossd.DetectedObject[], video: HTMLVideoElement) => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
     if (!ctx || !canvas) return;
 
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
     // Clear and draw video frame
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // Draw detections
-    detections.forEach(obj => {
+    // Draw detections with enhanced visuals
+    detections.forEach((obj, index) => {
+      const [x, y, width, height] = obj.bbox;
+      
+      // Draw bounding box
       ctx.beginPath();
       ctx.lineWidth = 2;
-      ctx.strokeStyle = '#FFA500';
-      ctx.strokeRect(...obj.bbox);
+      ctx.strokeStyle = `hsl(${obj.score * 120}, 100%, 50%)`; // Color based on confidence
+      ctx.strokeRect(x, y, width, height);
       
-      ctx.fillStyle = '#FFA500';
+      // Draw background for text
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillRect(x, y - 30, width, 30);
+      
+      // Draw text
+      ctx.fillStyle = 'white';
+      ctx.font = '14px Arial';
       ctx.fillText(
         `${obj.class} (${Math.round(obj.score * 100)}%)`,
-        obj.bbox[0] + 5,
-        obj.bbox[1] > 20 ? obj.bbox[1] - 5 : obj.bbox[1] + 15
+        x + 5,
+        y - 10
       );
     });
+
+    // Draw stats overlay
+    drawStatsOverlay(ctx, canvas.width, canvas.height);
+  };
+
+  // New function to draw stats overlay
+  const drawStatsOverlay = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(10, 10, 200, 120);
+
+    ctx.fillStyle = 'white';
+    ctx.font = '12px monospace';
+    ctx.fillText(`FPS: ${stats.fps}`, 20, 30);
+    ctx.fillText(`Confidence: ${stats.avgConfidence.toFixed(2)}`, 20, 50);
+    ctx.fillText(`Processing: ${stats.processingTime}ms`, 20, 70);
+    ctx.fillText(`Memory: ${stats.memoryUsage}MB`, 20, 90);
+    ctx.fillText(`Detections: ${stats.detectionCount}`, 20, 110);
+
+    // Draw mini performance graph
+    drawPerformanceGraph(ctx, width - 210, 10, 200, 100);
+  };
+
+  // New function to draw performance graph
+  const drawPerformanceGraph = (ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number) => {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(x, y, width, height);
+
+    // Draw confidence history
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(75, 192, 192, 0.8)';
+    ctx.lineWidth = 1;
+    
+    confidenceHistory.current.forEach((conf, i) => {
+      const px = x + (i / confidenceHistory.current.length) * width;
+      const py = y + height - (conf * height);
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    });
+    
+    ctx.stroke();
   };
 
   // RGB to HSV conversion
@@ -222,69 +313,124 @@ export default function OrangeDetector() {
     return [Math.round(h * 360), Math.round(s * 100), Math.round(v * 100)];
   };
 
-  // Improve custom model testing
+  // Add a test button that uses your custom model
   const testCustomModel = async () => {
-    try {
-      const imgSrc = webcamRef.current?.getScreenshot();
-      if (!imgSrc) {
-        throw new Error('Failed to capture image from camera');
-      }
+    const imgSrc = webcamRef.current?.getScreenshot();
+    if (!imgSrc) return;
 
-      const img = new Image();
-      img.src = imgSrc;
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = () => reject(new Error('Failed to load captured image'));
-      });
+    const img = new Image();
+    img.src = imgSrc;
+    await new Promise((resolve) => img.onload = resolve);
     
-      const prediction = await predictImage(img);
-      // Handle prediction visualization
-    } catch (error) {
-      console.error('Custom model test error:', error);
-      setModelStatus('Custom model error: ' + (error instanceof Error ? error.message : 'Unknown error'));
-    }
+    const prediction = await predictImage(img);
+    // Visualize prediction coordinates
   };
 
   return (
-    <ErrorBoundary>
-      <div className="p-6 space-y-6 max-w-4xl mx-auto">
-        <h2 className="text-xl font-bold">Orange Object Detector</h2>
-        
-        {/* Status indicators */}
-        <div className="space-y-2">
+    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 className="text-xl font-bold">Model Tester</h2>
           <p className="text-sm text-gray-400">{modelStatus}</p>
           <p className="text-sm text-gray-400">{cameraStatus}</p>
         </div>
+        
+        {/* Stats Panel */}
+        <div className="bg-gray-900/50 rounded-lg p-4 space-y-2 min-w-[200px]">
+          <h3 className="text-sm font-semibold text-gray-300">Performance Stats</h3>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="text-gray-400">FPS:</div>
+            <div className="text-right">{stats.fps}</div>
+            <div className="text-gray-400">Confidence:</div>
+            <div className="text-right">{stats.avgConfidence.toFixed(2)}</div>
+            <div className="text-gray-400">Processing:</div>
+            <div className="text-right">{stats.processingTime}ms</div>
+            <div className="text-gray-400">Memory:</div>
+            <div className="text-right">{stats.memoryUsage}MB</div>
+          </div>
+        </div>
+      </div>
 
-          <Webcam
-            ref={webcamRef}
-            className="w-full rounded-lg"
-            audio={false}
+      <div className="relative">
+        <Webcam
+          ref={webcamRef}
+          className="w-full rounded-lg"
+          audio={false}
           videoConstraints={{
             facingMode: 'environment',
             width: { ideal: 640 },
-            height: { ideal: 360 }, // 16:9 aspect for better performance
-            frameRate: { ideal: 15 }
+            height: { ideal: 360 },
+            frameRate: { ideal: 30 }
           }}
           onUserMedia={() => setCameraStatus('Camera active')}
           onUserMediaError={(e) => setCameraStatus(`Camera error: ${e.toString()}`)}
         />
+        <canvas
+          ref={canvasRef}
+          className="absolute top-0 left-0 w-full h-full"
+        />
+      </div>
 
+      <div className="grid grid-cols-2 gap-4">
         <button
           onClick={() => setIsRunning(!isRunning)}
-          className={`w-full p-4 rounded-lg ${
+          className={`p-4 rounded-lg ${
             isRunning ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'
-          } text-white`}
+          } text-white transition-colors`}
         >
           {isRunning ? 'Stop Detection' : 'Start Detection'}
         </button>
+        
+        <button
+          onClick={testCustomModel}
+          className="p-4 rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+        >
+          Test Custom Model
+        </button>
+      </div>
 
-        <div className="bg-gray-900 p-4 rounded-lg">
-          <p className="text-2xl font-bold text-center">
-            {orangeObjects.length} Orange Object{orangeObjects.length !== 1 ? 's' : ''} Detected
-          </p>
+      {/* Metrics Visualization */}
+      <div className="bg-gray-900/50 rounded-lg p-4 space-y-4">
+        <h3 className="text-sm font-semibold text-gray-300">Detection Metrics</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <p className="text-xs text-gray-400">Detection Count</p>
+            <div className="h-20 bg-gray-800/50 rounded overflow-hidden">
+              {/* Add bar chart visualization */}
+            </div>
+          </div>
+          <div className="space-y-2">
+            <p className="text-xs text-gray-400">Confidence History</p>
+            <div className="h-20 bg-gray-800/50 rounded overflow-hidden">
+              {/* Add line chart visualization */}
+            </div>
+          </div>
         </div>
       </div>
-    </ErrorBoundary>
+
+      {/* Detection Results */}
+      <div className="bg-gray-900/50 rounded-lg p-4">
+        <h3 className="text-sm font-semibold text-gray-300 mb-2">Detection Results</h3>
+        <div className="space-y-2">
+          {orangeObjects.map((obj, i) => (
+            <div 
+              key={i}
+              className="flex justify-between items-center bg-gray-800/50 rounded p-2 text-sm"
+            >
+              <span>{obj.class}</span>
+              <div className="flex items-center gap-2">
+                <div className="w-20 h-2 bg-gray-700 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-green-500 transition-all"
+                    style={{ width: `${obj.score * 100}%` }}
+                  />
+                </div>
+                <span className="text-xs">{Math.round(obj.score * 100)}%</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

@@ -58,6 +58,22 @@ const RootLayout: React.FC = () => {
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="theme-color" content="#121212" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.cdnfonts.com" crossOrigin="anonymous" />
+        <style>
+          {`
+            @font-face {
+              font-family: 'Modulus Pro';
+              font-display: swap;
+              src: local('Modulus Pro'),
+                   url('/fonts/ModulusPro.woff2') format('woff2'),
+                   url('/fonts/ModulusPro.woff') format('woff');
+              font-weight: normal;
+              font-style: normal;
+            }
+          `}
+        </style>
       </head>
       <body className="bg-background-primary text-text-primary flex flex-col min-h-screen max-w-[100vw] overflow-x-hidden">
         <GlobalStateProvider>

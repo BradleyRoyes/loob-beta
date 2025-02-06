@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import TorusSphere from './TorusSphere';
 import './Profile.css';
 import LoobricateProfile from './LoobricateProfile';
 import LoobricateAdminPanel from './LoobricateAdminPanel';
@@ -10,6 +9,7 @@ import type { Loobricate } from './GlobalStateContext';
 import type { LoobricateData } from '../types/loobricate';
 import DailyDump from './DailyDump';
 import DailyQuest from './DailyQuest';
+import VibeEntity from './VibeEntity';
 
 // Conversion helper
 const convertToLoobricate = (data: LoobricateData): Loobricate => ({
@@ -81,6 +81,7 @@ const Profile: React.FC<{
   // Remove duplicate state
   const [selectedLoobricate, setSelectedLoobricate] = useState<Loobricate | null>(null);
   const [showLoobricateModal, setShowLoobricateModal] = useState(false);
+  const [isLoobricateLoading, setIsLoobricateLoading] = useState(false);
 
   // Transform raw loobricates into normalized form, handling potential invalid data
   const connectedLoobricates = React.useMemo(() => 
@@ -202,6 +203,9 @@ const Profile: React.FC<{
 
   // Update the handleLoobricateClick function
   const handleLoobricateClick = async (loobricate: Loobricate) => {
+    setIsLoobricateLoading(true);
+    setShowLoobricateModal(true);
+    
     try {
       // Fetch fresh data from the server
       const response = await fetch(`/api/loobricates/${loobricate.id}`);
@@ -218,12 +222,12 @@ const Profile: React.FC<{
         description: freshData.description || loobricate.description || '',
         tags: freshData.tags || loobricate.tags || []
       });
-      setShowLoobricateModal(true);
     } catch (error) {
       console.error('Error fetching Loobricate details:', error);
       // Fallback to existing data if fetch fails
       setSelectedLoobricate(loobricate);
-      setShowLoobricateModal(true);
+    } finally {
+      setIsLoobricateLoading(false);
     }
   };
 
@@ -343,7 +347,21 @@ const Profile: React.FC<{
         </div>
 
         <div className="visualization-container">
-          <TorusSphere loobricateId={userId || 'default'} />
+          <VibeEntity 
+            entityId={userId || 'default'} 
+            className="profile-vibe-entity"
+            onStateUpdate={async (state) => {
+              try {
+                await fetch('/api/vibe_entities', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ id: userId, state })
+                });
+              } catch (error) {
+                console.error('Failed to update vibe state:', error);
+              }
+            }}
+          />
         </div>
 
         {/* For anonymous users, show welcome message */}
@@ -502,20 +520,27 @@ const Profile: React.FC<{
         </div>
       )}
 
-      {showLoobricateModal && selectedLoobricate && (
+      {showLoobricateModal && (
         <div className={`modal-overlay ${showLoobricateModal ? 'visible' : ''}`}>
-          {selectedLoobricate.admins?.includes(userId || '') ? (
-            <LoobricateAdminPanel
-              loobricateId={selectedLoobricate.id}
-              onClose={handleModalClose}
-              onUpdate={handleLoobricateUpdate}
-            />
-          ) : (
-            <LoobricateProfile
-              loobricate={convertToLoobricateData(selectedLoobricate)}
-              onClose={handleModalClose}
-              onUpdate={handleLoobricateUpdate}
-            />
+          {isLoobricateLoading ? (
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p className="loading-text">Loading Loobricate...</p>
+            </div>
+          ) : selectedLoobricate && (
+            selectedLoobricate.admins?.includes(userId || '') ? (
+              <LoobricateAdminPanel
+                loobricateId={selectedLoobricate.id}
+                onClose={handleModalClose}
+                onUpdate={handleLoobricateUpdate}
+              />
+            ) : (
+              <LoobricateProfile
+                loobricate={convertToLoobricateData(selectedLoobricate)}
+                onClose={handleModalClose}
+                onUpdate={handleLoobricateUpdate}
+              />
+            )
           )}
         </div>
       )}

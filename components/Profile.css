@@ -43,8 +43,33 @@
 
 /* Slider and Visuals */
 .visualization-container {
-  margin: 1rem 0;
-  text-align: center;
+  width: 100%;
+  height: 300px;
+  position: relative;
+  margin: 2rem 0;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: linear-gradient(
+    to bottom right,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.02)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.profile-vibe-entity {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  filter: blur(1px);
+  transition: filter 0.3s ease;
+}
+
+.profile-vibe-entity:hover {
+  filter: blur(0);
 }
 
 .visual-slider {
