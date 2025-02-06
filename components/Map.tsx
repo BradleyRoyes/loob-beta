@@ -177,6 +177,7 @@ const Map: React.FC = () => {
     status: 'idle',
     retryCount: 0,
   });
+  const [showVibeEntity, setShowVibeEntity] = useState(false);
 
   const { location, accuracy, heading, error: geoError } = useGeolocation(
     mapInstanceRef.current,
@@ -855,7 +856,28 @@ const Map: React.FC = () => {
               </h3>
             </div>
             <div className="sphere-preview">
-              {renderSphereForNode(previewNode)}
+              {previewNode && (
+                <VibeEntity 
+                  entityId={previewNode.id}
+                  className="preview-vibe-entity"
+                  onStateUpdate={async (state) => {
+                    try {
+                      await fetch('/api/vibe_entities', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                          id: previewNode.id,
+                          state,
+                          type: previewNode.type,
+                          isLoobricate: previewNode.isLoobricate 
+                        })
+                      });
+                    } catch (error) {
+                      console.error('Failed to update vibe state:', error);
+                    }
+                  }}
+                />
+              )}
             </div>
             <button
               className="more-info-btn"
@@ -904,24 +926,6 @@ const Map: React.FC = () => {
           console.log(`Found ${amount} LOOB!`);
         }}
       />
-
-      <div className="map-visualization">
-        <VibeEntity 
-          entityId={previewNode?.id || 'map'}
-          className="map-vibe-entity"
-          onStateUpdate={async (state) => {
-            try {
-              await fetch('/api/vibe_entities', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: previewNode?.id || 'map', state })
-              });
-            } catch (error) {
-              console.error('Failed to update vibe state:', error);
-            }
-          }}
-        />
-      </div>
     </div>
   );
 };
