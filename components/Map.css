@@ -104,6 +104,10 @@
   overflow: hidden;
 }
 
+.transparent-bg {
+  background: none !important;
+}
+
 .close-popup-btn {
   position: absolute;
   top: 6px;
