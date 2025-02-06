@@ -17,6 +17,10 @@ const pusher = new Pusher({
   useTLS: true,
 });
 
+// In-memory store for last update times
+const lastUpdateTimes = new Map<string, number>();
+const THROTTLE_INTERVAL = 2000; // 2 seconds between updates
+
 export async function POST(request: Request) {
   try {
     const { id, state } = await request.json();
@@ -27,6 +31,23 @@ export async function POST(request: Request) {
         headers: { 'Content-Type': 'application/json' }
       });
     }
+
+    // Check if we should throttle this update
+    const now = Date.now();
+    const lastUpdate = lastUpdateTimes.get(id) || 0;
+    if (now - lastUpdate < THROTTLE_INTERVAL) {
+      return new NextResponse(JSON.stringify({ 
+        success: true,
+        throttled: true,
+        message: 'Update throttled'
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Update the last update time
+    lastUpdateTimes.set(id, now);
 
     // Trigger Pusher event for the specific entity
     await pusher.trigger(`user-${id}`, "vibe-update", {

@@ -309,12 +309,34 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
     };
   }, []);
 
+  // Add device detection helper
+  const getDeviceInfo = () => {
+    const ua = navigator.userAgent;
+    const iOS = /iPad|iPhone|iPod/.test(ua);
+    const android = /Android/.test(ua);
+    const mobile = /Mobile|webOS/.test(ua);
+    const safari = /Safari/.test(ua) && !/Chrome/.test(ua);
+    const chrome = /Chrome/.test(ua);
+
+    return {
+      iOS,
+      android,
+      mobile,
+      safari,
+      chrome,
+      userAgent: ua
+    };
+  };
+
   /**
    * Initiates audio recording with error handling for various scenarios
    * Handles mobile-specific permission requests and browser compatibility
    */
   const handleStartRecording = async () => {
     try {
+      const deviceInfo = getDeviceInfo();
+      console.log('Starting recording on device:', deviceInfo);
+
       setError(null);
       setStatusMessage('Initializing recording...');
 
@@ -342,11 +364,26 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
         );
       }
 
+      // Log supported formats
+      const supportedFormats = [
+        'audio/webm',
+        'audio/webm;codecs=opus',
+        'audio/mp4',
+        'audio/aac',
+        'audio/x-m4a',
+        'audio/wav'
+      ].filter(format => MediaRecorder.isTypeSupported(format));
+
+      console.log('Supported audio formats:', {
+        formats: supportedFormats,
+        deviceInfo
+      });
+
       const mimeType = getSupportedMimeType();
-      if (!mimeType) {
-        throw new Error('No supported audio format found for your browser');
-      }
-      setStatusMessage(`Using format: ${mimeType}`);
+      console.log('Selected MIME type:', {
+        mimeType,
+        deviceInfo
+      });
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -413,10 +450,17 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       chunksRef.current = [];
       
       mediaRecorder.ondataavailable = (e) => {
+        console.log('Data available:', {
+          chunkSize: e.data.size,
+          chunkType: e.data.type,
+          timestamp: new Date().toISOString()
+        });
+        
         if (e.data.size > 0) {
           chunksRef.current.push(e.data);
           setStatusMessage(`Recording... (${formatDuration(recordingDuration)})`);
         } else {
+          console.warn('Empty chunk received');
           setStatusMessage('Warning: No audio data received');
         }
       };
@@ -451,10 +495,15 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       startRecordingProp();
 
     } catch (error: any) {
+      console.error('Recording error:', {
+        error,
+        deviceInfo: getDeviceInfo(),
+        message: error.message,
+        name: error.name
+      });
       const errorMessage = getErrorMessage(error);
       setError(errorMessage);
       setStatusMessage('Recording failed to start');
-      console.error("Recording error:", error);
       cleanupRecording();
     }
   };
@@ -470,17 +519,30 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
   const handleConfirmRecording = () => {
     if (!mediaRecorderRef.current || !isRecording) return;
     
+    const deviceInfo = getDeviceInfo();
+    console.log('Device Info:', deviceInfo);
+    
     setStatusMessage('Finalizing recording...');
     const audioBlob = new Blob(chunksRef.current, { 
       type: mediaRecorderRef.current.mimeType || 'audio/webm' 
     });
 
-    // Log the blob details for debugging
-    console.log('Audio recording details:', {
-      size: audioBlob.size,
-      type: audioBlob.type,
-      chunks: chunksRef.current.length,
-      userAgent: navigator.userAgent
+    // Enhanced debug logging
+    console.log('Recording Details:', {
+      blobSize: audioBlob.size,
+      blobType: audioBlob.type,
+      numberOfChunks: chunksRef.current.length,
+      chunks: chunksRef.current.map(chunk => ({
+        size: chunk.size,
+        type: chunk.type
+      })),
+      mimeType: mediaRecorderRef.current.mimeType,
+      deviceInfo,
+      recordingDuration,
+      audioContext: {
+        sampleRate: analyserRef.current?.context?.sampleRate,
+        state: analyserRef.current?.context?.state
+      }
     });
 
     if (audioBlob.size === 0) {
@@ -489,7 +551,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       return;
     }
     
-    setStatusMessage('Recording complete');
+    setStatusMessage('Recording complete - sending for transcription');
     stopRecordingProp();
     onRecordingComplete(audioBlob);
     cleanupRecording();

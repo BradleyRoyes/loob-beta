@@ -22,6 +22,13 @@ export async function POST(request: NextRequest) {
   console.log('🎤 Starting new transcription request...');
   const tempFiles: string[] = [];
 
+  // Log request details
+  console.log('Request headers:', {
+    userAgent: request.headers.get('user-agent'),
+    contentType: request.headers.get('content-type'),
+    accept: request.headers.get('accept')
+  });
+
   try {
     const formData = await request.formData();
     const audioFile = formData.get('audio') as File;
@@ -34,20 +41,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Log detailed file information
-    console.log('📦 Received audio file:', {
+    // Enhanced file logging
+    const fileDetails = {
       name: audioFile.name,
       size: audioFile.size,
       type: audioFile.type,
-      lastModified: audioFile.lastModified,
-      userAgent: request.headers.get('user-agent')
-    });
+      lastModified: new Date(audioFile.lastModified).toISOString()
+    };
+    
+    console.log('📦 Received audio file:', fileDetails);
 
-    // Validate file size
+    // Validate file size and type
     if (audioFile.size === 0) {
       console.error('❌ Empty audio file received');
       return NextResponse.json(
-        { error: 'Audio file is empty.' },
+        { error: 'Audio file is empty.', details: fileDetails },
+        { status: 400 }
+      );
+    }
+
+    if (audioFile.size > 25 * 1024 * 1024) { // 25MB limit
+      console.error('❌ File too large:', audioFile.size);
+      return NextResponse.json(
+        { error: 'Audio file too large (max 25MB).', details: fileDetails },
         { status: 400 }
       );
     }
@@ -65,7 +81,8 @@ export async function POST(request: NextRequest) {
     console.log('📝 Writing audio file:', {
       path: audioPath,
       size: buffer.length,
-      extension: fileExt
+      extension: fileExt,
+      details: fileDetails
     });
 
     await writeFile(audioPath, buffer);
@@ -78,25 +95,32 @@ export async function POST(request: NextRequest) {
         apiKey: process.env.OPENAI_API_KEY,
       });
 
-      // Send directly to Whisper API
-      console.log('🎯 Sending to Whisper API...', {
-        fileSize: audioFile.size,
-        mimeType: audioFile.type
-      });
-
       // Try to transcribe directly from the File object first
       try {
+        console.log('🎯 Attempting direct transcription...');
         const transcription = await openai.audio.transcriptions.create({
           file: audioFile,
           model: 'whisper-1',
         });
 
-        console.log('✅ Transcription successful:', transcription.text);
-        return NextResponse.json({ transcription: transcription.text });
+        console.log('✅ Direct transcription successful:', {
+          text: transcription.text,
+          fileDetails
+        });
+        
+        return NextResponse.json({ 
+          transcription: transcription.text,
+          method: 'direct',
+          fileDetails
+        });
       } catch (directError: any) {
-        console.warn('⚠️ Direct transcription failed, trying with file from disk:', directError.message);
+        console.warn('⚠️ Direct transcription failed:', {
+          error: directError.message,
+          fileDetails
+        });
         
         // If direct transcription fails, try with the file from disk
+        console.log('🔄 Attempting fallback transcription from disk...');
         const fileHandle = await import('node:fs').then(fs => 
           fs.createReadStream(audioPath)
         );
@@ -106,28 +130,29 @@ export async function POST(request: NextRequest) {
           model: 'whisper-1',
         });
 
-        console.log('✅ Fallback transcription successful:', transcription.text);
-        return NextResponse.json({ transcription: transcription.text });
+        console.log('✅ Fallback transcription successful:', {
+          text: transcription.text,
+          fileDetails
+        });
+        
+        return NextResponse.json({ 
+          transcription: transcription.text,
+          method: 'fallback',
+          fileDetails
+        });
       }
     } catch (error: any) {
       console.error('❌ Transcription error:', {
         message: error.message,
         stack: error.stack,
         details: error,
-        fileInfo: {
-          size: audioFile.size,
-          type: audioFile.type,
-          name: audioFile.name
-        }
+        fileDetails
       });
       return NextResponse.json(
         { 
           error: 'Error during transcription', 
           details: error.message,
-          fileInfo: {
-            size: audioFile.size,
-            type: audioFile.type
-          },
+          fileDetails,
           stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         },
         { status: 500 }

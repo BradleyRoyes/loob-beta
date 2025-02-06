@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 import { AstraDB } from "@datastax/astra-db-ts";
+import { v4 as uuidv4 } from "uuid";
 import generateDocContext from "./generateDocContext";
 const Pusher = require("pusher");
 
@@ -10,10 +11,14 @@ const requiredEnvVars = {
   ASTRA_DB_APPLICATION_TOKEN: process.env.ASTRA_DB_APPLICATION_TOKEN,
   ASTRA_DB_ENDPOINT: process.env.ASTRA_DB_ENDPOINT,
   ASTRA_DB_NAMESPACE: process.env.ASTRA_DB_NAMESPACE,
+};
+
+// Optional environment variables
+const optionalEnvVars = {
   VERCEL_URL: process.env.VERCEL_URL,
 };
 
-// Check for missing environment variables
+// Check for missing required environment variables
 const missingEnvVars = Object.entries(requiredEnvVars)
   .filter(([key, value]) => !value)
   .map(([key]) => key);
@@ -62,7 +67,7 @@ function parseAnalysis(content: string) {
 }
 
 // Save a message to the database
-async function saveMessageToDatabase(sessionId: string, content: string, role: string, analysis: any = null) {
+async function saveMessageToDatabase(sessionId: string, content: string, role: string, userId?: string, analysis: any = null) {
   try {
     const messagesCollection = await astraDb.collection("messages");
     const existingMessage = await messagesCollection.findOne({ sessionId, content });
@@ -72,6 +77,7 @@ async function saveMessageToDatabase(sessionId: string, content: string, role: s
     }
     const messageData = {
       sessionId,
+      userId,
       role,
       content,
       length: content.length,
@@ -86,7 +92,7 @@ async function saveMessageToDatabase(sessionId: string, content: string, role: s
       } : null
     };
     await messagesCollection.insertOne(messageData);
-    console.log(`Saved ${role} message to DB (sessionId: ${sessionId})`);
+    console.log(`Saved ${role} message to DB (sessionId: ${sessionId}, userId: ${userId || 'anonymous'})`);
   } catch (error) {
     console.error("Error saving message to database:", error);
     // Don't throw the error - we want to continue even if DB save fails
@@ -112,28 +118,18 @@ const getBaseUrl = () => {
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
-  return 'http://localhost:3000';
+  return process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '';
 };
 
 // Main POST function
-export async function POST(req: Request) {
+export async function POST(req: any) {
   try {
     console.log("Received POST request...");
-    const { messages, llm, sessionId, userId, connectedLoobricates } = await req.json();
-
-    if (!messages || !Array.isArray(messages)) {
-      return new Response(JSON.stringify({ error: "Invalid messages format" }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
+    const { messages, llm, sessionId, userId } = await req.json();
 
     const latestMessage = messages[messages.length - 1]?.content;
     if (!latestMessage) {
-      return new Response(JSON.stringify({ error: "No latest message found in the request" }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      throw new Error("No latest message found in the request.");
     }
 
     console.log("Generating document context...");
@@ -149,9 +145,10 @@ export async function POST(req: Request) {
     // Save user messages to database
     for (const message of messages) {
       if (message.role === 'user') {
-        await saveMessageToDatabase(sessionId, message.content, message.role);
+        await saveMessageToDatabase(sessionId, message.content, message.role, userId);
       }
     }
+
     const systemPrompt = [
       {
         role: "system",
@@ -225,7 +222,6 @@ export async function POST(req: Request) {
         `,
       },
     ];
-    
 
     console.log("Calling OpenAI API for chat completion...");
     const response = await openai.chat.completions.create({
@@ -234,56 +230,32 @@ export async function POST(req: Request) {
       messages: [...systemPrompt, ...messages],
     });
 
-    // Convert the response to a ReadableStream
     const stream = OpenAIStream(response as any, {
       onCompletion: async (completion: string) => {
         const analysis = parseAnalysis(completion);
         if (analysis) {
           console.log("Sending analysis data:", { analysis });
           const randomBrushstroke = brushstrokes[Math.floor(Math.random() * brushstrokes.length)];
-          
-          // Create vibe update payload
-          const vibeUpdate = {
-            mood: analysis.mood,
-            sentiment: analysis.sentiment || 0,
-            intensity: analysis.intensity || 0.5,
-            keywords: analysis.keywords,
-            action: randomBrushstroke,
-            timestamp: new Date().toISOString()
+          const pusherData = {
+            analysis,
+            actionName: randomBrushstroke,
+            payload: {
+              mood: analysis.mood,
+              keywords: analysis.keywords,
+              brushstroke: randomBrushstroke,
+              drink: analysis.drink,
+              joinCyberdelicSociety: analysis.joinCyberdelicSociety,
+            },
           };
 
-          // Update all entities through the vibe_entities API
+          // Throttle Pusher updates - only send one update
           try {
-            const entitiesToUpdate = [
-              ...(userId ? [userId] : []),
-              ...(connectedLoobricates || [])
-            ].filter(Boolean); // Remove any null/undefined values
-
-            if (entitiesToUpdate.length > 0) {
-              const baseUrl = getBaseUrl();
-              await Promise.all(entitiesToUpdate.map(entityId =>
-                fetch(`${baseUrl}/api/vibe_entities`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    id: entityId,
-                    state: {
-                      ...vibeUpdate,
-                      entityId
-                    }
-                  })
-                }).catch(err => {
-                  console.error(`Error updating vibe entity ${entityId}:`, err);
-                  // Continue with other updates even if one fails
-                })
-              ));
-            }
+            await pusher.trigger("my-channel", "my-event", pusherData);
           } catch (err) {
-            console.error("Error updating vibe entities:", err);
-            // Continue even if vibe updates fail
+            console.error("Error triggering Pusher event:", err);
           }
         }
-        await saveMessageToDatabase(sessionId, completion, "assistant", analysis);
+        await saveMessageToDatabase(sessionId, completion, "assistant", userId, analysis);
       },
     });
 
@@ -291,12 +263,10 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("Error in chatbot route:", error);
     
-    // Return a proper error response
     return new Response(
       JSON.stringify({
         error: "Internal server error",
         message: error.message || "An unexpected error occurred",
-        // Only include stack trace in development
         ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
       }),
       {

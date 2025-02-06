@@ -23,7 +23,8 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.cdnfonts.com",
               "font-src 'self' https://fonts.gstatic.com https://fonts.cdnfonts.com",
               "img-src 'self' data: blob: https:",
-              "connect-src 'self' https://*"
+              "connect-src 'self' https://*",
+              "media-src 'self' blob: mediastream:"
             ].join('; ')
           }
         ],
