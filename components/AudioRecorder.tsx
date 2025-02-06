@@ -216,38 +216,40 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
   };
 
   const getSupportedMimeType = (): string | null => {
-    // Keep original desktop priority for non-mobile
-    if (!isMobile()) {
-      const desktopMimeTypes = [
-        'audio/webm;codecs=opus',
-        'audio/webm',
-        'audio/mp4',
-        'audio/aac',
-        'audio/wav'
-      ];
-      const format = desktopMimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || null;
-      setRecordingFormat(format || 'No supported format found');
-      return format;
+    // Special case for iOS - prefer mp4/aac
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+      if (MediaRecorder.isTypeSupported('audio/mp4')) {
+        return 'audio/mp4';
+      }
+      if (MediaRecorder.isTypeSupported('audio/aac')) {
+        return 'audio/aac';
+      }
+      // Fallback to m4a which is common on iOS
+      if (MediaRecorder.isTypeSupported('audio/x-m4a')) {
+        return 'audio/x-m4a';
+      }
     }
 
-    // Mobile-optimized formats
-    const mobileMimeTypes = [
-      'audio/mp4',
-      'audio/aac',
+    // For other mobile devices
+    if (isMobile()) {
+      const mobileMimeTypes = [
+        'audio/mp4',
+        'audio/aac',
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/wav'
+      ];
+      return mobileMimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || null;
+    }
+
+    // Desktop formats
+    const desktopMimeTypes = [
       'audio/webm;codecs=opus',
       'audio/webm',
+      'audio/mp4',
       'audio/wav'
     ];
-    
-    // Special case for iOS
-    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-      setRecordingFormat('audio/mp4 (iOS)');
-      return 'audio/mp4';
-    }
-    
-    const format = mobileMimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || null;
-    setRecordingFormat(format || 'No supported format found');
-    return format;
+    return desktopMimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || null;
   };
 
   useEffect(() => {
@@ -354,6 +356,16 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
           ...(isMobile() && {
             channelCount: 1,
             sampleRate: 44100,
+          }),
+          ...(/iPad|iPhone|iPod/.test(navigator.userAgent) && {
+            // iOS-specific constraints
+            sampleSize: 16,
+            channelCount: 1,
+            sampleRate: 44100,
+            // These are important for iOS
+            echoCancellation: false,
+            autoGainControl: false,
+            noiseSuppression: false,
           })
         }
       });
@@ -459,7 +471,18 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
     if (!mediaRecorderRef.current || !isRecording) return;
     
     setStatusMessage('Finalizing recording...');
-    const audioBlob = new Blob(chunksRef.current, { type: mediaRecorderRef.current.mimeType });
+    const audioBlob = new Blob(chunksRef.current, { 
+      type: mediaRecorderRef.current.mimeType || 'audio/webm' 
+    });
+
+    // Log the blob details for debugging
+    console.log('Audio recording details:', {
+      size: audioBlob.size,
+      type: audioBlob.type,
+      chunks: chunksRef.current.length,
+      userAgent: navigator.userAgent
+    });
+
     if (audioBlob.size === 0) {
       setError('No audio data was captured');
       setStatusMessage('Recording failed - no audio data');
