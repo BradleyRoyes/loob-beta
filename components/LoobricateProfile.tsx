@@ -165,15 +165,56 @@ const LoobricateProfile: React.FC<Props> = ({ loobricate, onClose, onUpdate }) =
             </div>
 
             <div className="main-content">
-              <div className="description-section">
-                <p className="description">{currentLoobricate.description}</p>
-              </div>
+              <p className="description">{currentLoobricate.description}</p>
 
-              <div className="visualization-container">
+              <div className="visualization-section">
                 {showVibeComparison ? (
-                  <div className="vibe-comparison">
+                  <div className="comparison-mode">
+                    <div className="vibe-display">
+                      <span className="vibe-label">Loobricate Vibe</span>
+                      <div className="vibe-entity-wrapper">
+                        <VibeEntity 
+                          entityId={currentLoobricate._id}
+                          className="loobricate-vibe-entity"
+                          onStateUpdate={async (state) => {
+                            try {
+                              await fetch('/api/vibe_entities', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: currentLoobricate._id, state })
+                              });
+                            } catch (error) {
+                              console.error('Failed to update vibe state:', error);
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className="vibe-display">
+                      <span className="vibe-label">Your Vibe</span>
+                      <div className="vibe-entity-wrapper">
+                        <VibeEntity 
+                          entityId={userId || 'default'}
+                          className="user-vibe-entity"
+                          onStateUpdate={async (state) => {
+                            try {
+                              await fetch('/api/vibe_entities', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: userId, state })
+                              });
+                            } catch (error) {
+                              console.error('Failed to update vibe state:', error);
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="vibe-display">
+                    <span className="vibe-label">Loobricate Vibe</span>
                     <div className="vibe-entity-wrapper">
-                      <h3>Loobricate Vibe</h3>
                       <VibeEntity 
                         entityId={currentLoobricate._id}
                         className="loobricate-vibe-entity"
@@ -190,49 +231,13 @@ const LoobricateProfile: React.FC<Props> = ({ loobricate, onClose, onUpdate }) =
                         }}
                       />
                     </div>
-                    <div className="vibe-entity-wrapper">
-                      <h3>Your Vibe</h3>
-                      <VibeEntity 
-                        entityId={userId || 'default'}
-                        className="user-vibe-entity"
-                        onStateUpdate={async (state) => {
-                          try {
-                            await fetch('/api/vibe_entities', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ id: userId, state })
-                            });
-                          } catch (error) {
-                            console.error('Failed to update vibe state:', error);
-                          }
-                        }}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="single-vibe">
-                    <VibeEntity 
-                      entityId={currentLoobricate._id}
-                      className="loobricate-vibe-entity"
-                      onStateUpdate={async (state) => {
-                        try {
-                          await fetch('/api/vibe_entities', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ id: currentLoobricate._id, state })
-                          });
-                        } catch (error) {
-                          console.error('Failed to update vibe state:', error);
-                        }
-                      }}
-                    />
                   </div>
                 )}
                 <button 
-                  className="compare-vibes-button"
+                  className="compare-button"
                   onClick={() => setShowVibeComparison(!showVibeComparison)}
                 >
-                  {showVibeComparison ? 'Hide Comparison' : 'Compare Vibes'}
+                  {showVibeComparison ? 'Hide Comparison' : 'Compare Your Vibe'}
                 </button>
               </div>
 
