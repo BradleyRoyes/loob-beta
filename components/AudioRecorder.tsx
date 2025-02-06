@@ -596,29 +596,21 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
 
   return (
     <div className={`${styles.container} ${isRecording ? styles.recording : ''}`}>
+      {/* Simplified error message */}
       {error && (
         <div className={styles.errorMessage} role="alert">
-          {error}
-          {permissionState === 'denied' && (
-            <div className={styles.permissionHint}>
-              {getPermissionInstructions('microphone')}
-            </div>
-          )}
+          {error.includes('permission') ? 'Microphone access needed' : 'Recording failed'}
         </div>
       )}
 
-      <div className={styles.statusContainer}>
-        {statusMessage && (
+      {/* Simplified status message */}
+      {statusMessage && (
+        <div className={styles.statusContainer}>
           <div className={styles.statusMessage}>
-            {statusMessage}
+            {statusMessage.includes('Recording...') ? 'Recording...' : statusMessage}
           </div>
-        )}
-        {recordingFormat && !isRecording && (
-          <div className={styles.formatInfo}>
-            Format: {recordingFormat}
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className={styles.recordingContainer}>
         <div className={styles.waveformContainer}>
