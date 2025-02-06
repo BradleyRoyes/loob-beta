@@ -3,16 +3,18 @@ SIDEBAR STYLING
 ============================ */
 .sidebar-container {
   position: absolute;
-  top: 0; /* Connect with header */
+  top: 0;
   left: 0;
   width: 300px;
-  height: calc(100vh - 20px); /* Space at bottom */
+  height: 100vh; /* Full viewport height */
   background: rgba(0, 0, 0, 0.8);
   color: #fff;
   border-radius: 0 8px 8px 0;
   z-index: 1000;
   transform: translateX(-100%);
   transition: transform 0.3s ease-in-out;
+  display: flex; /* Add flex display */
+  flex-direction: column; /* Stack children vertically */
 }
 
 .sidebar-container.active {
@@ -23,7 +25,7 @@ SIDEBAR STYLING
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 0; /* Remove padding here */
+  overflow: hidden; /* Prevent content overflow */
 }
 
 .sidebar-title {
@@ -43,11 +45,12 @@ SIDEBAR STYLING
 }
 
 .sidebar-list {
-  flex: 1 1 auto;
-  overflow-y: auto;
+  flex: 1 1 auto; /* Allow grow and shrink */
+  overflow-y: auto; /* Enable scrolling */
   padding: 1rem;
+  padding-bottom: 100px; /* Add extra padding at bottom */
   background: rgba(0, 0, 0, 0.7);
-  margin-top: 0; /* Remove space */
+  margin-top: 0;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -129,9 +132,9 @@ TOGGLE SIDEBAR BUTTON
 /* Mobile adjustments */
 @media (max-width: 768px) {
   .sidebar-container {
-    width: 100%; /* Full width on mobile */
-    height: calc(100vh - 60px);
-    border-radius: 0;
+    width: 100%;
+    height: 100vh; /* Full height on mobile */
+    padding-bottom: env(safe-area-inset-bottom); /* Handle mobile safe areas */
   }
 
   .sidebar-header {
@@ -158,7 +161,7 @@ TOGGLE SIDEBAR BUTTON
   }
 
   .sidebar-list {
-    margin-top: 0; /* Remove extra space */
+    padding-bottom: 120px; /* More padding on mobile */
   }
 }
 
@@ -174,8 +177,8 @@ SEARCH BY ICONS STYLING
 ============================ */
 /* Sticky header section */
 .sidebar-header {
-  flex: 0 0 auto;
-  background: rgba(0, 0, 0, 0.7); /* More transparent */
+  flex: 0 0 auto; /* Don't shrink or grow */
+  background: rgba(0, 0, 0, 0.7);
   padding: 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }

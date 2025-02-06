@@ -16,8 +16,9 @@ export interface Node {
   details: string;
   contact: string;
   visualType: VisualView;
-  loobricate?: string;
-  isLoobricate?: boolean;
+  loobricate?: string;       // Single loobricate relationship
+  loobricates?: string[];    // Multiple loobricate relationships
+  isLoobricate?: boolean;    // Is this node itself a loobricate
   members?: string[];
   admins?: string[];
 }
@@ -33,12 +34,12 @@ interface MapSidebarProps {
   toggleSidebar: () => void;
 }
 
-// Add type constants at the top of the file
+// Update type constants to ensure exact matches
 const NODE_TYPES = {
-  VENUE: "Venue",
-  TALENT: "Talent",
-  GEAR: "Gear",
-  LOOBRICATE: "Loobricate"
+  VENUE: "venue",
+  TALENT: "talent",
+  GEAR: "gear",
+  LOOBRICATE: "loobricate"
 } as const;
 
 /**
@@ -75,31 +76,43 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
     }
   }, [sidebarActive]);
 
-  // Memoized filtered nodes based on selected loobricate and type
+  // Update the filteredNodes logic
   const filteredNodes = useMemo(() => {
-    console.log("Current nodes:", nodes);
-    console.log("Selected type:", selectedType);
-    console.log("Selected loobricate:", selectedLoobricate);
-
+    // Log all nodes for debugging
+    console.log("All nodes:", nodes.map(node => ({
+      type: node.type.toLowerCase(),
+      label: node.label,
+      loobricate: node.loobricate
+    })));
+    
     return nodes.filter((node) => {
+      // Normalize types for comparison
+      const nodeType = node.type.toLowerCase().trim();
+      const selectedTypeLC = selectedType.toLowerCase().trim();
+
       // Match Loobricate selection
       const matchesLoobricate = !selectedLoobricate || 
         selectedLoobricate === "All" || 
-        node.loobricate === selectedLoobricate ||
-        (node.isLoobricate && node.label === selectedLoobricate);
+        (node.loobricate && node.loobricate.toLowerCase() === selectedLoobricate.toLowerCase()) ||
+        (Array.isArray(node.loobricates) && 
+          node.loobricates.some(l => l.toLowerCase() === selectedLoobricate.toLowerCase())) ||
+        (node.isLoobricate && node.label.toLowerCase() === selectedLoobricate.toLowerCase());
 
-      // Match type selection - ensure exact match with our constants
-      const matchesType = !selectedType || 
-        node.type.toLowerCase() === selectedType.toLowerCase();
+      // Match type selection
+      const matchesType = !selectedType || nodeType === selectedTypeLC;
 
       // Match search query
-      const matchesSearch = node.label.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = !searchQuery || 
+        node.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        node.details?.toLowerCase().includes(searchQuery.toLowerCase());
 
-      // Debug log for each node
-      console.log("Node:", {
+      // Debug logging for all filtering
+      console.log("Node filtering:", {
         id: node.id,
-        type: node.type,
-        isLoobricate: node.isLoobricate,
+        label: node.label,
+        type: nodeType,
+        selectedType: selectedTypeLC,
+        loobricate: node.loobricate,
         matchesType,
         matchesLoobricate,
         matchesSearch
@@ -113,6 +126,7 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
    * Handles the selection of a node.
    */
   const handleNodeSelect = (node: Node) => {
+    console.log("Selected node:", node); // Add logging for node selection
     onNodeSelect(node);
     if (window.innerWidth <= 768) {
       toggleSidebar();
@@ -123,9 +137,23 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
    * Toggles the selected type filter.
    */
   const handleTypeSelection = (type: string) => {
-    console.log("Selecting type:", type);
+    // Convert type to lowercase for consistency
+    const normalizedType = type.toLowerCase();
+    
+    console.log("Type selection:", {
+      currentType: selectedType,
+      newType: normalizedType,
+      matchingNodes: nodes.filter(node => 
+        node.type.toLowerCase().trim() === normalizedType
+      ).map(n => ({
+        label: n.label,
+        type: n.type,
+        loobricate: n.loobricate
+      }))
+    });
+    
     setSelectedType(prevType => {
-      const newType = prevType === type ? "" : type;
+      const newType = prevType.toLowerCase() === normalizedType ? "" : normalizedType;
       console.log("New selected type:", newType);
       return newType;
     });
@@ -165,22 +193,24 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
               ))}
             </select>
             <div className="search-by-icons">
-              {[NODE_TYPES.VENUE, NODE_TYPES.TALENT, NODE_TYPES.GEAR].map((type) => (
-                <div
-                  key={type}
-                  className={`search-icon ${selectedType === type ? "active" : ""}`}
-                  onClick={() => handleTypeSelection(type)}
-                  aria-label={type}
-                >
-                  {type === NODE_TYPES.VENUE ? (
-                    <FaMapMarkerAlt className="icon" />
-                  ) : type === NODE_TYPES.TALENT ? (
-                    <FaUser className="icon" />
-                  ) : (
-                    <FaTools className="icon" />
-                  )}
-                  <span>{type}</span>
-                </div>
+              {Object.entries(NODE_TYPES).map(([key, value]) => (
+                key !== 'LOOBRICATE' && (
+                  <div
+                    key={value}
+                    className={`search-icon ${selectedType.toLowerCase() === value ? "active" : ""}`}
+                    onClick={() => handleTypeSelection(value)}
+                    aria-label={value}
+                  >
+                    {value === NODE_TYPES.VENUE ? (
+                      <FaMapMarkerAlt className="icon" />
+                    ) : value === NODE_TYPES.TALENT ? (
+                      <FaUser className="icon" />
+                    ) : (
+                      <FaTools className="icon" />
+                    )}
+                    <span>{value.charAt(0).toUpperCase() + value.slice(1)}</span>
+                  </div>
+                )
               ))}
             </div>
           </div>

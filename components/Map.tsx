@@ -40,6 +40,7 @@ export interface Node {
   tags?: string[];
   loobricates?: string[];
   dataType?: string;
+  isLoobricate?: boolean;
 }
 
 interface MapNode extends Node {
@@ -694,19 +695,46 @@ const Map: React.FC = () => {
     onDismiss: () => void;
   }) => (
     <div className="location-error-message">
-      <div className="error-content">
-        <span>{error.message}</span>
-        <div className="button-group">
+      <div className="error-content" style={{
+        backgroundColor: 'rgba(23, 23, 23, 0.9)',
+        color: '#E0E0E0',
+        padding: '1rem',
+        borderRadius: '8px',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+      }}>
+        <span style={{ display: 'block', marginBottom: '1rem' }}>{error.message}</span>
+        <div className="button-group" style={{ display: 'flex', gap: '0.5rem' }}>
           {error.type !== 'permission' && (
             <button 
               className="retry-button" 
               onClick={onRetry}
               disabled={locationState.status === 'requesting'}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#FF6B6B',
+                border: 'none',
+                borderRadius: '4px',
+                color: 'white',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s'
+              }}
             >
               {locationState.status === 'requesting' ? 'Retrying...' : 'Try Again'}
             </button>
           )}
-          <button className="dismiss-button" onClick={onDismiss}>
+          <button 
+            className="dismiss-button" 
+            onClick={onDismiss}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: error.type === 'permission' ? '#4A4A4A' : '#333',
+              border: 'none',
+              borderRadius: '4px',
+              color: 'white',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s'
+            }}
+          >
             {error.type === 'permission' ? 'Open Settings' : 'Dismiss'}
           </button>
         </div>
@@ -839,13 +867,32 @@ const Map: React.FC = () => {
             top: popupPosition.y,
             left: popupPosition.x,
             zIndex: 2000,
+            backgroundColor: 'rgba(23, 23, 23, 0.9)',
+            borderRadius: '12px',
+            padding: '1rem',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)',
+            color: '#E0E0E0',
+            transform: 'translate(-50%, -100%)',
+            border: '1px solid rgba(255, 255, 255, 0.05)'
           }}
         >
           <div className="small-popup-inner">
             <button
               className="close-popup-btn"
               onClick={() => setShowPreviewPopup(false)}
-              style={{ zIndex: 3000 }}
+              style={{
+                position: 'absolute',
+                top: '0.5rem',
+                right: '0.5rem',
+                background: 'none',
+                border: 'none',
+                color: '#FFFFFF',
+                fontSize: '1.2rem',
+                cursor: 'pointer',
+                padding: '0.25rem',
+                opacity: 0.8,
+                transition: 'opacity 0.2s'
+              }}
               aria-label="Close preview popup"
             >
               ×
@@ -855,11 +902,16 @@ const Map: React.FC = () => {
                 {previewNode.label}
               </h3>
             </div>
-            <div className="sphere-preview">
+            <div className="sphere-preview" style={{ 
+              backgroundColor: 'transparent',
+              borderRadius: '8px',
+              overflow: 'hidden',
+              margin: '-0.5rem'
+            }}>
               {previewNode && (
                 <VibeEntity 
                   entityId={previewNode.id}
-                  className="preview-vibe-entity"
+                  className="preview-vibe-entity transparent-bg"
                   onStateUpdate={async (state) => {
                     try {
                       await fetch('/api/vibe_entities', {
@@ -884,6 +936,17 @@ const Map: React.FC = () => {
               onClick={() => {
                 handleShowOfferingProfile(previewNode);
                 setShowPreviewPopup(false);
+              }}
+              style={{
+                marginTop: '1rem',
+                padding: '0.5rem 1rem',
+                backgroundColor: '#FF6B6B',
+                border: 'none',
+                borderRadius: '4px',
+                color: 'white',
+                cursor: 'pointer',
+                width: '100%',
+                transition: 'background-color 0.2s'
               }}
               aria-label="Show more info"
             >
