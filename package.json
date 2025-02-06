@@ -46,7 +46,7 @@
     "@types/offscreencanvas": "^2019.7.3",
     "@types/react-color": "^3.0.13",
     "@types/react-webcam": "^3.0.0",
-    "ai": "^2.2.35",
+    "ai": "^4.1.24",
     "axios": "^1.7.9",
     "babylonjs": "^7.35.0",
     "babylonjs-loaders": "^7.35.0",
