@@ -123,31 +123,47 @@ const getBaseUrl = () => {
 
 // Main POST function
 export async function POST(req: any) {
+  console.log("🚀 Starting chat request processing...");
   try {
-    console.log("Received POST request...");
     const { messages, llm, sessionId, userId } = await req.json();
+    console.log("📝 Request details:", {
+      messageCount: messages.length,
+      model: llm ?? "gpt-3.5-turbo",
+      sessionId,
+      userId,
+      lastMessagePreview: messages[messages.length - 1]?.content?.substring(0, 100) + "..."
+    });
 
     const latestMessage = messages[messages.length - 1]?.content;
     if (!latestMessage) {
+      console.error("❌ No latest message found in request");
       throw new Error("No latest message found in the request.");
     }
 
-    console.log("Generating document context...");
+    console.log("🔍 Generating document context...");
     let docContext;
     try {
       docContext = await generateDocContext(latestMessage, astraDb, openai);
-      console.log("Document context generated:", docContext);
+      console.log("✅ Document context generated:", {
+        contextLength: docContext?.length,
+        preview: docContext?.substring(0, 100) + "..."
+      });
     } catch (error) {
-      console.error("Error generating document context:", error);
-      docContext = ""; // Continue without context if generation fails
+      console.error("⚠️ Error generating document context:", {
+        error,
+        fallback: "Continuing without context"
+      });
+      docContext = "";
     }
 
     // Save user messages to database
+    console.log("💾 Saving user messages to database...");
     for (const message of messages) {
       if (message.role === 'user') {
         await saveMessageToDatabase(sessionId, message.content, message.role, userId);
       }
     }
+    console.log("✅ User messages saved successfully");
 
     const systemPrompt = [
       {
@@ -223,50 +239,114 @@ export async function POST(req: any) {
       },
     ];
 
-    console.log("Calling OpenAI API for chat completion...");
-    const response = await openai.chat.completions.create({
-      model: llm ?? "gpt-3.5-turbo",
-      stream: true,
-      messages: [...systemPrompt, ...messages],
+    console.log("🤖 Preparing OpenAI API call...", {
+      totalMessages: systemPrompt.length + messages.length,
+      model: llm ?? "gpt-3.5-turbo"
     });
 
-    const stream = OpenAIStream(response as any, {
-      onCompletion: async (completion: string) => {
-        const analysis = parseAnalysis(completion);
-        if (analysis) {
-          console.log("Sending analysis data:", { analysis });
-          const randomBrushstroke = brushstrokes[Math.floor(Math.random() * brushstrokes.length)];
-          const pusherData = {
-            analysis,
-            actionName: randomBrushstroke,
-            payload: {
+    try {
+      console.log("📡 Initiating OpenAI stream...");
+      const response = await openai.chat.completions.create({
+        model: llm ?? "gpt-3.5-turbo",
+        stream: true,
+        messages: [...systemPrompt, ...messages],
+      });
+      console.log("✅ OpenAI stream created successfully");
+
+      let accumulatedMessage = '';
+      console.log("🔄 Setting up message stream processing...");
+
+      const stream = OpenAIStream(response as any, {
+        async onCompletion(completion: string) {
+          console.log("📨 Message completion received:", {
+            length: completion.length,
+            preview: completion.substring(0, 100) + "..."
+          });
+          
+          accumulatedMessage = completion;
+          const analysis = parseAnalysis(completion);
+          
+          if (analysis) {
+            console.log("🎨 Analysis data extracted:", {
               mood: analysis.mood,
-              keywords: analysis.keywords,
-              brushstroke: randomBrushstroke,
-              drink: analysis.drink,
-              joinCyberdelicSociety: analysis.joinCyberdelicSociety,
-            },
-          };
-
-          // Throttle Pusher updates - only send one update
-          try {
-            await pusher.trigger("my-channel", "my-event", pusherData);
-          } catch (err) {
-            console.error("Error triggering Pusher event:", err);
+              keywordCount: analysis?.keywords?.length,
+              drink: analysis.drink
+            });
+            
+            const randomBrushstroke = brushstrokes[Math.floor(Math.random() * brushstrokes.length)];
+            try {
+              console.log("📤 Triggering Pusher event...");
+              await pusher.trigger("my-channel", "my-event", {
+                analysis,
+                actionName: randomBrushstroke,
+                payload: {
+                  mood: analysis.mood,
+                  keywords: analysis.keywords,
+                  brushstroke: randomBrushstroke,
+                  drink: analysis.drink,
+                  joinCyberdelicSociety: analysis.joinCyberdelicSociety,
+                },
+              });
+              console.log("✅ Pusher event sent successfully");
+            } catch (err) {
+              console.error("❌ Error triggering Pusher event:", {
+                error: err,
+                errorMessage: err.message,
+                stack: err.stack
+              });
+            }
+          } else {
+            console.log("ℹ️ No analysis data found in completion");
           }
-        }
-        await saveMessageToDatabase(sessionId, completion, "assistant", userId, analysis);
-      },
-    });
 
-    return new StreamingTextResponse(stream);
+          console.log("💾 Saving assistant message to database...");
+          await saveMessageToDatabase(sessionId, completion, "assistant", userId, analysis);
+          console.log("✅ Assistant message saved successfully");
+        },
+        onFinal(completion: string) {
+          console.log("🏁 Stream completed:", {
+            finalMessageLength: completion.length,
+            timestamp: new Date().toISOString()
+          });
+        },
+      });
+
+      console.log("🔄 Returning streaming response...");
+      return new StreamingTextResponse(stream);
+    } catch (error: any) {
+      console.error("❌ OpenAI API Error:", {
+        message: error.message,
+        type: error.type,
+        code: error.code,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
+      
+      return new Response(
+        JSON.stringify({
+          error: "OpenAI API Error",
+          message: error.message,
+          code: error.code,
+          timestamp: new Date().toISOString()
+        }),
+        { 
+          status: error.status || 500,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
   } catch (error: any) {
-    console.error("Error in chatbot route:", error);
+    console.error("❌ Fatal Error in chat route:", {
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
     
     return new Response(
       JSON.stringify({
         error: "Internal server error",
         message: error.message || "An unexpected error occurred",
+        timestamp: new Date().toISOString(),
         ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
       }),
       {
