@@ -67,36 +67,26 @@ function parseAnalysis(content: string) {
 }
 
 // Save a message to the database
-async function saveMessageToDatabase(sessionId: string, content: string, role: string, userId?: string, analysis: any = null) {
-  try {
-    const messagesCollection = await astraDb.collection("messages");
-    const existingMessage = await messagesCollection.findOne({ sessionId, content });
-    if (existingMessage) {
-      console.log("Duplicate message detected. Skipping save.");
-      return;
-    }
-    const messageData = {
-      sessionId,
-      userId,
-      role,
-      content,
-      length: content.length,
-      createdAt: new Date(),
-      type: 'chat_message',
-      mood: analysis?.mood,
-      keywords: analysis?.keywords,
-      analysis: analysis ? {
-        mood: analysis.mood,
-        keywords: analysis.keywords,
-        raw: analysis
-      } : null
-    };
-    await messagesCollection.insertOne(messageData);
-    console.log(`Saved ${role} message to DB (sessionId: ${sessionId}, userId: ${userId || 'anonymous'})`);
-  } catch (error) {
-    console.error("Error saving message to database:", error);
-    // Don't throw the error - we want to continue even if DB save fails
+async function saveMessageToDatabase(sessionId: string, content: string, role: string, analysis: any = null) {
+  const messagesCollection = await astraDb.collection("messages");
+  const existingMessage = await messagesCollection.findOne({ sessionId, content });
+  if (existingMessage) {
+    console.log("Duplicate message detected. Skipping save.");
+    return;
   }
+  const messageData = {
+    sessionId,
+    role,
+    content,
+    length: content.length,
+    createdAt: new Date(),
+    mood: analysis?.mood,
+    keywords: analysis?.keywords,
+    drink: analysis?.drink,
+    joinCyberdelicSociety: analysis?.joinCyberdelicSociety,
+  };
+  await messagesCollection.insertOne(messageData);
+  console.log(`Saved ${role} message to DB (sessionId: ${sessionId})`);
 }
 
 // Brushstroke actions for Pusher
@@ -123,47 +113,38 @@ const getBaseUrl = () => {
 
 // Main POST function
 export async function POST(req: any) {
-  console.log("🚀 Starting chat request processing...");
   try {
-    const { messages, llm, sessionId, userId } = await req.json();
-    console.log("📝 Request details:", {
-      messageCount: messages.length,
-      model: llm ?? "gpt-3.5-turbo",
-      sessionId,
-      userId,
-      lastMessagePreview: messages[messages.length - 1]?.content?.substring(0, 100) + "..."
-    });
+    const { messages, llm, sessionId } = await req.json();
 
     const latestMessage = messages[messages.length - 1]?.content;
     if (!latestMessage) {
-      console.error("❌ No latest message found in request");
-      throw new Error("No latest message found in the request.");
+      return new Response(
+        JSON.stringify({
+          error: "No message found",
+          message: "Please provide a message to continue the conversation.",
+          userAction: "Try sending your message again."
+        }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
-    console.log("🔍 Generating document context...");
     let docContext;
     try {
       docContext = await generateDocContext(latestMessage, astraDb, openai);
-      console.log("✅ Document context generated:", {
-        contextLength: docContext?.length,
-        preview: docContext?.substring(0, 100) + "..."
-      });
     } catch (error) {
-      console.error("⚠️ Error generating document context:", {
-        error,
-        fallback: "Continuing without context"
-      });
-      docContext = "";
+      docContext = ""; // Continue without context if generation fails
     }
 
-    // Save user messages to database
-    console.log("💾 Saving user messages to database...");
-    for (const message of messages) {
-      if (message.role === 'user') {
-        await saveMessageToDatabase(sessionId, message.content, message.role, userId);
+    // Save messages to database
+    try {
+      for (const message of messages) {
+        const analysis = message.role === "assistant" ? parseAnalysis(message.content) : null;
+        await saveMessageToDatabase(sessionId, message.content, message.role, analysis);
       }
+    } catch (dbError) {
+      // Continue even if database save fails
+      console.error("Database error:", dbError);
     }
-    console.log("✅ User messages saved successfully");
 
     const systemPrompt = [
       {
@@ -239,115 +220,81 @@ export async function POST(req: any) {
       },
     ];
 
-    console.log("🤖 Preparing OpenAI API call...", {
-      totalMessages: systemPrompt.length + messages.length,
-      model: llm ?? "gpt-3.5-turbo"
-    });
-
     try {
-      console.log("📡 Initiating OpenAI stream...");
       const response = await openai.chat.completions.create({
         model: llm ?? "gpt-3.5-turbo",
         stream: true,
         messages: [...systemPrompt, ...messages],
       });
-      console.log("✅ OpenAI stream created successfully");
-
-      let accumulatedMessage = '';
-      console.log("🔄 Setting up message stream processing...");
 
       const stream = OpenAIStream(response as any, {
-        async onCompletion(completion: string) {
-          console.log("📨 Message completion received:", {
-            length: completion.length,
-            preview: completion.substring(0, 100) + "..."
-          });
-          
-          accumulatedMessage = completion;
+        onCompletion: async (completion: string) => {
           const analysis = parseAnalysis(completion);
-          
           if (analysis) {
-            console.log("🎨 Analysis data extracted:", {
-              mood: analysis.mood,
-              keywordCount: analysis?.keywords?.length,
-              drink: analysis.drink
-            });
-            
             const randomBrushstroke = brushstrokes[Math.floor(Math.random() * brushstrokes.length)];
+            const pusherData = {
+              analysis,
+              actionName: randomBrushstroke,
+              payload: {
+                mood: analysis.mood,
+                keywords: analysis.keywords,
+                brushstroke: randomBrushstroke,
+                drink: analysis.drink,
+                joinCyberdelicSociety: analysis.joinCyberdelicSociety,
+              },
+            };
             try {
-              console.log("📤 Triggering Pusher event...");
-              await pusher.trigger("my-channel", "my-event", {
-                analysis,
-                actionName: randomBrushstroke,
-                payload: {
-                  mood: analysis.mood,
-                  keywords: analysis.keywords,
-                  brushstroke: randomBrushstroke,
-                  drink: analysis.drink,
-                  joinCyberdelicSociety: analysis.joinCyberdelicSociety,
-                },
-              });
-              console.log("✅ Pusher event sent successfully");
+              await pusher.trigger("my-channel", "my-event", pusherData);
             } catch (err) {
-              console.error("❌ Error triggering Pusher event:", {
-                error: err,
-                errorMessage: err.message,
-                stack: err.stack
-              });
+              // Continue even if Pusher fails
             }
-          } else {
-            console.log("ℹ️ No analysis data found in completion");
           }
-
-          console.log("💾 Saving assistant message to database...");
-          await saveMessageToDatabase(sessionId, completion, "assistant", userId, analysis);
-          console.log("✅ Assistant message saved successfully");
-        },
-        onFinal(completion: string) {
-          console.log("🏁 Stream completed:", {
-            finalMessageLength: completion.length,
-            timestamp: new Date().toISOString()
-          });
+          try {
+            await saveMessageToDatabase(sessionId, completion, "assistant", analysis);
+          } catch (err) {
+            // Continue even if database save fails
+          }
         },
       });
 
-      console.log("🔄 Returning streaming response...");
       return new StreamingTextResponse(stream);
-    } catch (error: any) {
-      console.error("❌ OpenAI API Error:", {
-        message: error.message,
-        type: error.type,
-        code: error.code,
-        stack: error.stack,
-        timestamp: new Date().toISOString()
-      });
-      
+    } catch (openaiError: any) {
+      // Handle specific OpenAI API errors
+      let userMessage = "I'm having trouble connecting to my brain right now.";
+      let userAction = "Please try again in a moment.";
+
+      if (openaiError.code === 'insufficient_quota') {
+        userMessage = "I've reached my conversation limit for now.";
+        userAction = "Please try again later or contact support.";
+      } else if (openaiError.code === 'rate_limit_exceeded') {
+        userMessage = "I'm getting too many requests at once.";
+        userAction = "Please wait a moment and try again.";
+      } else if (openaiError.code === 'invalid_api_key') {
+        userMessage = "I'm having authentication issues.";
+        userAction = "Please contact support to resolve this issue.";
+      }
+
       return new Response(
         JSON.stringify({
-          error: "OpenAI API Error",
-          message: error.message,
-          code: error.code,
-          timestamp: new Date().toISOString()
+          error: "AI Service Error",
+          message: userMessage,
+          userAction: userAction,
+          detail: process.env.NODE_ENV === 'development' ? openaiError.message : undefined
         }),
         { 
-          status: error.status || 500,
+          status: openaiError.status || 500,
           headers: { 'Content-Type': 'application/json' }
         }
       );
     }
   } catch (error: any) {
-    console.error("❌ Fatal Error in chat route:", {
-      message: error.message,
-      stack: error.stack,
-      timestamp: new Date().toISOString()
-    });
-    
+    // Handle general errors
     return new Response(
       JSON.stringify({
-        error: "Internal server error",
-        message: error.message || "An unexpected error occurred",
-        timestamp: new Date().toISOString(),
-        ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+        error: "Unexpected Error",
+        message: "Something went wrong with our conversation.",
+        userAction: "Please try refreshing the page or try again later.",
+        detail: process.env.NODE_ENV === 'development' ? error.message : undefined
       }),
       {
         status: 500,
