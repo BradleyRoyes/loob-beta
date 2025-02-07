@@ -1,7 +1,6 @@
 import OpenAI from "openai";
-import { OpenAIStream, StreamingTextResponse } from "ai";
+import { StreamingTextResponse, OpenAIStream } from "ai";
 import { AstraDB } from "@datastax/astra-db-ts";
-import { v4 as uuidv4 } from "uuid";
 import generateDocContext from "./generateDocContext";
 const Pusher = require("pusher");
 
@@ -13,23 +12,26 @@ const requiredEnvVars = {
   ASTRA_DB_NAMESPACE: process.env.ASTRA_DB_NAMESPACE,
 };
 
+// Optional environment variables
+const optionalEnvVars = {
+  VERCEL_URL: process.env.VERCEL_URL,
+};
+
 // Check for missing required environment variables
 const missingEnvVars = Object.entries(requiredEnvVars)
   .filter(([key, value]) => !value)
   .map(([key]) => key);
 
 if (missingEnvVars.length > 0) {
-  console.error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
+  throw new Error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
 }
 
-// Initialize OpenAI
+// Initialize OpenAI and AstraDB
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// Initialize AstraDB with error handling
 const astraDb = new AstraDB(
-  process.env.ASTRA_DB_APPLICATION_TOKEN!,
-  process.env.ASTRA_DB_ENDPOINT!,
-  process.env.ASTRA_DB_NAMESPACE!
+  process.env.ASTRA_DB_APPLICATION_TOKEN,
+  process.env.ASTRA_DB_ENDPOINT,
+  process.env.ASTRA_DB_NAMESPACE
 );
 
 // Initialize Pusher
@@ -63,32 +65,27 @@ function parseAnalysis(content: string) {
   return null;
 }
 
-// Modify saveMessageToDatabase to handle errors gracefully
+// Save a message to the database
 async function saveMessageToDatabase(sessionId: string, content: string, role: string, analysis: any = null) {
-  try {
-    const messagesCollection = await astraDb.collection("messages");
-    const existingMessage = await messagesCollection.findOne({ sessionId, content });
-    if (existingMessage) {
-      console.log("Duplicate message detected. Skipping save.");
-      return;
-    }
-    const messageData = {
-      sessionId,
-      role,
-      content,
-      length: content.length,
-      createdAt: new Date(),
-      mood: analysis?.mood,
-      keywords: analysis?.keywords,
-      drink: analysis?.drink,
-      joinCyberdelicSociety: analysis?.joinCyberdelicSociety,
-    };
-    await messagesCollection.insertOne(messageData);
-    console.log(`Saved ${role} message to DB (sessionId: ${sessionId})`);
-  } catch (error) {
-    console.error("Failed to save message to database:", error);
-    // Don't throw - allow chat to continue even if save fails
+  const messagesCollection = await astraDb.collection("messages");
+  const existingMessage = await messagesCollection.findOne({ sessionId, content });
+  if (existingMessage) {
+    console.log("Duplicate message detected. Skipping save.");
+    return;
   }
+  const messageData = {
+    sessionId,
+    role,
+    content,
+    length: content.length,
+    createdAt: new Date(),
+    mood: analysis?.mood,
+    keywords: analysis?.keywords,
+    drink: analysis?.drink,
+    joinCyberdelicSociety: analysis?.joinCyberdelicSociety,
+  };
+  await messagesCollection.insertOne(messageData);
+  console.log(`Saved ${role} message to DB (sessionId: ${sessionId})`);
 }
 
 // Brushstroke actions for Pusher
@@ -119,24 +116,8 @@ function createErrorResponse(error: any, status = 500) {
   let userAction = "Please try again later";
   let technicalDetails = error?.message || "No technical details available";
 
-  console.error('Chat API Error:', {
-    error,
-    status,
-    message: error?.message,
-    type: error?.type,
-    stack: error?.stack,
-    name: error?.name
-  });
-
   // Handle specific error types
   if (error instanceof OpenAI.APIError) {
-    console.error('OpenAI API Error:', {
-      status: error.status,
-      message: error.message,
-      code: error.code,
-      type: error.type
-    });
-
     switch (error.status) {
       case 401:
         message = "Authentication error with AI service";
@@ -150,21 +131,9 @@ function createErrorResponse(error: any, status = 500) {
         message = "AI service is temporarily unavailable";
         userAction = "Please try again in a few minutes";
         break;
-      case 503:
-        message = "AI service is temporarily overloaded";
-        userAction = "Please try again in a few minutes";
-        break;
       default:
-        if (error.code === 'insufficient_quota') {
-          message = "AI service quota exceeded";
-          userAction = "Please try again later";
-        } else if (error.code === 'invalid_request_error') {
-          message = "Invalid request to AI service";
-          userAction = "Please try again with a different message";
-        } else {
-          message = "Error communicating with AI service";
-          userAction = "Please try again";
-        }
+        message = "Error communicating with AI service";
+        userAction = "Please try again";
     }
   } else if (error.code === "ECONNREFUSED" || error.code === "ENOTFOUND") {
     message = "Network connection error";
@@ -175,12 +144,7 @@ function createErrorResponse(error: any, status = 500) {
     JSON.stringify({
       error: message,
       userAction,
-      technicalDetails: process.env.NODE_ENV === "development" ? {
-        message: technicalDetails,
-        type: error?.type,
-        code: error?.code,
-        status: error?.status
-      } : undefined
+      technicalDetails: process.env.NODE_ENV === "development" ? technicalDetails : undefined
     }),
     { 
       status, 
@@ -231,18 +195,17 @@ export async function POST(req: any) {
     } catch (error) {
       console.error("Context generation failed:", error);
       // Continue without context, but log the error
-      docContext = ""; // Ensure docContext is empty string if generation fails
     }
 
-    // Save messages to database - don't let database errors stop the chat
-    for (const message of messages) {
-      try {
+    // Save messages to database
+    try {
+      for (const message of messages) {
         const analysis = message.role === "assistant" ? parseAnalysis(message.content) : null;
         await saveMessageToDatabase(sessionId, message.content, message.role, analysis);
-      } catch (dbError) {
-        console.error("Database error while saving message:", dbError);
-        // Continue with next message
       }
+    } catch (dbError) {
+      console.error("Database error:", dbError);
+      // Continue even if database save fails
     }
 
     const systemPrompt = [
@@ -250,8 +213,6 @@ export async function POST(req: any) {
         role: "system",
         content: `
           You are Loob, an AI facilitator for Berlin's grassroots creative communities. Your purpose is connecting people with spaces, skills, resources, and community entities through the Loobrary - a peer-to-peer database of venues, talent, equipment, and communities. Keep your responses short.
-    
-          ${docContext ? `**Current Context**: ${docContext}` : ''}
     
           **Search Protocol**:
           - **Initial Query Analysis**:
@@ -337,6 +298,7 @@ export async function POST(req: any) {
           if (analysis) {
             try {
               await saveMessageToDatabase(sessionId, completion, "assistant", analysis);
+              // Trigger Pusher event for visualization
               const randomAction = brushstrokes[Math.floor(Math.random() * brushstrokes.length)];
               await pusher.trigger("loob-channel", randomAction, {
                 message: "New message saved",
