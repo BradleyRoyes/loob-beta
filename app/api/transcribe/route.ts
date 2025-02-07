@@ -13,23 +13,29 @@ function getFileExtension(mimeType: string): string {
     'audio/mpeg': 'mp3',
     'audio/wav': 'wav',
     'audio/x-m4a': 'm4a',
-    'audio/aac': 'aac'
+    'audio/aac': 'aac',
+    'audio/webm;codecs=opus': 'webm'  // Add explicit support for opus codec
   };
   return mimeToExt[mimeType] || 'webm';
+}
+
+// Validate OpenAI API key
+if (!process.env.OPENAI_API_KEY) {
+  throw new Error('Missing OPENAI_API_KEY environment variable');
 }
 
 export async function POST(request: NextRequest) {
   console.log('🎤 Starting new transcription request...');
   const tempFiles: string[] = [];
 
-  // Log request details
-  console.log('Request headers:', {
-    userAgent: request.headers.get('user-agent'),
-    contentType: request.headers.get('content-type'),
-    accept: request.headers.get('accept')
-  });
-
   try {
+    // Log request details for debugging
+    const headers = Object.fromEntries(request.headers.entries());
+    console.log('Request headers:', {
+      ...headers,
+      'content-type': request.headers.get('content-type')
+    });
+
     const formData = await request.formData();
     const audioFile = formData.get('audio') as File;
 
@@ -43,9 +49,9 @@ export async function POST(request: NextRequest) {
 
     // Enhanced file logging
     const fileDetails = {
-      name: audioFile.name,
+      name: audioFile.name || 'unnamed',
       size: audioFile.size,
-      type: audioFile.type,
+      type: audioFile.type || 'audio/webm',
       lastModified: new Date(audioFile.lastModified).toISOString()
     };
     
@@ -69,7 +75,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get appropriate file extension based on MIME type
-    const fileExt = getFileExtension(audioFile.type);
+    const fileExt = getFileExtension(audioFile.type || 'audio/webm');
     const uniqueId = uuidv4();
     const audioPath = join(tmpdir(), `audio_${uniqueId}.${fileExt}`);
     tempFiles.push(audioPath);
@@ -89,58 +95,35 @@ export async function POST(request: NextRequest) {
     console.log('✅ Audio file written to disk:', audioPath);
 
     try {
-      // Initialize OpenAI
+      // Initialize OpenAI with error handling
       console.log('🤖 Initializing OpenAI API...');
       const openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY,
       });
 
-      // Try to transcribe directly from the File object first
-      try {
-        console.log('🎯 Attempting direct transcription...');
-        const transcription = await openai.audio.transcriptions.create({
-          file: audioFile,
-          model: 'whisper-1',
-        });
+      // Always use the file from disk approach for consistency
+      console.log('🎯 Starting transcription...');
+      const fileHandle = await import('node:fs').then(fs => 
+        fs.createReadStream(audioPath)
+      );
 
-        console.log('✅ Direct transcription successful:', {
-          text: transcription.text,
-          fileDetails
-        });
-        
-        return NextResponse.json({ 
-          transcription: transcription.text,
-          method: 'direct',
-          fileDetails
-        });
-      } catch (directError: any) {
-        console.warn('⚠️ Direct transcription failed:', {
-          error: directError.message,
-          fileDetails
-        });
-        
-        // If direct transcription fails, try with the file from disk
-        console.log('🔄 Attempting fallback transcription from disk...');
-        const fileHandle = await import('node:fs').then(fs => 
-          fs.createReadStream(audioPath)
-        );
+      const transcription = await openai.audio.transcriptions.create({
+        file: fileHandle as any,
+        model: 'whisper-1',
+        response_format: 'json',
+        temperature: 0.3,
+        language: 'en'  // Explicitly set language to English
+      });
 
-        const transcription = await openai.audio.transcriptions.create({
-          file: fileHandle as any,
-          model: 'whisper-1',
-        });
-
-        console.log('✅ Fallback transcription successful:', {
-          text: transcription.text,
-          fileDetails
-        });
-        
-        return NextResponse.json({ 
-          transcription: transcription.text,
-          method: 'fallback',
-          fileDetails
-        });
-      }
+      console.log('✅ Transcription successful:', {
+        text: transcription.text,
+        fileDetails
+      });
+      
+      return NextResponse.json({ 
+        transcription: transcription.text,
+        fileDetails
+      });
     } catch (error: any) {
       console.error('❌ Transcription error:', {
         message: error.message,
@@ -148,9 +131,18 @@ export async function POST(request: NextRequest) {
         details: error,
         fileDetails
       });
+
+      // More specific error messages
+      let errorMessage = 'Error during transcription';
+      if (error.message.includes('API key')) {
+        errorMessage = 'OpenAI API key error';
+      } else if (error.message.includes('format')) {
+        errorMessage = 'Unsupported audio format';
+      }
+
       return NextResponse.json(
         { 
-          error: 'Error during transcription', 
+          error: errorMessage, 
           details: error.message,
           fileDetails,
           stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
