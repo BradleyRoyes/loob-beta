@@ -23,7 +23,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.cdnfonts.com",
               "font-src 'self' https://fonts.gstatic.com https://fonts.cdnfonts.com",
               "img-src 'self' data: blob: https:",
-              "connect-src 'self' https://* wss://*",
+              "connect-src 'self' https://* wss://* api.openai.com",
               "media-src 'self' blob: mediastream: data:",
               "frame-src 'self' blob: data:"
             ].join('; ')
@@ -40,6 +40,10 @@ const nextConfig = {
       canvas: false,
     };
     return config;
+  },
+  // Configure for Vercel serverless environment
+  experimental: {
+    serverComponentsExternalPackages: ['sharp', 'canvas']
   },
   // Add this to skip generating 404 during build
   output: 'standalone'

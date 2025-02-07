@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, unlink } from 'fs/promises';
+import { writeFile } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { v4 as uuidv4 } from 'uuid';
@@ -19,14 +19,13 @@ function getFileExtension(mimeType: string): string {
   return mimeToExt[mimeType] || 'webm';
 }
 
-// Validate OpenAI API key
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error('Missing OPENAI_API_KEY environment variable');
-}
+// Initialize OpenAI with error handling
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export async function POST(request: NextRequest) {
   console.log('🎤 Starting new transcription request...');
-  const tempFiles: string[] = [];
 
   try {
     // Log request details for debugging
@@ -74,45 +73,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get appropriate file extension based on MIME type
-    const fileExt = getFileExtension(audioFile.type || 'audio/webm');
-    const uniqueId = uuidv4();
-    const audioPath = join(tmpdir(), `audio_${uniqueId}.${fileExt}`);
-    tempFiles.push(audioPath);
-
-    // Write the uploaded file to disk
-    const bytes = await audioFile.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    
-    console.log('📝 Writing audio file:', {
-      path: audioPath,
-      size: buffer.length,
-      extension: fileExt,
-      details: fileDetails
-    });
-
-    await writeFile(audioPath, buffer);
-    console.log('✅ Audio file written to disk:', audioPath);
-
     try {
-      // Initialize OpenAI with error handling
-      console.log('🤖 Initializing OpenAI API...');
-      const openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
+      console.log('🎯 Starting transcription...');
+      
+      // Convert File to Blob
+      const arrayBuffer = await audioFile.arrayBuffer();
+      const blob = new Blob([arrayBuffer], { type: audioFile.type || 'audio/webm' });
+      
+      // Create a File object that OpenAI can handle
+      const file = new File([blob], audioFile.name || 'audio.webm', {
+        type: audioFile.type || 'audio/webm'
       });
 
-      // Always use the file from disk approach for consistency
-      console.log('🎯 Starting transcription...');
-      const fileHandle = await import('node:fs').then(fs => 
-        fs.createReadStream(audioPath)
-      );
-
       const transcription = await openai.audio.transcriptions.create({
-        file: fileHandle as any,
+        file: file,
         model: 'whisper-1',
         response_format: 'json',
         temperature: 0.3,
-        language: 'en'  // Explicitly set language to English
+        language: 'en'
       });
 
       console.log('✅ Transcription successful:', {
@@ -164,19 +142,5 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     );
-  } finally {
-    // Clean up temporary files
-    console.log('🧹 Cleaning up temporary files...');
-    for (const file of tempFiles) {
-      try {
-        await unlink(file);
-        console.log('✅ Deleted temporary file:', file);
-      } catch (error: any) {
-        console.error('❌ Error deleting temporary file:', file, {
-          message: error.message,
-          code: error.code
-        });
-      }
-    }
   }
 } 
