@@ -7,8 +7,9 @@ import Dropdown from "./Dropdown";
 import Toggle from "./Toggle";
 import { SimilarityMetric } from "../app/hooks/useConfiguration";
 import StickDashboard from "./StickDashboard";
+import GameOfLife from "./GameOfLife";
 import "./Settings.css";
-import { FaCog, FaBuilding, FaTools } from 'react-icons/fa';
+import { FaCog, FaBuilding, FaTools, FaGamepad } from 'react-icons/fa';
 
 interface Props {
   isOpen: boolean;
@@ -44,6 +45,7 @@ const Settings: React.FC<Props> = ({
   const [showStickDashboard, setShowStickDashboard] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('general');
   const [showJoinInfo, setShowJoinInfo] = useState(false);
+  const [showGameOfLife, setShowGameOfLife] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -76,7 +78,13 @@ const Settings: React.FC<Props> = ({
       description: 'Access video frame extraction and other stick-related tools',
       onClick: () => setShowStickDashboard(true),
     },
-    // Add more tool objects here
+    {
+      id: 'game-of-life',
+      title: 'Game of Life',
+      description: 'Play Conway\'s Game of Life simulation',
+      icon: <FaGamepad />,
+      onClick: () => setShowGameOfLife(true),
+    },
   ];
 
   const handleSignIn = () => {
@@ -238,6 +246,11 @@ const Settings: React.FC<Props> = ({
         {/* Stick Dashboard Modal */}
         {showStickDashboard && (
           <StickDashboard onClose={() => setShowStickDashboard(false)} />
+        )}
+
+        {/* Game of Life Modal */}
+        {showGameOfLife && (
+          <GameOfLife onClose={() => setShowGameOfLife(false)} />
         )}
       </div>
     </>

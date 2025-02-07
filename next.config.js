@@ -23,10 +23,22 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.cdnfonts.com",
               "font-src 'self' https://fonts.gstatic.com https://fonts.cdnfonts.com",
               "img-src 'self' data: blob: https:",
-              "connect-src 'self' https://* wss://* api.openai.com",
+              "connect-src 'self' https://*.openai.com https://*.pusher.com wss://*.pusher.com https://*.astra.datastax.com https://* wss://*",
               "media-src 'self' blob: mediastream: data:",
               "frame-src 'self' blob: data:"
             ].join('; ')
+          },
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*'
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, PUT, DELETE, OPTIONS'
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'X-Requested-With, Content-Type, Authorization'
           }
         ],
       },
@@ -41,8 +53,6 @@ const nextConfig = {
     };
     return config;
   },
-  // Configure external packages for serverless environment
-  serverExternalPackages: ['sharp', 'canvas'],
   // Add this to skip generating 404 during build
   output: 'standalone'
 }

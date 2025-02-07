@@ -5,15 +5,7 @@
 /* ============= Import Fonts ============= */
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600&display=swap');
 @import url('https://fonts.googleapis.com/css?family=Varela+Round');
-
-/* ============= Font Face Declarations ============= */
-@font-face {
-  font-family: 'Modulus Pro';
-  src: url('/fonts/ModulusProSemiBold.otf') format('opentype');
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
+@import url('https://fonts.cdnfonts.com/css/modulus-pro');
 
 /* ============= Tailwind CSS Directives ============= */
 @tailwind base;
@@ -42,6 +34,7 @@ html, body {
 
 /* ============= Root Variables ============= */
 :root {
+  --font-modulus: 'Modulus Pro', sans-serif;
   --text-primary: #ffffff;
   --text-secondary: #a6aaae;
   --text-tertiary: #6b6f73;

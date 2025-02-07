@@ -12,6 +12,18 @@ import ChatSection from "../components/ChatModal";
 import NFCReader from "../components/NFCReader";
 import AddEntry from "../components/AddEntry"; // Import AddEntry
 import "./globals.css";
+import { Inter } from "next/font/google";
+
+const inter = Inter({ subsets: ['latin'] });
+
+// Add font CSS
+const fontStyles = `
+  @import url('https://fonts.cdnfonts.com/css/modulus-pro');
+
+  :root {
+    --font-modulus: 'Modulus Pro', sans-serif;
+  }
+`;
 
 const RootLayout: React.FC = () => {
   const [view, setView] = useState<"Chat" | "Profile" | "Map" | "NFCReader" | "AddEntry">("Chat");
@@ -61,21 +73,13 @@ const RootLayout: React.FC = () => {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://fonts.cdnfonts.com" crossOrigin="anonymous" />
-        <style>
-          {`
-            @font-face {
-              font-family: 'Modulus Pro';
-              font-display: swap;
-              src: local('Modulus Pro'),
-                   url('/fonts/ModulusPro.woff2') format('woff2'),
-                   url('/fonts/ModulusPro.woff') format('woff');
-              font-weight: normal;
-              font-style: normal;
-            }
-          `}
-        </style>
+        <style dangerouslySetInnerHTML={{ __html: fontStyles }} />
+        <link
+          href="https://fonts.cdnfonts.com/css/modulus-pro"
+          rel="stylesheet"
+        />
       </head>
-      <body className="bg-background-primary text-text-primary flex flex-col min-h-screen max-w-[100vw] overflow-x-hidden">
+      <body className={`${inter.className} bg-background-primary text-text-primary flex flex-col min-h-screen max-w-[100vw] overflow-x-hidden`}>
         <GlobalStateProvider>
           {showSplash ? (
             <SplashScreen onClose={handleSplashComplete} />

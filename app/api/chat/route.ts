@@ -13,26 +13,23 @@ const requiredEnvVars = {
   ASTRA_DB_NAMESPACE: process.env.ASTRA_DB_NAMESPACE,
 };
 
-// Optional environment variables
-const optionalEnvVars = {
-  VERCEL_URL: process.env.VERCEL_URL,
-};
-
 // Check for missing required environment variables
 const missingEnvVars = Object.entries(requiredEnvVars)
   .filter(([key, value]) => !value)
   .map(([key]) => key);
 
 if (missingEnvVars.length > 0) {
-  throw new Error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
+  console.error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
 }
 
-// Initialize OpenAI and AstraDB
+// Initialize OpenAI
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// Initialize AstraDB with error handling
 const astraDb = new AstraDB(
-  process.env.ASTRA_DB_APPLICATION_TOKEN,
-  process.env.ASTRA_DB_ENDPOINT,
-  process.env.ASTRA_DB_NAMESPACE
+  process.env.ASTRA_DB_APPLICATION_TOKEN!,
+  process.env.ASTRA_DB_ENDPOINT!,
+  process.env.ASTRA_DB_NAMESPACE!
 );
 
 // Initialize Pusher
@@ -66,27 +63,32 @@ function parseAnalysis(content: string) {
   return null;
 }
 
-// Save a message to the database
+// Modify saveMessageToDatabase to handle errors gracefully
 async function saveMessageToDatabase(sessionId: string, content: string, role: string, analysis: any = null) {
-  const messagesCollection = await astraDb.collection("messages");
-  const existingMessage = await messagesCollection.findOne({ sessionId, content });
-  if (existingMessage) {
-    console.log("Duplicate message detected. Skipping save.");
-    return;
+  try {
+    const messagesCollection = await astraDb.collection("messages");
+    const existingMessage = await messagesCollection.findOne({ sessionId, content });
+    if (existingMessage) {
+      console.log("Duplicate message detected. Skipping save.");
+      return;
+    }
+    const messageData = {
+      sessionId,
+      role,
+      content,
+      length: content.length,
+      createdAt: new Date(),
+      mood: analysis?.mood,
+      keywords: analysis?.keywords,
+      drink: analysis?.drink,
+      joinCyberdelicSociety: analysis?.joinCyberdelicSociety,
+    };
+    await messagesCollection.insertOne(messageData);
+    console.log(`Saved ${role} message to DB (sessionId: ${sessionId})`);
+  } catch (error) {
+    console.error("Failed to save message to database:", error);
+    // Don't throw - allow chat to continue even if save fails
   }
-  const messageData = {
-    sessionId,
-    role,
-    content,
-    length: content.length,
-    createdAt: new Date(),
-    mood: analysis?.mood,
-    keywords: analysis?.keywords,
-    drink: analysis?.drink,
-    joinCyberdelicSociety: analysis?.joinCyberdelicSociety,
-  };
-  await messagesCollection.insertOne(messageData);
-  console.log(`Saved ${role} message to DB (sessionId: ${sessionId})`);
 }
 
 // Brushstroke actions for Pusher
@@ -111,28 +113,124 @@ const getBaseUrl = () => {
   return process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '';
 };
 
+// Custom error response function
+function createErrorResponse(error: any, status = 500) {
+  let message = "An unexpected error occurred";
+  let userAction = "Please try again later";
+  let technicalDetails = error?.message || "No technical details available";
+
+  console.error('Chat API Error:', {
+    error,
+    status,
+    message: error?.message,
+    type: error?.type,
+    stack: error?.stack,
+    name: error?.name
+  });
+
+  // Handle specific error types
+  if (error instanceof OpenAI.APIError) {
+    console.error('OpenAI API Error:', {
+      status: error.status,
+      message: error.message,
+      code: error.code,
+      type: error.type
+    });
+
+    switch (error.status) {
+      case 401:
+        message = "Authentication error with AI service";
+        userAction = "Please try again in a few minutes";
+        break;
+      case 429:
+        message = "Too many requests to AI service";
+        userAction = "Please wait a moment and try again";
+        break;
+      case 500:
+        message = "AI service is temporarily unavailable";
+        userAction = "Please try again in a few minutes";
+        break;
+      case 503:
+        message = "AI service is temporarily overloaded";
+        userAction = "Please try again in a few minutes";
+        break;
+      default:
+        if (error.code === 'insufficient_quota') {
+          message = "AI service quota exceeded";
+          userAction = "Please try again later";
+        } else if (error.code === 'invalid_request_error') {
+          message = "Invalid request to AI service";
+          userAction = "Please try again with a different message";
+        } else {
+          message = "Error communicating with AI service";
+          userAction = "Please try again";
+        }
+    }
+  } else if (error.code === "ECONNREFUSED" || error.code === "ENOTFOUND") {
+    message = "Network connection error";
+    userAction = "Please check your internet connection and try again";
+  }
+
+  return new Response(
+    JSON.stringify({
+      error: message,
+      userAction,
+      technicalDetails: process.env.NODE_ENV === "development" ? {
+        message: technicalDetails,
+        type: error?.type,
+        code: error?.code,
+        status: error?.status
+      } : undefined
+    }),
+    { 
+      status, 
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store'
+      } 
+    }
+  );
+}
+
 // Main POST function
 export async function POST(req: any) {
   try {
-    const { messages, llm, sessionId } = await req.json();
+    // Request validation
+    if (!req.body) {
+      return createErrorResponse({ message: "No request body found" }, 400);
+    }
+
+    let reqData;
+    try {
+      reqData = await req.json();
+    } catch (parseError) {
+      return createErrorResponse(parseError, 400);
+    }
+
+    const { messages, llm, sessionId } = reqData;
+
+    // Validate required fields
+    if (!messages || !Array.isArray(messages)) {
+      return createErrorResponse({ message: "No messages found in request" }, 400);
+    }
 
     const latestMessage = messages[messages.length - 1]?.content;
     if (!latestMessage) {
-      return new Response(
-        JSON.stringify({
-          error: "No message found",
-          message: "Please provide a message to continue the conversation.",
-          userAction: "Try sending your message again."
-        }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return createErrorResponse({ message: "No message content found" }, 400);
     }
 
-    let docContext;
+    // Validate OpenAI API key
+    if (!process.env.OPENAI_API_KEY) {
+      return createErrorResponse({ message: "AI service is not properly configured" }, 500);
+    }
+
+    // Generate document context
+    let docContext = "";
     try {
       docContext = await generateDocContext(latestMessage, astraDb, openai);
     } catch (error) {
-      docContext = ""; // Continue without context if generation fails
+      console.error("Context generation failed:", error);
+      // Continue without context, but log the error
     }
 
     // Save messages to database
@@ -142,8 +240,8 @@ export async function POST(req: any) {
         await saveMessageToDatabase(sessionId, message.content, message.role, analysis);
       }
     } catch (dbError) {
-      // Continue even if database save fails
       console.error("Database error:", dbError);
+      // Continue even if database save fails
     }
 
     const systemPrompt = [
@@ -220,86 +318,38 @@ export async function POST(req: any) {
       },
     ];
 
+    // OpenAI API call with proper error handling
     try {
       const response = await openai.chat.completions.create({
-        model: llm ?? "gpt-3.5-turbo",
+        model: llm || "gpt-4",
+        messages: [systemPrompt[0], ...messages],
+        temperature: 0.7,
         stream: true,
-        messages: [...systemPrompt, ...messages],
       });
 
+      // Create and return the streaming response
       const stream = OpenAIStream(response as any, {
-        onCompletion: async (completion: string) => {
+        async onCompletion(completion) {
           const analysis = parseAnalysis(completion);
           if (analysis) {
-            const randomBrushstroke = brushstrokes[Math.floor(Math.random() * brushstrokes.length)];
-            const pusherData = {
-              analysis,
-              actionName: randomBrushstroke,
-              payload: {
-                mood: analysis.mood,
-                keywords: analysis.keywords,
-                brushstroke: randomBrushstroke,
-                drink: analysis.drink,
-                joinCyberdelicSociety: analysis.joinCyberdelicSociety,
-              },
-            };
             try {
-              await pusher.trigger("my-channel", "my-event", pusherData);
-            } catch (err) {
-              // Continue even if Pusher fails
+              await saveMessageToDatabase(sessionId, completion, "assistant", analysis);
+              const randomAction = brushstrokes[Math.floor(Math.random() * brushstrokes.length)];
+              await pusher.trigger("loob-channel", randomAction, {
+                message: "New message saved",
+              });
+            } catch (error) {
+              console.error("Error in completion handler:", error);
             }
-          }
-          try {
-            await saveMessageToDatabase(sessionId, completion, "assistant", analysis);
-          } catch (err) {
-            // Continue even if database save fails
           }
         },
       });
 
       return new StreamingTextResponse(stream);
-    } catch (openaiError: any) {
-      // Handle specific OpenAI API errors
-      let userMessage = "I'm having trouble connecting to my brain right now.";
-      let userAction = "Please try again in a moment.";
-
-      if (openaiError.code === 'insufficient_quota') {
-        userMessage = "I've reached my conversation limit for now.";
-        userAction = "Please try again later or contact support.";
-      } else if (openaiError.code === 'rate_limit_exceeded') {
-        userMessage = "I'm getting too many requests at once.";
-        userAction = "Please wait a moment and try again.";
-      } else if (openaiError.code === 'invalid_api_key') {
-        userMessage = "I'm having authentication issues.";
-        userAction = "Please contact support to resolve this issue.";
-      }
-
-      return new Response(
-        JSON.stringify({
-          error: "AI Service Error",
-          message: userMessage,
-          userAction: userAction,
-          detail: process.env.NODE_ENV === 'development' ? openaiError.message : undefined
-        }),
-        { 
-          status: openaiError.status || 500,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
+    } catch (error) {
+      return createErrorResponse(error);
     }
-  } catch (error: any) {
-    // Handle general errors
-    return new Response(
-      JSON.stringify({
-        error: "Unexpected Error",
-        message: "Something went wrong with our conversation.",
-        userAction: "Please try refreshing the page or try again later.",
-        detail: process.env.NODE_ENV === 'development' ? error.message : undefined
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
+  } catch (error) {
+    return createErrorResponse(error);
   }
 }

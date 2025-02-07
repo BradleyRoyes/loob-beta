@@ -1,0 +1,211 @@
+.game-of-life-container {
+  background-color: rgba(43, 39, 38, 0.95);
+  border-radius: 12px;
+  padding: 16px;
+  width: 90vw;
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+  color: #ffd6cc;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  overflow: hidden;
+  max-width: 1000px;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 179, 153, 0.2);
+  flex-shrink: 0;
+}
+
+.game-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: rgb(255, 179, 153);
+  font-weight: 400;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: rgb(255, 179, 153);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  opacity: 0.8;
+}
+
+.close-button:hover {
+  opacity: 1;
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+  padding: 12px 0;
+  flex-shrink: 0;
+}
+
+.control-button {
+  background-color: rgba(61, 53, 51, 0.6);
+  border: 1px solid rgba(255, 179, 153, 0.2);
+  color: rgb(255, 179, 153);
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  flex: 1;
+  backdrop-filter: blur(4px);
+  white-space: nowrap;
+}
+
+.control-button:hover {
+  background-color: rgba(255, 179, 153, 0.1);
+  border-color: rgba(255, 179, 153, 0.4);
+}
+
+.main-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.grid-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(50, 1fr);
+  gap: 1px;
+  background-color: rgba(255, 179, 153, 0.15);
+  padding: 1px;
+  border-radius: 8px;
+  aspect-ratio: 1;
+  width: min(100%, calc(100vh - 250px));
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 179, 153, 0.2);
+  overflow: hidden;
+  position: relative;
+}
+
+.cell {
+  aspect-ratio: 1;
+  background-color: rgba(43, 39, 38, 0.95);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  border-radius: 0px;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.cell.alive {
+  background-color: rgba(255, 179, 153, 0.85);
+  box-shadow: 0 0 4px rgba(255, 179, 153, 0.3);
+}
+
+.cell:hover {
+  background-color: rgba(255, 179, 153, 0.3);
+}
+
+.instructions {
+  background-color: rgba(61, 53, 51, 0.3);
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  border: 1px solid rgba(255, 179, 153, 0.1);
+  margin-top: 8px;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.instructions p {
+  margin: 0 0 8px 0;
+  color: rgb(255, 179, 153);
+  opacity: 0.9;
+}
+
+.instructions ul {
+  margin: 0;
+  padding-left: 16px;
+  list-style-type: none;
+}
+
+.instructions li {
+  margin-bottom: 4px;
+  color: rgba(255, 214, 204, 0.8);
+  position: relative;
+  line-height: 1.4;
+}
+
+.instructions li::before {
+  content: "•";
+  position: absolute;
+  left: -12px;
+  color: rgb(255, 179, 153);
+}
+
+@media (min-width: 768px) {
+  .game-of-life-container {
+    padding: 24px;
+  }
+
+  .game-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .control-button {
+    font-size: 1rem;
+  }
+
+  .main-content {
+    flex-direction: row;
+    gap: 24px;
+  }
+
+  .grid-container {
+    flex: 1;
+    padding-right: 16px;
+  }
+
+  .grid {
+    width: min(100%, 700px);
+  }
+
+  .instructions {
+    width: 280px;
+    margin-top: 0;
+    align-self: center;
+  }
+}
+
+/* Fix for mobile top frame */
+@media (max-width: 767px) {
+  .grid {
+    border-width: 1px;
+    border-style: solid;
+    border-color: rgba(255, 179, 153, 0.2);
+  }
+} 
