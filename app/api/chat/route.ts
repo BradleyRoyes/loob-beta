@@ -231,17 +231,18 @@ export async function POST(req: any) {
     } catch (error) {
       console.error("Context generation failed:", error);
       // Continue without context, but log the error
+      docContext = ""; // Ensure docContext is empty string if generation fails
     }
 
-    // Save messages to database
-    try {
-      for (const message of messages) {
+    // Save messages to database - don't let database errors stop the chat
+    for (const message of messages) {
+      try {
         const analysis = message.role === "assistant" ? parseAnalysis(message.content) : null;
         await saveMessageToDatabase(sessionId, message.content, message.role, analysis);
+      } catch (dbError) {
+        console.error("Database error while saving message:", dbError);
+        // Continue with next message
       }
-    } catch (dbError) {
-      console.error("Database error:", dbError);
-      // Continue even if database save fails
     }
 
     const systemPrompt = [
@@ -249,6 +250,8 @@ export async function POST(req: any) {
         role: "system",
         content: `
           You are Loob, an AI facilitator for Berlin's grassroots creative communities. Your purpose is connecting people with spaces, skills, resources, and community entities through the Loobrary - a peer-to-peer database of venues, talent, equipment, and communities. Keep your responses short.
+    
+          ${docContext ? `**Current Context**: ${docContext}` : ''}
     
           **Search Protocol**:
           - **Initial Query Analysis**:
