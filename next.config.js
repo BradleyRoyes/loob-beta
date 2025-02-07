@@ -41,10 +41,8 @@ const nextConfig = {
     };
     return config;
   },
-  // Configure for Vercel serverless environment
-  experimental: {
-    serverComponentsExternalPackages: ['sharp', 'canvas']
-  },
+  // Configure external packages for serverless environment
+  serverExternalPackages: ['sharp', 'canvas'],
   // Add this to skip generating 404 during build
   output: 'standalone'
 }
