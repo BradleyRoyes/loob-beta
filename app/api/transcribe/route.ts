@@ -28,6 +28,15 @@ export async function POST(request: NextRequest) {
   console.log('🎤 Starting new transcription request...');
 
   try {
+    // Validate OpenAI API key
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('❌ OpenAI API key is missing');
+      return NextResponse.json(
+        { error: 'Server configuration error.' },
+        { status: 500 }
+      );
+    }
+
     // Log request details for debugging
     const headers = Object.fromEntries(request.headers.entries());
     console.log('Request headers:', {
@@ -85,6 +94,11 @@ export async function POST(request: NextRequest) {
         type: audioFile.type || 'audio/webm'
       });
 
+      // Validate file before sending to OpenAI
+      if (file.size === 0) {
+        throw new Error('File conversion resulted in empty file');
+      }
+
       const transcription = await openai.audio.transcriptions.create({
         file: file,
         model: 'whisper-1',
@@ -92,6 +106,10 @@ export async function POST(request: NextRequest) {
         temperature: 0.3,
         language: 'en'
       });
+
+      if (!transcription.text) {
+        throw new Error('No transcription text received from OpenAI');
+      }
 
       console.log('✅ Transcription successful:', {
         text: transcription.text,
@@ -112,10 +130,16 @@ export async function POST(request: NextRequest) {
 
       // More specific error messages
       let errorMessage = 'Error during transcription';
+      let statusCode = 500;
+
       if (error.message.includes('API key')) {
         errorMessage = 'OpenAI API key error';
       } else if (error.message.includes('format')) {
         errorMessage = 'Unsupported audio format';
+        statusCode = 400;
+      } else if (error.message.includes('empty file')) {
+        errorMessage = 'Audio file is empty or corrupted';
+        statusCode = 400;
       }
 
       return NextResponse.json(
@@ -125,7 +149,7 @@ export async function POST(request: NextRequest) {
           fileDetails,
           stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         },
-        { status: 500 }
+        { status: statusCode }
       );
     }
   } catch (error: any) {

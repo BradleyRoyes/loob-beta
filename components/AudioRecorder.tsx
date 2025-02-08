@@ -106,8 +106,12 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       // Stop all tracks and release stream
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => {
-          track.stop();
-          track.enabled = false;
+          try {
+            track.stop();
+            track.enabled = false;
+          } catch (e) {
+            console.debug('Track was already stopped');
+          }
         });
         streamRef.current = null;
       }
@@ -130,8 +134,14 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       recordingStartTimeRef.current = null;
       currentChunkStartTime.current = 0;
       chunksRef.current = [];
+      setStatusMessage('');
+      setError(null);
     } catch (e) {
       console.error('Error during cleanup:', e);
+      // Force reset of critical states even if cleanup fails
+      setIsRecording(false);
+      mediaRecorderRef.current = null;
+      streamRef.current = null;
     }
   };
 
@@ -334,12 +344,15 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
    */
   const handleStartRecording = async () => {
     try {
-      const deviceInfo = getDeviceInfo();
-      console.log('Starting recording on device:', deviceInfo);
-
+      // Reset state and cleanup before starting new recording
+      cleanupRecording();
       setError(null);
       setStatusMessage('Initializing recording...');
 
+      const deviceInfo = getDeviceInfo();
+      console.log('Starting recording on device:', deviceInfo);
+
+      // Check if already recording
       if (isRecording) {
         handleStopRecording();
         return;
@@ -505,6 +518,12 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       setError(errorMessage);
       setStatusMessage('Recording failed to start');
       cleanupRecording();
+      
+      // Reset state after error
+      setIsRecording(false);
+      if (onCancel) {
+        onCancel();
+      }
     }
   };
 
@@ -566,10 +585,21 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       
       stopRecordingProp();
       cleanupRecording();
+      
+      // Reset state
+      setIsRecording(false);
+      setStatusMessage('');
+      setError(null);
     } catch (error) {
       console.error("Error stopping recording:", error);
       setError('Failed to stop recording properly');
       cleanupRecording();
+      
+      // Reset state after error
+      setIsRecording(false);
+      if (onCancel) {
+        onCancel();
+      }
     }
   };
 
