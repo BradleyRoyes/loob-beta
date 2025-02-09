@@ -3,13 +3,25 @@ import {forwardRef, JSXElementConstructor, useMemo, RefObject} from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-const Bubble:JSXElementConstructor<any> = forwardRef(function Bubble({ content }, ref) {
+interface BubbleProps {
+  content: {
+    role: string;
+    content: string;
+    url?: string;
+  };
+  icon?: string;
+}
+
+const Bubble:JSXElementConstructor<BubbleProps> = forwardRef(function Bubble({ content, icon = '🤖' }, ref) {
   const { role } = content;
-  const isUser = role === "user"
+  const isUser = role === "user";
 
   return (
-    <div ref={ref  as RefObject<HTMLDivElement>} className={`block mt-4 md:mt-6 pb-[7px] clear-both ${isUser ? 'float-right' : 'float-left'}`}>
+    <div ref={ref as RefObject<HTMLDivElement>} className={`block mt-4 md:mt-6 pb-[7px] clear-both ${isUser ? 'float-right' : 'float-left'}`}>
       <div className="flex justify-end">
+        {!isUser && (
+          <div className="companion-icon mr-2 text-xl">{icon}</div>
+        )}
         <div className={`talk-bubble${isUser ? ' user' : ''} p-2 md:p-4`}>
           {content.processing ? (
             <div className="w-6 h-6 flex items-center justify-center">

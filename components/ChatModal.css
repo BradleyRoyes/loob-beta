@@ -310,3 +310,16 @@ html, body {
     transform: scale(0.95);
   }
 }
+
+.companion-icon {
+  display: flex;
+  align-items: flex-end;
+  font-size: 1.25rem;
+  margin-bottom: 4px;
+  opacity: 0.9;
+  transition: transform 0.2s ease;
+}
+
+.companion-icon:hover {
+  transform: scale(1.1);
+}

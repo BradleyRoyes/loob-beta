@@ -89,9 +89,10 @@ const LoobrarySignUp: React.FC<LoobrarySignUpProps> = ({ onBack, onExplore }) =>
 
       if (response.ok) {
         const data = await response.json();
-        // Make sure we're setting the correct user state
+        
+        // Set user state with the ID from the API response
         setUserState({
-          userId: data.user.id, // Make sure this matches the API response
+          userId: data.user.id,
           pseudonym: formData.pseudonym,
           email: formData.email,
           phone: formData.phone,

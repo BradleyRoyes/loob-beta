@@ -275,6 +275,7 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
                   role: "system",
                   content: getIntroMessage(activeTulpa, isAnonymous),
                 }}
+                icon={activeTulpa?.icon || '🤖'}
               />
             </div>
           )}
@@ -283,7 +284,10 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
               key={`message-${index}`}
               ref={index === messages.length - 1 ? latestMessageRef : undefined}
             >
-              <Bubble content={message} />
+              <Bubble 
+                content={message} 
+                icon={activeTulpa?.icon || '🤖'}
+              />
             </div>
           ))}
           {isProcessing && (

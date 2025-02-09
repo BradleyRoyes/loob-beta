@@ -19,9 +19,12 @@ export async function GET(
     
     const libraryCollection = await astraDb.collection('usersandloobricates');
     
-    // Find the user document
+    // Find the user document by ID or pseudonym
     const userDoc = await libraryCollection.findOne({ 
-      _id: userId,
+      $or: [
+        { _id: userId },
+        { pseudonym: userId }
+      ],
       dataType: 'userAccount'
     });
 

@@ -59,10 +59,23 @@ export async function POST(req: NextRequest) {
       createdAt: new Date().toISOString(),
     };
 
-    await collection.insertOne(userDocument);
+    const result = await collection.insertOne(userDocument);
+    const insertedUser = await collection.findOne({ _id: result.insertedId });
+
+    if (!insertedUser) {
+      return handleError('Failed to create user account', 500, 'creation_failed');
+    }
 
     console.log('User signup successful.');
-    return NextResponse.json({ message: 'Account created successfully.' }, { status: 201 });
+    return NextResponse.json({ 
+      message: 'Account created successfully.',
+      user: {
+        id: result.insertedId,
+        pseudonym: insertedUser.pseudonym,
+        email: insertedUser.email,
+        phone: insertedUser.phone
+      }
+    }, { status: 201 });
   } catch (error) {
     console.error('Unexpected error processing signup:', error);
     return handleError('Internal server error.', 500, 'internal_error');
