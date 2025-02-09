@@ -5,7 +5,18 @@
 /* ============= Import Fonts ============= */
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600&display=swap');
 @import url('https://fonts.googleapis.com/css?family=Varela+Round');
-@import url('https://fonts.cdnfonts.com/css/modulus-pro');
+
+/* Add font-display swap for better loading */
+@font-face {
+  font-family: 'Modulus Pro';
+  src: local('Modulus Pro'),
+       url('/fonts/ModulusPro.woff2') format('woff2'),
+       url('https://fonts.cdnfonts.com/css/modulus-pro') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+  font-synthesis: none;
+}
 
 /* ============= Tailwind CSS Directives ============= */
 @tailwind base;
@@ -34,7 +45,7 @@ html, body {
 
 /* ============= Root Variables ============= */
 :root {
-  --font-modulus: 'Modulus Pro', sans-serif;
+  --font-modulus: 'Modulus Pro', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --text-primary: #ffffff;
   --text-secondary: #a6aaae;
   --text-tertiary: #6b6f73;

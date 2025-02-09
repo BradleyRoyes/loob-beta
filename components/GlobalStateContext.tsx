@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { Tulpa } from './TulpaManager';
 
 export type Loobricate = {
   id: string;
@@ -25,6 +26,7 @@ interface UserState {
   isAnonymous: boolean;
   connectedLoobricates: Loobricate[];
   activeLoobricate: Loobricate | null;
+  activeTulpa: Tulpa | null;
 }
 
 interface GlobalState extends UserState {
@@ -34,6 +36,7 @@ interface GlobalState extends UserState {
   clearUserState: () => void;
   setActiveLoobricate: (loobricate: Loobricate | null) => void;
   setConnectedLoobricates: (loobricates: Loobricate[]) => void;
+  setActiveTulpa: (tulpa: Tulpa | null) => void;
 }
 
 const GlobalStateContext = createContext<GlobalState | undefined>(undefined);
@@ -64,7 +67,8 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
     phone: null,
     isAnonymous: true,
     connectedLoobricates: [],
-    activeLoobricate: null
+    activeLoobricate: null,
+    activeTulpa: null
   });
 
   // Initialize state from localStorage with logging
@@ -152,7 +156,8 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
       phone: null,
       isAnonymous: true,
       connectedLoobricates: [],
-      activeLoobricate: null
+      activeLoobricate: null,
+      activeTulpa: null
     });
     localStorage.removeItem('userState');
     localStorage.removeItem('isLoggedIn');
@@ -174,6 +179,13 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
     }));
   };
 
+  const setActiveTulpa = (tulpa: Tulpa | null) => {
+    setUserStateData(prev => ({
+      ...prev,
+      activeTulpa: tulpa
+    }));
+  };
+
   return (
     <GlobalStateContext.Provider
       value={{
@@ -184,6 +196,7 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
         clearUserState,
         setActiveLoobricate,
         setConnectedLoobricates,
+        setActiveTulpa,
       }}
     >
       {children}

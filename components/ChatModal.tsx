@@ -5,6 +5,7 @@ import Bubble from "./Bubble";
 import { useChat } from "ai/react";
 import PromptSuggestionRow from "./PromptSuggestions/PromptSuggestionsRow";
 import AudioRecorder from "./AudioRecorder";
+import TulpaManager, { Tulpa } from "./TulpaManager";
 import "./ChatModal.css";
 import { useGlobalState } from "./GlobalStateContext";
 
@@ -23,13 +24,34 @@ const TypingIndicator = () => (
   </div>
 );
 
+const getIntroMessage = (activeTulpa: Tulpa | null, isAnonymous: boolean) => {
+  if (isAnonymous) {
+    return "Hi there! I'm Loob. Ask me about planning an event—gear, venues, or talent.";
+  }
+
+  if (!activeTulpa) {
+    return "Welcome back! Select a Toolpuss to get started, or ask me about planning an event.";
+  }
+
+  const introMessages = {
+    'harm-reduction': "I'm your Harm Reduction Guide. I'm here to provide compassionate, evidence-based guidance for safer practices. How can I assist you today?",
+    'citizen-science': "Ready to contribute to citizen science? I'll help you document and analyze experiences with structured frameworks while maintaining anonymity.",
+    'loobrary-matcher': "Welcome to your Resource Matcher! I'll help you find the perfect gear, venues, and talent from your local Loobricates. What are you looking for?"
+  };
+
+  return introMessages[activeTulpa.id] || "Hi! How can I help you today?";
+};
+
 export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps) {
-  const { activeLoobricate, userId } = useGlobalState();
+  const { activeLoobricate, userId, activeTulpa, setActiveTulpa, isAnonymous } = useGlobalState();
+  const [showTulpaManager, setShowTulpaManager] = useState(false);
   
-  const { append, messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+  const { append, messages, input, handleInputChange, handleSubmit, isLoading, setMessages } = useChat({
     body: {
       userId: userId || undefined,
-      connectedLoobricates: activeLoobricate ? [activeLoobricate.id] : []
+      connectedLoobricates: activeLoobricate ? [activeLoobricate.id] : [],
+      systemPrompt: activeTulpa?.systemPrompt,
+      contextPath: activeTulpa?.contextPath
     }
   });
   
@@ -148,7 +170,26 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
   const handleAudioUpload = async (audioBlob: Blob) => {
     setIsProcessing(true);
     const formData = new FormData();
-    formData.append("audio", audioBlob, "audio.webm");
+    
+    // Create a proper filename with timestamp and extension based on mime type
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const extension = audioBlob.type === 'audio/webm' ? 'webm' : 
+                     audioBlob.type === 'audio/mp4' ? 'm4a' :
+                     audioBlob.type === 'audio/wav' ? 'wav' :
+                     audioBlob.type === 'audio/ogg' ? 'ogg' : 'webm';
+                     
+    const filename = `audio-${timestamp}.${extension}`;
+    
+    // Log the audio details for debugging
+    console.log('Uploading audio:', {
+      size: audioBlob.size,
+      type: audioBlob.type,
+      filename
+    });
+
+    // Ensure the blob has the correct type
+    const processedBlob = new Blob([audioBlob], { type: audioBlob.type || 'audio/webm' });
+    formData.append("audio", processedBlob, filename);
 
     try {
       const response = await fetch("/api/transcribe", {
@@ -156,12 +197,33 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
         body: formData,
       });
 
-      if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || 
+          errorData.details || 
+          `Server responded with ${response.status}`
+        );
+      }
 
       const data = await response.json();
+      
+      if (!data.transcription) {
+        throw new Error('No transcription received from server');
+      }
+      
       handlePrompt(data.transcription);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error uploading audio:", error);
+      // Show error to user using append instead of setMessages
+      append({
+        role: "assistant",
+        content: `Sorry, I couldn't process the audio. ${
+          error.message.includes('413') ? 'The recording was too long.' :
+          error.message.includes('format') ? 'The audio format is not supported.' :
+          'Please try again.'
+        }`
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -169,6 +231,35 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
 
   return (
     <section className="chatbot-section flex flex-col w-full max-w-md md:max-w-3xl mx-auto h-full md:h-[90vh] rounded-lg shadow-lg p-2 overflow-hidden">
+      {/* Chat Header with Tulpa Button */}
+      <div className="flex items-center gap-2 mb-4">
+        <button
+          onClick={() => setShowTulpaManager(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-all duration-300 group relative"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl transform group-hover:scale-110 transition-transform duration-300">
+              {activeTulpa?.icon || '🤖'}
+            </span>
+            <div className="flex flex-col items-start">
+              <span className="text-sm text-gray-400">
+                {isAnonymous ? 'Current Assistant' : 'Active Companion'}
+              </span>
+              <span className="text-base text-gray-200 font-medium">
+                {isAnonymous 
+                  ? (activeTulpa?.name || 'Loob Assistant')
+                  : (activeTulpa?.name || 'Choose Your Companion')}
+              </span>
+            </div>
+          </div>
+          {!isAnonymous && (
+            <span className="ml-3 text-pink-300/70 text-sm group-hover:text-pink-300 transition-colors duration-300">
+              Change →
+            </span>
+          )}
+        </button>
+      </div>
+
       {/* Chat Messages Section */}
       <div 
         ref={messagesContainerRef}
@@ -182,7 +273,7 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
                 key="intro-message"
                 content={{
                   role: "system",
-                  content: "Hi there! I'm Loob. Ask me about planning an event—gear, venues, or talent.",
+                  content: getIntroMessage(activeTulpa, isAnonymous),
                 }}
               />
             </div>
@@ -257,6 +348,18 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
           className="audio-recorder-mobile"
         />
       </div>
+
+      {/* TulpaManager Modal */}
+      <TulpaManager
+        isOpen={showTulpaManager}
+        onClose={() => setShowTulpaManager(false)}
+        onSelect={(tulpa) => {
+          setActiveTulpa(tulpa);
+          // Clear messages when switching Tulpas
+          setMessages([]);
+          setShowIntroMessage(true);
+        }}
+      />
 
       {/* Input, Send Button, and Loobricate Selector */}
       <div className="flex flex-col gap-2 mt-auto pb-2">

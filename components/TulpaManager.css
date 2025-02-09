@@ -1,0 +1,101 @@
+/* TulpaManager.css */
+.fixed {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Companion card hover effects */
+button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+}
+
+button:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* Level badge glow effect */
+.absolute {
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 5px rgba(236, 72, 153, 0.3);
+  }
+  to {
+    box-shadow: 0 0 15px rgba(236, 72, 153, 0.5);
+  }
+}
+
+/* Icon hover animation */
+.text-5xl {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.text-5xl:hover {
+  transform: scale(1.2) rotate(5deg);
+}
+
+/* Trait tags hover effect */
+.bg-gray-700 {
+  transition: all 0.2s ease;
+}
+
+.bg-gray-700:hover {
+  background-color: rgba(236, 72, 153, 0.2);
+  color: rgba(236, 72, 153, 0.9);
+}
+
+/* Custom scrollbar */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(236, 72, 153, 0.5) rgba(17, 24, 39, 0.1);
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: rgba(17, 24, 39, 0.1);
+  border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: rgba(236, 72, 153, 0.5);
+  border-radius: 3px;
+}
+
+/* Selection confirmation button pulse */
+.bg-pink-500\/20 {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .7;
+  }
+}
+
+/* Responsive grid adjustments */
+@media (max-width: 768px) {
+  .grid {
+    gap: 1rem;
+  }
+  
+  .text-5xl {
+    font-size: 3rem;
+  }
+} 

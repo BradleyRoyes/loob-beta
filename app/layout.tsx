@@ -13,6 +13,7 @@ import NFCReader from "../components/NFCReader";
 import AddEntry from "../components/AddEntry"; // Import AddEntry
 import "./globals.css";
 import { Inter } from "next/font/google";
+import Head from 'next/head';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -64,21 +65,15 @@ const RootLayout: React.FC = () => {
 
   return (
     <html lang="en">
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="theme-color" content="#121212" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://fonts.cdnfonts.com" crossOrigin="anonymous" />
-        <style dangerouslySetInnerHTML={{ __html: fontStyles }} />
+      <Head>
         <link
-          href="https://fonts.cdnfonts.com/css/modulus-pro"
-          rel="stylesheet"
+          rel="preload"
+          href="/fonts/ModulusPro.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
         />
-      </head>
+      </Head>
       <body className={`${inter.className} bg-background-primary text-text-primary flex flex-col min-h-screen max-w-[100vw] overflow-x-hidden`}>
         <GlobalStateProvider>
           {showSplash ? (

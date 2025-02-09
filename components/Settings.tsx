@@ -145,7 +145,7 @@ const Settings: React.FC<Props> = ({
                     setActiveLoobricate(selected || null);
                   }}
                 >
-                  <option value="">Select a Loobricate</option>
+                  <option key="default" value="">Select a Loobricate</option>
                   {connectedLoobricates.map((loobricate) => (
                     <option key={loobricate.id} value={loobricate.id}>
                       {loobricate.name}

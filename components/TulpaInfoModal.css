@@ -1,0 +1,107 @@
+/* Modal animation */
+.fixed {
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Custom scrollbar */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 148, 148, 0.5) rgba(42, 43, 54, 0.5);
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+  width: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: rgba(42, 43, 54, 0.5);
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 148, 148, 0.5);
+  border-radius: 2px;
+}
+
+/* Card hover effects */
+.bg-[#32333e] {
+  transition: all 0.2s ease;
+}
+
+.bg-[#32333e]:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 148, 148, 0.1);
+}
+
+/* List item hover effect */
+li {
+  transition: all 0.2s ease;
+}
+
+li:hover {
+  padding-left: 2px;
+}
+
+li:hover .text-[#ff9494] {
+  transform: scale(1.1);
+}
+
+/* Section transitions */
+section {
+  transition: all 0.2s ease;
+}
+
+section:hover {
+  background: rgba(42, 43, 54, 0.8);
+}
+
+/* Icon animations */
+.text-xl {
+  transition: transform 0.2s ease;
+}
+
+section:hover .text-xl {
+  transform: scale(1.1);
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .fixed {
+    padding: 0.5rem;
+  }
+  
+  .bg-[#1a1b26] {
+    margin: 0;
+    border-radius: 1rem;
+  }
+  
+  .p-4 {
+    padding: 1rem;
+  }
+  
+  .space-y-6 > * + * {
+    margin-top: 1rem;
+  }
+  
+  .text-xl {
+    font-size: 1.25rem;
+  }
+  
+  .text-lg {
+    font-size: 1.125rem;
+  }
+  
+  .text-sm {
+    font-size: 0.875rem;
+  }
+} 

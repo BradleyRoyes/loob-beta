@@ -155,13 +155,17 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       const microphone = audioContext.createMediaStreamSource(stream);
       
       // More responsive settings for the analyser
-      analyser.fftSize = 256;
-      analyser.minDecibels = -95; // Lower minimum for more sensitivity
-      analyser.maxDecibels = -0; // Increased from -5 for even more sensitivity
-      analyser.smoothingTimeConstant = 0.4; // Reduced for faster response
+      analyser.fftSize = 512; // Increased for better frequency resolution
+      analyser.minDecibels = -90; // Adjusted for better sensitivity
+      analyser.maxDecibels = -10; // Adjusted for better range
+      analyser.smoothingTimeConstant = 0.6; // Balanced smoothing
 
       microphone.connect(analyser);
 
+      // Keep track of historical data for time progression
+      const historyLength = 64; // Number of historical frames to keep
+      const waveformHistory: number[][] = [];
+      
       const updateWaveform = () => {
         const analyser = analyserRef.current;
         if (!analyser) return;
@@ -170,9 +174,10 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
         analyser.getByteFrequencyData(dataArray);
 
         const bars: number[] = [];
-        const barCount = Math.min(64, Math.max(32, Math.floor(window.innerWidth / 12)));
+        const barCount = Math.min(32, Math.max(16, Math.floor(window.innerWidth / 24))); // Fewer, wider bars
         const segmentLength = Math.floor(dataArray.length / barCount);
 
+        // Process current frame
         for (let i = 0; i < barCount; i++) {
           let sum = 0;
           let count = 0;
@@ -181,27 +186,46 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
           const endIdx = Math.min(startIdx + segmentLength, dataArray.length);
           
           for (let j = startIdx; j < endIdx; j++) {
-            // Enhanced frequency weighting
-            const weight = j < dataArray.length / 4 ? 1.8 : // Increased boost for low frequencies
-                         j < dataArray.length / 2 ? 1.4 : 
-                         0.8;
+            // Enhanced frequency weighting with focus on speech frequencies
+            const freq = (j * audioContext.sampleRate) / analyser.fftSize;
+            const weight = 
+              freq < 500 ? 2.0 : // Bass boost
+              freq < 2000 ? 1.5 : // Mid boost (speech frequencies)
+              freq < 4000 ? 1.2 : // High-mid
+              0.8; // High frequencies
+            
             sum += dataArray[j] * weight;
             count++;
           }
 
-          // Enhanced normalization and scaling
-          const normalizedValue = (sum / count) / 180; // Further reduced denominator
-          
-          // Adjusted non-linear scaling
-          const scaledValue = Math.pow(normalizedValue, 0.5) * 100; // Reduced power for more movement
-          
-          // Increased minimum height and amplification
-          const finalValue = Math.max(15, Math.min(98, scaledValue * 1.8));
-          
-          bars.push(finalValue);
+          // Improved normalization with dynamic range compression
+          const normalizedValue = Math.pow((sum / count) / 255, 0.7) * 100;
+          const amplifiedValue = Math.max(15, Math.min(98, normalizedValue * 1.5));
+          bars.push(amplifiedValue);
         }
 
-        setWaveformBars(bars);
+        // Add current frame to history
+        waveformHistory.push(bars);
+        if (waveformHistory.length > historyLength) {
+          waveformHistory.shift();
+        }
+
+        // Combine current and historical data for visualization
+        const combinedBars = bars.map((currentValue, index) => {
+          // Get historical values for this bar position
+          const history = waveformHistory.map(frame => frame[index] || 0);
+          
+          // Calculate a decaying influence from historical values
+          const historicalInfluence = history.reduce((acc, val, i) => {
+            const age = (history.length - i) / history.length;
+            return acc + (val * age * 0.3); // 0.3 controls historical influence strength
+          }, 0) / history.length;
+
+          // Blend current value with historical influence
+          return Math.max(currentValue, historicalInfluence);
+        });
+
+        setWaveformBars(combinedBars);
         animationFrameRef.current = requestAnimationFrame(updateWaveform);
       };
 
@@ -541,7 +565,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
     const deviceInfo = getDeviceInfo();
     console.log('Device Info:', deviceInfo);
     
-    setStatusMessage('Finalizing recording...');
+    setStatusMessage('Processing audio...');
     const audioBlob = new Blob(chunksRef.current, { 
       type: mediaRecorderRef.current.mimeType || 'audio/webm' 
     });
@@ -570,7 +594,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       return;
     }
     
-    setStatusMessage('Recording complete - sending for transcription');
+    setStatusMessage('Sending to transcription service...');
     stopRecordingProp();
     onRecordingComplete(audioBlob);
     cleanupRecording();

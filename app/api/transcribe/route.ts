@@ -14,7 +14,9 @@ function getFileExtension(mimeType: string): string {
     'audio/wav': 'wav',
     'audio/x-m4a': 'm4a',
     'audio/aac': 'aac',
-    'audio/webm;codecs=opus': 'webm'  // Add explicit support for opus codec
+    'audio/webm;codecs=opus': 'webm',  // Add explicit support for opus codec
+    'audio/ogg': 'ogg',
+    'audio/ogg;codecs=opus': 'ogg'
   };
   return mimeToExt[mimeType] || 'webm';
 }
@@ -85,13 +87,23 @@ export async function POST(request: NextRequest) {
     try {
       console.log('🎯 Starting transcription...');
       
-      // Convert File to Blob
+      // Convert File to Blob with explicit type handling
       const arrayBuffer = await audioFile.arrayBuffer();
-      const blob = new Blob([arrayBuffer], { type: audioFile.type || 'audio/webm' });
+      const mimeType = audioFile.type || 'audio/webm';
+      const extension = getFileExtension(mimeType);
       
-      // Create a File object that OpenAI can handle
-      const file = new File([blob], audioFile.name || 'audio.webm', {
-        type: audioFile.type || 'audio/webm'
+      // Create a new File with proper naming and type
+      const fileName = `audio-${Date.now()}.${extension}`;
+      const file = new File([arrayBuffer], fileName, {
+        type: mimeType
+      });
+
+      // Log file details before sending to OpenAI
+      console.log('Prepared file for OpenAI:', {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        extension
       });
 
       // Validate file before sending to OpenAI
@@ -121,11 +133,13 @@ export async function POST(request: NextRequest) {
         fileDetails
       });
     } catch (error: any) {
+      // Enhanced error logging
       console.error('❌ Transcription error:', {
         message: error.message,
         stack: error.stack,
         details: error,
-        fileDetails
+        fileDetails,
+        openaiError: error.response?.data || error.response || null
       });
 
       // More specific error messages
@@ -134,12 +148,15 @@ export async function POST(request: NextRequest) {
 
       if (error.message.includes('API key')) {
         errorMessage = 'OpenAI API key error';
-      } else if (error.message.includes('format')) {
+      } else if (error.message.includes('format') || error.message.includes('codec')) {
         errorMessage = 'Unsupported audio format';
         statusCode = 400;
       } else if (error.message.includes('empty file')) {
         errorMessage = 'Audio file is empty or corrupted';
         statusCode = 400;
+      } else if (error.response?.status === 413) {
+        errorMessage = 'File too large for processing';
+        statusCode = 413;
       }
 
       return NextResponse.json(
@@ -147,6 +164,7 @@ export async function POST(request: NextRequest) {
           error: errorMessage, 
           details: error.message,
           fileDetails,
+          openaiError: error.response?.data || null,
           stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         },
         { status: statusCode }
