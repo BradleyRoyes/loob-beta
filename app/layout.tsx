@@ -12,20 +12,15 @@ import ChatSection from "../components/ChatModal";
 import NFCReader from "../components/NFCReader";
 import AddEntry from "../components/AddEntry"; // Import AddEntry
 import "./globals.css";
-import { Inter } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import Head from 'next/head';
 import CompanionSelection from "../components/CompanionSelection";
 
 const inter = Inter({ subsets: ['latin'] });
-
-// Add font CSS
-const fontStyles = `
-  @import url('https://fonts.cdnfonts.com/css/modulus-pro');
-
-  :root {
-    --font-modulus: 'Modulus Pro', sans-serif;
-  }
-`;
+const spaceGrotesk = Space_Grotesk({ 
+  subsets: ['latin'],
+  variable: '--font-primary'
+});
 
 const RootLayout: React.FC = () => {
   const [view, setView] = useState<"Chat" | "Profile" | "Map" | "NFCReader" | "AddEntry">("Chat");
@@ -89,15 +84,10 @@ const RootLayout: React.FC = () => {
   return (
     <html lang="en">
       <Head>
-        <link
-          rel="preload"
-          href="/fonts/ModulusPro.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </Head>
-      <body className={`${inter.className} bg-background-primary text-text-primary flex flex-col min-h-screen max-w-[100vw] overflow-x-hidden`}>
+      <body className={`${inter.className} ${spaceGrotesk.variable} bg-background-primary text-text-primary flex flex-col min-h-screen max-w-[100vw] overflow-x-hidden`}>
         <GlobalStateProvider>
           {showSplash ? (
             <SplashScreen onClose={handleSplashComplete} />
