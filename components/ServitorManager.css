@@ -89,13 +89,74 @@ button:hover {
   }
 }
 
-/* Responsive grid adjustments */
-@media (max-width: 768px) {
+/* Mobile-first responsive design */
+.grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
   .grid {
-    gap: 1rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Ensure trait tags don't get cut off on mobile */
+.text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  white-space: nowrap;
+}
+
+/* Improve card spacing on mobile */
+button[class*="servitor-card"] {
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Ensure trait tags container has proper spacing */
+div[class*="servitor-traits"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  padding: 0.5rem;
+  width: 100%;
+}
+
+/* Improve text readability on mobile */
+.text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+@media (max-width: 640px) {
+  .text-xl {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
   }
   
   .text-5xl {
     font-size: 3rem;
+  }
+  
+  button[class*="servitor-card"] {
+    padding: 1rem;
+  }
+  
+  div[class*="servitor-traits"] {
+    padding: 0.25rem;
   }
 } 

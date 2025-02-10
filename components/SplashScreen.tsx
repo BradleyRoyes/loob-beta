@@ -27,7 +27,7 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/login/", {
+      const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pseudonym: username.trim(), password }),
@@ -39,12 +39,17 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         throw new Error(data.error || "Login failed");
       }
 
+      // Check if user has a previously chosen companion
+      const hasExistingCompanion = data.user.activeServitor || data.user.hasChosenCompanion;
+
       const userData = {
-        userId: data.user._id || data.user.id,
+        userId: data.user._id,
         pseudonym: data.user.pseudonym,
-        email: data.user.email,
-        phone: data.user.phone,
+        email: data.user.email || null,
+        phone: data.user.phone || null,
         isAnonymous: false,
+        hasChosenCompanion: hasExistingCompanion,
+        activeServitor: data.user.activeServitor || null,
         connectedLoobricates: data.user.connectedLoobricates || []
       };
 
@@ -68,19 +73,35 @@ const SplashScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
   const handleStayAnonymous = () => {
     const anonId = `anon-${Math.random().toString(36).substr(2, 9)}`;
-    setUserState({
+    const userData = {
       userId: anonId,
       pseudonym: 'Anonymous User',
       email: null,
       phone: null,
-      isAnonymous: true
-    });
+      isAnonymous: true,
+      hasChosenCompanion: false,
+      activeServitor: null,
+      connectedLoobricates: []
+    };
+    
+    setUserState(userData);
     setSessionId(generateSessionId());
+    localStorage.setItem('userState', JSON.stringify(userData));
+    
     setPhase("closing");
     setTimeout(() => onClose(), 1000);
   };
 
   const handleSignUpComplete = () => {
+    // Ensure new users start without a companion
+    const newUserData = {
+      hasChosenCompanion: false,
+      activeServitor: null
+    };
+    
+    setUserState(newUserData);
+    localStorage.setItem('userState', JSON.stringify(newUserData));
+    
     setPhase("closing");
     setTimeout(() => onClose(), 1000);
   };

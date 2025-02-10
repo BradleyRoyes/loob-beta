@@ -4,9 +4,9 @@
 .map-container {
   position: relative;
   width: 100%;
-  height: 100%;
+  height: 100vh;
   overflow: hidden;
-  background: #1a202c;
+  background: #1a1b26; /* Dark background while loading */
 }
 
 .map-layer {
@@ -15,8 +15,14 @@
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 2;
-  background: #1a202c;
+  z-index: 1;
+  background: #1a1b26;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.map-layer.loaded {
+  opacity: 1;
 }
 
 /* Add map visualization container styling */
@@ -874,4 +880,246 @@
 
 @keyframes location-spin {
   to { transform: rotate(360deg); }
+}
+
+/* User Marker */
+.user-marker {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 148, 148, 0.2);
+  border: 2px solid rgba(255, 148, 148, 0.8);
+  border-radius: 50%;
+  position: relative;
+  transform-origin: center;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.companion-indicator {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 24px;
+  filter: drop-shadow(0 0 10px rgba(255, 148, 148, 0.5));
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Pulsing Ring */
+.pulsing-ring {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 148, 148, 0.2) 0%, transparent 70%);
+  position: relative;
+  animation: expand 3s ease-in-out infinite;
+}
+
+/* Companion-specific ring styles */
+.pulsing-ring.logis {
+  background: radial-gradient(circle, rgba(255, 148, 148, 0.2) 0%, transparent 70%);
+}
+
+.pulsing-ring.harmoni {
+  background: radial-gradient(circle, rgba(148, 255, 192, 0.2) 0%, transparent 70%);
+}
+
+.pulsing-ring.nexus {
+  background: radial-gradient(circle, rgba(148, 192, 255, 0.2) 0%, transparent 70%);
+}
+
+/* Companion Status Overlay */
+.companion-overlay {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.companion-status {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.companion-icon {
+  font-size: 24px;
+  filter: drop-shadow(0 0 5px rgba(255, 148, 148, 0.5));
+}
+
+.companion-name {
+  color: white;
+  font-weight: 500;
+  font-size: 16px;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+@keyframes expand {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-5px);
+  }
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .user-marker {
+    width: 32px;
+    height: 32px;
+  }
+
+  .companion-indicator {
+    font-size: 20px;
+    top: -16px;
+  }
+
+  .pulsing-ring {
+    width: 80px;
+    height: 80px;
+  }
+
+  .companion-status {
+    padding: 6px 12px;
+  }
+
+  .companion-icon {
+    font-size: 20px;
+  }
+
+  .companion-name {
+    font-size: 14px;
+  }
+}
+
+/* iOS Specific Fixes */
+@supports (-webkit-touch-callout: none) {
+  .map-container {
+    height: -webkit-fill-available;
+  }
+}
+
+/* Loading States */
+.map-loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(0, 0, 0, 0.85);
+  padding: 2rem;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.map-loading-text {
+  color: white;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.map-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: map-spin 1s linear infinite;
+}
+
+@keyframes map-spin {
+  to { transform: rotate(360deg); }
+}
+
+.map-error-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.85);
+  padding: 1.5rem;
+  border-radius: 12px;
+  text-align: center;
+  color: white;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 1000;
+  max-width: 90%;
+  width: auto;
+}
+
+.map-error-message p {
+  margin-bottom: 1rem;
+  color: #ff6b6b;
+}
+
+.map-error-message .retry-button {
+  background: rgba(255, 148, 148, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 148, 148, 0.5);
+  padding: 0.5rem 1.5rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.map-error-message .retry-button:hover {
+  background: rgba(255, 148, 148, 0.3);
+  transform: translateY(-1px);
+}
+
+.map-error-message .retry-button:active {
+  transform: translateY(0);
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .map-loading-content {
+    padding: 1.5rem;
+  }
+
+  .map-loading-text {
+    font-size: 0.875rem;
+  }
+
+  .map-error-message {
+    padding: 1rem;
+  }
 }

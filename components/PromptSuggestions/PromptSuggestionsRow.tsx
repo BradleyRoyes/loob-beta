@@ -2,25 +2,20 @@ import PromptSuggestionButton from "./PromptSuggestionButton";
 import { useGlobalState } from "../GlobalStateContext";
 
 const servitorPrompts = {
-  'harm-reduction': [
-    "Help me plan a safe experience",
-    "What should I know about set and setting?",
-    "How can I integrate my experiences?"
+  'logis': [
+    "Help me plan an event",
+    "I need to track resources",
+    "Optimize my event logistics"
   ],
-  'citizen-science': [
-    "Start documenting an experience",
-    "Help me structure my observations",
-    "Contribute to research data"
+  'harmoni': [
+    "Guide me in vibe curation",
+    "Help with harm reduction",
+    "Support my integration process"
   ],
-  'loobrary-matcher': [
-    "Tell me more about Loob",
-    "Help me find gear for my event",
-    "I want to leave feedback"
-  ],
-  'servitor-trainer': [
-    "Help me create a custom companion",
-    "How do I train my companion?",
-    "What are companion traits?"
+  'nexus': [
+    "Connect me with resources",
+    "Help build collaborations",
+    "Map community connections"
   ]
 };
 
@@ -30,8 +25,8 @@ const PromptSuggestionRow = ({ onPromptClick }) => {
   // Default prompts for anonymous users or when no Servitor is selected
   const defaultPrompts = [
     "Tell me more about Loob",
-    "Help me find gear for my event",
-    "I want to leave feedback"
+    "Help me find resources",
+    "Connect with the community"
   ];
 
   const prompts = (!isAnonymous && activeServitor?.id) 

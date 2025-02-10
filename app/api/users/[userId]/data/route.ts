@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { AstraDB } from '@datastax/astra-db-ts';
 
 const astraDb = new AstraDB(
@@ -11,43 +11,34 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { userId: string } }
 ) {
-  // Await params at the start to prevent Next.js warnings
-  const userId = await Promise.resolve(params.userId);
-
   try {
+    const userId = params.userId;
     console.log('Fetching user data for:', userId);
     
     const libraryCollection = await astraDb.collection('usersandloobricates');
     
-    // Find the user document by ID or pseudonym
-    const userDoc = await libraryCollection.findOne({ 
-      $or: [
-        { _id: userId },
-        { pseudonym: userId }
-      ],
-      dataType: 'userAccount'
-    });
-
+    // Split the query into two separate operations since $or with _id is not supported
+    let userDoc = await libraryCollection.findOne({ _id: userId });
+    
     if (!userDoc) {
-      console.error('User not found:', userId);
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      // If not found by _id, try finding by pseudonym
+      userDoc = await libraryCollection.findOne({ pseudonym: userId });
     }
 
-    // Log the found user data
-    console.log('Found user data:', userDoc);
+    if (!userDoc) {
+      return new Response(JSON.stringify({ error: 'User not found' }), {
+        status: 404,
+      });
+    }
 
-    // Return all user data except sensitive information
-    const { password, ...userData } = userDoc;
-    
-    return NextResponse.json(userData);
+    return new Response(JSON.stringify(userDoc), {
+      status: 200,
+    });
+
   } catch (error) {
     console.error('Error fetching user data:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch user data' },
-      { status: 500 }
-    );
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+    });
   }
 } 

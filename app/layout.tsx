@@ -14,6 +14,7 @@ import AddEntry from "../components/AddEntry"; // Import AddEntry
 import "./globals.css";
 import { Inter } from "next/font/google";
 import Head from 'next/head';
+import CompanionSelection from "../components/CompanionSelection";
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -30,8 +31,30 @@ const RootLayout: React.FC = () => {
   const [view, setView] = useState<"Chat" | "Profile" | "Map" | "NFCReader" | "AddEntry">("Chat");
   const [configureOpen, setConfigureOpen] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [showCompanionSelection, setShowCompanionSelection] = useState(false);
 
-  const handleSplashComplete = () => setShowSplash(false);
+  // Check user state on mount and after splash
+  useEffect(() => {
+    if (!showSplash) {
+      const userState = localStorage.getItem('userState');
+      if (userState) {
+        try {
+          const { isAnonymous, hasChosenCompanion, activeServitor } = JSON.parse(userState);
+          setShowCompanionSelection(!isAnonymous && !hasChosenCompanion && !activeServitor);
+        } catch (error) {
+          console.error('Error parsing user state:', error);
+        }
+      }
+    }
+  }, [showSplash]);
+
+  const handleSplashComplete = () => {
+    setShowSplash(false);
+  };
+
+  const handleCompanionSelected = () => {
+    setShowCompanionSelection(false);
+  };
 
   const handleToggleView = (
     newView: "Chat" | "Profile" | "Map" | "NFCReader" | "AddEntry"
@@ -78,6 +101,12 @@ const RootLayout: React.FC = () => {
         <GlobalStateProvider>
           {showSplash ? (
             <SplashScreen onClose={handleSplashComplete} />
+          ) : showCompanionSelection ? (
+            <CompanionSelection
+              isOpen={true}
+              onClose={handleCompanionSelected}
+              onSelect={handleCompanionSelected}
+            />
           ) : (
             <>
               <Header

@@ -19,6 +19,7 @@ import OfferingProfile from "./OfferingProfile";
 import MapSidebar from "./MapSidebar";
 import AddVenueModal from "./AddVenueModal";
 import LoobCache from "./LoobCache";
+import { useGlobalState } from './GlobalStateContext';
 
 export type VisualView = "Today";
 
@@ -99,26 +100,27 @@ const MAP_STYLE: maplibregl.StyleSpecification = {
       minzoom: 0,
       maxzoom: 19,
       paint: {
-        "raster-saturation": -1,
-        "raster-contrast": 0.2,
-        "raster-brightness-min": 0.2,
+        "raster-saturation": -0.9,
+        "raster-brightness-min": 0.1,
+        "raster-brightness-max": 0.9,
       },
     },
   ],
 };
 
 const INITIAL_MAP_STATE = {
-  center: DEFAULT_LOCATION,
-  zoom: INITIAL_ZOOM,
-  pitch: 0,
+  zoom: 18,
+  pitch: 60,
   bearing: 0,
-  maxBounds: [
-    [-10, 35],
-    [40, 65],
-  ] as [[number, number], [number, number]],
-  minZoom: 4,
+  maxBounds: undefined,
+  minZoom: 16,
   maxZoom: 19,
-  fadeDuration: 0,
+  dragRotate: false,
+  dragPan: false,
+  scrollZoom: false,
+  keyboard: false,
+  doubleClickZoom: false,
+  touchZoomRotate: false,
 };
 
 const loadingOverlayStyle: CSSProperties = {
@@ -179,6 +181,10 @@ const Map: React.FC = () => {
     retryCount: 0,
   });
   const [showVibeEntity, setShowVibeEntity] = useState(false);
+  const { activeServitor } = useGlobalState();
+  const [mapLoadError, setMapLoadError] = useState<string | null>(null);
+  const initializationAttemptRef = useRef(0);
+  const maxInitializationAttempts = 3;
 
   const { location, accuracy, heading, error: geoError } = useGeolocation(
     mapInstanceRef.current,
@@ -327,114 +333,118 @@ const Map: React.FC = () => {
     }
   }, []);
 
-  const startWatchingLocation = useCallback(
-    async (map: maplibregl.Map) => {
-      if (!navigator.geolocation) {
-        setLocationState(prev => ({
-          ...prev,
-          status: 'error',
-          error: {
-            type: 'unavailable',
-            message: 'Geolocation is not supported by your browser'
-          }
-        }));
+  const startWatchingLocation = useCallback(async (map: maplibregl.Map) => {
+    if (!navigator.geolocation) {
+      setLocationError({
+        type: 'unavailable',
+        message: 'Geolocation is not supported by your browser'
+      });
+      return;
+    }
+
+    try {
+      const hasPermission = await requestLocationPermission();
+      if (!hasPermission) {
+        setLocationError({
+          type: 'permission',
+          message: 'Location access was denied. Please enable location services in your settings.'
+        });
         return;
       }
 
-      try {
-        // Check for permission first
-        const hasPermission = await requestLocationPermission();
-        setLocationState(prev => ({ ...prev, hasPermission }));
-        
-        if (!hasPermission) {
+      watchIdRef.current = navigator.geolocation.watchPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const newLocation: [number, number] = [longitude, latitude];
+          
+          setCurrentLocation(newLocation);
+          
+          // Update markers
+          if (userMarkerRef.current) {
+            userMarkerRef.current.setLngLat(newLocation);
+          }
+          if (pulsingMarkerRef.current) {
+            pulsingMarkerRef.current.setLngLat(newLocation);
+          }
+
+          // Keep map centered on user
+          map.easeTo({
+            center: newLocation,
+            duration: 1000,
+          });
+
+          // Clear any existing location errors
+          setLocationError(null);
+          
+          setLocationState({
+            status: 'watching',
+            error: null,
+            retryCount: 0,
+            lastUpdate: Date.now(),
+            hasPermission: true
+          });
+        },
+        (error) => {
+          let errorMessage = 'An unknown error occurred while getting your location.';
+          let errorType: 'permission' | 'unavailable' | 'timeout' = 'unavailable';
+
+          switch (error.code) {
+            case GeolocationPositionError.PERMISSION_DENIED:
+              errorType = 'permission';
+              errorMessage = 'Location access was denied. Please enable location services in your settings.';
+              break;
+            case GeolocationPositionError.POSITION_UNAVAILABLE:
+              errorType = 'unavailable';
+              errorMessage = 'Unable to determine your location. Please check your device settings.';
+              break;
+            case GeolocationPositionError.TIMEOUT:
+              errorType = 'timeout';
+              errorMessage = 'Location request timed out. Please check your connection.';
+              break;
+          }
+
+          console.warn('Location error:', {
+            code: error.code,
+            message: errorMessage,
+            type: errorType
+          });
+
+          setLocationError({
+            type: errorType,
+            message: errorMessage
+          });
+
           setLocationState(prev => ({
             ...prev,
             status: 'error',
             error: {
-              type: 'permission',
-              message: 'Location access was denied. Please enable it in your settings.'
+              type: errorType,
+              message: errorMessage
             }
           }));
-          return;
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0
         }
+      );
 
-        setLocationState(prev => ({ ...prev, status: 'requesting' }));
-
-        // Start watching position with high accuracy first
-        watchIdRef.current = navigator.geolocation.watchPosition(
-          (position) => {
-            const { latitude, longitude } = position.coords;
-            setCurrentLocation([longitude, latitude]);
-            
-            // Update markers if they exist
-            if (userMarkerRef.current) {
-              userMarkerRef.current.setLngLat([longitude, latitude]);
-              userMarkerRef.current.getElement().style.display = 'block';
-            }
-            if (pulsingMarkerRef.current) {
-              pulsingMarkerRef.current.setLngLat([longitude, latitude]);
-              pulsingMarkerRef.current.getElement().style.display = 'block';
-            }
-
-            // Only fly to location on first position or if explicitly requested
-            if (locationState.status === 'requesting') {
-              map.flyTo({
-                center: [longitude, latitude],
-                zoom: INITIAL_ZOOM,
-                duration: 1000
-              });
-            }
-
-            setLocationState(prev => ({
-              ...prev,
-              status: 'watching',
-              error: null,
-              lastUpdate: Date.now(),
-              retryCount: 0
-            }));
-          },
-          (error) => {
-            // Only update error state if we don't already have permission
-            if (!locationState.hasPermission || error.code === 1) {
-              const errorMessage = 
-                error.code === 1 ? 'Location access was denied. Please enable permissions in your browser settings.' :
-                error.code === 2 ? 'Unable to determine your location. Please check your device settings.' :
-                error.code === 3 ? 'Location request timed out. Please check your connection.' :
-                'An unknown error occurred while getting your location.';
-
-              setLocationState(prev => ({
-                ...prev,
-                status: 'error',
-                error: {
-                  type: error.code === 1 ? 'permission' : 
-                        error.code === 3 ? 'timeout' : 'unavailable',
-                  message: errorMessage
-                }
-              }));
-            }
-            // Log error without the full error object to avoid circular reference
-            console.warn('Watch position error:', {
-              code: error.code,
-              message: error.message
-            });
-          },
-          LOCATION_CONFIG.HIGH_ACCURACY
-        );
-
-      } catch (error: any) {
-        console.warn('Location setup error:', error.message);
-        setLocationState(prev => ({
-          ...prev,
-          status: 'error',
-          error: {
-            type: 'unavailable',
-            message: 'Failed to initialize location services.'
-          }
-        }));
-      }
-    },
-    [locationState.hasPermission, locationState.status]
-  );
+      // Clean up watch position on component unmount
+      return () => {
+        if (watchIdRef.current !== null) {
+          navigator.geolocation.clearWatch(watchIdRef.current);
+          watchIdRef.current = null;
+        }
+      };
+    } catch (error) {
+      console.warn('Location setup error:', error);
+      setLocationError({
+        type: 'unavailable',
+        message: 'Failed to initialize location services. Please try again.'
+      });
+    }
+  }, []);
 
   const handleDeviceOrientation = useCallback(
     (event: DeviceOrientationEventWithWebkit) => {
@@ -482,84 +492,112 @@ const Map: React.FC = () => {
     }
   }, [deviceOrientation]);
 
-  useEffect(() => {
+  const initializeMap = useCallback(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
-    const map = new maplibregl.Map({
-      container: mapContainerRef.current,
-      ...INITIAL_MAP_STATE,
-      style: MAP_STYLE,
-      maxZoom: 19,
-      minZoom: 4,
-      trackResize: true,
-      refreshExpiredTiles: false,
-    });
+    try {
+      const map = new maplibregl.Map({
+        container: mapContainerRef.current,
+        style: MAP_STYLE,
+        ...INITIAL_MAP_STATE,
+        fadeDuration: 0, // Disable fade animations for faster loading
+      });
 
-    // Enable default map interactions
-    map.dragPan.enable();
-    map.scrollZoom.enable();
-    map.doubleClickZoom.enable();
-    map.keyboard.enable();
+      // Disable all default interactions
+      map.dragPan.disable();
+      map.scrollZoom.disable();
+      map.doubleClickZoom.disable();
+      map.touchZoomRotate.disable();
+      map.keyboard.disable();
+      map.dragRotate.disable();
 
-    mapInstanceRef.current = map;
+      mapInstanceRef.current = map;
 
-    const createUserMarker = () => {
-      const userEl = document.createElement("div");
-      userEl.className = "user-arrow";
-      return new maplibregl.Marker({
-        element: userEl,
-        anchor: "center",
-        rotationAlignment: "map",
-        pitchAlignment: "map",
-        scale: 1.2,
-      })
-        .setLngLat(DEFAULT_LOCATION)
-        .addTo(map);
-    };
+      // Handle successful map load
+      map.once('load', () => {
+        console.log('Map loaded successfully');
+        setIsMapLoading(false);
+        setMapLoadError(null);
+        
+        // Create markers and start location watching only after successful load
+        createUserMarker(map);
+        createPulsingMarker(map);
+        startWatchingLocation(map);
+      });
 
-    userMarkerRef.current = createUserMarker();
-    if (!currentLocation) {
-      userMarkerRef.current.getElement().style.display = 'none';
-    }
+      // Handle map load errors
+      map.once('error', (e) => {
+        console.error('Map load error:', e);
+        setMapLoadError('Failed to load map. Retrying...');
+        
+        // Clean up failed map instance
+        map.remove();
+        mapInstanceRef.current = null;
 
-    // Create a pulsing ring marker behind the user marker.
-    const createPulsingMarker = () => {
-      const ringEl = document.createElement("div");
-      ringEl.className = "pulsing-ring";
-      return new maplibregl.Marker({
-        element: ringEl,
-        anchor: "center",
-      })
-        .setLngLat(DEFAULT_LOCATION)
-        .addTo(map);
-    };
+        // Retry initialization if under max attempts
+        if (initializationAttemptRef.current < maxInitializationAttempts) {
+          initializationAttemptRef.current += 1;
+          setTimeout(initializeMap, 2000); // Retry after 2 seconds
+        } else {
+          setMapLoadError('Could not load map. Please refresh the page.');
+          setIsMapLoading(false);
+        }
+      });
 
-    pulsingMarkerRef.current = createPulsingMarker();
-    if (!currentLocation) {
-      pulsingMarkerRef.current.getElement().style.display = 'none';
-    }
-
-    const debouncedResize = debounce(() => {
-      map.resize();
-    }, 250);
-
-    window.addEventListener("resize", debouncedResize);
-
-    map.on("load", () => {
+    } catch (error) {
+      console.error('Map initialization error:', error);
+      setMapLoadError('Failed to initialize map');
       setIsMapLoading(false);
-      startWatchingLocation(map);
-    });
+    }
+  }, [startWatchingLocation]);
 
-    // Clean up on unmount.
+  // Create user marker with companion icon
+  const createUserMarker = useCallback((map: maplibregl.Map) => {
+    const userEl = document.createElement("div");
+    userEl.className = "user-marker";
+    
+    if (activeServitor) {
+      const companionEl = document.createElement("div");
+      companionEl.className = "companion-indicator";
+      companionEl.innerHTML = activeServitor.icon;
+      userEl.appendChild(companionEl);
+    }
+    
+    userMarkerRef.current = new maplibregl.Marker({
+      element: userEl,
+      anchor: "center",
+      rotationAlignment: "map",
+      pitchAlignment: "viewport",
+    })
+      .setLngLat(DEFAULT_LOCATION)
+      .addTo(map);
+  }, [activeServitor]);
+
+  // Create pulsing marker with companion theme
+  const createPulsingMarker = useCallback((map: maplibregl.Map) => {
+    const ringEl = document.createElement("div");
+    ringEl.className = `pulsing-ring ${activeServitor ? activeServitor.id : ''}`;
+    
+    pulsingMarkerRef.current = new maplibregl.Marker({
+      element: ringEl,
+      anchor: "center",
+    })
+      .setLngLat(DEFAULT_LOCATION)
+      .addTo(map);
+  }, [activeServitor]);
+
+  // Initialize map on component mount
+  useEffect(() => {
+    setIsMapLoading(true);
+    initializeMap();
+
     return () => {
-      window.removeEventListener("resize", debouncedResize);
-      debouncedResize.cancel();
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
     };
-  }, [startWatchingLocation]);
+  }, [initializeMap]);
 
   // Create markers for nodes once and update only when nodes change.
   useEffect(() => {
@@ -746,9 +784,32 @@ const Map: React.FC = () => {
     <div className="map-container" style={{ position: "relative" }}>
       <div ref={mapContainerRef} className="map-layer" />
 
+      {/* Loading State */}
       {isMapLoading && (
         <div style={loadingOverlayStyle}>
-          <div className="map-spinner" />
+          <div className="map-loading-content">
+            <div className="map-spinner" />
+            <p className="map-loading-text">
+              {mapLoadError || 'Loading map...'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Map Load Error */}
+      {!isMapLoading && mapLoadError && (
+        <div className="map-error-message">
+          <p>{mapLoadError}</p>
+          <button 
+            onClick={() => {
+              setIsMapLoading(true);
+              initializationAttemptRef.current = 0;
+              initializeMap();
+            }}
+            className="retry-button"
+          >
+            Retry
+          </button>
         </div>
       )}
 
@@ -989,6 +1050,16 @@ const Map: React.FC = () => {
           console.log(`Found ${amount} LOOB!`);
         }}
       />
+
+      {/* Companion Status Overlay */}
+      {activeServitor && (
+        <div className="companion-overlay">
+          <div className="companion-status">
+            <span className="companion-icon">{activeServitor.icon}</span>
+            <span className="companion-name">{activeServitor.name}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

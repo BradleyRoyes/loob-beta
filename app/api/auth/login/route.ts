@@ -31,8 +31,10 @@ export async function POST(request: NextRequest) {
     }
 
     const libraryCollection = await getLibraryCollection();
+    
+    // First try to find by pseudonym
     const userDoc = await libraryCollection.findOne({ 
-      pseudonym,
+      pseudonym: pseudonym.trim(),
       dataType: 'userAccount'
     });
 
@@ -46,21 +48,24 @@ export async function POST(request: NextRequest) {
       return handleError('Invalid pseudonym or password.', 401, 'invalid_credentials');
     }
 
-    // Remove sensitive data before sending
+    // Remove sensitive data and ensure required fields
     const { password: _, ...userData } = userDoc;
-
-    console.log('User successfully logged in:', {
-      userId: userData._id,
-      pseudonym: userData.pseudonym
-    });
-
-    // Log full user data for debugging
-    console.log('Full user data loaded into GlobalStateContext:', userData);
+    
+    const safeUserData = {
+      _id: userData._id,
+      id: userData._id, // Include both for compatibility
+      pseudonym: userData.pseudonym,
+      email: userData.email || null,
+      phone: userData.phone || null,
+      connectedLoobricates: userData.connectedLoobricates || [],
+      dataType: 'userAccount'
+    };
 
     return NextResponse.json({
       message: 'Login successful.',
-      user: userData
+      user: safeUserData
     });
+    
   } catch (error) {
     console.error('Error in /api/auth/login:', error);
     return handleError('Internal Server Error', 500, 'internal_error');
