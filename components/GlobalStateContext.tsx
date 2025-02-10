@@ -28,6 +28,7 @@ interface UserState {
   activeLoobricate: Loobricate | null;
   activeServitor: Servitor | null;
   hasChosenCompanion: boolean;
+  discoveredServitors: string[];
 }
 
 interface GlobalState extends UserState {
@@ -70,7 +71,8 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
     connectedLoobricates: [],
     activeLoobricate: null,
     activeServitor: null,
-    hasChosenCompanion: false
+    hasChosenCompanion: false,
+    discoveredServitors: []
   });
 
   // Initialize state from localStorage with logging
@@ -160,7 +162,8 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
       connectedLoobricates: [],
       activeLoobricate: null,
       activeServitor: null,
-      hasChosenCompanion: false
+      hasChosenCompanion: false,
+      discoveredServitors: []
     });
     localStorage.removeItem('userState');
     localStorage.removeItem('isLoggedIn');

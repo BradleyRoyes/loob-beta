@@ -7,6 +7,7 @@ interface CompanionSelectionProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (servitor: Servitor) => void;
+  initialServitor?: Servitor;
 }
 
 const PHASES = {
@@ -60,33 +61,40 @@ const getServitorIntroText = (servitor: Servitor) => {
   }
 };
 
-const CompanionSelection: React.FC<CompanionSelectionProps> = ({ isOpen, onClose, onSelect }) => {
-  const { setUserState } = useGlobalState();
-  const [phase, setPhase] = useState(PHASES.INTRO);
-  const [selectedServitor, setSelectedServitor] = useState<Servitor | null>(null);
+const CompanionSelection: React.FC<CompanionSelectionProps> = ({ 
+  isOpen, 
+  onClose, 
+  onSelect,
+  initialServitor 
+}) => {
+  const { setUserState, isAnonymous } = useGlobalState();
+  const [phase, setPhase] = useState(initialServitor ? PHASES.RITUAL : PHASES.INTRO);
+  const [selectedServitor, setSelectedServitor] = useState<Servitor | null>(initialServitor || null);
   const [dialogText, setDialogText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [shouldSkipAnimation, setShouldSkipAnimation] = useState(false);
   const [ritualProgress, setRitualProgress] = useState(0);
   const [isRitualComplete, setIsRitualComplete] = useState(false);
 
+  const anonymousIntroText = "Welcome to Loob! I'm here to help you discover and connect with underground culture, events, and resources. Log in to unlock personalized companions and enhanced features.";
+  
   const introText = "Welcome, seeker! I'm Professor Loob, your guide into this realm of community and connection. Let's find your perfect companion for this journey...";
   
   const meetText = "Three unique Servitors await, each with special gifts to share. Feel their energy and choose the one that resonates with your spirit...";
 
   useEffect(() => {
     if (isOpen) {
-      setPhase(PHASES.INTRO);
-      setSelectedServitor(null);
+      setPhase(initialServitor ? PHASES.RITUAL : PHASES.INTRO);
+      setSelectedServitor(initialServitor || null);
       setRitualProgress(0);
       setIsRitualComplete(false);
-      typeText(introText);
+      typeText(isAnonymous ? anonymousIntroText : introText);
     }
     return () => {
       setShouldSkipAnimation(false);
       setIsTyping(false);
     };
-  }, [isOpen]);
+  }, [isOpen, isAnonymous, initialServitor]);
 
   const typeText = async (text: string) => {
     if (shouldSkipAnimation) {
@@ -96,7 +104,7 @@ const CompanionSelection: React.FC<CompanionSelectionProps> = ({ isOpen, onClose
     }
 
     setIsTyping(true);
-    setDialogText('');
+    let currentText = '';
     
     try {
       for (let i = 0; i < text.length; i++) {
@@ -104,7 +112,8 @@ const CompanionSelection: React.FC<CompanionSelectionProps> = ({ isOpen, onClose
           setDialogText(text);
           break;
         }
-        setDialogText(prev => prev + text[i]);
+        currentText += text[i];
+        setDialogText(currentText);
         await new Promise(resolve => setTimeout(resolve, 30));
       }
     } finally {
@@ -180,7 +189,7 @@ const CompanionSelection: React.FC<CompanionSelectionProps> = ({ isOpen, onClose
 
   const handleServitorSelect = (servitor: Servitor) => {
     setSelectedServitor(servitor);
-    typeText(`The ${servitor.name} resonates with your energy... They embody ${servitor.traits?.join(", ").toLowerCase()}. Shall we begin the bonding ritual?`);
+    typeText(`The ${servitor.name} resonates with your energy. They embody ${servitor.traits?.join(", ").toLowerCase()}. Shall we begin the bonding ritual?`);
   };
 
   if (!isOpen) return null;
@@ -189,94 +198,123 @@ const CompanionSelection: React.FC<CompanionSelectionProps> = ({ isOpen, onClose
     <div className="companion-selection-overlay">
       <div className="companion-selection-container">
         <div className="companion-selection-content">
-          {/* Professor and Dialog Section - Only show in intro, meet, and choose phases */}
-          {(phase === PHASES.INTRO || phase === PHASES.MEET || phase === PHASES.CHOOSE) && (
+          {/* Basic Loob Section for Anonymous Users */}
+          {isAnonymous ? (
             <div className="professor-section">
               <div className="professor-avatar">
-                🧙‍♂️
+                <img 
+                  src="/favicon.ico" 
+                  alt="Loob" 
+                  width={48} 
+                  height={48}
+                  className="basic-loob-icon"
+                />
               </div>
               <div className="dialog-box">
                 <p className={`dialog-text ${isTyping ? 'typing' : ''}`}>{dialogText}</p>
-                {!isTyping && phase !== PHASES.CHOOSE && (
+                <div className="anonymous-note">
+                  <p>Log in to unlock personalized companions and enhanced features</p>
                   <button 
-                    onClick={handleNext}
+                    onClick={onClose}
                     className="next-button"
                   >
-                    Next →
+                    Continue as Guest →
                   </button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Servitor Selection Section */}
-          {phase === PHASES.CHOOSE && (
-            <div className="servitor-selection">
-              <h2 className="text-2xl font-bold text-white mb-6">Choose Your Companion</h2>
-              <div className="servitor-grid">
-                {defaultServitors.map((servitor) => (
-                  <button
-                    key={servitor.id}
-                    onClick={() => handleServitorSelect(servitor)}
-                    className={`servitor-card ${selectedServitor?.id === servitor.id ? 'selected' : ''}`}
-                  >
-                    <div className="servitor-icon">{servitor.icon}</div>
-                    <h3 className="servitor-name">{servitor.name}</h3>
-                    <p className="servitor-description">{servitor.description}</p>
-                    <div className="servitor-traits">
-                      {servitor.traits?.map((trait, index) => (
-                        <span key={index} className="trait-tag">{trait}</span>
-                      ))}
-                    </div>
-                  </button>
-                ))}
-              </div>
-              {selectedServitor && (
-                <button 
-                  onClick={handleNext}
-                  className="confirm-button"
-                >
-                  Begin Ritual with {selectedServitor.name}
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Ritual Section */}
-          {phase === PHASES.RITUAL && selectedServitor && (
-            <div className="ritual-section">
-              <div className="ritual-circle">
-                <div className="servitor-icon large ritual-icon">{selectedServitor.icon}</div>
-                <div className="ritual-progress" style={{ '--progress': `${ritualProgress}%` } as any}>
-                  <div className="ritual-energy"></div>
                 </div>
               </div>
-              <div className="ritual-text">
-                <p className={`dialog-text ${isTyping ? 'typing' : ''}`}>{dialogText}</p>
-                {!isTyping && isRitualComplete && (
-                  <button onClick={handleNext} className="next-button">
-                    Complete Ritual →
-                  </button>
-                )}
-              </div>
             </div>
-          )}
+          ) : (
+            <>
+              {/* Existing Professor and Dialog Section */}
+              {(phase === PHASES.INTRO || phase === PHASES.MEET || phase === PHASES.CHOOSE) && (
+                <div className="professor-section">
+                  <div className="professor-avatar">
+                    🧙‍♂️
+                  </div>
+                  <div className="dialog-box">
+                    <p className={`dialog-text ${isTyping ? 'typing' : ''}`}>{dialogText}</p>
+                    {!isTyping && phase !== PHASES.CHOOSE && (
+                      <button 
+                        onClick={handleNext}
+                        className="next-button"
+                      >
+                        Next →
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
 
-          {/* Confirmation Section */}
-          {phase === PHASES.CONFIRM && selectedServitor && (
-            <div className="confirmation-section">
-              <div className="selected-servitor-card">
-                <div className="servitor-icon large">{selectedServitor.icon}</div>
-                <h2 className="text-2xl font-bold text-white mb-2">{selectedServitor.name}</h2>
-                <p className="text-gray-300 mb-4">{selectedServitor.description}</p>
-                <button 
-                  onClick={handleNext}
-                  className="start-journey-button"
-                >
-                  Begin Your Journey Together
-                </button>
-              </div>
-            </div>
+              {/* Servitor Selection Section */}
+              {phase === PHASES.CHOOSE && (
+                <div className="servitor-selection">
+                  <h2 className="text-2xl font-bold text-white mb-6">Choose Your Companion</h2>
+                  <div className="servitor-grid">
+                    {defaultServitors.map((servitor) => (
+                      <button
+                        key={servitor.id}
+                        onClick={() => handleServitorSelect(servitor)}
+                        className={`servitor-card ${selectedServitor?.id === servitor.id ? 'selected' : ''}`}
+                      >
+                        <div className="servitor-icon">{servitor.icon}</div>
+                        <h3 className="servitor-name">{servitor.name}</h3>
+                        <p className="servitor-description">{servitor.description}</p>
+                        <div className="servitor-traits">
+                          {servitor.traits?.map((trait, index) => (
+                            <span key={index} className="trait-tag">{trait}</span>
+                          ))}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  {selectedServitor && (
+                    <button 
+                      onClick={handleNext}
+                      className="confirm-button"
+                    >
+                      Begin Ritual with {selectedServitor.name}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Ritual Section */}
+              {phase === PHASES.RITUAL && selectedServitor && (
+                <div className="ritual-section">
+                  <div className="ritual-circle">
+                    <div className="servitor-icon large ritual-icon">{selectedServitor.icon}</div>
+                    <div className="ritual-progress" style={{ '--progress': `${ritualProgress}%` } as any}>
+                      <div className="ritual-energy"></div>
+                    </div>
+                  </div>
+                  <div className="ritual-text">
+                    <p className={`dialog-text ${isTyping ? 'typing' : ''}`}>{dialogText}</p>
+                    {!isTyping && isRitualComplete && (
+                      <button onClick={handleNext} className="next-button">
+                        Complete Ritual →
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Confirmation Section */}
+              {phase === PHASES.CONFIRM && selectedServitor && (
+                <div className="confirmation-section">
+                  <div className="selected-servitor-card">
+                    <div className="servitor-icon large">{selectedServitor.icon}</div>
+                    <h2 className="text-2xl font-bold text-white mb-2">You've Summoned {selectedServitor.name}</h2>
+                    <p className="text-gray-300 mb-4">{selectedServitor.description}</p>
+                    <button 
+                      onClick={handleNext}
+                      className="start-journey-button"
+                    >
+                      Begin Your Journey Together
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

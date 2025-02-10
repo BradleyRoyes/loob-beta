@@ -6,7 +6,6 @@
   width: 100%;
   height: 100vh;
   overflow: hidden;
-  background: #1a1b26; /* Dark background while loading */
 }
 
 .map-layer {
@@ -16,13 +15,6 @@
   width: 100%;
   height: 100%;
   z-index: 1;
-  background: #1a1b26;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.map-layer.loaded {
-  opacity: 1;
 }
 
 /* Add map visualization container styling */
@@ -276,29 +268,134 @@
 /* Add these new styles */
 .map-loading-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: #1a202c;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 2000;
+  backdrop-filter: blur(10px);
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: white;
+  text-align: center;
+}
+
+.loading-content p {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .map-spinner {
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top: 4px solid #3498db; /* Change this color as needed */
-  border-radius: 50%;
   width: 40px;
   height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ff9494;
+  border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
+/* Location status banner */
+.location-status-banner {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  color: white;
+  z-index: 2000;
+  max-width: 90%;
+  width: auto;
+  text-align: center;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  animation: slideDown 0.3s ease-out;
+}
+
+.status-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.status-content span {
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.retry-button {
+  background: rgba(255, 148, 148, 0.2);
+  color: #ff9494;
+  border: 1px solid rgba(255, 148, 148, 0.3);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.retry-button:hover {
+  background: rgba(255, 148, 148, 0.3);
+  transform: translateY(-1px);
+}
+
+.retry-button:active {
+  transform: translateY(0);
+}
+
+@keyframes slideDown {
+  from {
+    transform: translate(-50%, -20px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .location-status-banner {
+    bottom: 90px;
+    top: auto;
+    padding: 0.75rem 1rem;
+  }
+
+  .status-content span {
+    font-size: 0.9rem;
+  }
+
+  .retry-button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* iOS specific fixes */
+@supports (-webkit-touch-callout: none) {
+  .map-loading-overlay,
+  .location-status-banner {
+    position: fixed;
+  }
 }
 
 /* Add these styles to your existing Map.css */
@@ -663,28 +760,6 @@
   min-width: 200px;
 }
 
-.retry-button {
-  background: linear-gradient(45deg, #ffb6b9, #fae3d9);
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  color: #333;
-  cursor: pointer;
-  font-weight: 600;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-  min-width: 100px;
-}
-
-.retry-button:hover {
-  opacity: 0.9;
-  transform: scale(1.05);
-}
-
-.retry-button:active {
-  transform: scale(0.95);
-}
-
 .dismiss-button {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -1033,93 +1108,171 @@
   }
 }
 
-/* Loading States */
-.map-loading-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  background: rgba(0, 0, 0, 0.85);
-  padding: 2rem;
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.map-loading-text {
-  color: white;
-  font-size: 1rem;
-  text-align: center;
-}
-
-.map-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #fff;
+/* Servitor Markers */
+.servitor-marker {
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 148, 148, 0.1);
+  border: 2px solid rgba(255, 148, 148, 0.3);
   border-radius: 50%;
-  animation: map-spin 1s linear infinite;
-}
-
-@keyframes map-spin {
-  to { transform: rotate(360deg); }
-}
-
-.map-error-message {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(0, 0, 0, 0.85);
-  padding: 1.5rem;
-  border-radius: 12px;
-  text-align: center;
-  color: white;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  z-index: 1000;
-  max-width: 90%;
-  width: auto;
-}
-
-.map-error-message p {
-  margin-bottom: 1rem;
-  color: #ff6b6b;
-}
-
-.map-error-message .retry-button {
-  background: rgba(255, 148, 148, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 148, 148, 0.5);
-  padding: 0.5rem 1.5rem;
-  border-radius: 999px;
-  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  transform-origin: center bottom;
+  position: relative;
 }
 
-.map-error-message .retry-button:hover {
-  background: rgba(255, 148, 148, 0.3);
-  transform: translateY(-1px);
+.servitor-marker::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 148, 148, 0.2) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
-.map-error-message .retry-button:active {
-  transform: translateY(0);
+.servitor-marker.nearby {
+  background: rgba(255, 148, 148, 0.2);
+  border-color: rgba(255, 148, 148, 0.8);
+  animation: markerFloat 3s ease-in-out infinite;
+}
+
+.servitor-marker.nearby::before {
+  opacity: 1;
+  animation: pulseRing 2s ease-out infinite;
+}
+
+.servitor-marker .servitor-icon {
+  font-size: 24px;
+  filter: drop-shadow(0 0 10px rgba(255, 148, 148, 0.5));
+  transition: transform 0.3s ease;
+}
+
+.servitor-marker:hover .servitor-icon {
+  transform: scale(1.2);
+}
+
+.servitor-marker:not(.nearby) {
+  filter: grayscale(1) opacity(0.5);
+  animation: markerIdle 4s ease-in-out infinite;
+}
+
+.servitor-marker:not(.nearby):hover {
+  filter: grayscale(0.5) opacity(0.7);
+}
+
+.servitor-marker:not(.nearby):hover::after {
+  content: '❌';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ff9494;
+  font-size: 16px;
+  text-shadow: 0 0 10px rgba(255, 148, 148, 0.5);
+  animation: fadeInOut 1s ease-in-out infinite;
+}
+
+/* Spawn animation */
+@keyframes spawnIn {
+  0% {
+    transform: scale(0) translateY(-20px);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) translateY(0);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Float animation for nearby markers */
+@keyframes markerFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Idle animation for far markers */
+@keyframes markerIdle {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(5deg);
+  }
+}
+
+/* Pulse ring animation */
+@keyframes pulseRing {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Fade in/out animation */
+@keyframes fadeInOut {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* Mobile optimizations */
 @media (max-width: 768px) {
-  .map-loading-content {
-    padding: 1.5rem;
+  .servitor-marker {
+    width: 40px;
+    height: 40px;
   }
 
-  .map-loading-text {
-    font-size: 0.875rem;
+  .servitor-marker .servitor-icon {
+    font-size: 20px;
   }
 
-  .map-error-message {
-    padding: 1rem;
+  .servitor-marker.nearby {
+    animation: markerFloat 2s ease-in-out infinite;
+  }
+}
+
+/* Add new spawn effect */
+.spawn-effect {
+  position: absolute;
+  pointer-events: none;
+  width: 200px;
+  height: 200px;
+  transform: translate(-50%, -50%);
+  animation: spawnEffect 2s ease-out forwards;
+}
+
+@keyframes spawnEffect {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
   }
 }

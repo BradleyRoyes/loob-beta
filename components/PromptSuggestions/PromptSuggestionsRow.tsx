@@ -19,16 +19,17 @@ const servitorPrompts = {
   ]
 };
 
+// Updated anonymous user prompts
+const defaultPrompts = [
+  "Find underground events near me",
+  "Connect me with local resources",
+  "Learn about harm reduction",
+  "Discover community spaces"
+];
+
 const PromptSuggestionRow = ({ onPromptClick }) => {
   const { activeServitor, isAnonymous } = useGlobalState();
   
-  // Default prompts for anonymous users or when no Servitor is selected
-  const defaultPrompts = [
-    "Tell me more about Loob",
-    "Help me find resources",
-    "Connect with the community"
-  ];
-
   const prompts = (!isAnonymous && activeServitor?.id) 
     ? servitorPrompts[activeServitor.id] || defaultPrompts
     : defaultPrompts;

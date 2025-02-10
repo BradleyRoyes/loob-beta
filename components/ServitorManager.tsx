@@ -12,9 +12,15 @@ export interface Servitor {
   contextPath?: string;
   traits?: string[];
   level?: number;
+  isDiscovered?: boolean;
+  discoveryLocation?: {
+    lat: number;
+    lng: number;
+    radius: number; // meters
+  };
 }
 
-const defaultServitors: Servitor[] = [
+export const defaultServitors: Servitor[] = [
   {
     id: 'logis',
     name: 'Logis',
@@ -23,7 +29,12 @@ const defaultServitors: Servitor[] = [
     icon: '🏗️',
     contextPath: '/contexts/logis',
     traits: ['Organized', 'Efficient', 'Strategic'],
-    level: 1
+    level: 1,
+    discoveryLocation: {
+      lat: 52.52,
+      lng: 13.405,
+      radius: 100
+    }
   },
   {
     id: 'harmoni',
@@ -33,7 +44,12 @@ const defaultServitors: Servitor[] = [
     icon: '🌟',
     contextPath: '/contexts/harmoni',
     traits: ['Intuitive', 'Mindful', 'Supportive'],
-    level: 1
+    level: 1,
+    discoveryLocation: {
+      lat: 52.49,
+      lng: 13.42,
+      radius: 100
+    }
   },
   {
     id: 'nexus',
@@ -43,7 +59,12 @@ const defaultServitors: Servitor[] = [
     icon: '🔮',
     contextPath: '/contexts/nexus',
     traits: ['Connected', 'Collaborative', 'Visionary'],
-    level: 1
+    level: 1,
+    discoveryLocation: {
+      lat: 52.51,
+      lng: 13.38,
+      radius: 100
+    }
   }
 ];
 
@@ -54,11 +75,16 @@ interface ServitorManagerProps {
 }
 
 export default function ServitorManager({ isOpen, onClose, onSelect }: ServitorManagerProps) {
-  const { userId, isAnonymous } = useGlobalState();
+  const { userId, isAnonymous, discoveredServitors = [] } = useGlobalState();
   const [selectedServitor, setSelectedServitor] = useState<Servitor | null>(null);
   const [showInfoModal, setShowInfoModal] = useState(false);
 
   if (!isOpen) return null;
+
+  // Filter servitors to only show discovered ones
+  const availableServitors = defaultServitors.filter(servitor => 
+    discoveredServitors.includes(servitor.id)
+  );
 
   const handleServitorSelect = (servitor: Servitor) => {
     setSelectedServitor(servitor);
@@ -70,6 +96,30 @@ export default function ServitorManager({ isOpen, onClose, onSelect }: ServitorM
       onClose();
     }
   };
+
+  // If no discovered servitors, show a message about finding them on the map
+  if (availableServitors.length === 0) {
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 pt-[72px] px-4 sm:px-6">
+        <div className="bg-[#1a1b26] rounded-lg w-full max-w-4xl max-h-[calc(100vh-88px)] overflow-hidden flex flex-col p-6">
+          <div className="text-center">
+            <h2 className="text-xl md:text-2xl font-semibold text-white mb-4">
+              No Companions Discovered Yet
+            </h2>
+            <p className="text-gray-400 mb-6">
+              Explore the map to find and summon companions! Each companion can be discovered at specific locations throughout the city.
+            </p>
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-[#ff9494]/20 hover:bg-[#ff9494]/30 text-[#ff9494] rounded-lg transition-colors"
+            >
+              Explore Map →
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 pt-[72px] px-4 sm:px-6">
@@ -105,7 +155,7 @@ export default function ServitorManager({ isOpen, onClose, onSelect }: ServitorM
         {/* Servitor Grid - Scrollable */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {defaultServitors.map((servitor) => (
+            {availableServitors.map((servitor) => (
               <button
                 key={servitor.id}
                 onClick={() => handleServitorSelect(servitor)}

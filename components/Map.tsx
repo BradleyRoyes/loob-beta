@@ -20,6 +20,8 @@ import MapSidebar from "./MapSidebar";
 import AddVenueModal from "./AddVenueModal";
 import LoobCache from "./LoobCache";
 import { useGlobalState } from './GlobalStateContext';
+import { Servitor, defaultServitors } from './ServitorManager';
+import CompanionSelection from './CompanionSelection';
 
 export type VisualView = "Today";
 
@@ -52,6 +54,8 @@ const DEFAULT_LOCATION: [number, number] = [13.405, 52.52];
 const MAP_PITCH = 75;
 const INITIAL_ZOOM = 16;
 const LOCATION_TIMEOUT = 15000; // 15 seconds timeout
+const DEFAULT_CENTER: [number, number] = [13.405, 52.52]; // Berlin center coordinates
+const FALLBACK_ZOOM = 14;
 
 interface LocationError {
   type: "permission" | "unavailable" | "timeout";
@@ -59,7 +63,7 @@ interface LocationError {
 }
 
 interface LocationState {
-  status: 'idle' | 'requesting' | 'watching' | 'error';
+  status: 'idle' | 'requesting' | 'watching' | 'error' | 'denied' | 'fallback';
   error?: LocationError | null;
   retryCount: number;
   lastUpdate?: number;
@@ -109,18 +113,17 @@ const MAP_STYLE: maplibregl.StyleSpecification = {
 };
 
 const INITIAL_MAP_STATE = {
-  zoom: 18,
-  pitch: 60,
+  pitch: 60, // Tilted view by default
   bearing: 0,
-  maxBounds: undefined,
-  minZoom: 16,
+  maxBounds: undefined, // Remove bounds restriction
+  minZoom: 16, // Keep users zoomed in
   maxZoom: 19,
-  dragRotate: false,
-  dragPan: false,
-  scrollZoom: false,
-  keyboard: false,
-  doubleClickZoom: false,
-  touchZoomRotate: false,
+  dragRotate: false, // Disable manual rotation
+  dragPan: false, // Disable manual panning
+  scrollZoom: false, // Disable zoom with scroll
+  keyboard: false, // Disable keyboard controls
+  doubleClickZoom: false, // Disable double click zoom
+  touchZoomRotate: false, // Disable touch zoom/rotate
 };
 
 const loadingOverlayStyle: CSSProperties = {
@@ -154,6 +157,23 @@ interface DeviceOrientationEventWithWebkit extends DeviceOrientationEvent {
   webkitCompassHeading?: number;
 }
 
+interface SpawnedServitor extends Servitor {
+  spawnLocation: {
+    lat: number;
+    lng: number;
+  };
+  spawnTime: number;
+  despawnTime: number;
+}
+
+const SPAWN_CONFIG = {
+  MAX_DISTANCE: 1000, // meters
+  MIN_DISTANCE: 100, // meters
+  SPAWN_INTERVAL: 300000, // 5 minutes
+  DESPAWN_TIME: 1800000, // 30 minutes
+  INTERACTION_RADIUS: 50 // meters
+};
+
 const Map: React.FC = () => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
@@ -176,15 +196,17 @@ const Map: React.FC = () => {
   const [locationError, setLocationError] = useState<LocationError | null>(null);
   const [deviceOrientation, setDeviceOrientation] = useState<number>(0);
   const [isLocating, setIsLocating] = useState(false);
+  const [mapState, setMapState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [locationState, setLocationState] = useState<LocationState>({
     status: 'idle',
-    retryCount: 0,
+    retryCount: 0
   });
   const [showVibeEntity, setShowVibeEntity] = useState(false);
-  const { activeServitor } = useGlobalState();
-  const [mapLoadError, setMapLoadError] = useState<string | null>(null);
-  const initializationAttemptRef = useRef(0);
-  const maxInitializationAttempts = 3;
+  const { activeServitor, discoveredServitors = [], setUserState } = useGlobalState();
+  const [spawnedServitors, setSpawnedServitors] = useState<SpawnedServitor[]>([]);
+  const [showCompanionSelection, setShowCompanionSelection] = useState(false);
+  const [selectedServitor, setSelectedServitor] = useState<Servitor | null>(null);
+  const servitorMarkersRef = useRef<{ [key: string]: maplibregl.Marker }>({});
 
   const { location, accuracy, heading, error: geoError } = useGeolocation(
     mapInstanceRef.current,
@@ -492,104 +514,57 @@ const Map: React.FC = () => {
     }
   }, [deviceOrientation]);
 
-  const initializeMap = useCallback(() => {
+  useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
-    try {
-      const map = new maplibregl.Map({
-        container: mapContainerRef.current,
-        style: MAP_STYLE,
-        ...INITIAL_MAP_STATE,
-        fadeDuration: 0, // Disable fade animations for faster loading
+    const map = new maplibregl.Map({
+      container: mapContainerRef.current,
+      style: MAP_STYLE,
+      center: DEFAULT_CENTER,
+      zoom: FALLBACK_ZOOM,
+      ...INITIAL_MAP_STATE,
+    });
+
+    mapInstanceRef.current = map;
+
+    // Create user marker with companion icon - even if location isn't available
+    const createUserMarker = () => {
+      const userEl = document.createElement("div");
+      userEl.className = "user-marker";
+      
+      if (activeServitor) {
+        const companionEl = document.createElement("div");
+        companionEl.className = "companion-indicator";
+        companionEl.innerHTML = activeServitor.icon;
+        userEl.appendChild(companionEl);
+      }
+      
+      return new maplibregl.Marker({
+        element: userEl,
+        anchor: "center",
+        rotationAlignment: "map",
+        pitchAlignment: "viewport",
+      })
+        .setLngLat(DEFAULT_CENTER)
+        .addTo(map);
+    };
+
+    userMarkerRef.current = createUserMarker();
+
+    map.on("load", () => {
+      setMapState('ready');
+      // Try to get location, but don't block map functionality
+      initializeLocation(map).catch(() => {
+        setLocationState(prev => ({
+          ...prev,
+          status: 'fallback',
+          error: {
+            type: 'unavailable',
+            message: 'Using default location. Enable location services for a better experience.'
+          }
+        }));
       });
-
-      // Disable all default interactions
-      map.dragPan.disable();
-      map.scrollZoom.disable();
-      map.doubleClickZoom.disable();
-      map.touchZoomRotate.disable();
-      map.keyboard.disable();
-      map.dragRotate.disable();
-
-      mapInstanceRef.current = map;
-
-      // Handle successful map load
-      map.once('load', () => {
-        console.log('Map loaded successfully');
-        setIsMapLoading(false);
-        setMapLoadError(null);
-        
-        // Create markers and start location watching only after successful load
-        createUserMarker(map);
-        createPulsingMarker(map);
-        startWatchingLocation(map);
-      });
-
-      // Handle map load errors
-      map.once('error', (e) => {
-        console.error('Map load error:', e);
-        setMapLoadError('Failed to load map. Retrying...');
-        
-        // Clean up failed map instance
-        map.remove();
-        mapInstanceRef.current = null;
-
-        // Retry initialization if under max attempts
-        if (initializationAttemptRef.current < maxInitializationAttempts) {
-          initializationAttemptRef.current += 1;
-          setTimeout(initializeMap, 2000); // Retry after 2 seconds
-        } else {
-          setMapLoadError('Could not load map. Please refresh the page.');
-          setIsMapLoading(false);
-        }
-      });
-
-    } catch (error) {
-      console.error('Map initialization error:', error);
-      setMapLoadError('Failed to initialize map');
-      setIsMapLoading(false);
-    }
-  }, [startWatchingLocation]);
-
-  // Create user marker with companion icon
-  const createUserMarker = useCallback((map: maplibregl.Map) => {
-    const userEl = document.createElement("div");
-    userEl.className = "user-marker";
-    
-    if (activeServitor) {
-      const companionEl = document.createElement("div");
-      companionEl.className = "companion-indicator";
-      companionEl.innerHTML = activeServitor.icon;
-      userEl.appendChild(companionEl);
-    }
-    
-    userMarkerRef.current = new maplibregl.Marker({
-      element: userEl,
-      anchor: "center",
-      rotationAlignment: "map",
-      pitchAlignment: "viewport",
-    })
-      .setLngLat(DEFAULT_LOCATION)
-      .addTo(map);
-  }, [activeServitor]);
-
-  // Create pulsing marker with companion theme
-  const createPulsingMarker = useCallback((map: maplibregl.Map) => {
-    const ringEl = document.createElement("div");
-    ringEl.className = `pulsing-ring ${activeServitor ? activeServitor.id : ''}`;
-    
-    pulsingMarkerRef.current = new maplibregl.Marker({
-      element: ringEl,
-      anchor: "center",
-    })
-      .setLngLat(DEFAULT_LOCATION)
-      .addTo(map);
-  }, [activeServitor]);
-
-  // Initialize map on component mount
-  useEffect(() => {
-    setIsMapLoading(true);
-    initializeMap();
+    });
 
     return () => {
       if (mapInstanceRef.current) {
@@ -597,7 +572,65 @@ const Map: React.FC = () => {
         mapInstanceRef.current = null;
       }
     };
-  }, [initializeMap]);
+  }, [activeServitor]);
+
+  // Enhanced location initialization
+  const initializeLocation = async (map: maplibregl.Map) => {
+    try {
+      setLocationState(prev => ({ ...prev, status: 'requesting' }));
+      
+      const hasPermission = await requestLocationPermission();
+      if (!hasPermission) {
+        setLocationState(prev => ({
+          ...prev,
+          status: 'denied',
+          error: {
+            type: 'permission',
+            message: 'Location access denied. You can still explore the map, but some features may be limited.'
+          }
+        }));
+        return;
+      }
+
+      startWatchingLocation(map);
+    } catch (error) {
+      console.warn('Location initialization error:', error);
+      setLocationState(prev => ({
+        ...prev,
+        status: 'fallback',
+        error: {
+          type: 'unavailable',
+          message: 'Unable to get your location. You can still explore the map.'
+        }
+      }));
+    }
+  };
+
+  // Render location status message
+  const renderLocationStatus = () => {
+    if (locationState.status === 'fallback' || locationState.status === 'denied') {
+      return (
+        <div className="location-status-banner">
+          <div className="status-content">
+            <span>{locationState.error?.message}</span>
+            {locationState.status === 'fallback' && (
+              <button
+                onClick={() => {
+                  if (mapInstanceRef.current) {
+                    initializeLocation(mapInstanceRef.current);
+                  }
+                }}
+                className="retry-button"
+              >
+                Enable Location
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
 
   // Create markers for nodes once and update only when nodes change.
   useEffect(() => {
@@ -780,76 +813,160 @@ const Map: React.FC = () => {
     </div>
   );
 
+  // Add this new function for spawning companions
+  const generateSpawnLocation = (userLat: number, userLng: number): [number, number] => {
+    const radius = SPAWN_CONFIG.MIN_DISTANCE + 
+      Math.random() * (SPAWN_CONFIG.MAX_DISTANCE - SPAWN_CONFIG.MIN_DISTANCE);
+    const angle = Math.random() * 2 * Math.PI;
+    
+    // Convert meters to rough degrees (approximate at most latitudes)
+    const latOffset = (radius / 111111) * Math.cos(angle);
+    const lngOffset = (radius / (111111 * Math.cos(userLat * Math.PI / 180))) * Math.sin(angle);
+    
+    return [userLat + latOffset, userLng + lngOffset];
+  };
+
+  // Add this new function to manage spawns
+  const manageServitorSpawns = useCallback(() => {
+    if (!currentLocation) return;
+    
+    const [userLng, userLat] = currentLocation;
+    const now = Date.now();
+    
+    // Remove despawned servitors
+    const activeSpawns = spawnedServitors.filter(s => s.despawnTime > now);
+    
+    // Check if we need to spawn a new servitor
+    if (activeSpawns.length < 1) {
+      // Get available servitors (not yet discovered)
+      const availableServitors = defaultServitors.filter(
+        servitor => !discoveredServitors.includes(servitor.id)
+      );
+      
+      if (availableServitors.length > 0) {
+        // Randomly select a servitor to spawn
+        const servitorToSpawn = availableServitors[Math.floor(Math.random() * availableServitors.length)];
+        const [spawnLat, spawnLng] = generateSpawnLocation(userLat, userLng);
+        
+        const newSpawn: SpawnedServitor = {
+          ...servitorToSpawn,
+          spawnLocation: { lat: spawnLat, lng: spawnLng },
+          spawnTime: now,
+          despawnTime: now + SPAWN_CONFIG.DESPAWN_TIME
+        };
+        
+        setSpawnedServitors([...activeSpawns, newSpawn]);
+      }
+    } else {
+      setSpawnedServitors(activeSpawns);
+    }
+  }, [currentLocation, discoveredServitors, spawnedServitors]);
+
+  // Replace the existing useEffect for nearby servitors with this
+  useEffect(() => {
+    const spawnInterval = setInterval(manageServitorSpawns, 10000); // Check every 10 seconds
+    return () => clearInterval(spawnInterval);
+  }, [manageServitorSpawns]);
+
+  // Update the isWithinDiscoveryRange function
+  const isWithinDiscoveryRange = (userLocation: [number, number], servitor: SpawnedServitor): boolean => {
+    const [userLng, userLat] = userLocation;
+    const { lat, lng } = servitor.spawnLocation;
+    
+    // Calculate distance using Haversine formula
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = userLat * Math.PI/180;
+    const φ2 = lat * Math.PI/180;
+    const Δφ = (lat - userLat) * Math.PI/180;
+    const Δλ = (lng - userLng) * Math.PI/180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distance = R * c;
+
+    return distance <= SPAWN_CONFIG.INTERACTION_RADIUS;
+  };
+
+  // Update the servitor markers useEffect to use spawned servitors
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    // Remove existing markers
+    Object.values(servitorMarkersRef.current).forEach(marker => marker.remove());
+    servitorMarkersRef.current = {};
+
+    // Add markers for spawned servitors
+    spawnedServitors.forEach(servitor => {
+      const { lat, lng } = servitor.spawnLocation;
+      
+      const markerEl = document.createElement('div');
+      markerEl.className = 'servitor-marker';
+      
+      // Add pulsing effect if nearby
+      if (currentLocation && isWithinDiscoveryRange(currentLocation, servitor)) {
+        markerEl.classList.add('nearby');
+      }
+      
+      const iconEl = document.createElement('div');
+      iconEl.className = 'servitor-icon';
+      iconEl.innerHTML = servitor.icon;
+      markerEl.appendChild(iconEl);
+
+      const marker = new maplibregl.Marker({
+        element: markerEl,
+        anchor: 'bottom'
+      })
+        .setLngLat([lng, lat])
+        .addTo(map);
+
+      marker.getElement().addEventListener('click', () => {
+        if (!currentLocation) return;
+        
+        if (isWithinDiscoveryRange(currentLocation, servitor)) {
+          if (discoveredServitors.includes(servitor.id)) {
+            alert(`You have already summoned ${servitor.name}!`);
+            return;
+          }
+          setSelectedServitor(servitor);
+          setShowCompanionSelection(true);
+        } else {
+          alert('Move closer to discover this companion!');
+        }
+      });
+
+      servitorMarkersRef.current[servitor.id] = marker;
+    });
+
+    return () => {
+      Object.values(servitorMarkersRef.current).forEach(marker => marker.remove());
+    };
+  }, [mapInstanceRef.current, spawnedServitors, currentLocation, discoveredServitors]);
+
+  const handleCompanionSummoned = (servitor: Servitor) => {
+    setUserState({
+      discoveredServitors: [...(discoveredServitors || []), servitor.id]
+    });
+    setShowCompanionSelection(false);
+    setSelectedServitor(null);
+  };
+
   return (
     <div className="map-container" style={{ position: "relative" }}>
       <div ref={mapContainerRef} className="map-layer" />
 
-      {/* Loading State */}
-      {isMapLoading && (
-        <div style={loadingOverlayStyle}>
-          <div className="map-loading-content">
+      {mapState === 'loading' && (
+        <div className="map-loading-overlay">
+          <div className="loading-content">
             <div className="map-spinner" />
-            <p className="map-loading-text">
-              {mapLoadError || 'Loading map...'}
-            </p>
+            <p>Loading map...</p>
           </div>
         </div>
       )}
 
-      {/* Map Load Error */}
-      {!isMapLoading && mapLoadError && (
-        <div className="map-error-message">
-          <p>{mapLoadError}</p>
-          <button 
-            onClick={() => {
-              setIsMapLoading(true);
-              initializationAttemptRef.current = 0;
-              initializeMap();
-            }}
-            className="retry-button"
-          >
-            Retry
-          </button>
-        </div>
-      )}
-
-      {locationState.error && !locationState.hasPermission && (
-        <div className="location-error-banner" style={{
-          position: 'absolute',
-          top: '10px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          backgroundColor: 'rgba(0,0,0,0.8)',
-          color: 'white',
-          padding: '10px 20px',
-          borderRadius: '8px',
-          zIndex: 1000,
-          maxWidth: '90%',
-          textAlign: 'center'
-        }}>
-          <p style={{ margin: '0 0 10px 0' }}>{locationState.error.message}</p>
-          {locationState.error.type !== 'permission' && (
-            <button
-              onClick={() => {
-                if (mapInstanceRef.current) {
-                  startWatchingLocation(mapInstanceRef.current);
-                }
-              }}
-              style={{
-                padding: '8px 16px',
-                fontSize: '0.9rem',
-                borderRadius: '4px',
-                backgroundColor: '#FFB3BA',
-                border: 'none',
-                color: '#333',
-                cursor: 'pointer'
-              }}
-            >
-              Try Again
-            </button>
-          )}
-        </div>
-      )}
+      {renderLocationStatus()}
 
       <div className="tilt-controller">
         <button
@@ -1051,7 +1168,7 @@ const Map: React.FC = () => {
         }}
       />
 
-      {/* Companion Status Overlay */}
+      {/* Companion Status Overlay - Show even without location */}
       {activeServitor && (
         <div className="companion-overlay">
           <div className="companion-status">
@@ -1059,6 +1176,18 @@ const Map: React.FC = () => {
             <span className="companion-name">{activeServitor.name}</span>
           </div>
         </div>
+      )}
+
+      {showCompanionSelection && selectedServitor && (
+        <CompanionSelection
+          isOpen={true}
+          onClose={() => {
+            setShowCompanionSelection(false);
+            setSelectedServitor(null);
+          }}
+          onSelect={handleCompanionSummoned}
+          initialServitor={selectedServitor}
+        />
       )}
     </div>
   );
