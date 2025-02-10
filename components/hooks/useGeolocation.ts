@@ -19,6 +19,9 @@ const GEOLOCATION_OPTIONS = {
   maximumAge: 0
 };
 
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 2000;
+
 export const useGeolocation = (map: MaplibreMap | null, userMarker: Marker | null) => {
   const [state, setState] = useState<GeolocationState>({
     location: null,
@@ -28,6 +31,8 @@ export const useGeolocation = (map: MaplibreMap | null, userMarker: Marker | nul
   });
   
   const watchIdRef = useRef<number | null>(null);
+  const retryCountRef = useRef(0);
+  const lastUpdateRef = useRef(0);
 
   const updateMarkerPosition = useCallback((longitude: number, latitude: number, heading: number | null) => {
     if (userMarker) {
@@ -38,7 +43,7 @@ export const useGeolocation = (map: MaplibreMap | null, userMarker: Marker | nul
     }
   }, [userMarker]);
 
-  useEffect(() => {
+  const startWatching = useCallback(() => {
     if (!navigator.geolocation) {
       setState(prev => ({
         ...prev,
@@ -47,13 +52,16 @@ export const useGeolocation = (map: MaplibreMap | null, userMarker: Marker | nul
       return;
     }
 
-    let lastUpdate = 0;
     const handleSuccess = (position: GeolocationPosition) => {
       const now = Date.now();
-      if (now - lastUpdate < 100) return;
-      lastUpdate = now;
+      // Throttle updates to prevent excessive renders
+      if (now - lastUpdateRef.current < 100) return;
+      lastUpdateRef.current = now;
 
       const { latitude, longitude, accuracy, heading } = position.coords;
+      
+      // Reset retry count on successful position
+      retryCountRef.current = 0;
       
       setState({
         location: [longitude, latitude],
@@ -66,24 +74,69 @@ export const useGeolocation = (map: MaplibreMap | null, userMarker: Marker | nul
     };
 
     const handleError = (error: GeolocationPositionError) => {
+      console.warn('Geolocation error:', error);
+
+      // Implement retry logic for temporary errors
+      if (retryCountRef.current < MAX_RETRIES) {
+        retryCountRef.current++;
+        setTimeout(() => {
+          if (watchIdRef.current !== null) {
+            navigator.geolocation.clearWatch(watchIdRef.current);
+          }
+          startWatching();
+        }, RETRY_DELAY);
+        return;
+      }
+
       setState(prev => ({
         ...prev,
-        error: { code: error.code, message: error.message }
+        error: { 
+          code: error.code,
+          message: error.code === 1 
+            ? 'Location access was denied. Please enable location services to use the map.'
+            : error.code === 2
+              ? 'Location unavailable. Please check your device settings.'
+              : 'Unable to get your location. Please try again.'
+        }
       }));
     };
 
-    watchIdRef.current = navigator.geolocation.watchPosition(
-      handleSuccess,
-      handleError,
-      GEOLOCATION_OPTIONS
-    );
+    try {
+      watchIdRef.current = navigator.geolocation.watchPosition(
+        handleSuccess,
+        handleError,
+        GEOLOCATION_OPTIONS
+      );
+    } catch (error) {
+      console.error('Failed to start location watching:', error);
+      setState(prev => ({
+        ...prev,
+        error: { 
+          code: 0, 
+          message: 'Failed to initialize location services. Please refresh the page.' 
+        }
+      }));
+    }
+  }, [updateMarkerPosition]);
+
+  useEffect(() => {
+    startWatching();
 
     return () => {
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
       }
     };
-  }, [updateMarkerPosition]);
+  }, [startWatching]);
 
-  return state;
+  // Add a method to manually retry location watching
+  const retry = useCallback(() => {
+    retryCountRef.current = 0;
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+    }
+    startWatching();
+  }, [startWatching]);
+
+  return { ...state, retry };
 }; 
