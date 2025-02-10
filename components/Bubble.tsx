@@ -8,6 +8,7 @@ interface BubbleProps {
     role: string;
     content: string;
     url?: string;
+    processing?: boolean;
   };
   icon?: string;
 }

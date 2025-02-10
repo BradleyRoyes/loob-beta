@@ -61,9 +61,9 @@ const Header: React.FC<HeaderProps> = ({
 >
   <Image 
     src="/favicon.ico"
-    alt="Favicon"
-    width={500}
-    height={300}
+    alt="Loob"
+    width={24}
+    height={24}
     className="h-6 w-6 mr-2"
   />
   Loob

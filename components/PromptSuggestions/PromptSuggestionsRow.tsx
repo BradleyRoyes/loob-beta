@@ -1,7 +1,7 @@
 import PromptSuggestionButton from "./PromptSuggestionButton";
 import { useGlobalState } from "../GlobalStateContext";
 
-const tulpaPrompts = {
+const servitorPrompts = {
   'harm-reduction': [
     "Help me plan a safe experience",
     "What should I know about set and setting?",
@@ -16,21 +16,26 @@ const tulpaPrompts = {
     "Tell me more about Loob",
     "Help me find gear for my event",
     "I want to leave feedback"
+  ],
+  'servitor-trainer': [
+    "Help me create a custom companion",
+    "How do I train my companion?",
+    "What are companion traits?"
   ]
 };
 
 const PromptSuggestionRow = ({ onPromptClick }) => {
-  const { activeTulpa, isAnonymous } = useGlobalState();
+  const { activeServitor, isAnonymous } = useGlobalState();
   
-  // Default prompts for anonymous users or when no Tulpa is selected
+  // Default prompts for anonymous users or when no Servitor is selected
   const defaultPrompts = [
     "Tell me more about Loob",
     "Help me find gear for my event",
     "I want to leave feedback"
   ];
 
-  const prompts = (!isAnonymous && activeTulpa?.id) 
-    ? tulpaPrompts[activeTulpa.id] || defaultPrompts
+  const prompts = (!isAnonymous && activeServitor?.id) 
+    ? servitorPrompts[activeServitor.id] || defaultPrompts
     : defaultPrompts;
   
   return (

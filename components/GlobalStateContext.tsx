@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { Tulpa } from './TulpaManager';
+import { Servitor } from './ServitorManager';
 
 export type Loobricate = {
   id: string;
@@ -26,7 +26,7 @@ interface UserState {
   isAnonymous: boolean;
   connectedLoobricates: Loobricate[];
   activeLoobricate: Loobricate | null;
-  activeTulpa: Tulpa | null;
+  activeServitor: Servitor | null;
 }
 
 interface GlobalState extends UserState {
@@ -36,7 +36,7 @@ interface GlobalState extends UserState {
   clearUserState: () => void;
   setActiveLoobricate: (loobricate: Loobricate | null) => void;
   setConnectedLoobricates: (loobricates: Loobricate[]) => void;
-  setActiveTulpa: (tulpa: Tulpa | null) => void;
+  setActiveServitor: (servitor: Servitor | null) => void;
 }
 
 const GlobalStateContext = createContext<GlobalState | undefined>(undefined);
@@ -68,7 +68,7 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
     isAnonymous: true,
     connectedLoobricates: [],
     activeLoobricate: null,
-    activeTulpa: null
+    activeServitor: null
   });
 
   // Initialize state from localStorage with logging
@@ -157,7 +157,7 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
       isAnonymous: true,
       connectedLoobricates: [],
       activeLoobricate: null,
-      activeTulpa: null
+      activeServitor: null
     });
     localStorage.removeItem('userState');
     localStorage.removeItem('isLoggedIn');
@@ -179,10 +179,10 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
     }));
   };
 
-  const setActiveTulpa = (tulpa: Tulpa | null) => {
+  const setActiveServitor = (servitor: Servitor | null) => {
     setUserStateData(prev => ({
       ...prev,
-      activeTulpa: tulpa
+      activeServitor: servitor
     }));
   };
 
@@ -196,7 +196,7 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
         clearUserState,
         setActiveLoobricate,
         setConnectedLoobricates,
-        setActiveTulpa,
+        setActiveServitor,
       }}
     >
       {children}

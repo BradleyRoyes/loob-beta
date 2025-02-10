@@ -34,11 +34,11 @@
 }
 
 /* Card hover effects */
-.bg-[#32333e] {
+.card-bg {
   transition: all 0.2s ease;
 }
 
-.bg-[#32333e]:hover {
+.card-bg:hover {
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(255, 148, 148, 0.1);
 }
@@ -52,7 +52,7 @@ li:hover {
   padding-left: 2px;
 }
 
-li:hover .text-[#ff9494] {
+li:hover .highlight-text {
   transform: scale(1.1);
 }
 
@@ -80,7 +80,7 @@ section:hover .text-xl {
     padding: 0.5rem;
   }
   
-  .bg-[#1a1b26] {
+  .modal-bg {
     margin: 0;
     border-radius: 1rem;
   }

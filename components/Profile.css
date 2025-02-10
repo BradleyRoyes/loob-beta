@@ -75,6 +75,7 @@
 .visual-slider {
   width: 100%;
   -webkit-appearance: none;
+  appearance: none;
   height: 6px;
   background: linear-gradient(to right, #fbc2eb, #a6c1ee);
   border-radius: 3px;

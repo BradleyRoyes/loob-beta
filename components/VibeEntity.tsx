@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import Pusher from 'pusher-js';
+import Pusher, { Channel } from 'pusher-js';
 
 // Enhanced interfaces for state management
 interface VibeState {
@@ -189,7 +189,7 @@ const VibeEntity: React.FC<VibeEntityProps> = ({
   const animationFrameRef = useRef<number>();
   const lastUpdateRef = useRef<number>(0);
   const pusherRef = useRef<Pusher | null>(null);
-  const channelRef = useRef<Pusher.Channel | null>(null);
+  const channelRef = useRef<Channel | null>(null);
   const [quaternion, setQuaternion] = useState<[number, number, number, number]>(
     initialState?.quaternion || [1, 0, 0, 0]
   );

@@ -5,7 +5,7 @@ import Bubble from "./Bubble";
 import { useChat } from "ai/react";
 import PromptSuggestionRow from "./PromptSuggestions/PromptSuggestionsRow";
 import AudioRecorder from "./AudioRecorder";
-import TulpaManager, { Tulpa } from "./TulpaManager";
+import ServitorManager, { Servitor } from "./ServitorManager";
 import "./ChatModal.css";
 import { useGlobalState } from "./GlobalStateContext";
 
@@ -24,35 +24,37 @@ const TypingIndicator = () => (
   </div>
 );
 
-const getIntroMessage = (activeTulpa: Tulpa | null, isAnonymous: boolean) => {
+const getIntroMessage = (activeServitor: Servitor | null, isAnonymous: boolean) => {
   if (isAnonymous) {
     return "Hi there! I'm Loob. Ask me about planning an event—gear, venues, or talent.";
   }
 
-  if (!activeTulpa) {
-    return "Welcome back! Select a Toolpuss to get started, or ask me about planning an event.";
+  if (!activeServitor) {
+    return "Welcome back! Select a Servitor to get started, or ask me about planning an event.";
   }
 
   const introMessages = {
     'harm-reduction': "I'm your Harm Reduction Guide. I'm here to provide compassionate, evidence-based guidance for safer practices. How can I assist you today?",
     'citizen-science': "Ready to contribute to citizen science? I'll help you document and analyze experiences with structured frameworks while maintaining anonymity.",
-    'loobrary-matcher': "Welcome to your Resource Matcher! I'll help you find the perfect gear, venues, and talent from your local Loobricates. What are you looking for?"
+    'loobrary-matcher': "Welcome to your Resource Matcher! I'll help you find the perfect gear, venues, and talent from your local Loobricates. What are you looking for?",
+    'servitor-trainer': "Welcome to the Servitor Training Program! I'll help you create and customize your own AI companions. Would you like to start creating or learn more about training?"
   };
 
-  return introMessages[activeTulpa.id] || "Hi! How can I help you today?";
+  return introMessages[activeServitor.id] || "Hi! How can I help you today?";
 };
 
 export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps) {
-  const { activeLoobricate, userId, activeTulpa, setActiveTulpa, isAnonymous } = useGlobalState();
-  const [showTulpaManager, setShowTulpaManager] = useState(false);
+  const { activeLoobricate, userId, activeServitor, setActiveServitor, isAnonymous } = useGlobalState();
+  const [showServitorManager, setShowServitorManager] = useState(false);
   
   const { append, messages, input, handleInputChange, handleSubmit, isLoading, setMessages } = useChat({
     body: {
       userId: userId || undefined,
       connectedLoobricates: activeLoobricate ? [activeLoobricate.id] : [],
-      systemPrompt: activeTulpa?.systemPrompt,
-      contextPath: activeTulpa?.contextPath
-    }
+      systemPrompt: activeServitor?.systemPrompt,
+      contextPath: activeServitor?.contextPath
+    },
+    id: activeServitor?.id
   });
   
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -231,24 +233,24 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
 
   return (
     <section className="chatbot-section flex flex-col w-full max-w-md md:max-w-3xl mx-auto h-full md:h-[90vh] rounded-lg shadow-lg p-2 overflow-hidden">
-      {/* Chat Header with Tulpa Button */}
+      {/* Chat Header with Servitor Button */}
       <div className="flex items-center gap-2 mb-4">
         <button
-          onClick={() => setShowTulpaManager(true)}
+          onClick={() => setShowServitorManager(true)}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-all duration-300 group relative"
         >
           <div className="flex items-center gap-3">
             <span className="text-2xl transform group-hover:scale-110 transition-transform duration-300">
-              {activeTulpa?.icon || '🤖'}
+              {activeServitor?.icon || '🤖'}
             </span>
             <div className="flex flex-col items-start">
               <span className="text-sm text-gray-400">
                 {isAnonymous ? 'Current Assistant' : 'Active Companion'}
               </span>
               <span className="text-base text-gray-200 font-medium">
-                {isAnonymous 
-                  ? (activeTulpa?.name || 'Loob Assistant')
-                  : (activeTulpa?.name || 'Choose Your Companion')}
+                {isAnonymous
+                  ? (activeServitor?.name || 'Loob Assistant')
+                  : (activeServitor?.name || 'Choose Your Companion')}
               </span>
             </div>
           </div>
@@ -273,9 +275,9 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
                 key="intro-message"
                 content={{
                   role: "system",
-                  content: getIntroMessage(activeTulpa, isAnonymous),
+                  content: getIntroMessage(activeServitor, isAnonymous),
                 }}
-                icon={activeTulpa?.icon || '🤖'}
+                icon={activeServitor?.icon || '🤖'}
               />
             </div>
           )}
@@ -286,7 +288,7 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
             >
               <Bubble 
                 content={message} 
-                icon={activeTulpa?.icon || '🤖'}
+                icon={activeServitor?.icon || '🤖'}
               />
             </div>
           ))}
@@ -353,15 +355,15 @@ export default function ChatModal({ onConfigureOpen, showModal }: ChatModalProps
         />
       </div>
 
-      {/* TulpaManager Modal */}
-      <TulpaManager
-        isOpen={showTulpaManager}
-        onClose={() => setShowTulpaManager(false)}
-        onSelect={(tulpa) => {
-          setActiveTulpa(tulpa);
-          // Clear messages when switching Tulpas
+      {/* ServitorManager Modal */}
+      <ServitorManager
+        isOpen={showServitorManager}
+        onClose={() => setShowServitorManager(false)}
+        onSelect={(servitor) => {
+          setActiveServitor(servitor);
+          // Clear messages when switching Servitors
           setMessages([]);
-          setShowIntroMessage(true);
+          setShowServitorManager(false);
         }}
       />
 

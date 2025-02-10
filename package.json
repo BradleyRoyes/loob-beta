@@ -25,6 +25,8 @@
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@geist-ui/core": "^2.3.8",
     "@heroicons/react": "^2.2.0",
+    "@humeai/voice": "^0.1.10",
+    "@humeai/voice-react": "^0.1.19",
     "@langchain/core": "^0.3.38",
     "@langchain/textsplitters": "^0.1.0",
     "@mediapipe/tasks-vision": "^0.10.20",
