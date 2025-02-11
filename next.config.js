@@ -33,7 +33,19 @@ const nextConfig = {
     ]
   },
   reactStrictMode: true,
-  webpack: (config) => {
+  webpack: (config, { dev, isServer }) => {
+    // Optimize webpack configuration
+    if (dev) {
+      config.cache = {
+        type: 'filesystem',
+        buildDependencies: {
+          config: [__filename],
+        },
+        name: isServer ? 'server-development' : 'client-development',
+        version: `${isServer ? 'server' : 'client'}-development`,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+      };
+    }
     // This will ignore the canvas module on the server
     config.resolve.fallback = {
       ...config.resolve.fallback,
@@ -44,7 +56,10 @@ const nextConfig = {
   // Configure external packages for serverless environment
   serverExternalPackages: ['sharp', 'canvas'],
   // Add this to skip generating 404 during build
-  output: 'standalone'
+  output: 'standalone',
+  // Add other Next.js config options here
+  poweredByHeader: false,
+  swcMinify: true,
 }
 
 module.exports = nextConfig

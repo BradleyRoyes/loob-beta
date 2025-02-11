@@ -55,11 +55,16 @@ const INITIAL_ZOOM = 16;
 const FALLBACK_ZOOM = 14;
 
 const LOCATION_CONFIG = {
-  TIMEOUT: 10000, // Reduced timeout for faster feedback
+  TIMEOUT: 10000,
   HIGH_ACCURACY: {
     enableHighAccuracy: true,
     timeout: 10000,
     maximumAge: 0
+  },
+  FALLBACK: {
+    enableHighAccuracy: false,
+    timeout: 15000,
+    maximumAge: 30000
   }
 };
 
@@ -69,17 +74,14 @@ const MAP_STYLE: maplibregl.StyleSpecification = {
     "osm-tiles": {
       type: "raster",
       tiles: [
-        // Use multiple tile servers for redundancy and load balancing
-        "https://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
-        "https://b.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
-        "https://c.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
+        "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
       ],
       tileSize: 256,
       attribution: "© OpenStreetMap contributors",
       maxzoom: 19,
-      minzoom: 0,
+      minzoom: 1,
       bounds: [-180, -85.0511, 180, 85.0511],
-      scheme: "xyz",
+      scheme: "xyz"
     },
   },
   layers: [
@@ -87,12 +89,14 @@ const MAP_STYLE: maplibregl.StyleSpecification = {
       id: "osm-tiles",
       type: "raster",
       source: "osm-tiles",
-      minzoom: 0,
+      minzoom: 1,
       maxzoom: 19,
       paint: {
+        "raster-opacity": 1,
         "raster-saturation": -0.9,
         "raster-brightness-min": 0.1,
         "raster-brightness-max": 0.9,
+        "raster-contrast": 0,
         "raster-resampling": "linear",
       },
     },
@@ -100,17 +104,17 @@ const MAP_STYLE: maplibregl.StyleSpecification = {
 };
 
 const INITIAL_MAP_STATE = {
-  pitch: 60, // Tilted view by default
+  pitch: 60,
   bearing: 0,
-  maxBounds: undefined, // Remove bounds restriction
-  minZoom: 16, // Keep users zoomed in
+  maxBounds: undefined,
+  minZoom: 3, // Reduced minimum zoom to prevent issues
   maxZoom: 19,
-  dragRotate: false, // Disable manual rotation
-  dragPan: false, // Disable manual panning
-  scrollZoom: false, // Disable zoom with scroll
-  keyboard: false, // Disable keyboard controls
-  doubleClickZoom: false, // Disable double click zoom
-  touchZoomRotate: false, // Disable touch zoom/rotate
+  dragRotate: false,
+  dragPan: true, // Enable panning
+  scrollZoom: true, // Enable zoom
+  keyboard: false,
+  doubleClickZoom: true, // Enable double click zoom
+  touchZoomRotate: true, // Enable touch zoom/rotate
 };
 
 const loadingOverlayStyle: CSSProperties = {
@@ -160,6 +164,21 @@ const SPAWN_CONFIG = {
   DESPAWN_TIME: 1800000, // 30 minutes
   INTERACTION_RADIUS: 50 // meters
 };
+
+// Update the MapErrorEvent interface
+interface MapErrorEvent {
+  type: string;
+  source?: maplibregl.Source;
+  sourceId?: string;
+  error?: {
+    status: number;
+  };
+  message?: string;
+}
+
+interface ExtendedSource extends maplibregl.Source {
+  reload?: () => void;
+}
 
 const Map: React.FC = () => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -336,17 +355,50 @@ const Map: React.FC = () => {
         style: MAP_STYLE,
         zoom: FALLBACK_ZOOM,
         ...INITIAL_MAP_STATE,
-        center: [0, 0], // Add a default center to prevent initialization errors
+        center: [13.404954, 52.520008], // Default center (Berlin)
+        transformRequest: (url, resourceType) => {
+          if (resourceType === 'Tile' && url.startsWith('https://tile.openstreetmap.org')) {
+            return {
+              url,
+              headers: {
+                'User-Agent': 'Loob/1.0'
+              }
+            };
+          }
+        }
       });
 
-      map.on('error', (e) => {
+      map.on('error', (e: MapErrorEvent) => {
         console.error('Map error:', e);
+        // Attempt to reload failed tiles
+        if (e.error?.status === 404 && e.source) {
+          const source = map.getSource(e.sourceId || '') as ExtendedSource;
+          if (source?.reload) {
+            setTimeout(() => {
+              source.reload!();
+            }, 1000);
+          }
+        }
       });
 
       // Wait for map to be fully loaded before proceeding
       map.once('load', () => {
         mapInstanceRef.current = map;
         initializeLocation();
+      });
+
+      // Add error handling for tile loading
+      map.on('sourcedataloading', (e: { sourceId: string; tile?: any }) => {
+        if (e.sourceId === 'osm-tiles' && e.tile) {
+          e.tile.retry = () => {
+            setTimeout(() => {
+              const source = map.getSource(e.sourceId) as ExtendedSource;
+              if (source?.reload) {
+                source.reload();
+              }
+            }, 1000);
+          };
+        }
       });
 
       // Create user marker but don't add it to map yet
@@ -382,91 +434,14 @@ const Map: React.FC = () => {
     }
   }, [activeServitor]);
 
-  // Simplified location initialization
-  const initializeLocation = async () => {
-    if (!navigator.geolocation) {
-      setLocationState({ 
-        status: 'error', 
-        error: 'Geolocation is not supported by your browser' 
-      });
-      return;
-    }
-
-    try {
-      setLocationState({ status: 'requesting' });
-
-      // First try to get permission
-      if (typeof navigator.permissions !== 'undefined') {
-        const permission = await navigator.permissions.query({ name: 'geolocation' });
-        if (permission.state === 'denied') {
-          setLocationState({ 
-            status: 'denied',
-            error: 'Location access was denied. Please enable location services to use the map.'
-          });
-          return;
-        }
-      }
-
-      // Start watching position
-      const watchId = navigator.geolocation.watchPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          const newLocation: [number, number] = [longitude, latitude];
-          
-          setCurrentLocation(newLocation);
-          setLocationState({ status: 'granted' });
-          
-          // Update markers and map
-          if (userMarkerRef.current) {
-            userMarkerRef.current
-              .setLngLat(newLocation)
-              .addTo(mapInstanceRef.current!);
-          }
-
-          // Center map on first location fix
-          if (locationState.status !== 'granted' && mapInstanceRef.current) {
-            mapInstanceRef.current.flyTo({
-              center: newLocation,
-              zoom: INITIAL_ZOOM,
-              pitch: MAP_PITCH,
-              essential: true
-            });
-          }
-        },
-        (error) => {
-          console.warn('Location error:', error);
-          let errorMessage = 'Unable to get your location.';
-          
-          if (error.code === 1) {
-            errorMessage = 'Location access was denied. Please enable location services to use the map.';
-            setLocationState({ status: 'denied', error: errorMessage });
-          } else {
-            setLocationState({ status: 'error', error: errorMessage });
-          }
-        },
-        LOCATION_CONFIG.HIGH_ACCURACY
-      );
-
-      // Store watch ID for cleanup
-      watchIdRef.current = watchId;
-
-    } catch (error) {
-      console.error('Location initialization error:', error);
-      setLocationState({ 
-        status: 'error',
-        error: 'Failed to initialize location services. Please try again.'
-      });
-    }
-  };
-
-  // Render location status banner with retry option
+  // Update the location status banner render function
   const renderLocationStatus = () => {
     if (locationState.status === 'requesting') {
       return (
         <div className="location-status-banner">
           <div className="status-content">
             <div className="location-spinner" />
-            <span>Requesting location access...</span>
+            <span>Getting your location...</span>
           </div>
         </div>
       );
@@ -483,11 +458,12 @@ const Map: React.FC = () => {
                   window.location.reload();
                 } else {
                   retryGeolocation();
+                  setLocationState({ status: 'requesting' });
                 }
               }}
               className="retry-button"
             >
-              {locationState.status === 'denied' ? 'Enable Location' : 'Retry'}
+              {locationState.status === 'denied' ? 'Enable Location' : 'Try Again'}
             </button>
           </div>
         </div>
@@ -623,7 +599,8 @@ const Map: React.FC = () => {
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        checkLocationPermission();
+        // Re-initialize location when page becomes visible
+        initializeLocation();
       }
     };
 
@@ -686,6 +663,70 @@ const Map: React.FC = () => {
       </div>
     </div>
   );
+
+  // Update the initializeLocation function
+  const initializeLocation = async () => {
+    if (!navigator.geolocation) {
+      setLocationState({ 
+        status: 'error', 
+        error: 'Geolocation is not supported by your browser' 
+      });
+      return;
+    }
+
+    try {
+      setLocationState({ status: 'requesting' });
+
+      // First try to get permission
+      if (typeof navigator.permissions !== 'undefined') {
+        const permission = await navigator.permissions.query({ name: 'geolocation' });
+        if (permission.state === 'denied') {
+          setLocationState({ 
+            status: 'denied',
+            error: 'Location access was denied. Please enable location services to use the map.'
+          });
+          return;
+        }
+      }
+
+      // Get an initial position with high accuracy
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const newLocation: [number, number] = [longitude, latitude];
+          
+          setCurrentLocation(newLocation);
+          setLocationState({ status: 'granted' });
+          
+          if (userMarkerRef.current && mapInstanceRef.current) {
+            userMarkerRef.current
+              .setLngLat(newLocation)
+              .addTo(mapInstanceRef.current);
+
+            mapInstanceRef.current.flyTo({
+              center: newLocation,
+              zoom: INITIAL_ZOOM,
+              pitch: MAP_PITCH,
+              essential: true
+            });
+          }
+        },
+        (error) => {
+          console.warn('Initial location error:', error);
+          // Don't show an error yet, let the watch position handle it
+          // This prevents showing errors too early
+        },
+        LOCATION_CONFIG.HIGH_ACCURACY
+      );
+
+    } catch (error) {
+      console.error('Location initialization error:', error);
+      setLocationState({ 
+        status: 'error',
+        error: 'Failed to initialize location services. Please try again.'
+      });
+    }
+  };
 
   // Add this new function for spawning companions
   const generateSpawnLocation = (userLat: number, userLng: number): [number, number] => {

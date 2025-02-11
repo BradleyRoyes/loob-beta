@@ -15,12 +15,19 @@ interface GeolocationError {
 
 const GEOLOCATION_OPTIONS = {
   enableHighAccuracy: true,
-  timeout: 5000,
+  timeout: 10000,
   maximumAge: 0
+};
+
+const FALLBACK_OPTIONS = {
+  enableHighAccuracy: false,
+  timeout: 15000,
+  maximumAge: 30000
 };
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 2000;
+const UPDATE_THRESHOLD = 100;
 
 export const useGeolocation = (map: MaplibreMap | null, userMarker: Marker | null) => {
   const [state, setState] = useState<GeolocationState>({
@@ -55,7 +62,7 @@ export const useGeolocation = (map: MaplibreMap | null, userMarker: Marker | nul
     const handleSuccess = (position: GeolocationPosition) => {
       const now = Date.now();
       // Throttle updates to prevent excessive renders
-      if (now - lastUpdateRef.current < 100) return;
+      if (now - lastUpdateRef.current < UPDATE_THRESHOLD) return;
       lastUpdateRef.current = now;
 
       const { latitude, longitude, accuracy, heading } = position.coords;
@@ -76,15 +83,24 @@ export const useGeolocation = (map: MaplibreMap | null, userMarker: Marker | nul
     const handleError = (error: GeolocationPositionError) => {
       console.warn('Geolocation error:', error);
 
-      // Implement retry logic for temporary errors
-      if (retryCountRef.current < MAX_RETRIES) {
+      // For timeout errors, try again with less accurate but more reliable options
+      if (error.code === 3 && retryCountRef.current < MAX_RETRIES) {
         retryCountRef.current++;
+        console.log(`Retrying geolocation (${retryCountRef.current}/${MAX_RETRIES}) with fallback options...`);
+        
         setTimeout(() => {
           if (watchIdRef.current !== null) {
             navigator.geolocation.clearWatch(watchIdRef.current);
           }
-          startWatching();
+          
+          // Use fallback options on retry
+          watchIdRef.current = navigator.geolocation.watchPosition(
+            handleSuccess,
+            handleError,
+            retryCountRef.current === MAX_RETRIES ? FALLBACK_OPTIONS : GEOLOCATION_OPTIONS
+          );
         }, RETRY_DELAY);
+        
         return;
       }
 
@@ -96,12 +112,15 @@ export const useGeolocation = (map: MaplibreMap | null, userMarker: Marker | nul
             ? 'Location access was denied. Please enable location services to use the map.'
             : error.code === 2
               ? 'Location unavailable. Please check your device settings.'
-              : 'Unable to get your location. Please try again.'
+              : error.code === 3
+                ? 'Location request timed out. Please check your connection and try again.'
+                : 'Unable to get your location. Please try again.'
         }
       }));
     };
 
     try {
+      // Start with high accuracy options
       watchIdRef.current = navigator.geolocation.watchPosition(
         handleSuccess,
         handleError,
